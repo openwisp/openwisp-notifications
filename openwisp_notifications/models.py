@@ -13,12 +13,13 @@ from swapper import swappable_setting
 from openwisp_utils.base import TimeStampedEditableModel, UUIDModel
 
 
-class Notifications(UUIDModel, AbstractNotification):
+class Notification(UUIDModel, AbstractNotification):
     COUNT_CACHE_KEY = 'ow2-unread-notifications-{0}'
 
     class Meta(AbstractNotification.Meta):
         abstract = False
-        swappable = swappable_setting('openwisp_notifications', 'Notifications')
+        app_label = 'openwisp_notifications'
+        swappable = swappable_setting('openwisp_notifications', 'Notification')
 
     def __str__(self):
         return self.timesince()
@@ -63,7 +64,7 @@ def create_notificationuser_settings(sender, instance, **kwargs):
         NotificationUser.objects.create(user=instance)
 
 
-@receiver(post_save, sender=Notifications, dispatch_uid='send_email_notification')
+@receiver(post_save, sender=Notification, dispatch_uid='send_email_notification')
 def send_email_notification(sender, instance, created, **kwargs):
     # ensure we need to sending email or stop
     if not created or (not instance.recipient.notificationuser.email or
@@ -83,7 +84,7 @@ def send_email_notification(sender, instance, created, **kwargs):
     instance.save()
 
 
-@receiver(post_save, sender=Notifications, dispatch_uid='clear_notification_cache_saved')
-@receiver(post_delete, sender=Notifications, dispatch_uid='clear_notification_cache_deleted')
+@receiver(post_save, sender=Notification, dispatch_uid='clear_notification_cache_saved')
+@receiver(post_delete, sender=Notification, dispatch_uid='clear_notification_cache_deleted')
 def clear_notification_cache(sender, instance, **kwargs):
-    Notifications.invalidate_cache(instance.recipient)
+    Notification.invalidate_cache(instance.recipient)

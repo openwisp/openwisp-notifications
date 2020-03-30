@@ -22,26 +22,15 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'openwisp_notifications.apps.OpenwispNotificationsConfig',
-    # 'django.contrib.sites',
-    
- 
-
-
-    # 'openwisp_utils.admin_theme',
-    'django.contrib.admin',
-    # 'django_filters',
-    # 'django_extensions',
-    # admin theme
     'openwisp_utils.admin_theme',
-    'notifications',
-    # 'rest_framework',
     'django.contrib.sites',
     'django_extensions',
     'allauth',
     'allauth.account',
     'allauth.socialaccount',
     'openwisp_users',
+    'django.contrib.admin',
+    'openwisp_notifications',
 ]
 
 STATICFILES_FINDERS = [
@@ -71,22 +60,22 @@ USE_TZ = True
 USE_I18N = False
 USE_L10N = False
 STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 CORS_ORIGIN_ALLOW_ALL = True
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'
 EMAIL_PORT = '1025'
 
+EXTENDED_APPS = ['openwisp_notifications']
 
 # during development only
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
-# change this to something secret in production
-# DJANGO_FREERADIUS_API_TOKEN = 'djangofreeradiusapitoken'
 
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(os.path.dirname(BASE_DIR), 'openwisp_notifications', 'templates')],
         'OPTIONS': {
             'loaders': [
                 'django.template.loaders.filesystem.Loader',
@@ -98,54 +87,20 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'openwisp_utils.admin_theme.context_processor.menu_items',
+                'openwisp_utils.admin_theme.context_processor.admin_theme_settings'
             ],
         },
     },
 ]
 
-
-# LOGGING = {
-#     'version': 1,
-#     'filters': {
-#         'require_debug_true': {
-#             '()': 'django.utils.log.RequireDebugTrue',
-#         }
-#     },
-#     'handlers': {
-#         'console': {
-#             'level': 'DEBUG',
-#             'filters': ['require_debug_true'],
-#             'class': 'logging.StreamHandler',
-#         }
-#     },
-#     'loggers': {
-#         'django.db.backends': {
-#             'level': 'DEBUG',
-#             'handlers': ['console'],
-#         }
-#     }
-# }
-
-# SOCIALACCOUNT_PROVIDERS = {
-#     'facebook': {
-#         'METHOD': 'oauth2',
-#         'SCOPE': ['email', 'public_profile'],
-#         'AUTH_PARAMS': {'auth_type': 'reauthenticate'},
-#         'INIT_PARAMS': {'cookie': True},
-#         'FIELDS': [
-#             'id',
-#             'email',
-#             'name',
-#             'first_name',
-#             'last_name',
-#             'verified',
-#         ],
-#         'VERIFIED_EMAIL': True,
-#     }
-# }
 ACCOUNT_AUTHENTICATED_LOGIN_REDIRECTS = False
-
-
+OPENWISP_ADMIN_SHOW_USERLINKS_BLOCK = True
+OPENWISP_ADMIN_THEME_LINKS = [
+    {'type': 'text/css', 'href': '/static/admin/css/openwisp.css', 'rel': 'stylesheet', 'media': 'all'},
+    {'type': 'text/css', 'href': '/static/openwisp_notifications/css/notifications.css', 'rel': 'stylesheet', 'media': 'all'},
+    {'type': 'image/x-icon', 'href': '/static/ui/openwisp/images/favicon.png', 'rel': 'icon'}
+]
 
 # local settings must be imported before test runner otherwise they'll be ignored
 try:

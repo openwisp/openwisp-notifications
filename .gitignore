@@ -1,9 +1,10 @@
-
+*.db
+local_settings.example.py
 # Created by https://www.gitignore.io/api/code,venv,django,python
 # Edit at https://www.gitignore.io/?templates=code,venv,django,python
 
 ### Code ###
-.vscode/*
+.vscode/
 !.vscode/settings.json
 !.vscode/tasks.json
 !.vscode/launch.json

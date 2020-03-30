@@ -17,4 +17,5 @@ def get_version():
             version = '%s%s%s' % (version, VERSION[3][0:1], rev)
     return version
 
-default_app_config = 'openwisp_notifications.apps.NotificationsConfig'
+
+default_app_config = 'openwisp_notifications.apps.OpenwispNotificationsConfig'

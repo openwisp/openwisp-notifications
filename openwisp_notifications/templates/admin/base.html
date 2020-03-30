@@ -1,0 +1,12 @@
+{% extends "admin/base.html" %}
+{% load i18n static openwisp_notifications %}
+
+
+{% block userlinks %} 
+    <a href="{% url 'admin:openwisp_notifications_notification_changelist' %}"
+       id="openwisp-notifications">
+      <img class="bell-icon"
+           src="{% static "openwisp_notifications/images/bell.svg" %}" />
+      {% unread_notifications %}
+    </a>
+{% endblock %}

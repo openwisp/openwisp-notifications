@@ -9,7 +9,7 @@ from ...monitoring.tests import TestMonitoringMixin
 from ..admin import NotificationAdmin
 from .test_helpers import MessagingRequest
 
-Notification = swapper.load_model('notifications', 'Notification')
+Notification = swapper.load_model('openwisp_notifications', 'Notifications')
 
 
 class MockSuperUser:
