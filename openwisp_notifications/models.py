@@ -12,6 +12,8 @@ from swapper import swappable_setting
 
 from openwisp_utils.base import TimeStampedEditableModel, UUIDModel
 
+User = get_user_model()
+
 
 class Notification(UUIDModel, AbstractNotification):
     COUNT_CACHE_KEY = 'ow2-unread-notifications-{0}'
@@ -31,17 +33,18 @@ class Notification(UUIDModel, AbstractNotification):
 
 
 class NotificationUser(TimeStampedEditableModel):
-    _RECEIVE_HELP = 'note: non-superadmin users receive ' \
-                    'notifications only for organizations ' \
-                    'of which they are member of.'
-    user = models.OneToOneField(settings.AUTH_USER_MODEL,
-                                on_delete=models.CASCADE)
-    receive = models.BooleanField(_('receive notifications'),
-                                  default=True,
-                                  help_text=_(_RECEIVE_HELP))
-    email = models.BooleanField(_('email notifications'),
-                                default=True,
-                                help_text=_(_RECEIVE_HELP))
+    _RECEIVE_HELP = (
+        'note: non-superadmin users receive '
+        'notifications only for organizations '
+        'of which they are member of.'
+    )
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    receive = models.BooleanField(
+        _('receive notifications'), default=True, help_text=_(_RECEIVE_HELP)
+    )
+    email = models.BooleanField(
+        _('email notifications'), default=True, help_text=_(_RECEIVE_HELP)
+    )
 
     class Meta:
         verbose_name = _('user notification settings')
@@ -67,24 +70,30 @@ def create_notificationuser_settings(sender, instance, **kwargs):
 @receiver(post_save, sender=Notification, dispatch_uid='send_email_notification')
 def send_email_notification(sender, instance, created, **kwargs):
     # ensure we need to sending email or stop
-    if not created or (not instance.recipient.notificationuser.email or
-                       not instance.recipient.email):
+    if not created or (
+        not instance.recipient.notificationuser.email or not instance.recipient.email
+    ):
         return
     # send email
-    subject = instance.data.get('email_subject') or instance.description[0:24]
-    url = instance.data.get('url')
+    try:
+        subject = instance.data.get('email_subject')
+    except AttributeError:
+        instance.description[0:24]
+    url = instance.data.get('url', '')
     description = instance.description
     if url:
         description += '\n\nFor more information see {0}.'.format(url)
-    send_mail(subject, description,
-              settings.DEFAULT_FROM_EMAIL,
-              [instance.recipient.email])
+    send_mail(
+        subject, description, settings.DEFAULT_FROM_EMAIL, [instance.recipient.email]
+    )
     # flag as emailed
     instance.emailed = True
     instance.save()
 
 
 @receiver(post_save, sender=Notification, dispatch_uid='clear_notification_cache_saved')
-@receiver(post_delete, sender=Notification, dispatch_uid='clear_notification_cache_deleted')
+@receiver(
+    post_delete, sender=Notification, dispatch_uid='clear_notification_cache_deleted'
+)
 def clear_notification_cache(sender, instance, **kwargs):
     Notification.invalidate_cache(instance.recipient)

@@ -1,36 +1,48 @@
 from django.contrib import admin
 from django.utils.translation import ugettext_lazy as _
+from swapper import load_model
 
 # from allauth.account.admin
 from openwisp_users.admin import UserAdmin
 from openwisp_utils.admin import AlwaysHasChangedMixin
 
 from .models import NotificationUser
-from swapper import load_model
 
 Notification = load_model('openwisp_notifications', 'Notification')
 
+
 @admin.register(Notification)
 class NotificationAdmin(admin.ModelAdmin):
-    raw_id_fields = ('recipient', )
+    raw_id_fields = ('recipient',)
     list_display = ('description', 'read', 'level', 'timesince')
-    list_filter = ('level', 'unread', )
+    list_filter = (
+        'level',
+        'unread',
+    )
     fieldsets = (
-        (None, {
-            'fields': ('timestamp', 'level', 'description', 'emailed',)
-        }),
-        (_('Advanced options'), {
-            'classes': ('collapse',),
-            'fields': ('actor_content_type', 'actor_object_id',
-                       'action_object_content_type', 'action_object_object_id',
-                       'target_content_type', 'target_object_id',
-                       'data'),
-        }),
+        (None, {'fields': ('timestamp', 'level', 'description', 'emailed',)}),
+        (
+            _('Advanced options'),
+            {
+                'classes': ('collapse',),
+                'fields': (
+                    'actor_content_type',
+                    'actor_object_id',
+                    'action_object_content_type',
+                    'action_object_object_id',
+                    'target_content_type',
+                    'target_object_id',
+                    'data',
+                ),
+            },
+        ),
     )
 
     class Media:
         extend = True
-        js =  ['openwisp_notifications/js/notifications.js',]
+        js = [
+            'openwisp_notifications/js/notifications.js',
+        ]
 
     def read(self, instance):
         return not instance.unread
@@ -61,22 +73,27 @@ class NotificationAdmin(admin.ModelAdmin):
     def has_add_permission(self, request):
         return False
 
-    def render_change_form(self, request, context, add=False, change=True, form_url='', obj=None):
+    def render_change_form(
+        self, request, context, add=False, change=True, form_url='', obj=None
+    ):
         if obj and obj.unread:
             obj.unread = False
             obj.save()
         # disable save buttons
-        context.update({
-            'add': False,
-            'has_add_permission': False,
-            'show_delete_link': True,
-            'show_save_as_new': False,
-            'show_save_and_add_another': False,
-            'show_save_and_continue': False,
-            'show_save': False
-        })
-        return super(NotificationAdmin, self).render_change_form(request, context, add=add,
-                                                                 change=change, form_url=form_url, obj=obj)
+        context.update(
+            {
+                'add': False,
+                'has_add_permission': False,
+                'show_delete_link': True,
+                'show_save_as_new': False,
+                'show_save_and_add_another': False,
+                'show_save_and_continue': False,
+                'show_save': False,
+            }
+        )
+        return super(NotificationAdmin, self).render_change_form(
+            request, context, add=add, change=change, form_url=form_url, obj=obj
+        )
 
 
 class NotificationUserInline(AlwaysHasChangedMixin, admin.StackedInline):
@@ -84,5 +101,4 @@ class NotificationUserInline(AlwaysHasChangedMixin, admin.StackedInline):
     fields = ('receive', 'email')
 
 
-UserAdmin.inlines.insert(len(UserAdmin.inlines) - 1,
-                         NotificationUserInline)
+UserAdmin.inlines.insert(len(UserAdmin.inlines) - 1, NotificationUserInline)

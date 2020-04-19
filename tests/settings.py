@@ -10,7 +10,7 @@ ALLOWED_HOSTS = []
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'openwisp_notfications.db')
+        'NAME': os.path.join(BASE_DIR, 'openwisp_notfications.db'),
     }
 }
 
@@ -75,7 +75,11 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(os.path.dirname(BASE_DIR), 'openwisp_notifications', 'templates')],
+        'DIRS': [
+            os.path.join(
+                os.path.dirname(BASE_DIR), 'openwisp_notifications', 'templates'
+            )
+        ],
         'OPTIONS': {
             'loaders': [
                 'django.template.loaders.filesystem.Loader',
@@ -88,7 +92,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'openwisp_utils.admin_theme.context_processor.menu_items',
-                'openwisp_utils.admin_theme.context_processor.admin_theme_settings'
+                'openwisp_utils.admin_theme.context_processor.admin_theme_settings',
             ],
         },
     },
@@ -97,9 +101,23 @@ TEMPLATES = [
 ACCOUNT_AUTHENTICATED_LOGIN_REDIRECTS = False
 OPENWISP_ADMIN_SHOW_USERLINKS_BLOCK = True
 OPENWISP_ADMIN_THEME_LINKS = [
-    {'type': 'text/css', 'href': '/static/admin/css/openwisp.css', 'rel': 'stylesheet', 'media': 'all'},
-    {'type': 'text/css', 'href': '/static/openwisp_notifications/css/notifications.css', 'rel': 'stylesheet', 'media': 'all'},
-    {'type': 'image/x-icon', 'href': '/static/ui/openwisp/images/favicon.png', 'rel': 'icon'}
+    {
+        'type': 'text/css',
+        'href': '/static/admin/css/openwisp.css',
+        'rel': 'stylesheet',
+        'media': 'all',
+    },
+    {
+        'type': 'text/css',
+        'href': '/static/openwisp_notifications/css/notifications.css',
+        'rel': 'stylesheet',
+        'media': 'all',
+    },
+    {
+        'type': 'image/x-icon',
+        'href': '/static/ui/openwisp/images/favicon.png',
+        'rel': 'icon',
+    },
 ]
 
 # local settings must be imported before test runner otherwise they'll be ignored
