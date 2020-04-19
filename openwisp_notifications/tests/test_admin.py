@@ -45,7 +45,8 @@ class TestAdmin(TestOrganizationMixin, TestCase):
             recipient=self.admin,
             description="Test Notification",
             verb="Test Notification",
-            data=dict(email_subject='Test Email subject', url='localhost:8000/admin'),
+            email_subject='Test Email subject',
+            url='localhost:8000/admin',
         )
         self.site = AdminSite()
         self.model_admin = NotificationAdmin(Notification, self.site)

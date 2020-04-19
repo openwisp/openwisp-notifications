@@ -75,10 +75,7 @@ def send_email_notification(sender, instance, created, **kwargs):
     ):
         return
     # send email
-    try:
-        subject = instance.data.get('email_subject')
-    except AttributeError:
-        instance.description[0:24]
+    subject = instance.data.get('email_subject', instance.description[0:24])
     url = instance.data.get('url', '')
     description = instance.description
     if url:

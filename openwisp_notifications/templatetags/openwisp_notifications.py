@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
-from distutils.version import StrictVersion
-
 import swapper
-from django import get_version
 from django.core.cache import cache
 from django.template import Library
 from django.utils.html import format_html
@@ -32,7 +29,4 @@ def unread_notifications(context):
     return output
 
 
-if StrictVersion(get_version()) >= StrictVersion('2.0'):
-    register.simple_tag(takes_context=True)(unread_notifications)
-else:
-    register.assignment_tag(takes_context=True)(notifications_unread)
+register.simple_tag(takes_context=True)(unread_notifications)

@@ -1,9 +1,7 @@
 from django.conf import settings
 from notifications.settings import CONFIG_DEFAULTS
 
-CONFIG_DEFAULTS.update(
-    {'email_subject': 'Default email subject', 'USE_JSONFIELD': True}
-)
+CONFIG_DEFAULTS.update({'USE_JSONFIELD': True})
 
 
 def get_config():
