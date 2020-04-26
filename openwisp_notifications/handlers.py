@@ -1,9 +1,13 @@
+from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.contrib.contenttypes.models import ContentType
+from django.db.models import Q
 from django.db.models.query import QuerySet
 from django.utils import timezone
 from openwisp_notifications import settings as app_settings
 from swapper import load_model
+
+User = get_user_model()
 
 EXTRA_DATA = app_settings.get_config()['USE_JSONFIELD']
 
@@ -16,25 +20,40 @@ def notify_handler(verb, **kwargs):
     """
     # Pull the options out of kwargs
     kwargs.pop('signal', None)
-    recipient = kwargs.pop('recipient')
     actor = kwargs.pop('sender')
-    optional_objs = [
-        (kwargs.pop(opt, None), opt) for opt in ('target', 'action_object')
-    ]
     public = bool(kwargs.pop('public', True))
     description = kwargs.pop('description', None)
     timestamp = kwargs.pop('timestamp', timezone.now())
     level = kwargs.pop('level', Notification.LEVELS.info)
+    recipient = kwargs.pop('recipient', None)
 
-    # Check if User or Group
-    if isinstance(recipient, Group):
-        recipients = recipient.user_set.all()
-    elif isinstance(recipient, (QuerySet, list)):
-        recipients = recipient
+    target_org = getattr(kwargs.get('target', None), 'organization_id', None)
+
+    where = Q()
+    if target_org:
+        where = Q(is_staff=True) & Q(openwisp_users_organization=target_org)
+    where = where & Q(notificationuser__receive=True)
+
+    if recipient:
+        # Check if recipient is User, Group or QuerySet
+        if isinstance(recipient, Group):
+            recipients = recipient.user_set.filter(where)
+        elif isinstance(recipient, (QuerySet, list)):
+            recipients = recipient
+        else:
+            recipients = [recipient]
     else:
-        recipients = [recipient]
-
+        where = where | (Q(is_superuser=True) & Q(notificationuser__receive=True))
+        recipients = (
+            User.objects.select_related('notificationuser')
+            .order_by('date_joined')
+            .filter(where)
+        )
     new_notifications = []
+
+    optional_objs = [
+        (kwargs.pop(opt, None), opt) for opt in ('target', 'action_object')
+    ]
 
     for recipient in recipients:
         newnotify = Notification(

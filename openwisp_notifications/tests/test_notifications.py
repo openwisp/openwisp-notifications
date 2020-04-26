@@ -10,7 +10,7 @@ from openwisp_notifications.handlers import notify_handler
 from openwisp_notifications.signals import notify
 from swapper import load_model
 
-from openwisp_users.models import Group
+from openwisp_users.models import Group, OrganizationUser
 from openwisp_users.tests.utils import TestOrganizationMixin
 
 User = get_user_model()
@@ -116,10 +116,10 @@ class TestNotifications(TestOrganizationMixin, TestCase):
         super()._create_operator()
         users = User.objects.all()
         self.notification_options.update({'recipient': users})
-        n = self._create_notification()
+        n = self._create_notification().pop()
         if n[0] is notify_handler:
             notifications = n[1]
-            for notification, user in notifications, users:
+            for notification, user in zip(notifications, users):
                 self.assertEqual(notification.recipient, user)
 
     def test_description_in_email_subject(self):
@@ -136,3 +136,19 @@ class TestNotifications(TestOrganizationMixin, TestCase):
             n.action_object_content_type, ContentType.objects.get_for_model(operator)
         )
         self.assertEqual(n.action_object_object_id, str(operator.id))
+
+    def test_organization_recipient(self):
+        testorg = self._create_org()
+        operator = self._create_operator()
+        user = self._create_user(is_staff=False)
+        OrganizationUser.objects.create(user=user, organization=testorg)
+        OrganizationUser.objects.create(user=operator, organization=testorg)
+        self.assertIsNotNone(operator.notificationuser)
+        self.notification_options.pop('recipient')
+        recipents = (self.admin, operator)
+        operator.organization_id = testorg.id
+        n = notify.send(target=operator, **self.notification_options).pop()
+        if n[0] is notify_handler:
+            notifications = n[1]
+            for notification, recipient in zip(notifications, recipents):
+                self.assertEqual(notification.recipient, recipient)
