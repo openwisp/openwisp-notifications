@@ -1,6 +1,7 @@
 import swapper
 from django.contrib.admin.sites import AdminSite
 from django.contrib.auth import get_user_model
+from django.contrib.contenttypes.models import ContentType
 from django.core.cache import cache
 from django.test import TestCase
 from django.urls import reverse
@@ -12,6 +13,7 @@ from ..admin import NotificationAdmin
 from .test_helpers import MessagingRequest
 
 Notification = swapper.load_model('openwisp_notifications', 'Notification')
+notification_queryset = Notification.objects.order_by('timestamp')
 
 
 class MockSuperUser:
@@ -91,3 +93,51 @@ class TestAdmin(TestOrganizationMixin, TestCase):
         m = list(request.get_messages())
         self.assertEqual(len(m), 1)
         self.assertEqual(str(m[0]), '1 notification was marked as read.')
+
+    def _generic_test_obj_link(self, field):
+        notify.send(**self.notification_options)
+        n = notification_queryset.first()
+        get_actual_obj_link = getattr(self.model_admin, f'{field}_object_link')
+        object_id = getattr(n, f'{field}_object_id', None)
+
+        exp_obj_link = '<a href="{0}" id="{1}-object-url">{2}</a>'.format(
+            reverse('admin:openwisp_users_user_change', args=(object_id,)),
+            field,
+            object_id,
+        )
+        self.assertEqual(get_actual_obj_link(n), exp_obj_link)
+
+        setattr(n, f'{field}_content_type', ContentType())
+        self.assertEqual(get_actual_obj_link(n), object_id)
+
+        setattr(n, f'{field}_content_type', None)
+        self.assertEqual(get_actual_obj_link(n), '-')
+
+    def test_callable_actor_object_link(self):
+        self._generic_test_obj_link('actor')
+
+    def test_callable_action_object_link(self):
+        self.notification_options.update({'action_object': self.admin})
+        self._generic_test_obj_link('action_object')
+
+    def test_callable_target_object_link(self):
+        self.notification_options.update({'target': self.admin})
+        self._generic_test_obj_link('target')
+
+    def test_callable_related_object(self):
+        self.notification_options.update({'target': self.admin})
+        notify.send(**self.notification_options)
+        n = notification_queryset.first()
+
+        exp_related_obj_link = '<a href="{0}" id="related-object-url">{1}: {2}</a>'.format(
+            reverse('admin:openwisp_users_user_change', args=(self.admin.id,)),
+            ContentType.objects.get_for_model(self.admin).model,
+            self.admin,
+        )
+        self.assertEqual(self.model_admin.related_object(n), exp_related_obj_link)
+
+        n.target_content_type = ContentType()
+        self.assertEqual(self.model_admin.related_object(n), n.target_object_id)
+
+        n.target_content_type = None
+        self.assertEqual(self.model_admin.related_object(n), '-')
