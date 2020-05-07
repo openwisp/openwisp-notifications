@@ -1,0 +1,5 @@
+#!/bin/bash
+set -e
+openwisp-qa-check \
+        --migration-path "./openwisp_notifications/migrations/" \
+        --migration-module "openwisp_notifications"

@@ -122,7 +122,8 @@ class AbstractNotificationAdmin(admin.ModelAdmin):
         return self.model.objects.filter(recipient=request.user)
 
     def get_readonly_fields(self, request, obj=None):
-        return self.fields or [f.name for f in self.model._meta.fields]
+        fields = self.fields or [f.name for f in self.model._meta.fields]
+        return fields + self.__class__.readonly_fields
 
     def has_add_permission(self, request):
         return False
