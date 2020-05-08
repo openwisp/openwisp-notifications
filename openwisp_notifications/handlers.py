@@ -29,21 +29,23 @@ def notify_handler(verb, **kwargs):
 
     target_org = getattr(kwargs.get('target', None), 'organization_id', None)
 
-    where = Q()
+    where = Q(is_superuser=True)
+    where_group = Q()
     if target_org:
-        where = Q(is_staff=True) & Q(openwisp_users_organization=target_org)
+        where = where | (Q(is_staff=True) & Q(openwisp_users_organization=target_org))
+        where_group = Q(openwisp_users_organization=target_org)
+    where_group = where_group & Q(notificationuser__receive=True)
     where = where & Q(notificationuser__receive=True)
 
     if recipient:
         # Check if recipient is User, Group or QuerySet
         if isinstance(recipient, Group):
-            recipients = recipient.user_set.filter(where)
+            recipients = recipient.user_set.filter(where_group)
         elif isinstance(recipient, (QuerySet, list)):
             recipients = recipient
         else:
             recipients = [recipient]
     else:
-        where = where | (Q(is_superuser=True) & Q(notificationuser__receive=True))
         recipients = (
             User.objects.select_related('notificationuser')
             .order_by('date_joined')
