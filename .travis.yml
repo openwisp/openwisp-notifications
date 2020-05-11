@@ -24,15 +24,14 @@ before_install:
   - pip install -U pip wheel
   - pip install $DJANGO
   - pip install -U -r requirements-test.txt
+  # temporary: remove when openwisp-utils 0.5.0 is released
+  - pip install -U https://github.com/openwisp/openwisp-utils/tarball/master#egg=openwisp_utils[qa]
 
 install:
   - python setup.py -q develop
 
 before-script:
-  - >
-    openwisp-utils-qa-checks \
-        --migration-path ./openwisp_notifications/migrations/ \
-        --migration-module openwisp_notifications
+  - ./run-qa-checks
 
 script:
   - coverage run -a --source=openwisp_notifications runtests.py

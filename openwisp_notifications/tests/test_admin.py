@@ -141,3 +141,11 @@ class TestAdmin(TestOrganizationMixin, TestCase):
 
         n.target_content_type = None
         self.assertEqual(self.model_admin.related_object(n), '-')
+
+    def test_notification_view_webpage(self):
+        notify.send(**self.notification_options)
+        n = notification_queryset.first()
+        url = reverse('admin:openwisp_notifications_notification_change', args=(n.id,))
+        response = self.client.get(url)
+        self.assertContains(response, 'id="actor-object-url"')
+        self.assertContains(response, '<div class="readonly">Test Notification</div>')
