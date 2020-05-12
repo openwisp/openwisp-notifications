@@ -45,8 +45,8 @@ class TestAdmin(TestOrganizationMixin, TestCase):
         self.notification_options = dict(
             sender=self.admin,
             recipient=self.admin,
-            description="Test Notification",
-            verb="Test Notification",
+            description='Test Notification',
+            verb='Test Notification',
             email_subject='Test Email subject',
             url='localhost:8000/admin',
         )
