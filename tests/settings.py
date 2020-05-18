@@ -103,6 +103,6 @@ OPENWISP_ADMIN_SHOW_USERLINKS_BLOCK = True
 
 # local settings must be imported before test runner otherwise they'll be ignored
 try:
-    from local_settings import *
+    from openwisp2.local_settings import *
 except ImportError:
     pass

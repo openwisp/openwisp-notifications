@@ -1,5 +1,6 @@
 from datetime import timedelta
 
+import openwisp_notifications.settings as app_settings
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.core import mail
@@ -7,6 +8,7 @@ from django.core.exceptions import ImproperlyConfigured
 from django.template import TemplateDoesNotExist
 from django.test import TestCase
 from django.utils import timezone
+from django.utils.html import strip_tags
 from django.utils.timesince import timesince
 from openwisp_notifications.handlers import notify_handler
 from openwisp_notifications.signals import notify
@@ -267,7 +269,7 @@ class TestNotifications(TestOrganizationMixin, TestCase):
             'level': 'info',
             'verb': 'message template verb',
             'name': 'Message Template Type',
-            'email_subject': '[{site}] Messsage Template Subject',
+            'email_subject': '[{site.name}] Messsage Template Subject',
         }
 
         with self.subTest('Register type with non existent message template'):
@@ -289,7 +291,7 @@ class TestNotifications(TestOrganizationMixin, TestCase):
         with self.subTest('Links in notification message'):
             exp_message = (
                 '<p>info : None message template verb </p>\n'
-                f'<p><a href="/admin/openwisp_users/user/{self.admin.id}/change/">admin</a>'
+                f'<p><a href="http://example.com/admin/openwisp_users/user/{self.admin.id}/change/">admin</a>'
                 '\nreports\n<a href="#">None</a>\nmessage template verb.</p>'
             )
             self.assertEqual(n.message, exp_message)
@@ -300,7 +302,7 @@ class TestNotifications(TestOrganizationMixin, TestCase):
             'level': 'test',
             'verb': 'testing',
             'message': '{notification.verb} initiated by {notification.actor} since {notification}',
-            'email_subject': '[{site}] {notification.verb} reported by {notification.actor}',
+            'email_subject': '[{site.name}] {notification.verb} reported by {notification.actor}',
         }
 
         with self.subTest('Registering new notification type'):
@@ -346,3 +348,70 @@ class TestNotifications(TestOrganizationMixin, TestCase):
         with self.subTest('Check unregistration in NOTIFICATION_CHOICES'):
             with self.assertRaises(ImproperlyConfigured):
                 _unregister_notification_choice('test_type')
+
+    def test_notification_type_email(self):
+        operator = self._create_operator()
+        exp_target_url = (
+            f'http://example.com/admin/openwisp_users/user/{operator.id}/change/'
+        )
+        exp_email_body = '{message}\n\nFor more information see {target_url}.'
+        self.notification_options.update({'type': 'default'})
+
+        with self.subTest('Test email with URL option'):
+            url = self.notification_options['url']
+            self._create_notification()
+            email = mail.outbox.pop()
+            n = notification_queryset.first()
+            self.assertEqual(
+                email.body,
+                exp_email_body.format(
+                    message=strip_tags(n.message),
+                    target_url=self.notification_options['url'],
+                ),
+            )
+            html_message, content_type = email.alternatives.pop()
+            self.assertEqual(content_type, 'text/html')
+            self.assertIn(n.message, html_message)
+            self.assertIn(
+                f'For further information see <a href="{url}">{url}</a>.', html_message,
+            )
+
+        with self.subTest('Test email without URL option and target object'):
+            self.notification_options.pop('url')
+            self._create_notification()
+            email = mail.outbox.pop()
+            n = notification_queryset.first()
+            self.assertEqual(email.body, strip_tags(n.message))
+            html_message, content_type = email.alternatives.pop()
+            self.assertEqual(content_type, 'text/html')
+            self.assertIn(n.message, html_message)
+            self.assertNotIn(
+                f'<a href="{exp_target_url}">', html_message,
+            )
+        with self.subTest('Test email with target object'):
+            self.notification_options.update({'target': operator})
+            self._create_notification()
+            email = mail.outbox.pop()
+            n = notification_queryset.first()
+            html_message, content_type = email.alternatives.pop()
+            self.assertEqual(
+                email.body,
+                exp_email_body.format(
+                    message=strip_tags(n.message), target_url=exp_target_url
+                ),
+            )
+            self.assertEqual(
+                email.subject, '[example.com] Default Notification Subject'
+            )
+            self.assertEqual(content_type, 'text/html')
+            self.assertIn(
+                f'<img src="{app_settings.OPENWISP_NOTIFICATION_EMAIL_LOGO}"'
+                ' alt="Logo" id="logo" class="logo">',
+                html_message,
+            )
+            self.assertIn(n.message, html_message)
+            self.assertIn(
+                f'<a href="{exp_target_url}">For further information see'
+                f' "{n.target_content_type.model}: {n.target}".</a>',
+                html_message,
+            )

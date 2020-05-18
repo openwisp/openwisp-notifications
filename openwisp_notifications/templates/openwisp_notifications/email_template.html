@@ -1,0 +1,99 @@
+{% load i18n %}
+{% load l10n %}
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  {% block styles %}
+  <style type="text/css">
+    .background {
+      height: 100%;
+      background: linear-gradient(to bottom, #bb442c 50%, #464646 50%);
+      background-repeat: no-repeat;
+      background-attachment: fixed;
+      padding: 50px;
+    }
+
+    .container {
+      padding: 20px;
+      width: 75%;
+      margin: auto;
+      background-color: whitesmoke;
+      border-radius: 10px;
+    }
+
+    .notification-description {
+      padding: 0px 30px;
+    }
+
+    .logo {
+      width: 100px;
+    }
+
+    table {
+      border-collapse: collapse;
+    }
+
+    td,
+    th {
+      padding: 10px;
+    }
+
+    .notification-header {
+      background-color: #464646;
+      color: white;
+    }
+
+    .notification-subject {
+      width: 100%;
+      text-align: right;
+    }
+
+    .notification-subject a {
+      color: white;
+    }
+  </style>
+  {% endblock styles %}
+</head>
+
+<body>
+  {% block body %}
+  <div class="background">
+    <div class="container">
+      <table style="width: 100%;">
+        <thead class="notification-header">
+        {% block notification_header %}
+          <tr>
+            <th><img src="{{ OPENWISP_NOTIFICATION_EMAIL_LOGO }}" alt="Logo" id="logo" class="logo"></th>
+            <th class="notification-subject">{{ notification.email_subject }}</th>
+          </tr>
+        {% endblock notification_header %}
+        </thead>
+        <tbody>
+          {% block notification_body %}
+          <tr class="notification-body">
+            <td colspan="2">
+              <div class="notification-description">
+                {{ notification.message }}
+                {% if target_url %}
+                <p>
+                  {% if notification.target %}
+                    <a href="{{ target_url }}">{% trans 'For further information see' %} "{{ notification.target_content_type.model }}: {{ notification.target }}".</a>
+                  {% else %}
+                    {% trans 'For further information see' %} <a href="{{ target_url }}">{{target_url}}</a>.
+                  {% endif %}
+                </p>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+          {% endblock notification_body %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endblock body %}
+</body>
+</html>

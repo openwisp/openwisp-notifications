@@ -6,10 +6,10 @@ NOTIFICATION_TYPES = {
         'level': 'info',
         'verb': 'default verb',
         'name': 'Default Type',
-        'email_subject': '[{site}] Default Notification Subject',
+        'email_subject': '[{site.name}] Default Notification Subject',
         'message': (
-            'Default notification with {notification.verb} and level {notification.level} '
-            'by [{notification.actor}]({notification.actor_link})'
+            'Default notification with {notification.verb} and level {notification.level}'
+            ' by [{notification.actor}]({notification.actor_link})'
         ),
         'message_template': 'openwisp_notifications/default_message.md',
     },

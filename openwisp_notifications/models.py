@@ -1,15 +1,16 @@
+import openwisp_notifications.settings as app_settings
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.sites.models import Site
 from django.core.cache import cache
 from django.core.exceptions import ObjectDoesNotExist
-from django.core.mail import send_mail
+from django.core.mail import EmailMultiAlternatives
 from django.db import models
 from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 from django.template.loader import render_to_string
 from django.utils.functional import cached_property
-from django.utils.html import mark_safe
+from django.utils.html import mark_safe, strip_tags
 from django.utils.translation import ugettext_lazy as _
 from markdown import markdown
 from notifications.base.models import AbstractNotification
@@ -47,13 +48,17 @@ class Notification(UUIDModel, AbstractNotification):
         if self.type:
             # setting links in notification object for message rendering
             self.actor_link = _get_object_link(
-                self, field='actor', html=False, url_only=True
+                self, field='actor', html=False, url_only=True, absolute_url=True
             )
             self.action_link = _get_object_link(
-                self, field='action_object', html=False, url_only=True
+                self,
+                field='action_object',
+                html=False,
+                url_only=True,
+                absolute_url=True,
             )
             self.target_link = _get_object_link(
-                self, field='target', html=False, url_only=True
+                self, field='target', html=False, url_only=True, absolute_url=True
             )
 
             config = get_notification_configuration(self.type)
@@ -129,10 +134,32 @@ def send_email_notification(sender, instance, created, **kwargs):
     url = instance.data.get('url', '') if instance.data else None
     description = instance.message
     if url:
-        description += '\n\nFor more information see {0}.'.format(url)
-    send_mail(
-        subject, description, settings.DEFAULT_FROM_EMAIL, [instance.recipient.email]
+        target_url = url
+    elif instance.target:
+        target_url = _get_object_link(
+            instance, field='target', html=False, url_only=True, absolute_url=True
+        )
+    else:
+        target_url = None
+    if target_url:
+        description += '\n\nFor more information see {0}.'.format(target_url)
+    mail = EmailMultiAlternatives(
+        subject=subject,
+        body=strip_tags(description),
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        to=[instance.recipient.email],
     )
+    if app_settings.OPENWISP_NOTIFICATION_HTML_EMAIL:
+        html_message = render_to_string(
+            app_settings.OPENWISP_NOTIFICATION_EMAIL_TEMPLATE,
+            context=dict(
+                OPENWISP_NOTIFICATION_EMAIL_LOGO=app_settings.OPENWISP_NOTIFICATION_EMAIL_LOGO,
+                notification=instance,
+                target_url=target_url,
+            ),
+        )
+        mail.attach_alternative(html_message, 'text/html')
+    mail.send()
     # flag as emailed
     instance.emailed = True
     instance.save()
