@@ -13,8 +13,8 @@ OpenWISP Notifications Module
 It is used to notify OpenWISP users about meaningful events in their network.
 It not only handles common tasks like selecting appropriate recipients for a notification,
 sending email notifications, etc. but also provide measures to customize those notifications with provision for
-configurable email templates, grouping of notifications to ease management and so on. 
-**openwisp-notifications** takes care of all this, so you can focus on what matters the most. 
+configurable email templates, grouping of notifications to ease management and so on.
+**openwisp-notifications** takes care of all this, so you can focus on what matters the most.
 
 ------------
 
@@ -23,6 +23,12 @@ configurable email templates, grouping of notifications to ease management and s
    :depth: 3
 
 ------------
+
+Available features
+------------------
+
+- `Generate notifications <#generating-notifications>`_
+- TODO: add more
 
 Install development version
 ---------------------------
@@ -38,31 +44,6 @@ Alternatively, you can install via pip using git:
 .. code-block:: shell
 
     pip install -e git+git://github.com/openwisp/openwisp-notifications#egg=openwisp_notifications
-
-Setup (integrate into an existing Django project)
--------------------------------------------------
-
-``INSTALLED_APPS`` in ``settings.py`` should look like the following:
-
-.. code-block:: python
-
-     INSTALLED_APPS = [
-      'django.contrib.auth',
-      'django.contrib.contenttypes',
-      'django.contrib.sessions',
-      'django.contrib.messages',
-      'django.contrib.staticfiles',
-      'openwisp_utils.admin_theme',
-      'django.contrib.sites',
-      'django_extensions',
-      'allauth',
-      'allauth.account',
-      'allauth.socialaccount',
-      'openwisp_users',
-      'django.contrib.admin',
-      # notifications module
-      'openwisp_notifications',
-     ]
 
 Installing for development
 --------------------------
@@ -107,7 +88,32 @@ Run tests with:
 
 .. code-block:: shell
 
-    ./runtests.py
+    ./runtests.py --parallel
+
+Setup (integrate into an existing Django project)
+-------------------------------------------------
+
+``INSTALLED_APPS`` in ``settings.py`` should look like the following:
+
+.. code-block:: python
+
+     INSTALLED_APPS = [
+        'django.contrib.auth',
+        'django.contrib.contenttypes',
+        'django.contrib.sessions',
+        'django.contrib.messages',
+        'django.contrib.staticfiles',
+        'openwisp_utils.admin_theme',
+        'django.contrib.sites',
+        'django_extensions',
+        'allauth',
+        'allauth.account',
+        'allauth.socialaccount',
+        'openwisp_users',
+        'django.contrib.admin',
+        # notifications module
+        'openwisp_notifications',
+     ]
 
 Generating Notifications
 ------------------------
@@ -127,7 +133,7 @@ to create notifications. An example of usage has been provided below.
     operators = Group.objects.get(name='Operator')
 
     notify.send(
-       sender=admin, 
+       sender=admin,
        recipient=operators,
        description="Test Notification",
        verb="Test Notification",
@@ -135,27 +141,27 @@ to create notifications. An example of usage has been provided below.
        url='https://localhost:8000/admin',
     )
 
-The above code snippet creates and sends a notification to all users belonging to the `Operators` 
-group if they have opted-in to receive notifications. Non-superadmin users receive notifications 
+The above code snippet creates and sends a notification to all users belonging to the `Operators`
+group if they have opted-in to receive notifications. Non-superadmin users receive notifications
 only for organizations which they are a member of.
 
 .. note::
-   
-    If recipient is not provided, it defaults to all superadmin. If the target is provided, users 
-    of same organization of the target object are added to the list of recipients given that they 
+
+    If recipient is not provided, it defaults to all superadmin. If the target is provided, users
+    of same organization of the target object are added to the list of recipients given that they
     have staff status and opted-in to receive notifications.
 
 The complete syntax for ``notify`` is.
 
 .. code-block:: python
-   
+
     notify.send(actor, recipient, verb, action_object, target, level, description, **kwargs)
 
 .. note::
-    Since ``openwisp-notifications`` uses ``django-notifications`` under the hood, usage of the 
+    Since ``openwisp-notifications`` uses ``django-notifications`` under the hood, usage of the
     ``notify signal`` has been kept unaffected to maintain consistency with ``django-notifications``.
-    You can learn more about accepted parameters from `django-notifications documentation 
-    <https://github.com/django-notifications/django-notifications#generating-notifications>`_. 
+    You can learn more about accepted parameters from `django-notifications documentation
+    <https://github.com/django-notifications/django-notifications#generating-notifications>`_.
 
 Additionally Supported Parameters
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -167,10 +173,10 @@ Additionally Supported Parameters
 |                 |                                                                             |
 |                 | Defaults to the truncated description.                                      |
 +-----------------+-----------------------------------------------------------------------------+
-|       url       | Adds a URL in email as <br/>                                                | 
+|       url       | Adds a URL in email as <br/>                                                |
 |                 |                                                                             |
 |                 | ``For more information see <url>.`` <br/>                                   |
-|                 |                                                                             | 
+|                 |                                                                             |
 |                 | Default to **None** meaning above message would not be added to the email.  |
 +-----------------+-----------------------------------------------------------------------------+
 
@@ -178,8 +184,6 @@ Contributing
 ------------
 
 Please read the `OpenWISP contributing guidelines <http://openwisp.io/docs/developer/contributing.html>`_.
-
-.. _PEP8, Style Guide for Python Code: http://www.python.org/dev/peps/pep-0008/
 
 License
 -------
