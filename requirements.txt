@@ -1,5 +1,5 @@
-openwisp_users
-openwisp_utils
+django-notifications-hq>=1.6,<1.7
+openwisp-users>=0.2.0,<0.3.0
+# TODO: enable when openwisp-utils 0.5 is released
+# openwisp-utils[rest]~=0.5
 swapper
-django-rest-framework
-django-notifications-hq
