@@ -13,7 +13,7 @@ from ..admin import NotificationAdmin
 from .test_helpers import MessagingRequest
 
 Notification = swapper.load_model('openwisp_notifications', 'Notification')
-notification_queryset = Notification.objects.order_by('timestamp')
+notification_queryset = Notification.objects.order_by('-timestamp')
 
 
 class MockSuperUser:

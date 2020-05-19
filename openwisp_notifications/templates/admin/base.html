@@ -1,6 +1,9 @@
 {% extends "admin/base.html" %}
 {% load i18n static openwisp_notifications %}
 
+{% block extrastyle %}
+  <link rel="stylesheet" type="text/css" href="{% static 'openwisp_notifications/css/notifications.css' %}" />
+{% endblock extrastyle %}
 
 {% block userlinks %} 
     <a href="{% url 'admin:openwisp_notifications_notification_changelist' %}"

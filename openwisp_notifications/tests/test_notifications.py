@@ -16,7 +16,7 @@ from openwisp_users.tests.utils import TestOrganizationMixin
 User = get_user_model()
 
 Notification = load_model('openwisp_notifications', 'Notification')
-notification_queryset = Notification.objects.order_by('timestamp')
+notification_queryset = Notification.objects.order_by('-timestamp')
 start_time = timezone.now()
 ten_minutes_ago = start_time - timedelta(minutes=10)
 
@@ -102,15 +102,49 @@ class TestNotifications(TestOrganizationMixin, TestCase):
         self.assertEqual(len(mail.outbox), 0)
 
     def test_group_recipient(self):
-        operator = super()._get_operator()
+        operator = self._get_operator()
+        user = self._create_user(
+            username='user', email='user@user.com', first_name='User', last_name='user'
+        )
         op_group = Group.objects.get(name='Operator')
         op_group.user_set.add(operator)
+        op_group.user_set.add(user)
         op_group.save()
         self.notification_options.update({'recipient': op_group})
+        recipients = (operator, user)
+
+        # Test for group with no target object
+        n = self._create_notification().pop()
+        if n[0] is notify_handler:
+            notifications = n[1]
+            self.assertEqual(len(notifications), 2)
+            for notification, recipient in zip(notifications, recipients):
+                self.assertEqual(notification.recipient, recipient)
+        else:
+            self.fail()
+
+        # Test for group with target object of another organization
+        org = self._get_org()
+        target = self._create_user(
+            username='target',
+            email='target@target.com',
+            first_name='Target',
+            last_name='user',
+        )
+        OrganizationUser.objects.create(user=target, organization=org)
+        target.organization_id = org.id
+        self.notification_options.update({'target': target})
         self._create_notification()
+        # No new notification should be created
+        self.assertEqual(notification_queryset.count(), 2)
+
+        # Test for group with target object of same organization
+        # Adding operator to organization of target object
+        OrganizationUser.objects.create(user=operator, organization=org)
+        self._create_notification()
+        self.assertEqual(notification_queryset.count(), 3)
         n = notification_queryset.first()
         self.assertEqual(n.recipient, operator)
-        self.assertIn(operator.email, mail.outbox[0].to)
 
     def test_queryset_recipient(self):
         super()._create_operator()
@@ -121,6 +155,8 @@ class TestNotifications(TestOrganizationMixin, TestCase):
             notifications = n[1]
             for notification, user in zip(notifications, users):
                 self.assertEqual(notification.recipient, user)
+        else:
+            self.fail()
 
     def test_description_in_email_subject(self):
         self.notification_options.pop('email_subject')
@@ -130,7 +166,8 @@ class TestNotifications(TestOrganizationMixin, TestCase):
 
     def test_handler_optional_tag(self):
         operator = self._create_operator()
-        notify.send(action_object=operator, **self.notification_options)
+        self.notification_options.update({'action_object': operator})
+        self._create_notification()
         n = notification_queryset.first()
         self.assertEqual(
             n.action_object_content_type, ContentType.objects.get_for_model(operator)
@@ -147,8 +184,41 @@ class TestNotifications(TestOrganizationMixin, TestCase):
         self.notification_options.pop('recipient')
         recipents = (self.admin, operator)
         operator.organization_id = testorg.id
-        n = notify.send(target=operator, **self.notification_options).pop()
+        self.notification_options.update({'target': operator})
+        n = self._create_notification().pop()
         if n[0] is notify_handler:
             notifications = n[1]
             for notification, recipient in zip(notifications, recipents):
                 self.assertEqual(notification.recipient, recipient)
+        else:
+            self.fail()
+
+    def test_no_organization(self):
+        # Tests no target object is present
+        self._create_org_user()
+        user = self._create_user(
+            username='user',
+            email='user@user.com',
+            first_name='User',
+            last_name='user',
+            is_staff=False,
+        )
+        self.notification_options.pop('recipient')
+        self._create_notification()
+        # Only superadmin should receive notification
+        self.assertEqual(notification_queryset.count(), 1)
+        n = notification_queryset.first()
+        self.assertEqual(n.actor, self.admin)
+        self.assertEqual(n.recipient, self.admin)
+
+        # Tests no user from organization of target object
+        org = self._create_org(name='test_org')
+        OrganizationUser.objects.create(user=user, organization=org)
+        self.notification_options.update({'target': user})
+        self._create_notification()
+        self.assertEqual(notification_queryset.count(), 2)
+        # Only superadmin should receive notification
+        n = notification_queryset.first()
+        self.assertEqual(n.actor, self.admin)
+        self.assertEqual(n.recipient, self.admin)
+        self.assertEqual(n.target, user)

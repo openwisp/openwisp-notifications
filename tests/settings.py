@@ -100,25 +100,6 @@ TEMPLATES = [
 
 ACCOUNT_AUTHENTICATED_LOGIN_REDIRECTS = False
 OPENWISP_ADMIN_SHOW_USERLINKS_BLOCK = True
-OPENWISP_ADMIN_THEME_LINKS = [
-    {
-        'type': 'text/css',
-        'href': '/static/admin/css/openwisp.css',
-        'rel': 'stylesheet',
-        'media': 'all',
-    },
-    {
-        'type': 'text/css',
-        'href': '/static/openwisp_notifications/css/notifications.css',
-        'rel': 'stylesheet',
-        'media': 'all',
-    },
-    {
-        'type': 'image/x-icon',
-        'href': '/static/ui/openwisp/images/favicon.png',
-        'rel': 'icon',
-    },
-]
 
 # local settings must be imported before test runner otherwise they'll be ignored
 try:
