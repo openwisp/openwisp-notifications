@@ -1,7 +1,7 @@
 from django.contrib import admin
-from django.urls import NoReverseMatch, reverse
-from django.utils.html import format_html
+from django.utils.html import format_html, strip_tags
 from django.utils.translation import ugettext_lazy as _
+from openwisp_notifications.utils import _get_object_link
 
 
 class AbstractNotificationAdmin(admin.ModelAdmin):
@@ -11,9 +11,10 @@ class AbstractNotificationAdmin(admin.ModelAdmin):
         'actor_object_link',
         'target_object_link',
         'related_object',
+        'display_list_message',
         'message',
     ]
-    list_display = ('message', 'read', 'level', 'timesince')
+    list_display = ('display_list_message', 'read', 'level', 'timesince')
     list_filter = (
         'level',
         'unread',
@@ -74,41 +75,23 @@ class AbstractNotificationAdmin(admin.ModelAdmin):
 
     mark_as_read.short_description = _('Mark selected notifications as read')
 
-    def _get_link(self, obj, field, html=True):
-        content_type = getattr(obj, f'{field}_content_type', None)
-        object_id = getattr(obj, f'{field}_object_id', None)
-        try:
-            url = reverse(
-                f'admin:{content_type.app_label}_{content_type.model}_change',
-                args=[object_id],
-            )
-            if not html:
-                return url
-            return format_html(
-                f'<a href="{url}" id="{field}-object-url">{object_id}</a>'
-            )
-        except NoReverseMatch:
-            return object_id
-        except AttributeError:
-            return '-'
-
     def actor_object_link(self, obj):
-        return self._get_link(obj, field='actor')
+        return _get_object_link(obj, field='actor')
 
     actor_object_link.short_description = _('Actor Object')
 
     def action_object_object_link(self, obj):
-        return self._get_link(obj, field='action_object')
+        return _get_object_link(obj, field='action_object')
 
     action_object_object_link.short_description = _('Action Object')
 
     def target_object_link(self, obj):
-        return self._get_link(obj, field='target')
+        return _get_object_link(obj, field='target')
 
     target_object_link.short_description = _('Target Object')
 
     def related_object(self, obj):
-        target_object_url = self._get_link(obj, field='target', html=False)
+        target_object_url = _get_object_link(obj, field='target', html=False)
         if target_object_url.startswith('/admin/'):
             return format_html(
                 '<a href="{url}" id="related-object-url">{content_type}: {name}</a>',
@@ -119,6 +102,11 @@ class AbstractNotificationAdmin(admin.ModelAdmin):
         return target_object_url
 
     related_object.short_description = _('Related Object')
+
+    def display_list_message(self, obj):
+        return strip_tags(obj.message)
+
+    display_list_message.short_description = _('Message')
 
     def get_queryset(self, request):
         return self.model.objects.filter(recipient=request.user)

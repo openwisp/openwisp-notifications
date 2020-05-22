@@ -7,7 +7,10 @@ NOTIFICATION_TYPES = {
         'verb': 'default verb',
         'name': 'Default Type',
         'email_subject': '[{site}] Default Notification Subject',
-        'message': 'Default notification with {notification.verb} and {notification.level}',
+        'message': (
+            'Default notification with {notification.verb} and level {notification.level} '
+            'by [{notification.actor}]({notification.actor_link})'
+        ),
         'message_template': 'openwisp_notifications/default_message.md',
     },
 }

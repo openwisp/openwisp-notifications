@@ -3,3 +3,4 @@ openwisp-users>=0.2.0,<0.3.0
 # TODO: enable when openwisp-utils 0.5 is released
 # openwisp-utils[rest]~=0.5
 swapper
+markdown>=3.2,<3.3

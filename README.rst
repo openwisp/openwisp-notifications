@@ -230,19 +230,21 @@ These properties can be configured for each notification type:
 Defining ``message_template``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-You can either extend default message template or write your own from scratch. An example to extend default
-message template is shown below.
+You can either extend default message template or write your own markdown formatted message template
+from scratch. An example to extend default message template is shown below.
 
 .. code-block:: jinja2
 
     # In templates/openwisp_notifications/your_message_template.md
     {% extends 'openwisp_notifications/default_message.md' %}
     {% block body %}
-        {{ notification.target }} has malfunctioned. 
+        [{{ notification.target }}]({{ notification.target_link }}) has malfunctioned. 
     {% endblock body %}
 
 .. note::
-    You can access all attributes of the notification using ``notification`` variables in your message template as shown above.
+    You can access all attributes of the notification using ``notification`` variables in your message
+    template as shown above. Additionally attributes ``actor_link``, ``action_link`` and ``target_link``
+    are also available for providing hyperlinks to respective objects. 
 
 Registering / Unregistering Notification Types
 ----------------------------------------------
@@ -281,7 +283,7 @@ An example usage has been shown below.
         'level': 'info',
         'verb': 'added',
         'verbose_name': 'device added',
-        'message': '{notification.target} was {notification.verb} at {notification.timestamp}',
+        'message': '[{notification.target}]({notification.target_link}) was {notification.verb} at {notification.timestamp}',
         'email_subject' : '[{site.name}] A device has been added'
     }
 
@@ -299,6 +301,10 @@ An example usage has been shown below.
     configuration of notification type. They refer to objects of ``django.contrib.sites.models.Site`
     and ``openwisp_notifications.models.Notification`` repectively. This allows you to use any of their
     attributes in your configuration.
+
+.. note::
+
+    Similarly to ``message_template``, ``message`` property can also be formatted using markdown.
 
 unregister_notification_type
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~

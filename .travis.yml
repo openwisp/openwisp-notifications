@@ -19,6 +19,7 @@ env:
 branches:
   only:
     - master
+    - issues/1 #Remove this before merging
 
 before_install:
   - pip install -U pip wheel
