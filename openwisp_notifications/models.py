@@ -9,12 +9,15 @@ from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 from django.template.loader import render_to_string
 from django.utils.functional import cached_property
+from django.utils.html import mark_safe
 from django.utils.translation import ugettext_lazy as _
+from markdown import markdown
 from notifications.base.models import AbstractNotification
 from openwisp_notifications.types import (
     NOTIFICATION_CHOICES,
     get_notification_configuration,
 )
+from openwisp_notifications.utils import _get_object_link
 from swapper import swappable_setting
 
 from openwisp_utils.base import TimeStampedEditableModel, UUIDModel
@@ -42,13 +45,27 @@ class Notification(UUIDModel, AbstractNotification):
     @cached_property
     def message(self):
         if self.type:
+            # setting links in notification object for message rendering
+            self.actor_link = _get_object_link(
+                self, field='actor', html=False, url_only=True
+            )
+            self.action_link = _get_object_link(
+                self, field='action_object', html=False, url_only=True
+            )
+            self.target_link = _get_object_link(
+                self, field='target', html=False, url_only=True
+            )
+
             config = get_notification_configuration(self.type)
             if 'message' in config:
-                return config['message'].format(notification=self)
+                md_text = config['message'].format(notification=self)
             else:
-                return render_to_string(
+                md_text = render_to_string(
                     config['message_template'], context=dict(notification=self)
                 ).strip()
+            # clean up
+            self.actor_link = self.action_link = self.target_link = None
+            return mark_safe(markdown(md_text))
         else:
             return self.description
 
