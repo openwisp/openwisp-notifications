@@ -75,7 +75,7 @@ def send_email_notification(sender, instance, created, **kwargs):
     ):
         return
     # send email
-    subject = instance.data.get('email_subject', instance.description[0:24])
+    subject = instance.data.get('email_subject', instance.description)
     url = instance.data.get('url', '')
     description = instance.description
     if url:
