@@ -3,3 +3,15 @@ set -e
 openwisp-qa-check \
         --migration-path "./openwisp_notifications/migrations/" \
         --migration-module "openwisp_notifications"
+
+echo ''
+echo 'Running checks for SAMPLE_APP'
+SAMPLE_APP=1 openwisp-qa-check \
+    --skip-isort \
+    --skip-flake8 \
+    --skip-checkmigrations \
+    --skip-checkendline \
+    --skip-checkcommit \
+    --skip-black \
+    --migration-path "./tests/openwisp2/sample_notifications/migrations/" \
+    --migration-module "sample_notifications"

@@ -52,7 +52,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'urls'
+ROOT_URLCONF = 'openwisp2.urls'
 
 TIME_ZONE = 'Europe/Rome'
 LANGUAGE_CODE = 'en-gb'
@@ -68,16 +68,16 @@ EMAIL_PORT = '1025'
 
 EXTENDED_APPS = ['openwisp_notifications']
 
-# during development only
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-
 
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [
             os.path.join(
-                os.path.dirname(BASE_DIR), 'openwisp_notifications', 'templates'
+                os.path.dirname(os.path.dirname(BASE_DIR)),
+                'openwisp_notifications',
+                'templates',
             )
         ],
         'OPTIONS': {
@@ -106,3 +106,15 @@ try:
     from openwisp2.local_settings import *
 except ImportError:
     pass
+
+if os.environ.get('SAMPLE_APP', False):
+    INSTALLED_APPS.remove('openwisp_notifications')
+    EXTENDED_APPS.append('openwisp_notifications')
+    INSTALLED_APPS.append('openwisp2.sample_notifications')
+    OPENWISP_NOTIFICATIONS_NOTIFICATION_MODEL = 'sample_notifications.Notification'
+    OPENWISP_NOTIFICATIONS_NOTIFICATIONUSER_MODEL = (
+        'sample_notifications.NotificationUser'
+    )
+    TEMPLATES[0]['DIRS'].insert(
+        0, os.path.join(BASE_DIR, 'sample_notifications', 'templates')
+    )
