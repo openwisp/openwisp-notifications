@@ -1,6 +1,7 @@
 *****************************
 OpenWISP Notifications Module
 *****************************
+
 .. image:: https://travis-ci.org/openwisp/openwisp-notifications.svg?branch=master
    :target: https://travis-ci.org/openwisp/openwisp-notifications
 
@@ -9,12 +10,10 @@ OpenWISP Notifications Module
 
 ------------
 
-**openwisp-notifications** provides email and web notifications for OpenWISP.
-It is used to notify OpenWISP users about meaningful events in their network.
-It not only handles common tasks like selecting appropriate recipients for a notification,
-sending email notifications, etc. but also provide measures to customize those notifications with provision for
-configurable email templates, grouping of notifications to ease management and so on.
-**openwisp-notifications** takes care of all this, so you can focus on what matters the most.
+**openwisp-notifications** provides email and web notifications for `OpenWISP <http://openwisp.org>`_.
+
+Its main goal is to allow the other OpenWISP modules to notify users about
+meaningful events that happen in their network.
 
 ------------
 
@@ -27,7 +26,10 @@ configurable email templates, grouping of notifications to ease management and s
 Available features
 ------------------
 
-- `Generate notifications <#generating-notifications>`_
+- `Sending notifications <#sending-notifications>`_
+- Email notifications
+- Web notifications
+- Configurable email theme
 - TODO: add more
 
 Install development version
@@ -115,11 +117,10 @@ Setup (integrate into an existing Django project)
         'openwisp_notifications',
      ]
 
-Generating Notifications
-------------------------
+Sending notifications
+---------------------
 
-In order to simplify generation of notifications, a signal has been provided which should be used
-to create notifications. An example of usage has been provided below.
+Notifications can be created using the ``notify`` signal. Eg:
 
 .. code-block:: python
 
@@ -141,44 +142,55 @@ to create notifications. An example of usage has been provided below.
        url='https://localhost:8000/admin',
     )
 
-The above code snippet creates and sends a notification to all users belonging to the `Operators`
+The above code snippet creates and sends a notification to all users belonging to the ``Operators``
 group if they have opted-in to receive notifications. Non-superadmin users receive notifications
 only for organizations which they are a member of.
 
 .. note::
 
-    If recipient is not provided, it defaults to all superadmin. If the target is provided, users
+    If recipient is not provided, it defaults to all superusers. If the target is provided, users
     of same organization of the target object are added to the list of recipients given that they
     have staff status and opted-in to receive notifications.
 
-The complete syntax for ``notify`` is.
+The complete syntax for ``notify`` is:
 
 .. code-block:: python
 
-    notify.send(actor, recipient, verb, action_object, target, level, description, **kwargs)
+    notify.send(
+        actor,
+        recipient,
+        verb,
+        action_object,
+        target,
+        level,
+        description,
+        **kwargs
+    )
 
 .. note::
+
     Since ``openwisp-notifications`` uses ``django-notifications`` under the hood, usage of the
     ``notify signal`` has been kept unaffected to maintain consistency with ``django-notifications``.
     You can learn more about accepted parameters from `django-notifications documentation
     <https://github.com/django-notifications/django-notifications#generating-notifications>`_.
 
-Additionally Supported Parameters
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Additional ``notify`` keyword arguments
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-+-----------------+-----------------------------------------------------------------------------+
-|  **Parameter**  |                             **Description**                                 |
-+-----------------+-----------------------------------------------------------------------------+
-|  email_subject  | Sets subject of email notification to be sent.                              |
-|                 |                                                                             |
-|                 | Defaults to the truncated description.                                      |
-+-----------------+-----------------------------------------------------------------------------+
-|       url       | Adds a URL in email as <br/>                                                |
-|                 |                                                                             |
-|                 | ``For more information see <url>.`` <br/>                                   |
-|                 |                                                                             |
-|                 | Default to **None** meaning above message would not be added to the email.  |
-+-----------------+-----------------------------------------------------------------------------+
++---------------------+-----------------------------------------------------------------------------+
+|  **Parameter**      |                             **Description**                                 |
++---------------------+-----------------------------------------------------------------------------+
+| ``email_subject``   | Sets subject of email notification to be sent.                              |
+|                     |                                                                             |
+|                     | Defaults to the truncated description.                                      |
++---------------------+-----------------------------------------------------------------------------+
+| ``url``             | Adds a URL in the email text, eg:                                           |
+|                     |                                                                             |
+|                     | ``For more information see <url>.``                                         |
+|                     |                                                                             |
+|                     | Defaults to **None**, meaning the above message would                       |
+|                     | not be added to the email text.                                             |
++---------------------+-----------------------------------------------------------------------------+
 
 Contributing
 ------------
