@@ -162,7 +162,7 @@ class TestNotifications(TestOrganizationMixin, TestCase):
         self.notification_options.pop('email_subject')
         self._create_notification()
         n = notification_queryset.first()
-        self.assertEqual(mail.outbox[0].subject, n.description[0:24])
+        self.assertEqual(mail.outbox[0].subject, n.description)
 
     def test_handler_optional_tag(self):
         operator = self._create_operator()
