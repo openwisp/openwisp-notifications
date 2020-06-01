@@ -7,7 +7,7 @@ class OpenwispNotificationsConfig(AppConfig):
     verbose_name = _('Notifications')
 
     def ready(self):
-        from openwisp_notifications.signals import notify  # noqa
+        from openwisp_notifications.signals import notify
         from openwisp_notifications.handlers import notify_handler
 
         notify.connect(

@@ -30,6 +30,8 @@ Available features
 - Email notifications
 - Web notifications
 - Configurable email theme
+- `Definition of notification types <#notification-types>`_
+- `Possibility to register new notification types <#registering--unregistering-notification-types>`_
 - TODO: add more
 
 Install development version
@@ -180,17 +182,154 @@ Additional ``notify`` keyword arguments
 +---------------------+-----------------------------------------------------------------------------+
 |  **Parameter**      |                             **Description**                                 |
 +---------------------+-----------------------------------------------------------------------------+
-| ``email_subject``   | Sets subject of email notification to be sent.                              |
+|  ``email_subject``  | Sets subject of email notification to be sent.                              |
 |                     |                                                                             |
 |                     | Defaults to the truncated description.                                      |
 +---------------------+-----------------------------------------------------------------------------+
-| ``url``             | Adds a URL in the email text, eg:                                           |
+|       ``url``       | Adds a URL in the email text, eg:                                           |
 |                     |                                                                             |
 |                     | ``For more information see <url>.``                                         |
 |                     |                                                                             |
 |                     | Defaults to **None**, meaning the above message would                       |
 |                     | not be added to the email text.                                             |
 +---------------------+-----------------------------------------------------------------------------+
+|       ``type``      | Set values of other parameters based on predefined setting                  |
+|                     | ``OPENWISP_NOTIFICATION_TYPES``                                             |
+|                     |                                                                             |
+|                     | Defaults to **None** meaning you need to provide other arguments.           |
++---------------------+-----------------------------------------------------------------------------+
+
+Notification Types
+------------------
+
+**OpenWISP Notifications** simplifies configuring individual notification by using notification types.
+You can think of notification type as a template for notifications. 
+
+These properties can be configured for each notification type: 
+
++------------------+--------------------------------------------------------------------------------+
+|   **Property**   |                         **Description**                                        |
++------------------+--------------------------------------------------------------------------------+
+|      level       | Sets ``level`` attribute of the notification.                                  |
++------------------+--------------------------------------------------------------------------------+
+|      verb        | Sets ``verb`` attribute of the notification.                                   |
++------------------+--------------------------------------------------------------------------------+
+|      name        | Sets display name of notification type.                                        |
++------------------+--------------------------------------------------------------------------------+
+|     message      | Sets ``message`` attribute of the notification.                                | 
++------------------+--------------------------------------------------------------------------------+
+|  email_subject   | Sets subject of the email notification.                                        |
++------------------+--------------------------------------------------------------------------------+
+| message_template | Path to file having template for message of the notification.                  |
++------------------+--------------------------------------------------------------------------------+
+
+.. note::
+    A notification type configuration should contain atleast one of ``message`` or ``message_template``
+    settings. If both of them are present, ``message`` is given preference over ``message_template``. 
+
+Defining ``message_template``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+You can either extend default message template or write your own from scratch. An example to extend default
+message template is shown below.
+
+.. code-block:: jinja2
+
+    # In templates/openwisp_notifications/your_message_template.md
+    {% extends 'openwisp_notifications/default_message.md' %}
+    {% block body %}
+        {{ notification.target }} has malfunctioned. 
+    {% endblock body %}
+
+.. note::
+    You can access all attributes of the notification using ``notification`` variables in your message template as shown above.
+
+Registering / Unregistering Notification Types
+----------------------------------------------
+
+**OpenWISP Notifications** provides registering and unregistering notifications through utility functions
+``openwisp_notifications.types.register_notification_type`` and ``openwisp_notifications.types.unregister_notification_type``. Using
+these functions you can register or unregister notification types from anywhere in your code. 
+
+register_notification_type
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This function is used to register a new notification type from anywhere in your code.
+
+Syntax:
+
+.. code-block:: python
+
+    register_notification_type(type_name, type_config)
+
++---------------+--------------------------------------------------------------+
+|   Parameter   |                     Description                              |
++---------------+--------------------------------------------------------------+
+|   type_name   | A ``str`` defining name of the notification type.            |
++---------------+--------------------------------------------------------------+
+|  type_config  | A ``dict`` defining configuration of the notification type.  |
++---------------+--------------------------------------------------------------+
+
+An example usage has been shown below.
+
+.. code-block:: python
+
+    from openwisp_notifications.types.register_notification_type
+
+    # Define configuration of your notification type
+    custom_type = {
+        'level': 'info',
+        'verb': 'added',
+        'verbose_name': 'device added',
+        'message': '{notification.target} was {notification.verb} at {notification.timestamp}',
+        'email_subject' : '[{site.name}] A device has been added'
+    }
+
+    # Register your custom notification type
+    register_notification_type('custom_type', custom_type)
+
+.. note::
+
+    It will raise ``ImproperlyConfigured`` exception if a notification type is already registered
+    with same name(not to be confused with verbose_name).
+
+.. note::
+
+    You can use ``site`` and ``notification`` variables while defining ``message`` and ``email_subject``
+    configuration of notification type. They refer to objects of ``django.contrib.sites.models.Site`
+    and ``openwisp_notifications.models.Notification`` repectively. This allows you to use any of their
+    attributes in your configuration.
+
+unregister_notification_type
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This function is used to unregister a notification type from anywhere in your code.
+
+Syntax:
+
+.. code-block:: python
+
+    unregister_notification_type(type_name)
+
++---------------+--------------------------------------------------------------+
+|   Parameter   |                     Description                              |
++---------------+--------------------------------------------------------------+
+|   type_name   | A ``str`` defining name of the notification type.            |
++---------------+--------------------------------------------------------------+
+
+An example usage is shown below.
+
+.. code-block:: python
+
+    from openwisp_notifications.types.uregister_notification_type
+
+    # Unregister previously registered notification type
+    unregister_notification_type('custom type')
+
+.. note::
+
+    It will raise ``ImproperlyConfigured`` exception if the concerned notification type is not
+    registered. 
 
 Contributing
 ------------
