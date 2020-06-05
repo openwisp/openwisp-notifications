@@ -56,8 +56,8 @@ class TestAdmin(TestOrganizationMixin, TestCase):
     _url = reverse('admin:openwisp_notifications_notification_changelist')
     _cache_key = Notification.COUNT_CACHE_KEY
 
-    def _expected_output(self, count=0):
-        if count > 0:
+    def _expected_output(self, count=None):
+        if count:
             return '<span>{0}</span>'.format(count)
         return 'id="openwisp-notifications">'
 
@@ -66,11 +66,19 @@ class TestAdmin(TestOrganizationMixin, TestCase):
         self.assertContains(r, self._expected_output())
 
     def test_non_zero_notifications(self):
-        no_of_notifications = 10
-        for _ in range(no_of_notifications):
-            notify.send(**self.notification_options)
-        r = self.client.get(self._url)
-        self.assertContains(r, self._expected_output(no_of_notifications))
+        with self.subTest("Test UI for less than 100 notifications"):
+            no_of_notifications = 10
+            for _ in range(no_of_notifications):
+                notify.send(**self.notification_options)
+            r = self.client.get(self._url)
+            self.assertContains(r, self._expected_output('10'))
+
+        with self.subTest("Test UI for 99+ notifications"):
+            no_of_notifications = 100
+            for _ in range(no_of_notifications):
+                notify.send(**self.notification_options)
+            r = self.client.get(self._url)
+            self.assertContains(r, self._expected_output('99+'))
 
     def test_cached_value(self):
         self.client.get(self._url)

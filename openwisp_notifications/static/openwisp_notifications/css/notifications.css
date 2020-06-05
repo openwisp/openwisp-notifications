@@ -28,8 +28,8 @@
 #openwisp-notifications span {
   position: absolute;
   top: 3px;
-  right: 7px;
-  width: 15px;
+  left: 27px;
+  min-width: 15px;
   height: 15px;
   display: block;
   line-height: 14px;

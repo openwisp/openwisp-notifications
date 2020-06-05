@@ -296,7 +296,7 @@ An example usage has been shown below.
 .. note::
 
     You can use ``site`` and ``notification`` variables while defining ``message`` and ``email_subject``
-    configuration of notification type. They refer to objects of ``django.contrib.sites.models.Site`
+    configuration of notification type. They refer to objects of ``django.contrib.sites.models.Site``
     and ``openwisp_notifications.models.Notification`` repectively. This allows you to use any of their
     attributes in your configuration.
 

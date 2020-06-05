@@ -16,6 +16,7 @@ def get_notifications_count(context):
     count = cache.get(cache_key)
     if count is None:
         count = notifications_unread(context)
+        count = '99+' if count > 99 else count
         cache.set(cache_key, count)
     return count
 
