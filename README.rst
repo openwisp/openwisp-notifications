@@ -203,9 +203,9 @@ Notification Types
 ------------------
 
 **OpenWISP Notifications** simplifies configuring individual notification by using notification types.
-You can think of notification type as a template for notifications. 
+You can think of notification type as a template for notifications.
 
-These properties can be configured for each notification type: 
+These properties can be configured for each notification type:
 
 +------------------+--------------------------------------------------------------------------------+
 |   **Property**   |                         **Description**                                        |
@@ -216,7 +216,7 @@ These properties can be configured for each notification type:
 +------------------+--------------------------------------------------------------------------------+
 |      name        | Sets display name of notification type.                                        |
 +------------------+--------------------------------------------------------------------------------+
-|     message      | Sets ``message`` attribute of the notification.                                | 
+|     message      | Sets ``message`` attribute of the notification.                                |
 +------------------+--------------------------------------------------------------------------------+
 |  email_subject   | Sets subject of the email notification.                                        |
 +------------------+--------------------------------------------------------------------------------+
@@ -225,7 +225,7 @@ These properties can be configured for each notification type:
 
 .. note::
     A notification type configuration should contain atleast one of ``message`` or ``message_template``
-    settings. If both of them are present, ``message`` is given preference over ``message_template``. 
+    settings. If both of them are present, ``message`` is given preference over ``message_template``.
 
 Defining ``message_template``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -238,7 +238,7 @@ message template is shown below.
     # In templates/openwisp_notifications/your_message_template.md
     {% extends 'openwisp_notifications/default_message.md' %}
     {% block body %}
-        {{ notification.target }} has malfunctioned. 
+        {{ notification.target }} has malfunctioned.
     {% endblock body %}
 
 .. note::
@@ -249,7 +249,7 @@ Registering / Unregistering Notification Types
 
 **OpenWISP Notifications** provides registering and unregistering notifications through utility functions
 ``openwisp_notifications.types.register_notification_type`` and ``openwisp_notifications.types.unregister_notification_type``. Using
-these functions you can register or unregister notification types from anywhere in your code. 
+these functions you can register or unregister notification types from anywhere in your code.
 
 register_notification_type
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -274,7 +274,7 @@ An example usage has been shown below.
 
 .. code-block:: python
 
-    from openwisp_notifications.types.register_notification_type
+    from openwisp_notifications.types import register_notification_type
 
     # Define configuration of your notification type
     custom_type = {
@@ -321,7 +321,7 @@ An example usage is shown below.
 
 .. code-block:: python
 
-    from openwisp_notifications.types.uregister_notification_type
+    from openwisp_notifications.types import unregister_notification_type
 
     # Unregister previously registered notification type
     unregister_notification_type('custom type')
@@ -329,7 +329,7 @@ An example usage is shown below.
 .. note::
 
     It will raise ``ImproperlyConfigured`` exception if the concerned notification type is not
-    registered. 
+    registered.
 
 Contributing
 ------------
