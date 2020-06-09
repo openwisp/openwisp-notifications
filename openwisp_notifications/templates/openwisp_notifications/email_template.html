@@ -8,12 +8,17 @@
 
   {% block styles %}
   <style type="text/css">
+    body {
+      min-width: 250px;
+    }
+
     .background {
       height: 100%;
       background: linear-gradient(to bottom, #bb442c 50%, #464646 50%);
       background-repeat: no-repeat;
       background-attachment: fixed;
-      padding: 50px;
+      padding: 50px 0px;
+      min-width: 250px;
     }
 
     .container {
@@ -41,18 +46,67 @@
       padding: 10px;
     }
 
-    .notification-header {
+    .m-notification-header th {
+      width: 100%;
+      text-align: center;
+    }
+
+    .notification-header,
+    .m-notification-header {
       background-color: #464646;
       color: white;
     }
 
     .notification-subject {
-      width: 100%;
       text-align: right;
+      word-break: break-word;
     }
 
     .notification-subject a {
       color: white;
+    }
+
+    .links {
+      word-break: break-word;
+    }
+
+    @media screen and (max-width: 250px) {
+      body {
+        width: 250px;
+      }
+
+      .background {
+        width: 250px;
+      }
+    }
+
+    @media screen and (max-width: 600px) {
+      .container {
+        padding: 10px;
+      }
+
+      .m-notification-header {
+        display: table-row;
+      }
+
+      .m-notification-header th {
+        width: 100%;
+        text-align: center;
+      }
+
+      .notification-header {
+        display: none;
+      }
+    }
+
+    @media screen and (min-width: 600px) {
+      .notification-header {
+        display: table-row;
+      }
+
+      .m-notification-header {
+        display: none;
+      }
     }
   </style>
   {% endblock styles %}
@@ -63,13 +117,29 @@
   <div class="background">
     <div class="container">
       <table style="width: 100%;">
-        <thead class="notification-header">
-        {% block notification_header %}
-          <tr>
+        <thead>
+          {% block notification_header %}
+          {% comment %}
+            Large screen devices' notification header
+          {% endcomment %}
+          <tr class="notification-header">
             <th><img src="{{ OPENWISP_NOTIFICATION_EMAIL_LOGO }}" alt="Logo" id="logo" class="logo"></th>
             <th class="notification-subject">{{ notification.email_subject }}</th>
           </tr>
-        {% endblock notification_header %}
+          {% comment %}
+            Large screen devices' notification header ends
+            Mobile devices' notification header
+          {% endcomment %}
+          <tr class="m-notification-header">
+            <th><img src="{{ OPENWISP_NOTIFICATION_EMAIL_LOGO }}" alt="Logo" id="logo" class="logo"></th>
+          </tr>
+          <tr class="m-notification-header">
+            <th class="notification-subject">{{ notification.email_subject }}</th>
+          </tr>
+          {% comment %}
+            Mobile devices' notification header ends
+          {% endcomment %}
+          {% endblock notification_header %}
         </thead>
         <tbody>
           {% block notification_body %}
@@ -78,7 +148,7 @@
               <div class="notification-description">
                 {{ notification.message }}
                 {% if target_url %}
-                <p>
+                <p class="links">
                   {% if notification.target %}
                     <a href="{{ target_url }}">{% trans 'For further information see' %} "{{ notification.target_content_type.model }}: {{ notification.target }}".</a>
                   {% else %}

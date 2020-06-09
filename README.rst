@@ -289,7 +289,9 @@ Settings
 |  default  |  ``True``  |
 +-----------+------------+
 
-Toggles HTML rendering of notification message in email notification.
+If ``True``, attaches markdown rendered HTML of notification message in email notification.
+If ``False``, HTML rendering of notification message will be disabled and a plain
+text email is sent.
 
 ``OPENWISP_NOTIFICATION_EMAIL_TEMPLATE``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
