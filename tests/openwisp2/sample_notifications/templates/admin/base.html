@@ -1,0 +1,11 @@
+{% extends "admin/base.html" %}
+{% load i18n static notification_tags %}
+
+{% block userlinks %} 
+    <a href="{% url 'admin:sample_notifications_notification_changelist' %}"
+       id="sample_notifications">
+      <img class="bell-icon"
+           src="{% static "openwisp_notifications/images/bell.svg" %}" />
+      {% unread_notifications %}
+    </a>
+{% endblock %}

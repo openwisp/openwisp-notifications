@@ -1,18 +1,27 @@
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.contrib.contenttypes.models import ContentType
+from django.core.exceptions import ObjectDoesNotExist
+from django.core.mail import EmailMultiAlternatives
 from django.db.models import Q
 from django.db.models.query import QuerySet
+from django.db.models.signals import post_delete, post_save
+from django.dispatch import receiver
+from django.template.loader import render_to_string
 from django.utils import timezone
+from django.utils.html import strip_tags
 from openwisp_notifications import settings as app_settings
+from openwisp_notifications.swapper import load_model
 from openwisp_notifications.types import get_notification_configuration
-from swapper import load_model
+from openwisp_notifications.utils import _get_object_link
 
 User = get_user_model()
 
 EXTRA_DATA = app_settings.get_config()['USE_JSONFIELD']
 
-Notification = load_model('openwisp_notifications', 'Notification')
+Notification = load_model('Notification')
+NotificationUser = load_model('NotificationUser')
 
 
 def notify_handler(**kwargs):
@@ -90,3 +99,62 @@ def notify_handler(**kwargs):
         new_notifications.append(newnotify)
 
     return new_notifications
+
+
+@receiver(post_save, sender=User, dispatch_uid='create_notificationuser')
+def create_notificationuser_settings(sender, instance, **kwargs):
+    try:
+        instance.notificationuser
+    except ObjectDoesNotExist:
+        NotificationUser.objects.create(user=instance)
+
+
+@receiver(post_save, sender=Notification, dispatch_uid='send_email_notification')
+def send_email_notification(sender, instance, created, **kwargs):
+    # ensure we need to sending email or stop
+    if not created or (
+        not instance.recipient.notificationuser.email or not instance.recipient.email
+    ):
+        return
+    # send email
+    subject = instance.email_subject
+    url = instance.data.get('url', '') if instance.data else None
+    description = instance.message
+    if url:
+        target_url = url
+    elif instance.target:
+        target_url = _get_object_link(
+            instance, field='target', html=False, url_only=True, absolute_url=True
+        )
+    else:
+        target_url = None
+    if target_url:
+        description += '\n\nFor more information see {0}.'.format(target_url)
+    mail = EmailMultiAlternatives(
+        subject=subject,
+        body=strip_tags(description),
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        to=[instance.recipient.email],
+    )
+    if app_settings.OPENWISP_NOTIFICATION_HTML_EMAIL:
+        html_message = render_to_string(
+            app_settings.OPENWISP_NOTIFICATION_EMAIL_TEMPLATE,
+            context=dict(
+                OPENWISP_NOTIFICATION_EMAIL_LOGO=app_settings.OPENWISP_NOTIFICATION_EMAIL_LOGO,
+                notification=instance,
+                target_url=target_url,
+            ),
+        )
+        mail.attach_alternative(html_message, 'text/html')
+    mail.send()
+    # flag as emailed
+    instance.emailed = True
+    instance.save()
+
+
+@receiver(post_save, sender=Notification, dispatch_uid='clear_notification_cache_saved')
+@receiver(
+    post_delete, sender=Notification, dispatch_uid='clear_notification_cache_deleted'
+)
+def clear_notification_cache(sender, instance, **kwargs):
+    Notification.invalidate_cache(instance.recipient)

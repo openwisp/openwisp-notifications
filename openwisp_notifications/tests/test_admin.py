@@ -1,4 +1,3 @@
-import swapper
 from django.contrib.admin.sites import AdminSite
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
@@ -6,13 +5,14 @@ from django.core.cache import cache
 from django.test import TestCase
 from django.urls import reverse
 from openwisp_notifications.signals import notify
+from openwisp_notifications.swapper import load_model
 
 from openwisp_users.tests.utils import TestOrganizationMixin
 
 from ..admin import NotificationAdmin
 from .test_helpers import MessagingRequest
 
-Notification = swapper.load_model('openwisp_notifications', 'Notification')
+Notification = load_model('Notification')
 notification_queryset = Notification.objects.order_by('-timestamp')
 
 
@@ -35,6 +35,8 @@ class TestAdmin(TestOrganizationMixin, TestCase):
     Tests notifications in admin
     """
 
+    app_label = 'openwisp_notifications'
+
     def _login_admin(self):
         u = User.objects.create_superuser('admin', 'admin', 'test@test.com')
         self.client.force_login(u)
@@ -53,13 +55,18 @@ class TestAdmin(TestOrganizationMixin, TestCase):
         self.site = AdminSite()
         self.model_admin = NotificationAdmin(Notification, self.site)
 
-    _url = reverse('admin:openwisp_notifications_notification_changelist')
-    _cache_key = Notification.COUNT_CACHE_KEY
+    @property
+    def _url(self):
+        return reverse(f'admin:{self.app_label}_notification_changelist')
+
+    @property
+    def _cache_key(self):
+        return Notification.COUNT_CACHE_KEY
 
     def _expected_output(self, count=None):
         if count:
             return '<span>{0}</span>'.format(count)
-        return 'id="openwisp-notifications">'
+        return f'id="{self.app_label}">'
 
     def test_zero_notifications(self):
         r = self.client.get(self._url)
@@ -94,13 +101,27 @@ class TestAdmin(TestOrganizationMixin, TestCase):
         self.assertEqual(cache.get(cache_key), 1)
 
     def test_mark_as_read_action(self):
-        notify.send(**self.notification_options)
-        qs = Notification.objects.all()
-        self.model_admin.mark_as_read(request, qs)
-        self.assertEqual(qs.count(), 1)
-        m = list(request.get_messages())
-        self.assertEqual(len(m), 1)
-        self.assertEqual(str(m[0]), '1 notification was marked as read.')
+        with self.subTest('Test marking a single notification read'):
+            notify.send(**self.notification_options)
+            qs = notification_queryset
+            self.model_admin.mark_as_read(request, qs)
+            self.assertEqual(qs.count(), 1)
+            m = list(request.get_messages())
+            self.assertEqual(len(m), 1)
+            self.assertEqual(str(m[0]), '1 notification was marked as read.')
+
+        with self.subTest('Test marking mutiple notifications read'):
+            no_of_notifications = 10
+            for _ in range(no_of_notifications):
+                notify.send(**self.notification_options)
+            qs = Notification.objects.all()
+            self.model_admin.mark_as_read(request, qs)
+            self.assertEqual(qs.count(), no_of_notifications + 1)
+            m = list(request.get_messages())
+            self.assertEqual(len(m), 2)
+            self.assertEqual(
+                str(m[1]), f'{no_of_notifications} notifications were marked as read.'
+            )
 
     def _generic_test_obj_link(self, field):
         notify.send(**self.notification_options)
@@ -153,7 +174,7 @@ class TestAdmin(TestOrganizationMixin, TestCase):
     def test_notification_view_webpage(self):
         notify.send(**self.notification_options)
         n = notification_queryset.first()
-        url = reverse('admin:openwisp_notifications_notification_change', args=(n.id,))
+        url = reverse(f'admin:{self.app_label}_notification_change', args=(n.id,))
         response = self.client.get(url)
         self.assertContains(response, 'id="actor-object-url"')
         self.assertContains(response, '<div class="readonly">Test Notification</div>')

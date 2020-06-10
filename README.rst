@@ -49,51 +49,6 @@ Alternatively, you can install via pip using git:
 
     pip install -e git+git://github.com/openwisp/openwisp-notifications#egg=openwisp_notifications
 
-Installing for development
---------------------------
-
-Install SQLite:
-
-.. code-block:: shell
-
-    sudo apt-get install sqlite3 libsqlite3-dev openssl libssl-dev
-
-Install your forked repo:
-
-.. code-block:: shell
-
-    git clone git://github.com/<your_fork>/openwisp-notifications
-    cd openwisp-notifications/
-    python setup.py develop
-
-Install test requirements:
-
-.. code-block:: shell
-
-    pip install -r requirements-test.txt
-
-Create a database:
-
-.. code-block:: shell
-
-    cd tests/
-    ./manage.py migrate
-    ./manage.py createsuperuser
-
-Launch the development server:
-
-.. code-block:: shell
-
-    ./manage.py runserver
-
-You can access the admin interface at http://127.0.0.1:8000/admin/.
-
-Run tests with:
-
-.. code-block:: shell
-
-    ./runtests.py --parallel
-
 Setup (integrate into an existing Django project)
 -------------------------------------------------
 
@@ -148,11 +103,9 @@ The above code snippet creates and sends a notification to all users belonging t
 group if they have opted-in to receive notifications. Non-superadmin users receive notifications
 only for organizations which they are a member of.
 
-.. note::
-
-    If recipient is not provided, it defaults to all superusers. If the target is provided, users
-    of same organization of the target object are added to the list of recipients given that they
-    have staff status and opted-in to receive notifications.
+**Note**: If recipient is not provided, it defaults to all superusers. If the target is provided, users
+of same organization of the target object are added to the list of recipients given that they have staff
+status and opted-in to receive notifications.
 
 The complete syntax for ``notify`` is:
 
@@ -169,12 +122,10 @@ The complete syntax for ``notify`` is:
         **kwargs
     )
 
-.. note::
-
-    Since ``openwisp-notifications`` uses ``django-notifications`` under the hood, usage of the
-    ``notify signal`` has been kept unaffected to maintain consistency with ``django-notifications``.
-    You can learn more about accepted parameters from `django-notifications documentation
-    <https://github.com/django-notifications/django-notifications#generating-notifications>`_.
+**Note**: Since ``openwisp-notifications`` uses ``django-notifications`` under the hood, usage of the
+``notify signal`` has been kept unaffected to maintain consistency with ``django-notifications``.
+You can learn more about accepted parameters from `django-notifications documentation
+<https://github.com/django-notifications/django-notifications#generating-notifications>`_.
 
 Additional ``notify`` keyword arguments
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -223,9 +174,8 @@ These properties can be configured for each notification type:
 | message_template | Path to file having template for message of the notification.                  |
 +------------------+--------------------------------------------------------------------------------+
 
-.. note::
-    A notification type configuration should contain atleast one of ``message`` or ``message_template``
-    settings. If both of them are present, ``message`` is given preference over ``message_template``.
+**Note**: A notification type configuration should contain atleast one of ``message`` or ``message_template``
+settings. If both of them are present, ``message`` is given preference over ``message_template``.
 
 Defining ``message_template``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -241,10 +191,9 @@ from scratch. An example to extend default message template is shown below.
         [{{ notification.target }}]({{ notification.target_link }}) has malfunctioned.
     {% endblock body %}
 
-.. note::
-    You can access all attributes of the notification using ``notification`` variables in your message
-    template as shown above. Additionally attributes ``actor_link``, ``action_link`` and ``target_link``
-    are also available for providing hyperlinks to respective object. 
+**Note**: You can access all attributes of the notification using ``notification`` variables in your message
+template as shown above. Additionally attributes ``actor_link``, ``action_link`` and ``target_link`` are
+also available for providing hyperlinks to respective object.
 
 Registering / Unregistering Notification Types
 ----------------------------------------------
@@ -290,21 +239,14 @@ An example usage has been shown below.
     # Register your custom notification type
     register_notification_type('custom_type', custom_type)
 
-.. note::
+**Note**: It will raise ``ImproperlyConfigured`` exception if a notification type is already registered
+with same name(not to be confused with verbose_name).
 
-    It will raise ``ImproperlyConfigured`` exception if a notification type is already registered
-    with same name(not to be confused with verbose_name).
-
-.. note::
-
-    You can use ``site`` and ``notification`` variables while defining ``message`` and ``email_subject``
-    configuration of notification type. They refer to objects of ``django.contrib.sites.models.Site``
-    and ``openwisp_notifications.models.Notification`` repectively. This allows you to use any of their
-    attributes in your configuration.
-
-.. note::
-
-    Similarly to ``message_template``, ``message`` property can also be formatted using markdown.
+**Note**: You can use ``site`` and ``notification`` variables while defining ``message`` and
+``email_subject`` configuration of notification type. They refer to objects of
+``django.contrib.sites.models.Site`` and ``openwisp_notifications.models.Notification`` repectively.
+This allows you to use any of their attributes in your configuration. Similarly to ``message_template``,
+``message`` property can also be formatted using markdown.
 
 unregister_notification_type
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -332,10 +274,8 @@ An example usage is shown below.
     # Unregister previously registered notification type
     unregister_notification_type('custom type')
 
-.. note::
-
-    It will raise ``ImproperlyConfigured`` exception if the concerned notification type is not
-    registered.
+**Note**: It will raise ``ImproperlyConfigured`` exception if the concerned notification type is not
+registered.
 
 Settings
 --------
@@ -349,7 +289,7 @@ Settings
 |  default  |  ``True``  |
 +-----------+------------+
 
-Toggles HTML rendering of notification message in email notification. 
+Toggles HTML rendering of notification message in email notification.
 
 ``OPENWISP_NOTIFICATION_EMAIL_TEMPLATE``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -362,7 +302,7 @@ Toggles HTML rendering of notification message in email notification.
 
 This setting takes the path to the template for email notifications. Thus, making it possible to
 customize email notification.You can either extend the default email template or write your own
-email template from scratch. An example of extending default email template to customize styling is 
+email template from scratch. An example of extending default email template to customize styling is
 shown below.
 
 .. code-block:: jinja2
@@ -403,10 +343,320 @@ for reference implementation.
 
 This setting takes the URL of the logo to be displayed on email notification.
 
-.. note::
+**Note**: Provide a URL which points to the logo on your own web server. Ensure that the URL provided is
+publicly accessible from the internet. Otherwise, the logo may not be displayed in email.
 
-        Provide a URL which points to the logo on your own web server. Ensure that the URL provided is publicly
-        accessible from the internet. Otherwise, the logo may not be displayed in email.
+Installing for development
+--------------------------
+
+Install SQLite:
+
+.. code-block:: shell
+
+    sudo apt-get install sqlite3 libsqlite3-dev openssl libssl-dev
+
+Install your forked repo:
+
+.. code-block:: shell
+
+    git clone git://github.com/<your_fork>/openwisp-notifications
+    cd openwisp-notifications/
+    python setup.py develop
+
+Install test requirements:
+
+.. code-block:: shell
+
+    pip install -r requirements-test.txt
+
+Create a database:
+
+.. code-block:: shell
+
+    cd tests/
+    ./manage.py migrate
+    ./manage.py createsuperuser
+
+Launch the development server:
+
+.. code-block:: shell
+
+    ./manage.py runserver
+
+You can access the admin interface at http://127.0.0.1:8000/admin/.
+
+Run tests with:
+
+.. code-block:: shell
+
+    # run qa checks
+    ./run-qa-checks
+
+    # standard tests
+    ./runtests.py
+
+    # tests for the sample app
+    SAMPLE_APP=1 ./runtests.py
+
+When running the last line of the previous example, the environment variable ``SAMPLE_APP`` activates
+the sample app in ``/tests/openwisp2/`` which is a simple django app that extend ``openwisp-notifications``
+with the sole purpose of testing its extensibility, for more information regarding this concept,
+read the following section.
+
+Extending openwisp-notifications
+--------------------------------
+
+One of the core values of the OpenWISP project is `Software Reusability <http://openwisp.io/docs/general/values.html#software-reusability-means-long-term-sustainability>`_,
+for this reason *openwisp-notification* provides a set of base classes which can be imported, extended
+and reused to create derivative apps.
+
+In order to implement your custom version of *openwisp-notifications*, you need to perform the steps
+described in the rest of this section.
+
+When in doubt, the code in `test project <https://github.com/openwisp/openwisp-notifications/tree/master/tests/openwisp2/>`_
+and `sample_notifications <https://github.com/openwisp/openwisp-notifications/tree/master/tests/openwisp2/sample_notifications/>`_
+will guide you in the correct direction: just replicate and adapt that code to get a basic derivative of
+*openwisp-notifications* working.
+
+**Premise**: if you plan on using a customized version of this module, we suggest to start with it since
+the beginning, because migrating your data from the default module to your extended version may be time
+consuming.
+
+1. Initialize your custom module
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The first thing you need to do in order to extend *openwisp-notifications* is create a new django app which
+will contain your custom version of that *openwisp-notifications* app.
+
+A django app is nothing more than a `python package <https://docs.python.org/3/tutorial/modules.html#packages>`_
+(a directory of python scripts), in the following examples we'll call this django app as ``mynotifications``
+but you can name it how you want:
+
+.. code-block:: shell
+
+    django-admin startapp mynotifications
+
+Keep in mind that the command mentioned above must be called from a directory which is available in your
+`PYTHON_PATH <https://docs.python.org/3/using/cmdline.html#envvar-PYTHONPATH>`_ so that you can then import
+the result into your project.
+
+Now you need to add ``mynotifications`` to ``INSTALLED_APPS`` in your ``settings.py``, ensuring also that
+``openwisp_notifications`` has been removed:
+
+.. code-block:: python
+
+    INSTALLED_APPS = [
+        # ... other apps ...
+        # 'openwisp_notifications',        <-- comment out or delete this line
+        'mynotifications',
+    ]
+
+For more information about how to work with django projects and django apps, please refer to the
+`django documentation <https://docs.djangoproject.com/en/dev/intro/tutorial01/>`_.
+
+2. Install ``openwisp-notifications``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Install (and add to the requirement of your project) *openwisp-notifications*:
+
+.. code-block:: shell
+
+    pip install -U https://github.com/openwisp/openwisp-notifications/tarball/master
+
+3. Add ``EXTENDED_APPS``
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+Add the following to your ``settings.py``:
+
+.. code-block:: python
+
+    EXTENDED_APPS = ['openwisp_notifications']
+
+4. Add ``openwisp_utils.staticfiles.DependencyFinder``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Add ``openwisp_utils.staticfiles.DependencyFinder`` to ``STATICFILES_FINDERS`` in your ``settings.py``:
+
+.. code-block:: python
+
+    STATICFILES_FINDERS = [
+        'django.contrib.staticfiles.finders.FileSystemFinder',
+        'django.contrib.staticfiles.finders.AppDirectoriesFinder',
+        'openwisp_utils.staticfiles.DependencyFinder',
+    ]
+
+5. Add ``openwisp_utils.loaders.DependencyLoader``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Add ``openwisp_utils.loaders.DependencyLoader`` to ``TEMPLATES`` in your ``settings.py``:
+
+.. code-block:: python
+
+    TEMPLATES = [
+        {
+            'BACKEND': 'django.template.backends.django.DjangoTemplates',
+            'OPTIONS': {
+                'loaders': [
+                    'django.template.loaders.filesystem.Loader',
+                    'django.template.loaders.app_directories.Loader',
+                    'openwisp_utils.loaders.DependencyLoader',
+                ],
+                'context_processors': [
+                    'django.template.context_processors.debug',
+                    'django.template.context_processors.request',
+                    'django.contrib.auth.context_processors.auth',
+                    'django.contrib.messages.context_processors.messages',
+                ],
+            },
+        }
+    ]
+
+6. Inherit the AppConfig class
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Please refer to the following files in the sample app of the test project:
+
+- `sample_notifications/__init__.py <https://github.com/openwisp/openwisp-notifications/blob/master/tests/openwisp2/sample_notifications/__init__.py>`_.
+- `sample_notifications/apps.py <https://github.com/openwisp/openwisp-notifications/blob/master/tests/openwisp2/sample_notifications/apps.py>`_.
+
+For more information regarding the concept of ``AppConfig`` please refer to the
+`"Applications" section in the django documentation <https://docs.djangoproject.com/en/dev/ref/applications/>`_.
+
+7. Create your custom models
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+For the purpose of showing an example, we added a simple "details" field to the
+`models of the sample app in the test project <https://github.com/openwisp/openwisp-notifications/blob/master/tests/openwisp2/sample_notifications/models.py>`_.
+
+You can add fields in a similar way in your ``models.py`` file.
+
+**Note**: For doubts regarding how to use, extend or develop models please refer to
+the `"Models" section in the django documentation <https://docs.djangoproject.com/en/dev/topics/db/models/>`_.
+
+8. Add swapper configurations
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Add the following to your ``settings.py``:
+
+.. code-block:: python
+
+    # Setting models for swapper module
+    OPENWISP_NOTIFICATIONS_NOTIFICATION_MODEL = 'mynotifications.Notification'
+    OPENWISP_NOTIFICATIONS_NOTIFICATIONUSER_MODEL = 'mynotifications.NotificationUser'
+
+9. Create database migrations
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Create and apply database migrations::
+
+    ./manage.py makemigrations
+    ./manage.py migrate
+
+For more information, refer to the
+`"Migrations" section in the django documentation <https://docs.djangoproject.com/en/dev/topics/migrations/>`_.
+
+10. Create your custom admin
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Refer to the `admin.py file of the sample app <https://github.com/openwisp/openwisp-notifications/tests/openwisp2/sample_firmware_upgrader/admin.py>`_.
+
+To introduce changes to the admin, you can do it in two main ways which are described below.
+
+**Note**: For more information regarding how the django admin works, or how it can be customized,
+please refer to `"The django admin site" section in the django documentation <https://docs.djangoproject.com/en/dev/ref/contrib/admin/>`_.
+
+1. Monkey patching
+##################
+
+If the changes you need to add are relatively small, you can resort to monkey patching.
+
+For example:
+
+.. code-block:: python
+
+    from openwisp_notifications.admin import NotificationAdmin, NotificationUserInline
+
+    NotificationAdmin.list_display.insert(1, 'my_custom_field')
+    NotificationAdmin.ordering = ['-my_custom_field']
+
+2. Inheriting admin classes
+###########################
+
+If you need to introduce significant changes and/or you don't want to resort to
+monkey patching, you can proceed as follows:
+
+.. code-block:: python
+
+    from django.contrib import admin
+    from openwisp_notifications.admin import NotificationAdmin as BaseNotificationAdmin
+    from openwisp_notifications.admin import (
+        NotificationUserInline as BaseNotificationUserInline,
+    )
+    from openwisp_notifications.swapper import load_model
+
+    Notification = load_model('Notification')
+    NotificationUser = load_model('NotificationUser')
+
+    admin.site.unregister(Notification)
+    admin.site.unregister(NotificationUser)
+
+
+    @admin.register(Notification)
+    class NotificationAdmin(BaseNotificationAdmin):
+        # add your changes here
+        pass
+
+
+    @admin.register(NotificationUser)
+    class NotificationUserInline(BaseNotificationUserInline):
+        # add your changes here
+        pass
+
+11. Create root URL configuration
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Please refer to the `urls.py <https://github.com/openwisp/openwisp-notifications/blob/master/tests/openwisp2/urls.py>`_
+file in the test project.
+
+For more information about URL configuration in django, please refer to the
+`"URL dispatcher" section in the django documentation <https://docs.djangoproject.com/en/dev/topics/http/urls/>`_.
+
+12. Register Template Tags
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+If you need to use template tags of *openwisp_notifications*, you will need to register as the, shown in
+`"templatetags/notification_tags.py" of sample_notifications
+<https://github.com/openwisp/openwisp-notifications/blob/master/tests/openwisp2/sample_notifications/templatetags/notification_tags.py>`_.
+
+For more information about template tags in django, please refer to the
+`"Custom template tags and filters" section in the django documentation <https://docs.djangoproject.com/en/dev/topics/http/urls/>`_.
+
+13. Add Base Template for Admin
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Please refer to the `"templates/admin/base.html" in sample_notifications
+<https://github.com/openwisp/openwisp-notifications/blob/master/tests/openwisp2/sample_notifications/templates/admin/base.html>`_.
+
+For more information about customizing admin templates in django, please refer to the
+`"Overriding admin templates" section in the django documentation
+<https://docs.djangoproject.com/en/3.0/ref/contrib/admin/#overriding-admin-templates>`_.
+
+14. Import the automated tests
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+When developing a custom application based on this module, it's a good idea to import and run the base tests
+too, so that you can be sure the changes you're introducing are not breaking some of the existing feature
+of openwisp-notifications.
+
+In case you need to add breaking changes, you can overwrite the tests defined in the base classes to test
+your own behavior.
+
+See the `tests of the sample_notifications
+<https://github.com/openwisp/openwisp-notifications/blob/master/tests/openwisp2/sample_notifications/tests.py>`_
+to find out how to do this.
+
+**Note**: Some tests will fail if ``templatetags`` and ``admin/base.html`` are not configured properly.
+See preceeding sections to configure them properly.
 
 Contributing
 ------------

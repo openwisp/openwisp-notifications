@@ -12,6 +12,7 @@ from django.utils.html import strip_tags
 from django.utils.timesince import timesince
 from openwisp_notifications.handlers import notify_handler
 from openwisp_notifications.signals import notify
+from openwisp_notifications.swapper import load_model
 from openwisp_notifications.types import (
     NOTIFICATION_CHOICES,
     _unregister_notification_choice,
@@ -19,20 +20,21 @@ from openwisp_notifications.types import (
     register_notification_type,
     unregister_notification_type,
 )
-from swapper import load_model
 
 from openwisp_users.models import Group, OrganizationUser
 from openwisp_users.tests.utils import TestOrganizationMixin
 
 User = get_user_model()
 
-Notification = load_model('openwisp_notifications', 'Notification')
+Notification = load_model('Notification')
 notification_queryset = Notification.objects.order_by('-timestamp')
 start_time = timezone.now()
 ten_minutes_ago = start_time - timedelta(minutes=10)
 
 
 class TestNotifications(TestOrganizationMixin, TestCase):
+    app_label = 'openwisp_notifications'
+
     def setUp(self):
         self.admin = self._create_admin()
         self.notification_options = dict(
