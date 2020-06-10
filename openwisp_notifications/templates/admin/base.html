@@ -5,8 +5,8 @@
   <link rel="stylesheet" type="text/css" href="{% static 'openwisp_notifications/css/notifications.css' %}" />
 {% endblock extrastyle %}
 
-{% block userlinks %} 
-    <a href="{% url 'admin:openwisp_notifications_notification_changelist' %}"
+{% block userlinks %}
+    <a href="{% url 'admin:openwisp_notifications_notification_changelist' %}" class="ow-notifications"
        id="openwisp_notifications">
       <img class="bell-icon"
            src="{% static "openwisp_notifications/images/bell.svg" %}" />
