@@ -390,6 +390,7 @@ class TestNotifications(TestOrganizationMixin, TestCase):
             self.assertNotIn(
                 f'<a href="{exp_target_url}">', html_message,
             )
+
         with self.subTest('Test email with target object'):
             self.notification_options.update({'target': operator})
             self._create_notification()
@@ -417,3 +418,13 @@ class TestNotifications(TestOrganizationMixin, TestCase):
                 f' "{n.target_content_type.model}: {n.target}".</a>',
                 html_message,
             )
+
+    def test_responsive_html_email(self):
+        self.notification_options.update({'type': 'default'})
+        self._create_notification()
+        email = mail.outbox.pop()
+        html_message, content_type = email.alternatives.pop()
+        self.assertIn('@media screen and (max-width: 250px)', html_message)
+        self.assertIn('@media screen and (max-width: 600px)', html_message)
+        self.assertIn('@media screen and (min-width: 600px)', html_message)
+        self.assertIn('<tr class="m-notification-header">', html_message)
