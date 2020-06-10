@@ -5,7 +5,7 @@
     }
 }
 
-#openwisp-notifications {
+.ow-notifications {
   float: right;
   display: block;
   padding: 0 20px;
@@ -25,7 +25,7 @@
     top: -1px;
 }
 
-#openwisp-notifications span {
+.ow-notifications span {
   position: absolute;
   top: 3px;
   left: 27px;
@@ -42,13 +42,13 @@
   border: 1px solid #464646;
 }
 
-#openwisp-notifications:hover span,
-#openwisp-notifications:focus span {
+.ow-notifications:hover span,
+.ow-notifications:focus span {
   background-color: #d9553b;
 }
 
 @media (max-width: 1024px) {
-  #openwisp-notifications {
+  .ow-notifications {
     display: block !important;
     line-height: 40px !important;
     position: absolute;
