@@ -1,6 +1,7 @@
 import os
 import sys
 
+TESTING = 'test' in sys.argv
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 DEBUG = True
@@ -98,6 +99,49 @@ TEMPLATES = [
     },
 ]
 
+CACHES = {
+    'default': {
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': 'redis://localhost/5',
+        'OPTIONS': {'CLIENT_CLASS': 'django_redis.client.DefaultClient',},
+    }
+}
+
+SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
+SESSION_CACHE_ALIAS = 'default'
+
+LOGGING = {
+    'version': 1,
+    'filters': {'require_debug_true': {'()': 'django.utils.log.RequireDebugTrue'}},
+    'handlers': {
+        'console': {
+            'level': 'DEBUG',
+            'filters': ['require_debug_true'],
+            'class': 'logging.StreamHandler',
+        }
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': os.getenv('DJANGO_LOG_LEVEL', 'INFO'),
+            'propagate': False,
+        },
+        'py.warnings': {'handlers': ['console'], 'propagate': False},
+        'celery': {'handlers': ['console'], 'level': 'DEBUG'},
+        'celery.task': {'handlers': ['console'], 'level': 'DEBUG'},
+    },
+}
+
+if not TESTING:
+    LOGGING.update({'root': {'level': 'INFO', 'handlers': ['console']}})
+
+if not TESTING:
+    CELERY_BROKER_URL = 'redis://localhost/1'
+else:
+    CELERY_TASK_ALWAYS_EAGER = True
+    CELERY_TASK_EAGER_PROPAGATES = True
+    CELERY_BROKER_URL = 'memory://'
+
 ACCOUNT_AUTHENTICATED_LOGIN_REDIRECTS = False
 OPENWISP_ADMIN_SHOW_USERLINKS_BLOCK = True
 
@@ -118,3 +162,5 @@ if os.environ.get('SAMPLE_APP', False):
     TEMPLATES[0]['DIRS'].insert(
         0, os.path.join(BASE_DIR, 'sample_notifications', 'templates')
     )
+    # Celery auto detects tasks only from INSTALLED_APPS
+    CELERY_IMPORTS = ('openwisp_notifications.tasks',)

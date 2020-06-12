@@ -3,6 +3,10 @@ from django.urls import NoReverseMatch, reverse
 from django.utils.html import format_html
 
 
+class NotificationException(Exception):
+    pass
+
+
 def _get_object_link(obj, field, html=True, url_only=False, absolute_url=False):
     site = Site.objects.get_current()
     content_type = getattr(obj, f'{field}_content_type', None)

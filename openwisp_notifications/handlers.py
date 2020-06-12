@@ -6,15 +6,16 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import EmailMultiAlternatives
 from django.db.models import Q
 from django.db.models.query import QuerySet
-from django.db.models.signals import post_delete, post_save
+from django.db.models.signals import post_delete, post_save, pre_delete
 from django.dispatch import receiver
 from django.template.loader import render_to_string
 from django.utils import timezone
 from django.utils.html import strip_tags
 from openwisp_notifications import settings as app_settings
 from openwisp_notifications.swapper import load_model
+from openwisp_notifications.tasks import delete_obsolete_notifications
 from openwisp_notifications.types import get_notification_configuration
-from openwisp_notifications.utils import _get_object_link
+from openwisp_notifications.utils import NotificationException, _get_object_link
 
 User = get_user_model()
 
@@ -111,13 +112,17 @@ def create_notificationuser_settings(sender, instance, **kwargs):
 
 @receiver(post_save, sender=Notification, dispatch_uid='send_email_notification')
 def send_email_notification(sender, instance, created, **kwargs):
-    # ensure we need to sending email or stop
-    if not created or (
-        not instance.recipient.notificationuser.email or not instance.recipient.email
+    # Abort if new notification is not created or
+    # notification recipient opted out of email notifications
+    if not created or not (
+        instance.recipient.notificationuser.email and instance.recipient.email
     ):
         return
-    # send email
-    subject = instance.email_subject
+    try:
+        subject = instance.email_subject
+    except NotificationException:
+        # Do not send email if notification is malformed.
+        return
     url = instance.data.get('url', '') if instance.data else None
     description = instance.message
     if url:
@@ -158,3 +163,17 @@ def send_email_notification(sender, instance, created, **kwargs):
 )
 def clear_notification_cache(sender, instance, **kwargs):
     Notification.invalidate_cache(instance.recipient)
+
+
+@receiver(pre_delete, dispatch_uid='notification_related_object_deleted')
+def notification_related_object_deleted(sender, instance, **kwargs):
+    """
+    Delete notifications having 'instance' as actor, action or target object.
+    """
+    instance_id = getattr(instance, 'pk', None)
+    if instance_id:
+        instance_model = instance._meta.model_name
+        instance_app_label = instance._meta.app_label
+        delete_obsolete_notifications.delay(
+            instance_app_label, instance_model, instance_id
+        )

@@ -1,3 +1,5 @@
+import logging
+
 from django.conf import settings
 from django.contrib.sites.models import Site
 from django.core.cache import cache
@@ -12,9 +14,11 @@ from openwisp_notifications.types import (
     NOTIFICATION_CHOICES,
     get_notification_configuration,
 )
-from openwisp_notifications.utils import _get_object_link
+from openwisp_notifications.utils import NotificationException, _get_object_link
 
 from openwisp_utils.base import TimeStampedEditableModel, UUIDModel
+
+logger = logging.getLogger(__name__)
 
 
 class AbstractNotification(UUIDModel, BaseNotifcation):
@@ -51,12 +55,19 @@ class AbstractNotification(UUIDModel, BaseNotifcation):
             )
 
             config = get_notification_configuration(self.type)
-            if 'message' in config:
-                md_text = config['message'].format(notification=self)
-            else:
-                md_text = render_to_string(
-                    config['message_template'], context=dict(notification=self)
-                ).strip()
+            try:
+                if 'message' in config:
+                    md_text = config['message'].format(notification=self)
+                else:
+                    md_text = render_to_string(
+                        config['message_template'], context=dict(notification=self)
+                    ).strip()
+            except AttributeError as e:
+                logger.error(e)
+                md_text = (
+                    'Error while generating notification message,'
+                    ' notification data may have been deleted.'
+                )
             # clean up
             self.actor_link = self.action_link = self.target_link = None
             return mark_safe(markdown(md_text))
@@ -66,10 +77,14 @@ class AbstractNotification(UUIDModel, BaseNotifcation):
     @cached_property
     def email_subject(self):
         if self.type:
-            config = get_notification_configuration(self.type)
-            return config['email_subject'].format(
-                site=Site.objects.get_current(), notification=self
-            )
+            try:
+                config = get_notification_configuration(self.type)
+                return config['email_subject'].format(
+                    site=Site.objects.get_current(), notification=self
+                )
+            except AttributeError as e:
+                logger.error(e)
+                raise NotificationException('Error while generating notification')
         elif self.data.get('email_subject', None):
             return self.data.get('email_subject')
         else:
