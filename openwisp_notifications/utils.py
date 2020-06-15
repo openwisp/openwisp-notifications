@@ -8,7 +8,6 @@ class NotificationException(Exception):
 
 
 def _get_object_link(obj, field, html=True, url_only=False, absolute_url=False):
-    site = Site.objects.get_current()
     content_type = getattr(obj, f'{field}_content_type', None)
     object_id = getattr(obj, f'{field}_object_id', None)
     try:
@@ -17,7 +16,7 @@ def _get_object_link(obj, field, html=True, url_only=False, absolute_url=False):
             args=[object_id],
         )
         if absolute_url:
-            url = f'http://{site.domain}{url}'
+            url = _get_absolute_url(url)
         if not html:
             return url
         return format_html(f'<a href="{url}" id="{field}-object-url">{object_id}</a>')
@@ -28,3 +27,8 @@ def _get_object_link(obj, field, html=True, url_only=False, absolute_url=False):
     if url_only:
         return '#'
     return fallback_content
+
+
+def _get_absolute_url(url):
+    site = Site.objects.get_current()
+    return f'http://{site.domain}{url}'
