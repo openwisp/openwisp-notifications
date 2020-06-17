@@ -50,7 +50,7 @@ setup(
     download_url='https://github.com/TheOneAboveAllTitan/openwisp-notifications/releases',
     platforms=['Platform Independent'],
     keywords=['django', 'netjson', 'notification', 'openwisp', 'monitoring'],
-    packages=find_packages(exclude=['tests', 'docs']),
+    packages=find_packages(exclude=['tests*', 'docs*']),
     include_package_data=True,
     zip_safe=False,
     install_requires=get_install_requires(),
