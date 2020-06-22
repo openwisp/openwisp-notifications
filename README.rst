@@ -74,6 +74,37 @@ Setup (integrate into an existing Django project)
         'openwisp_notifications',
      ]
 
+Configure caching (you may use a different cache storage if you want):
+
+.. code-block:: python
+
+    CACHES = {
+        'default': {
+            'BACKEND': 'django_redis.cache.RedisCache',
+            'LOCATION': 'redis://localhost/0',
+            'OPTIONS': {
+                'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+            }
+        }
+    }
+
+    SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
+    SESSION_CACHE_ALIAS = 'default'
+
+Configure celery:
+
+.. code-block:: python
+
+    # here we show how to configure celery with Redis but you can
+    # use other brokers if you want, consult the celery docs
+    CELERY_BROKER_URL = 'redis://localhost/1'
+
+If you decide to use redis (as shown in these examples), make sure the python dependencies are installed in your system:
+
+.. code-block:: shell
+
+    pip install redis django-redis
+
 Sending notifications
 ---------------------
 
@@ -351,6 +382,14 @@ publicly accessible from the internet. Otherwise, the logo may not be displayed 
 Installing for development
 --------------------------
 
+We use Redis as celery broker (you can use a different broker if you want).
+The recommended way for development is running it using Docker so you will need to
+`install docker and docker-compose <https://docs.docker.com/engine/install/>`_ beforehand.
+
+In case you prefer not to use Docker you can
+`install Redis from your repositories <https://redis.io/download>`_, but keep in mind that
+the version packaged by your distribution may be different.
+
 Install SQLite:
 
 .. code-block:: shell
@@ -371,6 +410,12 @@ Install test requirements:
 
     pip install -r requirements-test.txt
 
+Start Redis using docker-compose:
+
+.. code-block:: shell
+
+    docker-compose up -d
+
 Create a database:
 
 .. code-block:: shell
@@ -386,6 +431,13 @@ Launch the development server:
     ./manage.py runserver
 
 You can access the admin interface at http://127.0.0.1:8000/admin/.
+
+Run celery  worker (separate terminal window is needed):
+
+.. code-block:: shell
+
+    # (cd tests)
+    celery -A openwisp2 worker -l info
 
 Run tests with:
 
@@ -623,7 +675,26 @@ file in the test project.
 For more information about URL configuration in django, please refer to the
 `"URL dispatcher" section in the django documentation <https://docs.djangoproject.com/en/dev/topics/http/urls/>`_.
 
-12. Register Template Tags
+12. Create celery.py
+~~~~~~~~~~~~~~~~~~~~
+
+Please refer to the `celery.py <https://github.com/openwisp/openwisp-notifications/blob/master/tests/openwisp2/celery.py>`_
+file in the test project.
+
+For more information about the usage of celery in django, please refer to the
+`"First steps with Django" section in the celery documentation <https://docs.celeryproject.org/en/master/django/first-steps-with-django.html>`_.
+
+13. Import Celery Tasks
+~~~~~~~~~~~~~~~~~~~~~~~
+
+Add the following in your settings.py to import celery tasks from ``openwisp_notifications`` app.
+
+.. code-block:: python
+
+    CELERY_IMPORTS = ('openwisp_notifications.tasks',)
+
+
+14. Register Template Tags
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 If you need to use template tags of *openwisp_notifications*, you will need to register as the, shown in
@@ -633,7 +704,7 @@ If you need to use template tags of *openwisp_notifications*, you will need to r
 For more information about template tags in django, please refer to the
 `"Custom template tags and filters" section in the django documentation <https://docs.djangoproject.com/en/dev/topics/http/urls/>`_.
 
-13. Add Base Template for Admin
+15. Add Base Template for Admin
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Please refer to the `"templates/admin/base.html" in sample_notifications
@@ -643,7 +714,7 @@ For more information about customizing admin templates in django, please refer t
 `"Overriding admin templates" section in the django documentation
 <https://docs.djangoproject.com/en/3.0/ref/contrib/admin/#overriding-admin-templates>`_.
 
-14. Import the automated tests
+16. Import the automated tests
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 When developing a custom application based on this module, it's a good idea to import and run the base tests

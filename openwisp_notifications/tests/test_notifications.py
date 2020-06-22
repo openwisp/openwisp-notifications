@@ -20,6 +20,7 @@ from openwisp_notifications.types import (
     register_notification_type,
     unregister_notification_type,
 )
+from openwisp_notifications.utils import NotificationException
 
 from openwisp_users.models import Group, OrganizationUser
 from openwisp_users.tests.utils import TestOrganizationMixin
@@ -428,3 +429,77 @@ class TestNotifications(TestOrganizationMixin, TestCase):
         self.assertIn('@media screen and (max-width: 600px)', html_message)
         self.assertIn('@media screen and (min-width: 600px)', html_message)
         self.assertIn('<tr class="m-notification-header">', html_message)
+
+    def test_missing_relation_object(self):
+        test_type = {
+            'verbose_name': 'Test Notification Type',
+            'level': 'info',
+            'verb': 'testing',
+            'message': (
+                '{notification.verb} initiated by'
+                '[{notification.actor}]({notification.actor_link}) with'
+                ' [{notification.action_object}]({notification.action_link}) for'
+                ' [{notification.target}]({notification.target_link}).'
+            ),
+            'email_subject': (
+                '[{site.name}] {notification.verb} reported by'
+                ' {notification.actor} with {notification.action_object} for {notification.target}'
+            ),
+        }
+        register_notification_type('test_type', test_type)
+        self.notification_options.pop('email_subject')
+        self.notification_options.update({'type': 'test_type'})
+
+        with self.subTest("Missing target object after creation"):
+            operator = self._get_operator()
+            self.notification_options.update({'target': operator})
+            self._create_notification()
+            operator.delete()
+
+            n_count = notification_queryset.count()
+            self.assertEqual(n_count, 0)
+
+        with self.subTest("Missing action object after creation"):
+            operator = self._get_operator()
+            self.notification_options.pop('target')
+            self.notification_options.update({'action_object': operator})
+            self._create_notification()
+            operator.delete()
+
+            n_count = notification_queryset.count()
+            self.assertEqual(n_count, 0)
+
+        with self.subTest("Missing actor object after creation"):
+            operator = self._get_operator()
+            self.notification_options.pop('action_object')
+            self.notification_options.pop('url')
+            self.notification_options.update({'sender': operator})
+            self._create_notification()
+            operator.delete()
+
+            n_count = notification_queryset.count()
+            self.assertEqual(n_count, 0)
+
+        unregister_notification_type('test_type')
+
+    def test_notification_invalid_message_attribute(self):
+        self.notification_options.update({'type': 'test_type'})
+        test_type = {
+            'verbose_name': 'Test Notification Type',
+            'level': 'info',
+            'verb': 'testing',
+            'message': '{notification.actor.random}',
+            'email_subject': '[{site.name}] {notification.actor.random}',
+        }
+        register_notification_type('test_type', test_type)
+        self._create_notification()
+        n = notification_queryset.first()
+        self.assertEqual(
+            n.message,
+            '<p>Error while generating notification message, notification data may have been deleted.</p>',
+        )
+        with self.assertRaises(NotificationException):
+            n.email_subject
+        # Ensure email is not sent for such notification
+        self.assertEqual(len(mail.outbox), 0)
+        unregister_notification_type('test_type')
