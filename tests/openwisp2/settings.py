@@ -136,7 +136,7 @@ if not TESTING:
     LOGGING.update({'root': {'level': 'INFO', 'handlers': ['console']}})
 
 if not TESTING:
-    CELERY_BROKER_URL = 'redis://localhost/1'
+    CELERY_BROKER_URL = 'redis://localhost/6'
 else:
     CELERY_TASK_ALWAYS_EAGER = True
     CELERY_TASK_EAGER_PROPAGATES = True
