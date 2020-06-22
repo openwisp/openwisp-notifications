@@ -81,7 +81,7 @@ Configure caching (you may use a different cache storage if you want):
     CACHES = {
         'default': {
             'BACKEND': 'django_redis.cache.RedisCache',
-            'LOCATION': 'redis://localhost/5',
+            'LOCATION': 'redis://localhost/0',
             'OPTIONS': {
                 'CLIENT_CLASS': 'django_redis.client.DefaultClient',
             }
@@ -99,10 +99,7 @@ Configure celery:
     # use other brokers if you want, consult the celery docs
     CELERY_BROKER_URL = 'redis://localhost/1'
 
-    INSTALLED_APPS.append('djcelery_email')
-    EMAIL_BACKEND = 'djcelery_email.backends.CeleryEmailBackend'
-
-If you decide to use redis (as shown in these examples), install the requierd python packages:
+If you decide to use redis (as shown in these examples), make sure the python dependencies are installed in your system:
 
 .. code-block:: shell
 
