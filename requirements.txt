@@ -4,3 +4,4 @@ openwisp-users>=0.2.0,<0.3.0
 # openwisp-utils[rest]~=0.5
 swapper~=1.1
 markdown>=3.2,<3.3
+celery~=4.4
