@@ -22,13 +22,3 @@ class SampleNotificationsConfig(OpenwispNotificationsConfig):
                 'email_subject': '[{site.name}] INFO: {notification.target} created',
             },
         )
-        register_notification_type(
-            'object_deleted',
-            {
-                'name': 'Object deleted',
-                'verb': 'deleted',
-                'level': 'info',
-                'message': '{notification.target} object {notification.verb}.',
-                'email_subject': '[{site.name}] INFO: {notification.target} {notification.verb}',
-            },
-        )
