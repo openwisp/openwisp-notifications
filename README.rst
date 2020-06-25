@@ -562,6 +562,16 @@ the sample app in ``/tests/openwisp2/`` which is a simple django app that extend
 with the sole purpose of testing its extensibility, for more information regarding this concept,
 read the following section.
 
+While testing, if you need to have notifications present in the database you can use
+``create_notification`` management command to create a dummy notification.
+
+Run following command on terminal to create a notification:
+
+.. code-block:: shell
+
+    # (cd tests)
+    ./manage.py create_notification
+
 Extending openwisp-notifications
 --------------------------------
 
@@ -798,7 +808,6 @@ Add the following in your settings.py to import celery tasks from ``openwisp_not
 
     CELERY_IMPORTS = ('openwisp_notifications.tasks',)
 
-
 14. Register Template Tags
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -820,7 +829,6 @@ The registered notification type of ``sample_notifications`` app is used for cre
 when an object of ``TestApp`` model is created. You can use
 `sample_notifications/models.py <https://github.com/openwisp/openwisp-notifications/blob/master/tests/openwisp2/sample_notifications/models.py>`_
 as reference for your implementation.
-
 
 16. Add Base Template for Admin
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
