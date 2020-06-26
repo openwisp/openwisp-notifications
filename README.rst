@@ -562,6 +562,16 @@ the sample app in ``/tests/openwisp2/`` which is a simple django app that extend
 with the sole purpose of testing its extensibility, for more information regarding this concept,
 read the following section.
 
+While testing, if you need to have notifications present in the database you can use
+``create_notification`` management command to create a dummy notification.
+
+Run following command on terminal to create a notification:
+
+.. code-block:: shell
+
+    # (cd tests)
+    ./manage.py create_notification
+
 Extending openwisp-notifications
 --------------------------------
 
@@ -798,7 +808,6 @@ Add the following in your settings.py to import celery tasks from ``openwisp_not
 
     CELERY_IMPORTS = ('openwisp_notifications.tasks',)
 
-
 14. Register Template Tags
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -809,7 +818,19 @@ If you need to use template tags of *openwisp_notifications*, you will need to r
 For more information about template tags in django, please refer to the
 `"Custom template tags and filters" section in the django documentation <https://docs.djangoproject.com/en/dev/topics/http/urls/>`_.
 
-15. Add Base Template for Admin
+15. Register Notification Types
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+You can register notification types as shown in the `section for registering notification types <#register_notification_type>`_.
+
+A reference for registering a notification type is also provided in
+`sample_notifications/apps.py <https://github.com/openwisp/openwisp-notifications/blob/master/tests/openwisp2/sample_notifications/apps.py>`_.
+The registered notification type of ``sample_notifications`` app is used for creating notifications
+when an object of ``TestApp`` model is created. You can use
+`sample_notifications/models.py <https://github.com/openwisp/openwisp-notifications/blob/master/tests/openwisp2/sample_notifications/models.py>`_
+as reference for your implementation.
+
+16. Add Base Template for Admin
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Please refer to the `"templates/admin/base.html" in sample_notifications
@@ -819,7 +840,7 @@ For more information about customizing admin templates in django, please refer t
 `"Overriding admin templates" section in the django documentation
 <https://docs.djangoproject.com/en/3.0/ref/contrib/admin/#overriding-admin-templates>`_.
 
-16. Import the automated tests
+17. Import the automated tests
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 When developing a custom application based on this module, it's a good idea to import and run the base tests
