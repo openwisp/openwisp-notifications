@@ -1,5 +1,8 @@
 from openwisp_notifications.swapper import load_model
 from openwisp_notifications.tests.test_admin import TestAdmin as BaseTestAdmin
+from openwisp_notifications.tests.test_api import (
+    TestNotificationApi as BaseTestNotificationApi,
+)
 from openwisp_notifications.tests.test_notifications import (
     TestNotifications as BaseTestNotifications,
 )
@@ -34,5 +37,10 @@ class TestNotifications(BaseTestNotifications):
         n.delete()
 
 
+class TestNotificationAPI(BaseTestNotificationApi):
+    app_label = 'sample_notifications'
+
+
 del BaseTestAdmin
 del BaseTestNotifications
+del BaseTestNotificationApi

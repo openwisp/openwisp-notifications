@@ -68,11 +68,32 @@ Setup (integrate into an existing Django project)
         'allauth',
         'allauth.account',
         'allauth.socialaccount',
+        # rest framework
+        'rest_framework',
+        'rest_framework.authtoken',
+        'drf_yasg',
+        'django_filters',
         'openwisp_users',
         'django.contrib.admin',
         # notifications module
         'openwisp_notifications',
      ]
+
+``urls.py``:
+
+.. code-block:: python
+
+    from django.contrib import admin
+    from django.urls import include, path
+    from django.contrib.staticfiles.urls import staticfiles_urlpatterns
+
+    urlpatterns = [
+        path('admin/', admin.site.urls),
+        path('api/v1/', include(('openwisp_users.api.urls', 'users'), namespace='users')),
+        path('', include('openwisp_notifications.urls', namespace='openwisp_notifications')),
+    ]
+
+    urlpatterns += staticfiles_urlpatterns()
 
 Configure caching (you may use a different cache storage if you want):
 
@@ -378,6 +399,90 @@ This setting takes the URL of the logo to be displayed on email notification.
 
 **Note**: Provide a URL which points to the logo on your own web server. Ensure that the URL provided is
 publicly accessible from the internet. Otherwise, the logo may not be displayed in email.
+
+REST API
+--------
+
+Live documentation
+~~~~~~~~~~~~~~~~~~
+
+.. image:: https://github.com/openwisp/openwisp-notifications/blob/master/docs/images/api-docs.png
+
+A general live API documentation (following the OpenAPI specification) is available at ``/api/v1/docs/``.
+
+Browsable web interface
+~~~~~~~~~~~~~~~~~~~~~~~
+
+.. image:: https://github.com/openwisp/openwisp-notifications/blob/master/docs/images/api-ui.png
+
+Additionally, opening any of the endpoints `listed below <#list-of-endpoints>`_
+directly in the browser will show the `browsable API interface of Django-REST-Framework
+<https://www.django-rest-framework.org/topics/browsable-api/>`_,
+which makes it even easier to find out the details of each endpoint.
+
+Authentication
+~~~~~~~~~~~~~~
+
+See openwisp-users: `authenticating with the user token
+<https://github.com/openwisp/openwisp-users#authenticating-with-the-user-token>`_.
+
+When browsing the API via the `Live documentation <#live-documentation>`_
+or the `Browsable web interface <#browsable-web-interface>`_, you can use
+the session authentication by logging in the django admin.
+
+Pagination
+~~~~~~~~~~
+
+The *list* endpoint support the ``page_size`` parameter that allows paginating
+the results in conjunction with the ``page`` parameter.
+
+.. code-block:: text
+
+    GET /api/v1/notifications/?page_size=10
+    GET api/v1/notifications/?page_size=10&page=2
+
+List of endpoints
+~~~~~~~~~~~~~~~~~
+
+Since the detailed explanation is contained in the `Live documentation <#live-documentation>`_
+and in the `Browsable web page <#browsable-web-interface>`_ of each endpoint,
+here we'll provide just a list of the available endpoints,
+for further information please open the URL of the endpoint in your browser.
+
+List user's notifications
+#########################
+
+.. code-block:: text
+
+    GET /api/v1/notifications/
+
+Mark all user's notifications read
+##################################
+
+.. code-block:: text
+
+    POST /api/v1/notifications/read/
+
+Get notification details
+########################
+
+.. code-block:: text
+
+    GET /api/v1/notifications/{pk}/
+
+Mark a notification read
+########################
+
+.. code-block:: text
+
+    PATCH /api/v1/notifications/{pk}/
+
+Delete a notification
+#####################
+
+.. code-block:: text
+
+    DELETE /api/v1/notifications/{pk}/
 
 Installing for development
 --------------------------
@@ -730,6 +835,23 @@ to find out how to do this.
 
 **Note**: Some tests will fail if ``templatetags`` and ``admin/base.html`` are not configured properly.
 See preceeding sections to configure them properly.
+
+Other base classes that can be inherited and extended
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The following steps are not required and are intended for more advanced customization.
+
+API views
+#########
+
+The API view classes can be extended into other django applications as well. Note
+that it is not required for extending openwisp-notifications to your app and this change
+is required only if you plan to make changes to the API views.
+
+Create a view file as done in `sample_notifications/views.py <https://github.com/openwisp/openwisp-notifications/blob/master/tests/openwisp2/sample_notifications/views.py>`_
+
+For more information regarding Django REST Framework API views, please refer to the
+`"Generic views" section in the Django REST Framework documentation <https://www.django-rest-framework.org/api-guide/generic-views/>`_.
 
 Contributing
 ------------

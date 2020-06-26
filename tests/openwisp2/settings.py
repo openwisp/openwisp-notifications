@@ -29,6 +29,11 @@ INSTALLED_APPS = [
     'allauth',
     'allauth.account',
     'allauth.socialaccount',
+    # rest framework
+    'rest_framework',
+    'rest_framework.authtoken',
+    'drf_yasg',
+    'django_filters',
     'openwisp_users',
     'django.contrib.admin',
     'openwisp_notifications',
@@ -144,6 +149,8 @@ else:
 
 ACCOUNT_AUTHENTICATED_LOGIN_REDIRECTS = False
 OPENWISP_ADMIN_SHOW_USERLINKS_BLOCK = True
+OPENWISP_API_DOCS = True
+OPENWISP_USERS_AUTH_API = True
 
 # local settings must be imported before test runner otherwise they'll be ignored
 try:
