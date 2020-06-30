@@ -1,5 +1,8 @@
 #!/bin/bash
 set -e
+
+jshint ./openwisp_notifications/static/openwisp_notifications/js/*.js
+
 openwisp-qa-check \
         --migration-path "./openwisp_notifications/migrations/" \
         --migration-module "openwisp_notifications"

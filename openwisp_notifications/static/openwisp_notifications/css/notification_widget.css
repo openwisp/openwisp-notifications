@@ -1,0 +1,99 @@
+.notification-dropdown {
+  position: absolute;
+  z-index: 99;
+  right: 100px;
+  border: 2px solid #464646;
+  text-align: left;
+  width: 425px;
+  text-transform: none;
+  background-color: whitesmoke;
+  border-radius: 5px;
+  box-shadow: 0px 1px 20px 3px black;
+}
+
+.hide {
+  display: none;
+}
+
+.info-url {
+  text-align: right;
+}
+
+.accordion {
+  overflow-y: scroll;
+  max-height: 350px;
+  height: 100%;
+  border-bottom-left-radius: 3px;
+  border-bottom-right-radius: 3px;
+}
+
+.accordion-heading {
+  cursor: pointer;
+  padding: 10px 18px;
+  border: none;
+  outline: none;
+  transition: 0.4s;
+  background-color: #7a7a7a;
+  color: white;
+  font-weight: 600;
+}
+
+.accordion-panel {
+  padding: 0 18px;
+  color: black;
+  overflow: hidden;
+  background-color: whitesmoke;
+  font-weight: bolder;
+}
+
+.accordion-heading a, .accordion-panel a {
+  color: #df5d43 !important;
+}
+
+.accordion-heading:hover a, .active a {
+  color: white !important;
+}
+
+.active, .accordion-heading:hover {
+  background-color: #df5d43 !important;
+}
+
+.accordion-heading p {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.notification-dropdown .btn {
+  color: #df5d43;
+  cursor: pointer;
+}
+
+.unread {
+  background: #464646;
+}
+
+.filters {
+  margin: 10px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.disabled {
+  color: grey !important;
+  cursor: not-allowed !important;
+}
+
+.no-notifications {
+  color: #464646;
+  text-align: center;
+  font-weight: bold;
+  font-size: small;
+}
+
+@media screen and (max-width: 425px) {
+  .notification-dropdown {
+      width: 100%;
+      right: 0px;
+  }
+}

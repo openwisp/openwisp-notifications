@@ -1,8 +1,8 @@
 @media (min-width: 1024px) {
-    #user-tools .user {
-        line-height: 40px;
-        margin-right: 3px;
-    }
+  #user-tools .user {
+    line-height: 40px;
+    margin-right: 3px;
+  }
 }
 
 .ow-notifications {
@@ -19,10 +19,10 @@
 }
 
 .bell-icon {
-    height: 14px;
-    vertical-align: middle;
-    position: relative;
-    top: -1px;
+  height: 14px;
+  vertical-align: middle;
+  position: relative;
+  top: -1px;
 }
 
 .ow-notifications span {
@@ -57,11 +57,20 @@
   }
 }
 
-#notification_form .label{ font-weight: bold }
-#notification_form .form-row.field-data{ display: none }
-#notification_form .target { margin: 13px 0 8px }
+#notification_form .label {
+  font-weight: bold
+}
+
+#notification_form .form-row.field-data {
+  display: none
+}
+
+#notification_form .target {
+  margin: 13px 0 8px
+}
+
 #notification_form .target .button {
-    color: #fff;
-    padding: 8px 15px;
-    text-decoration: none;
+  color: #fff;
+  padding: 8px 15px;
+  text-decoration: none;
 }
