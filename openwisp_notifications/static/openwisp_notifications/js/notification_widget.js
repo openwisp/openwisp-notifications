@@ -19,22 +19,6 @@ function initNotificationDropDown($) {
             $('.notification-dropdown').addClass('hide');
         }
     });
-
-    // Initialise accordion
-    $('.accordion').on('click', '.accordion-heading', function () {
-        let siblingPanenlVisible = false,
-            siblingPanel = $(this).next();
-        if (siblingPanel.css('display') === 'block') {
-            siblingPanenlVisible = true;
-        }
-        $('.accordion-panel').slideUp();
-        $('.accordion-heading.active').removeClass('active');
-        // Don't open sibling panel again if it was already open
-        if (!siblingPanenlVisible) {
-            $(this).addClass('active');
-            siblingPanel.slideDown();
-        }
-    });
 }
 
 function notificationWidget($) {
@@ -56,9 +40,9 @@ function notificationWidget($) {
         }
 
         function appendPage() {
-            $('.accordion').append(pageContainer(fetchedPages[lastRenderedPage]));
+            $('.notification-wrapper').append(pageContainer(fetchedPages[lastRenderedPage]));
             if (lastRenderedPage >= renderedPages) {
-                $('.accordion div:first').remove();
+                $('.notification-wrapper div:first').remove();
             }
             lastRenderedPage += 1;
             busy = false;
@@ -107,9 +91,9 @@ function notificationWidget($) {
         function pageUp() {
             busy = true;
             if (lastRenderedPage > renderedPages) {
-                $('.accordion div.page:last').remove();
+                $('.notification-wrapper div.page:last').remove();
                 var addedDiv = pageContainer(fetchedPages[lastRenderedPage - renderedPages - 1]);
-                $('.accordion').prepend(addedDiv);
+                $('.notification-wrapper').prepend(addedDiv);
                 lastRenderedPage -= 1;
             }
             busy = false;
@@ -117,9 +101,9 @@ function notificationWidget($) {
 
         function onUpdate() {
             if (!busy) {
-                var scrollTop = $('.accordion').scrollTop(),
-                    scrollBottom = scrollTop + $('.accordion').innerHeight(),
-                    height = $('.accordion')[0].scrollHeight;
+                var scrollTop = $('.notification-wrapper').scrollTop(),
+                    scrollBottom = scrollTop + $('.notification-wrapper').innerHeight(),
+                    height = $('.notification-wrapper')[0].scrollHeight;
                 if (height * 0.90 <= scrollBottom) {
                     pageDown();
                 } else if (height * 0.10 >= scrollTop) {
@@ -133,31 +117,22 @@ function notificationWidget($) {
             if (elem.unread) {
                 klass = 'unread';
             }
-            return `<div class="accordion-element">
-                        <div class="accordion-heading ${klass}" id=${elem.id}>
+            return `<div class="notification-elem ${klass}" id=${elem.id}
+                        data-location="${elem.target_object_url}">
                             ${elem.message}
-                        </div>
-                        <div class="accordion-panel hide">
-                            ${elem.message}
-                            <a href="${elem.target_object_url}">
-                                <p class="info-url">
-                                    Follow this linkfor more information.
-                                </p>
-                            </a>
-                        </div>
                     </div>`;
         }
-        $('.accordion').on('scroll', onUpdate);
+        $('.notification-wrapper').on('scroll', onUpdate);
         onUpdate();
     }
 
     function refreshNotificationWidget(url = '/api/v1/notifications/') {
-        $('.accordion').empty();
         $('.loader').removeClass('hide');
+        $('.notification-wrapper').empty();
         fetchedPages.length = 0;
         lastRenderedPage = 0;
         nextPageUrl = url;
-        $('.accordion').scroll();
+        $('.notification-wrapper').scroll();
     }
 
     initNotificationWidget($);
@@ -171,7 +146,6 @@ function notificationWidget($) {
             refreshNotificationWidget('/api/v1/notifications/');
             $(this).html('Show unread only');
         }
-        $('.loader').addClass('hide');
     });
 
     // Handler for marking all notifications read
@@ -184,7 +158,7 @@ function notificationWidget($) {
             },
             success: function () {
                 refreshNotificationWidget();
-                $('.loader').addClass('hide');
+                $('#show-unread').html('Show unread only');
             },
             error: function (error) {
                 throw error;
@@ -193,28 +167,25 @@ function notificationWidget($) {
     });
 
     // Handler for marking single notification as read
-    $('.accordion').on('click', '.accordion-heading', function () {
+    $('.notification-wrapper').on('click', '.notification-elem', function () {
         let elem = $(this);
-        let siblingPanel = elem.next();
-        if (siblingPanel.css('display') === 'none') {
-            // Only process for sending read request if panel was not already open.
-            if (elem.hasClass('unread')) {
-                // If notification was unread the send read request
-                let notificationId = elem.attr('id');
-                $.ajax({
-                    type: 'PATCH',
-                    url: `/api/v1/notifications/${notificationId}/`,
-                    headers: {
-                        "X-CSRFToken": $('input[name="csrfmiddlewaretoken"]').val()
-                    },
-                    success: function () {
-                        elem.removeClass('unread');
-                    },
-                    error: function (error) {
-                        throw error;
-                    },
-                });
-            }
+        // If notification was unread then send read request
+        if (elem.hasClass('unread')) {
+            let notificationId = elem.attr('id');
+            $.ajax({
+                type: 'PATCH',
+                url: `/api/v1/notifications/${notificationId}/`,
+                headers: {
+                    "X-CSRFToken": $('input[name="csrfmiddlewaretoken"]').val()
+                },
+                success: function () {
+                    elem.removeClass('unread');
+                    window.location = elem.data('location');
+                },
+                error: function (error) {
+                    throw error;
+                },
+            });
         }
     });
 }

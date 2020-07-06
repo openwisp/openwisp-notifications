@@ -2,7 +2,7 @@
 set -e
 
 jshint openwisp_notifications/static/openwisp_notifications/js/*.js
-stylelint openwisp_notifications/static/css/*.css
+stylelint "openwisp_notifications/static/openwisp_notifications/css/*.css"
 
 openwisp-qa-check \
         --migration-path "./openwisp_notifications/migrations/" \

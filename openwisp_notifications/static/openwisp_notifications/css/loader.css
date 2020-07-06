@@ -19,7 +19,6 @@
   -ms-transform: translateZ(0);
   transform: translateZ(0);
 }
-
 .loader:before {
   width: 50%;
   height: 50%;
@@ -30,7 +29,6 @@
   left: 0;
   content: '';
 }
-
 .loader:after {
   background: #f5f5f5;
   width: 75%;

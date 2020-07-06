@@ -6,7 +6,6 @@
         "ignore": ["stylelint-commands", "after-comment"]
       }],
       "declaration-colon-space-after": "always",
-      "extends": "stylelint-config-standard",
       "indentation": [2, {
         "except": ["value"]
       }],
@@ -15,6 +14,6 @@
         "except": ["first-nested"],
         "ignore": ["after-comment", "inside-block"]
       }],
-      "unit-whitelist": ["em", "rem", "%", "s", "px", "vh"]
+      "unit-whitelist": ["em", "rem", "%", "s", "px", "vh", "deg"]
     }
   }

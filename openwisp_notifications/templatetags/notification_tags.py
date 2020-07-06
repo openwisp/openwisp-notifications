@@ -37,14 +37,14 @@ def notification_widget(context):
         '''
         <div class="notification-dropdown hide">
             <div class="filters">
-                <span class="btn" id="mark-all-read">Mark all read</span>
-                <span class="btn" id="show-unread">Show unread only</span>
+                <span class="btn" id="mark-all-read" tabindex="1" role="button">Mark all read</span>
+                <span class="btn" id="show-unread" tabindex="2" role="button">Show unread only</span>
             </div>
-            <div class="accordion"></div>
-            <div class="no-notifications hide">
-                <p>No notifications founds.</p>
+            <div class="notification-wrapper round-bottom-border"></div>
+            <div class="no-notifications round-bottom-border hide">
+                <p>No new notification.</p>
             </div>
-            <div class="loader hide"></div>
+            <div class="loader-wrapper"><div class="loader"></div></div>
         </div>
         '''
     )
