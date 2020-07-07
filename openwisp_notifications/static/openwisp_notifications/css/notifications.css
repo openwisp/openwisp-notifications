@@ -54,6 +54,24 @@
   text-decoration: none;
 }
 
+/* Toasts for new notifications */
+.toast{
+  background-color: #d04124;
+  position: fixed;
+  left: 0;
+  right: 0;
+  margin: auto;
+  width: fit-content;
+  text-transform: none;
+  top: 5%;
+  display: none;
+  cursor: pointer;
+}
+.toast p{
+  margin: 1em;
+  font-weight: bold;
+}
+
 @media (max-width: 1024px) {
   .ow-notifications {
     display: block !important;

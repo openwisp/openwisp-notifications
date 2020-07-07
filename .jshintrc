@@ -5,7 +5,8 @@
     "strict": "global",
     "globals": {
         "django": true,
-        "gettext": true
+        "gettext": true,
+        "ReconnectingWebSocket": true
     },
     "browser": true
 }

@@ -40,8 +40,6 @@
 .notification-elem {
   cursor: pointer;
   padding: 10px 18px;
-  border: none;
-  outline: none;
   transition: 0.4s;
   color: black;
   font-weight: bold;
@@ -89,7 +87,7 @@
 .loader {
   height: 4em;
   width: 4em;
-  margin: 35px auto 4px auto;
+  margin: 40px auto 4px auto;
 }
 
 @media screen and (max-width: 425px) {

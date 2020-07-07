@@ -32,3 +32,10 @@ def _get_object_link(obj, field, html=True, url_only=False, absolute_url=False):
 def _get_absolute_url(url):
     site = Site.objects.get_current()
     return f'http://{site.domain}{url}'
+
+
+def normalize_unread_count(unread_count):
+    if unread_count > 99:
+        return '99+'
+    else:
+        return unread_count

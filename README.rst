@@ -95,6 +95,19 @@ Setup (integrate into an existing Django project)
 
     urlpatterns += staticfiles_urlpatterns()
 
+Add routes for websockets:
+
+.. code-block:: python
+
+    # In yourproject/routing.py
+    from channels.auth import AuthMiddlewareStack
+    from channels.routing import ProtocolTypeRouter, URLRouter
+    from openwisp_notifications.websockets import routing as ws_routing
+
+    application = ProtocolTypeRouter(
+        {'websocket': AuthMiddlewareStack(URLRouter(ws_routing.websocket_urlpatterns))}
+    )
+
 Configure caching (you may use a different cache storage if you want):
 
 .. code-block:: python
@@ -125,6 +138,25 @@ If you decide to use redis (as shown in these examples), make sure the python de
 .. code-block:: shell
 
     pip install redis django-redis
+
+Configure ``ASGI_APPLICATION``:
+
+.. code-block:: python
+
+    ASGI_APPLICATION = 'yourproject.routing.application'
+
+Configure channel layers (you may user a `different channel layer <https://channels.readthedocs.io/en/latest/topics/channel_layers.html#configuration>`_):
+
+.. code-block:: python
+
+    CHANNEL_LAYERS = {
+        'default': {
+            'BACKEND': 'channels_redis.core.RedisChannelLayer',
+            'CONFIG': {
+                'hosts': ['redis://localhost/7'],
+            },
+        },
+    }
 
 Sending notifications
 ---------------------
@@ -499,7 +531,7 @@ Install SQLite:
 
 .. code-block:: shell
 
-    sudo apt-get install sqlite3 libsqlite3-dev openssl libssl-dev
+    sudo apt install sqlite3 libsqlite3-dev openssl libssl-dev
 
 Install your forked repo:
 
@@ -790,7 +822,16 @@ file in the test project.
 For more information about URL configuration in django, please refer to the
 `"URL dispatcher" section in the django documentation <https://docs.djangoproject.com/en/dev/topics/http/urls/>`_.
 
-12. Create celery.py
+12. Create root routing configuration
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Please refer to the `routing.py <https://github.com/openwisp/openwisp-notifications/blob/master/tests/openwisp2/routing.py>`_
+file in the test project.
+
+For more information about URL configuration in django, please refer to the
+`"Routing" section in the Channels documentation <https://channels.readthedocs.io/en/latest/topics/routing.html>`_.
+
+13. Create celery.py
 ~~~~~~~~~~~~~~~~~~~~
 
 Please refer to the `celery.py <https://github.com/openwisp/openwisp-notifications/blob/master/tests/openwisp2/celery.py>`_
@@ -799,7 +840,7 @@ file in the test project.
 For more information about the usage of celery in django, please refer to the
 `"First steps with Django" section in the celery documentation <https://docs.celeryproject.org/en/master/django/first-steps-with-django.html>`_.
 
-13. Import Celery Tasks
+14. Import Celery Tasks
 ~~~~~~~~~~~~~~~~~~~~~~~
 
 Add the following in your settings.py to import celery tasks from ``openwisp_notifications`` app.
@@ -808,7 +849,7 @@ Add the following in your settings.py to import celery tasks from ``openwisp_not
 
     CELERY_IMPORTS = ('openwisp_notifications.tasks',)
 
-14. Register Template Tags
+15. Register Template Tags
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 If you need to use template tags of *openwisp_notifications*, you will need to register as the, shown in
@@ -818,7 +859,7 @@ If you need to use template tags of *openwisp_notifications*, you will need to r
 For more information about template tags in django, please refer to the
 `"Custom template tags and filters" section in the django documentation <https://docs.djangoproject.com/en/dev/topics/http/urls/>`_.
 
-15. Register Notification Types
+16. Register Notification Types
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 You can register notification types as shown in the `section for registering notification types <#register_notification_type>`_.
@@ -830,7 +871,7 @@ when an object of ``TestApp`` model is created. You can use
 `sample_notifications/models.py <https://github.com/openwisp/openwisp-notifications/blob/master/tests/openwisp2/sample_notifications/models.py>`_
 as reference for your implementation.
 
-16. Add Base Template for Admin
+17. Add Base Template for Admin
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Please refer to the `"templates/admin/base.html" in sample_notifications
@@ -840,7 +881,7 @@ For more information about customizing admin templates in django, please refer t
 `"Overriding admin templates" section in the django documentation
 <https://docs.djangoproject.com/en/3.0/ref/contrib/admin/#overriding-admin-templates>`_.
 
-17. Import the automated tests
+18. Import the automated tests
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 When developing a custom application based on this module, it's a good idea to import and run the base tests
@@ -873,6 +914,19 @@ Create a view file as done in `sample_notifications/views.py <https://github.com
 
 For more information regarding Django REST Framework API views, please refer to the
 `"Generic views" section in the Django REST Framework documentation <https://www.django-rest-framework.org/api-guide/generic-views/>`_.
+
+Web Socket Consumers
+####################
+
+The Web Socket Consumer classes can be extended into other django applications as well. Note
+that it is not required for extending openwisp-notifications to your app and this change
+is required only if you plan to make changes to the consumers.
+
+Create a consumer file as done in `sample_notifications/consumers.py <https://github.com/openwisp/openwisp-notifications/blob/master/tests/openwisp2/sample_notifications/consumers.py>`_
+
+For more information regarding Channels' Consumers, please refer to the
+`"Consumers" section in the Channels documentation <https://channels.readthedocs.io/en/latest/topics/consumers.html>`_.
+
 
 Contributing
 ------------

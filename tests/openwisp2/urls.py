@@ -14,7 +14,7 @@ urlpatterns = [
 
 if os.environ.get('SAMPLE_APP', False):
     # Load custom api views:
-    # This should be done when you are extending the app and modifing the API
+    # This should be done when you are extending the app and modifying the API
     # views in your extended application.
     from .sample_notifications import views as api_views
 
