@@ -32,4 +32,23 @@ def unread_notifications(context):
     return output
 
 
+def notification_widget(context):
+    return format_html(
+        '''
+        <div class="notification-dropdown hide">
+            <div class="filters">
+                <span class="btn" id="mark-all-read" tabindex="1" role="button">Mark all read</span>
+                <span class="btn" id="show-unread" tabindex="2" role="button">Show unread only</span>
+            </div>
+            <div class="notification-wrapper round-bottom-border"></div>
+            <div class="no-notifications round-bottom-border hide">
+                <p>No new notification.</p>
+            </div>
+            <div class="loader-wrapper"><div class="loader"></div></div>
+        </div>
+        '''
+    )
+
+
 register.simple_tag(takes_context=True)(unread_notifications)
+register.simple_tag(takes_context=True)(notification_widget)
