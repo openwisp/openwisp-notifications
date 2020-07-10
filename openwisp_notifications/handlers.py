@@ -130,7 +130,7 @@ def send_email_notification(sender, instance, created, **kwargs):
         target_url = url
     elif instance.target:
         target_url = _get_object_link(
-            instance, field='target', html=False, url_only=True, absolute_url=True
+            instance, field='target', url_only=True, absolute_url=True
         )
     else:
         target_url = None
@@ -169,7 +169,7 @@ def clear_notification_cache(sender, instance, **kwargs):
         return
     # Reload notification only if notification is created or deleleted
     # Display when a new notification is created
-    ws_handlers.update_widget(
+    ws_handlers.notification_update_handler(
         recipient=instance.recipient,
         reload_widget=kwargs.get('created', True),
         notification=instance if kwargs.get('created', None) else None,

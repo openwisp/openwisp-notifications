@@ -20,28 +20,25 @@ def create_notification(admin_user):
 
 
 @database_sync_to_async
-def notification_operation(notification, mark_read=False, delete=False):
-    if mark_read:
+def notification_operation(notification, **kwargs):
+    if kwargs.get('mark_read', False):
         notification.mark_as_read()
-    if delete:
+    if kwargs.get('delete', False):
         notification.delete()
+    if kwargs.get('refresh', False):
+        notification.refresh_from_db()
+    return Notification.objects.first()
 
 
 @pytest.mark.asyncio
 @pytest.mark.django_db(transaction=True)
 class TestNotificationSockets:
     async def _get_communicator(self, admin_client):
+        session_id = admin_client.cookies['sessionid'].value
         communicator = WebsocketCommunicator(
             application,
-            path="ws/notifications/",
-            headers=[
-                (
-                    b'cookie',
-                    f'sessionid={admin_client.cookies["sessionid"].value}'.encode(
-                        'ascii'
-                    ),
-                )
-            ],
+            path='ws/notifications/',
+            headers=[(b'cookie', f'sessionid={session_id}'.encode('ascii'),)],
         )
         connected, subprotocol = await communicator.connect()
         assert connected is True
@@ -87,7 +84,7 @@ class TestNotificationSockets:
         await communicator.disconnect()
 
     async def test_unauthenticated_user(self, client):
-        client.cookies["sessionid"] = "random"
+        client.cookies['sessionid'] = 'random'
         with pytest.raises(AssertionError):
             await self._get_communicator(client)
 

@@ -27,7 +27,7 @@ class NotificationSerializer(serializers.ModelSerializer):
 
     def get_target_object_url(self, obj):
         return _get_object_link(
-            obj, 'target', html=False, url_only=True, absolute_url=True
+            obj, 'target', url_only=True, absolute_url=True
         )
 
     @property
@@ -40,5 +40,13 @@ class NotificationSerializer(serializers.ModelSerializer):
 
 class NotificationListSerializer(NotificationSerializer):
     class Meta(NotificationSerializer.Meta):
-        fields = ['id', 'message', 'unread', 'target_object_url', 'email_subject']
+        fields = [
+            'id',
+            'message',
+            'unread',
+            'target_object_url',
+            'email_subject',
+            'timestamp',
+            'level',
+        ]
         exclude = None
