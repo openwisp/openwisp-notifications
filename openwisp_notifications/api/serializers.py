@@ -26,9 +26,7 @@ class NotificationSerializer(serializers.ModelSerializer):
         return model_fields + self.Meta.extra_fields
 
     def get_target_object_url(self, obj):
-        return _get_object_link(
-            obj, 'target', url_only=True, absolute_url=True
-        )
+        return _get_object_link(obj, 'target', url_only=True, absolute_url=True)
 
     @property
     def data(self):

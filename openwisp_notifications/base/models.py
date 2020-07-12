@@ -44,10 +44,7 @@ class AbstractNotification(UUIDModel, BaseNotifcation):
                 self, field='actor', url_only=True, absolute_url=True
             )
             self.action_link = _get_object_link(
-                self,
-                field='action_object',
-                url_only=True,
-                absolute_url=True,
+                self, field='action_object', url_only=True, absolute_url=True,
             )
             self.target_link = _get_object_link(
                 self, field='target', url_only=True, absolute_url=True

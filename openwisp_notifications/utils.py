@@ -1,6 +1,5 @@
 from django.contrib.sites.models import Site
 from django.urls import NoReverseMatch, reverse
-from django.utils.html import format_html
 
 
 class NotificationException(Exception):
@@ -20,6 +19,7 @@ def _get_object_link(obj, field, url_only=False, absolute_url=False):
         return url
     except (NoReverseMatch, AttributeError):
         return '#'
+
 
 def _get_absolute_url(url):
     site = Site.objects.get_current()
