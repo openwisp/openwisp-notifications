@@ -27,6 +27,10 @@ OPENWISP_NOTIFICATIONS_SOUND = getattr(
     '/static/openwisp_notifications/audio/notification_bell.mp3',
 )
 
+OPENWISP_NOTIFICATIONS_CACHE_TIMEOUT = getattr(
+    settings, 'OPENWISP_NOTIFICATIONS_CACHE_TIMEOUT', 2 * 24 * 60 * 60
+)
+
 
 def get_config():
     user_config = getattr(settings, 'OPENWISP_NOTIFICATIONS_CONFIG', {})

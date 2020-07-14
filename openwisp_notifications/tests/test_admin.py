@@ -59,10 +59,6 @@ class TestAdmin(TestOrganizationMixin, TestCase):
     def _url(self):
         return reverse('admin:index')
 
-    @property
-    def _cache_key(self):
-        return Notification.COUNT_CACHE_KEY
-
     def _expected_output(self, count=None):
         if count:
             return '<span id="ow-notification-count">{0}</span>'.format(count)
@@ -89,7 +85,7 @@ class TestAdmin(TestOrganizationMixin, TestCase):
 
     def test_cached_value(self):
         self.client.get(self._url)
-        cache_key = self._cache_key.format(self.admin.pk)
+        cache_key = Notification.count_cache_key(self.admin.pk)
         self.assertEqual(cache.get(cache_key), 0)
         return cache_key
 

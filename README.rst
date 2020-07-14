@@ -259,6 +259,16 @@ Additional ``notify`` keyword arguments
 |                     | Defaults to **None** meaning you need to provide other arguments.           |
 +---------------------+-----------------------------------------------------------------------------+
 
+Notification Cache
+------------------
+
+In a typical OpenWISP installation, ``actor``, ``action_object`` and ``target`` objects are same
+for a number of notifications. To optimize database queries, these objects are cached using
+`Django’s cache framework <https://docs.djangoproject.com/en/3.0/topics/cache/>`_.
+The cached values are updated automatically to reflect actual data from database. You can control
+the duration of caching these objects using
+`OPENWISP_NOTIFICATIONS_CACHE_TIMEOUT setting <#OPENWISP_NOTIFICATIONS_CACHE_TIMEOUT>`_
+
 Notification Types
 ------------------
 
@@ -518,6 +528,19 @@ Provide an absolute or relative path(hosted on your webserver) to audio file as 
 .. code-block:: python
 
     OPENWISP_NOTIFICATIONS_SOUND = '/static/your-appname/audio/notification.mp3'
+
+``OPENWISP_NOTIFICATIONS_CACHE_TIMEOUT``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
++-----------+------------------------------------+
+|   type    |  ``int``                           |
++-----------+------------------------------------+
+|  default  |  ``172800`` `(2 days, in seconds)` |
++-----------+------------------------------------+
+
+It sets the number of seconds the notification contents should be stored in the cache.
+If you want cached notification content to never expire, then set it to ``None``.
+Set it to ``0`` if you don't want to store notification contents in cache at all.
 
 REST API
 --------

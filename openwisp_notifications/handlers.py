@@ -76,8 +76,7 @@ def notify_handler(**kwargs):
     for recipient in recipients:
         newnotify = Notification(
             recipient=recipient,
-            actor_content_type=ContentType.objects.get_for_model(actor),
-            actor_object_id=actor.pk,
+            actor=actor,
             verb=str(verb),
             public=public,
             description=description,
@@ -164,7 +163,7 @@ def send_email_notification(sender, instance, created, **kwargs):
 )
 def clear_notification_cache(sender, instance, **kwargs):
     try:
-        Notification.invalidate_cache(instance.recipient)
+        Notification.invalidate_unread_cache(instance.recipient)
     except AttributeError:
         return
     # Reload notification only if notification is created or deleleted
