@@ -1,8 +1,11 @@
+from unittest.mock import patch
+
 from django.contrib.admin.sites import AdminSite
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
 from django.test import TestCase
 from django.urls import reverse
+from openwisp_notifications import settings as app_settings
 from openwisp_notifications.signals import notify
 from openwisp_notifications.swapper import load_model
 
@@ -96,3 +99,28 @@ class TestAdmin(TestOrganizationMixin, TestCase):
         self.assertIsNone(cache.get(cache_key))
         self.client.get(self._url)
         self.assertEqual(cache.get(cache_key), 1)
+
+    def test_default_notification_setting(self):
+        res = self.client.get(self._url)
+        self.assertContains(
+            res, '/static/openwisp_notifications/audio/notification_bell.mp3'
+        )
+        self.assertContains(res, 'window.location')
+
+    @patch.object(
+        app_settings, 'OPENWISP_NOTIFICATIONS_SOUND', '/static/notification.mp3',
+    )
+    def test_notification_sound_setting(self):
+        res = self.client.get(self._url)
+        self.assertContains(res, '/static/notification.mp3')
+        self.assertNotContains(
+            res, '/static/openwisp_notifications/audio/notification_bell.mp3'
+        )
+
+    @patch.object(
+        app_settings, 'OPENWISP_NOTIFICATIONS_HOST', 'https://example.com',
+    )
+    def test_notification_host_setting(self):
+        res = self.client.get(self._url)
+        self.assertContains(res, 'https://example.com')
+        self.assertNotContains(res, 'window.location')

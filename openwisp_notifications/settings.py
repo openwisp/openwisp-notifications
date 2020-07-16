@@ -20,6 +20,13 @@ OPENWISP_NOTIFICATION_HTML_EMAIL = getattr(
     settings, 'OPENWISP_NOTIFICATION_HTML_EMAIL', True
 )
 
+OPENWISP_NOTIFICATIONS_HOST = getattr(settings, 'OPENWISP_NOTIFICATIONS_HOST', None)
+OPENWISP_NOTIFICATIONS_SOUND = getattr(
+    settings,
+    'OPENWISP_NOTIFICATIONS_SOUND',
+    '/static/openwisp_notifications/audio/notification_bell.mp3',
+)
+
 
 def get_config():
     user_config = getattr(settings, 'OPENWISP_NOTIFICATIONS_CONFIG', {})
