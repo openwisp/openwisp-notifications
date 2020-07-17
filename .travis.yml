@@ -23,6 +23,7 @@ services:
 branches:
   only:
     - master
+    - dev
 
 before_install:
   - pip install -U pip wheel
