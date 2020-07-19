@@ -1,4 +1,5 @@
 from datetime import timedelta
+from unittest.mock import patch
 
 import openwisp_notifications.settings as app_settings
 from django.contrib.auth import get_user_model
@@ -503,3 +504,20 @@ class TestNotifications(TestOrganizationMixin, TestCase):
         # Ensure email is not sent for such notification
         self.assertEqual(len(mail.outbox), 0)
         unregister_notification_type('test_type')
+
+    @patch.object(app_settings, 'OPENWISP_NOTIFICATION_HTML_EMAIL', False)
+    def test_no_html_email(self, *args):
+        operator = self._create_operator()
+        self.notification_options.update(
+            {'type': 'default', 'target': operator, 'url': None}
+        )
+        self._create_notification()
+        email = mail.outbox.pop()
+        n = notification_queryset.first()
+        self.assertEqual(
+            email.body,
+            f'{strip_tags(n.message)}\n\nFor more information see'
+            f' http://example.com/admin/openwisp_users/user/{operator.id}/change/.',
+        )
+        self.assertEqual(email.subject, '[example.com] Default Notification Subject')
+        self.assertFalse(email.alternatives)
