@@ -1,6 +1,5 @@
-from django.urls import reverse
 from openwisp_notifications.swapper import load_model
-from openwisp_notifications.utils import _get_absolute_url
+from openwisp_notifications.utils import NotificationException, _get_object_link
 from rest_framework import serializers
 
 Notification = load_model('Notification')
@@ -27,14 +26,25 @@ class NotificationSerializer(serializers.ModelSerializer):
         return model_fields + self.Meta.extra_fields
 
     def get_target_object_url(self, obj):
-        url = reverse(
-            f'admin:{Notification._meta.app_label}_{Notification._meta.model_name}_change',
-            args=(obj.id,),
-        )
-        return _get_absolute_url(url)
+        return _get_object_link(obj, 'target', url_only=True, absolute_url=True)
+
+    @property
+    def data(self):
+        try:
+            return super().data
+        except NotificationException:
+            return None
 
 
 class NotificationListSerializer(NotificationSerializer):
     class Meta(NotificationSerializer.Meta):
-        fields = ['id', 'message', 'unread', 'target_object_url', 'email_subject']
+        fields = [
+            'id',
+            'message',
+            'unread',
+            'target_object_url',
+            'email_subject',
+            'timestamp',
+            'level',
+        ]
         exclude = None

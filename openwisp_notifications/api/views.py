@@ -3,6 +3,7 @@ from openwisp_notifications.api.serializers import (
     NotificationListSerializer,
     NotificationSerializer,
 )
+from openwisp_notifications.handlers import clear_notification_cache
 from openwisp_notifications.swapper import load_model
 from rest_framework import status
 from rest_framework.authentication import SessionAuthentication
@@ -60,7 +61,8 @@ class NotificationReadAllView(BaseNotificationView):
     def post(self, request, *args, **kwargs):
         queryset = self.get_queryset()
         queryset.update(unread=False)
-        Notification.invalidate_cache(request.user)
+        # update() does not create post_save signal
+        clear_notification_cache(sender=self, instance=queryset.first())
         return Response(status=status.HTTP_200_OK)
 
 

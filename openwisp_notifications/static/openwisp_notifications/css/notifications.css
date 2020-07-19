@@ -1,10 +1,12 @@
-@media (min-width: 1024px) {
-    #user-tools .user {
-        line-height: 40px;
-        margin-right: 3px;
-    }
+.ow-hide {
+  display: none;
+}
+.ow-round-bottom-border {
+  border-bottom-left-radius: 3px;
+  border-bottom-right-radius: 3px;
 }
 
+/* Nntification bell */
 .ow-notifications {
   float: right;
   display: block;
@@ -16,15 +18,8 @@
   bottom: -1px;
   right: -5px;
   margin-left: 10px;
+  cursor: pointer;
 }
-
-.bell-icon {
-    height: 14px;
-    vertical-align: middle;
-    position: relative;
-    top: -1px;
-}
-
 .ow-notifications span {
   position: absolute;
   top: 3px;
@@ -41,10 +36,172 @@
   background-color: #d04124;
   border: 1px solid #464646;
 }
-
 .ow-notifications:hover span,
 .ow-notifications:focus span {
   background-color: #d9553b;
+}
+.ow-notifications .bell-icon {
+  height: 14px;
+  vertical-align: middle;
+  position: relative;
+  top: -1px;
+}
+
+/* Toasts for new notification */
+.ow-notification-toast{
+  background-color: #d04124;
+  position: fixed;
+  left: 0;
+  right: 0;
+  margin: auto;
+  width: fit-content;
+  text-transform: none;
+  top: 5%;
+  display: none;
+  cursor: pointer;
+  border: white solid 0.1px;
+  padding: 0.5em;
+}
+.ow-notification-toast > div{
+  display: flex;
+  align-items: center;
+}
+.ow-notification-toast p{
+  margin: 0.5em;
+  font-weight: bold;
+}
+
+/* Notification widget dropdown */
+.ow-notification-dropdown {
+  position: absolute;
+  z-index: 99;
+  right: 100px;
+  border: 2px solid #464646;
+  text-align: left;
+  width: 425px;
+  text-transform: none;
+  background-color: whitesmoke;
+  border-radius: 5px;
+  box-shadow: 0px 0px 5px 1px black;
+  font-size: 12px;
+}
+.ow-notification-dropdown .btn {
+  color: #df5d43;
+  cursor: pointer;
+}
+.ow-notification-dropdown .filters {
+  margin: 10px;
+  display: flex;
+  justify-content: space-between;
+}
+.ow-notification-dropdown .disabled {
+  color: grey !important;
+  pointer-events: none;
+}
+.ow-notification-wrapper {
+  overflow-y: auto;
+  max-height: 70vh;
+  height: 100%;
+}
+.ow-notification-elem {
+  cursor: pointer;
+  padding: 10px;
+  transition: 0.4s;
+  color: black;
+  font-weight: bold;
+  background-color: whitesmoke;
+}
+.ow-notification-elem.unread{
+  background: #464646;
+  color: white;
+}
+.ow-notification-elem p{
+  margin: 5px auto;
+}
+.ow-notification-meta{
+  display: flex;
+  justify-content: space-between;
+  color: #777;;
+  -webkit-text-stroke: 0.2px white;
+  padding: 1px 0px;
+}
+.ow-notification-elem:hover .ow-notification-meta{
+  color: white;
+}
+.ow-notification-elem a {
+  color: #df5d43 !important;
+}
+.ow-notification-elem:hover a{
+  color: white !important;
+}
+.ow-notification-elem:hover{
+  background-color: #df5d43 !important;
+}
+.ow-no-notifications {
+  color: #464646;
+  text-align: center;
+  font-weight: bold;
+  font-size: small;
+  padding: 8px;
+  background-color: whitesmoke;
+}
+
+/* Loader */
+.ow-notification-dropdown .loader-wrapper {
+  box-shadow: 0px 0px 5px 1px black;
+  position: absolute;
+  top: 0px;
+  background: whitesmoke;
+  z-index: -1;
+  width: 100%;
+  border-radius: 5px;
+}
+.ow-notification-dropdown .loader {
+  height: 4em;
+  width: 4em;
+  margin: 40px auto 4px auto;
+}
+
+/* Notification level icons */
+.ow-notification-level-wrapper {
+  display: flex;
+}
+.ow-notification-level-text {
+  padding: 0px 6px;
+  text-transform: uppercase;
+}
+.ow-notification-elem .icon,
+.ow-notification-toast .icon{
+  min-height: 15px;
+  min-width: 15px;
+  background-repeat: no-repeat;
+  filter: invert(46%) sepia(4%) saturate(139%) hue-rotate(317deg) brightness(99%) contrast(85%);
+}
+.ow-notification-elem:hover .icon{
+  filter: invert(95%) sepia(5%) saturate(0%) hue-rotate(81deg) brightness(104%) contrast(109%);
+}
+.ow-notification-elem.unread .icon {
+  filter: invert(46%) sepia(90%) saturate(1688%) hue-rotate(334deg) brightness(92%) contrast(89%);
+}
+.ow-notify-info {
+  background-image: url('/static/openwisp_notifications/images/icons/icon-info.svg');
+}
+.ow-notify-warning {
+  background-image: url('/static/openwisp_notifications/images/icons/icon-warning.svg');
+}
+.ow-notify-error {
+  background-image: url('/static/openwisp_notifications/images/icons/icon-error.svg');
+}
+.ow-notify-success {
+  background-image: url('/static/openwisp_notifications/images/icons/icon-success.svg');
+}
+
+
+@media screen and (max-width: 600px) {
+  .ow-notification-dropdown {
+    width: 99%;
+    right: 0px;
+  }
 }
 
 @media (max-width: 1024px) {
@@ -55,13 +212,17 @@
     top: 43px;
     right: 113px;
   }
+  .ow-notification-dropdown .loader {
+    margin-top: 45px;
+  }
 }
 
-#notification_form .label{ font-weight: bold }
-#notification_form .form-row.field-data{ display: none }
-#notification_form .target { margin: 13px 0 8px }
-#notification_form .target .button {
-    color: #fff;
-    padding: 8px 15px;
-    text-decoration: none;
+@media screen and (min-width: 1025px){
+  .ow-notification-dropdown {
+    width: 500px;
+  }
+  #user-tools .user {
+    line-height: 40px;
+    margin-right: 3px;
+  }
 }

@@ -16,6 +16,7 @@ from openwisp_notifications.swapper import load_model
 from openwisp_notifications.tasks import delete_obsolete_notifications
 from openwisp_notifications.types import get_notification_configuration
 from openwisp_notifications.utils import NotificationException, _get_object_link
+from openwisp_notifications.websockets import handlers as ws_handlers
 
 User = get_user_model()
 
@@ -129,7 +130,7 @@ def send_email_notification(sender, instance, created, **kwargs):
         target_url = url
     elif instance.target:
         target_url = _get_object_link(
-            instance, field='target', html=False, url_only=True, absolute_url=True
+            instance, field='target', url_only=True, absolute_url=True
         )
     else:
         target_url = None
@@ -162,7 +163,17 @@ def send_email_notification(sender, instance, created, **kwargs):
     post_delete, sender=Notification, dispatch_uid='clear_notification_cache_deleted'
 )
 def clear_notification_cache(sender, instance, **kwargs):
-    Notification.invalidate_cache(instance.recipient)
+    try:
+        Notification.invalidate_cache(instance.recipient)
+    except AttributeError:
+        return
+    # Reload notification only if notification is created or deleleted
+    # Display when a new notification is created
+    ws_handlers.notification_update_handler(
+        recipient=instance.recipient,
+        reload_widget=kwargs.get('created', True),
+        notification=instance if kwargs.get('created', None) else None,
+    )
 
 
 @receiver(pre_delete, dispatch_uid='notification_related_object_deleted')

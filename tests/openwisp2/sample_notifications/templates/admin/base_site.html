@@ -1,0 +1,11 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static notification_tags %}
+
+{% block userlinks %}
+  <div class="ow-notifications" id="sample_notifications">
+    <img class="bell-icon" src="{% static 'openwisp_notifications/images/icons/icon-bell.svg' %}" />
+    {% unread_notifications %}
+  </div>
+  {% csrf_token %}
+  {% notification_widget %}
+{% endblock %}

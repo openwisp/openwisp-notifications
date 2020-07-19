@@ -1,6 +1,5 @@
 from django.contrib.admin.sites import AdminSite
 from django.contrib.auth import get_user_model
-from django.contrib.contenttypes.models import ContentType
 from django.core.cache import cache
 from django.test import TestCase
 from django.urls import reverse
@@ -9,7 +8,6 @@ from openwisp_notifications.swapper import load_model
 
 from openwisp_users.tests.utils import TestOrganizationMixin
 
-from ..admin import NotificationAdmin
 from .test_helpers import MessagingRequest
 
 Notification = load_model('Notification')
@@ -53,11 +51,10 @@ class TestAdmin(TestOrganizationMixin, TestCase):
             url='localhost:8000/admin',
         )
         self.site = AdminSite()
-        self.model_admin = NotificationAdmin(Notification, self.site)
 
     @property
     def _url(self):
-        return reverse(f'admin:{self.app_label}_notification_changelist')
+        return reverse('admin:index')
 
     @property
     def _cache_key(self):
@@ -65,7 +62,7 @@ class TestAdmin(TestOrganizationMixin, TestCase):
 
     def _expected_output(self, count=None):
         if count:
-            return '<span>{0}</span>'.format(count)
+            return '<span id="ow-notification-count">{0}</span>'.format(count)
         return f'id="{self.app_label}">'
 
     def test_zero_notifications(self):
@@ -99,82 +96,3 @@ class TestAdmin(TestOrganizationMixin, TestCase):
         self.assertIsNone(cache.get(cache_key))
         self.client.get(self._url)
         self.assertEqual(cache.get(cache_key), 1)
-
-    def test_mark_as_read_action(self):
-        with self.subTest('Test marking a single notification read'):
-            notify.send(**self.notification_options)
-            qs = notification_queryset
-            self.model_admin.mark_as_read(request, qs)
-            self.assertEqual(qs.count(), 1)
-            m = list(request.get_messages())
-            self.assertEqual(len(m), 1)
-            self.assertEqual(str(m[0]), '1 notification was marked as read.')
-
-        with self.subTest('Test marking mutiple notifications read'):
-            no_of_notifications = 10
-            for _ in range(no_of_notifications):
-                notify.send(**self.notification_options)
-            qs = Notification.objects.all()
-            self.model_admin.mark_as_read(request, qs)
-            self.assertEqual(qs.count(), no_of_notifications + 1)
-            m = list(request.get_messages())
-            self.assertEqual(len(m), 2)
-            self.assertEqual(
-                str(m[1]), f'{no_of_notifications} notifications were marked as read.'
-            )
-
-    def _generic_test_obj_link(self, field):
-        notify.send(**self.notification_options)
-        n = notification_queryset.first()
-        get_actual_obj_link = getattr(self.model_admin, f'{field}_object_link')
-        object_id = getattr(n, f'{field}_object_id', None)
-
-        exp_obj_link = '<a href="{0}" id="{1}-object-url">{2}</a>'.format(
-            reverse('admin:openwisp_users_user_change', args=(object_id,)),
-            field,
-            object_id,
-        )
-        self.assertEqual(get_actual_obj_link(n), exp_obj_link)
-
-        setattr(n, f'{field}_content_type', ContentType())
-        self.assertEqual(get_actual_obj_link(n), object_id)
-
-        setattr(n, f'{field}_content_type', None)
-        self.assertEqual(get_actual_obj_link(n), '-')
-
-    def test_callable_actor_object_link(self):
-        self._generic_test_obj_link('actor')
-
-    def test_callable_action_object_link(self):
-        self.notification_options.update({'action_object': self.admin})
-        self._generic_test_obj_link('action_object')
-
-    def test_callable_target_object_link(self):
-        self.notification_options.update({'target': self.admin})
-        self._generic_test_obj_link('target')
-
-    def test_callable_related_object(self):
-        self.notification_options.update({'target': self.admin})
-        notify.send(**self.notification_options)
-        n = notification_queryset.first()
-
-        exp_related_obj_link = '<a href="{0}" id="related-object-url">{1}: {2}</a>'.format(
-            reverse('admin:openwisp_users_user_change', args=(self.admin.id,)),
-            ContentType.objects.get_for_model(self.admin).model,
-            self.admin,
-        )
-        self.assertEqual(self.model_admin.related_object(n), exp_related_obj_link)
-
-        n.target_content_type = ContentType()
-        self.assertEqual(self.model_admin.related_object(n), n.target_object_id)
-
-        n.target_content_type = None
-        self.assertEqual(self.model_admin.related_object(n), '-')
-
-    def test_notification_view_webpage(self):
-        notify.send(**self.notification_options)
-        n = notification_queryset.first()
-        url = reverse(f'admin:{self.app_label}_notification_change', args=(n.id,))
-        response = self.client.get(url)
-        self.assertContains(response, 'id="actor-object-url"')
-        self.assertContains(response, '<div class="readonly">Test Notification</div>')

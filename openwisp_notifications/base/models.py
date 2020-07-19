@@ -41,17 +41,13 @@ class AbstractNotification(UUIDModel, BaseNotifcation):
         if self.type:
             # setting links in notification object for message rendering
             self.actor_link = _get_object_link(
-                self, field='actor', html=False, url_only=True, absolute_url=True
+                self, field='actor', url_only=True, absolute_url=True
             )
             self.action_link = _get_object_link(
-                self,
-                field='action_object',
-                html=False,
-                url_only=True,
-                absolute_url=True,
+                self, field='action_object', url_only=True, absolute_url=True,
             )
             self.target_link = _get_object_link(
-                self, field='target', html=False, url_only=True, absolute_url=True
+                self, field='target', url_only=True, absolute_url=True
             )
 
             config = get_notification_configuration(self.type)

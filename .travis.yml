@@ -23,6 +23,7 @@ services:
 branches:
   only:
     - master
+    - dev
 
 before_install:
   - pip install -U pip wheel
@@ -30,6 +31,7 @@ before_install:
   - pip install -U -r requirements-test.txt
   # temporary: remove when openwisp-users with API support is released
   - pip install -U https://github.com/openwisp/openwisp-users/tarball/master#egg=openwisp_users[rest]
+  - npm install -g jshint stylelint
 
 install:
   - python setup.py -q develop
