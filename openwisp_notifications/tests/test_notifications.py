@@ -14,6 +14,7 @@ from django.utils import timezone
 from django.utils.html import strip_tags
 from django.utils.timesince import timesince
 from openwisp_notifications import settings as app_settings
+from openwisp_notifications import tasks
 from openwisp_notifications.handlers import notify_handler
 from openwisp_notifications.signals import notify
 from openwisp_notifications.swapper import load_model
@@ -579,3 +580,18 @@ class TestNotifications(TestOrganizationMixin, TestCase):
         ContentType.objects.clear_cache()
         # DoesNotExists exception should not be raised.
         operator.delete()
+
+    def test_delete_old_notification(self):
+        days_old = 91
+        # Create notification with current timestamp
+        self.notification_options.update({'type': 'default'})
+        self._create_notification()
+        # Create notification with older timestamp
+        self.notification_options.update(
+            {'timestamp': timezone.now() - timedelta(days=days_old)}
+        )
+        self._create_notification()
+
+        self.assertEqual(notification_queryset.count(), 2)
+        tasks.delete_old_notifications.delay(days_old)
+        self.assertEqual(notification_queryset.count(), 1)
