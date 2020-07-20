@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'openwisp_users',
     'django.contrib.admin',
     'openwisp_notifications',
+    'django_celery_beat',
 ]
 
 STATICFILES_FINDERS = [
