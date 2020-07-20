@@ -38,3 +38,4 @@ def delete_old_notifications(days):
         Q(timestamp=timezone.now() - timedelta(days=days))
     )
     Notification.objects.filter(where).delete()
+
