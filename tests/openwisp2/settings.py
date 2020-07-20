@@ -1,5 +1,6 @@
 import os
 import sys
+from datetime import timedelta
 
 TESTING = 'test' in sys.argv
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -146,6 +147,14 @@ else:
     CELERY_TASK_ALWAYS_EAGER = True
     CELERY_TASK_EAGER_PROPAGATES = True
     CELERY_BROKER_URL = 'memory://'
+
+CELERY_BEAT_SCHEDULE = {
+    'delete_old_notifications': {
+        'task': 'openwisp_notifications.tasks.delete_old_notifications',
+        'schedule': timedelta(days=1),
+        'args': (90,)
+    },
+}
 
 ACCOUNT_AUTHENTICATED_LOGIN_REDIRECTS = False
 OPENWISP_ADMIN_SHOW_USERLINKS_BLOCK = True
