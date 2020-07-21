@@ -35,7 +35,7 @@ def delete_old_notifications():
     Delete notifications having 'timestamp' more than 90 days scheduled every day.
     """
     where = (
-        Q(timestamp=timezone.now() - timedelta(days=90))
+        Q(timestamp<=timezone.now() - timedelta(days=90))
     )
     Notification.objects.filter(where).delete()
 
