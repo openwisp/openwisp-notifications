@@ -254,7 +254,7 @@ Additional ``notify`` keyword arguments
 |                     | not be added to the email text.                                             |
 +---------------------+-----------------------------------------------------------------------------+
 |       ``type``      | Set values of other parameters based on predefined setting                  |
-|                     | ``OPENWISP_NOTIFICATION_TYPES``                                             |
+|                     | ``OPENWISP_NOTIFICATIONS_TYPES``                                            |
 |                     |                                                                             |
 |                     | Defaults to **None** meaning you need to provide other arguments.           |
 +---------------------+-----------------------------------------------------------------------------+
@@ -399,8 +399,8 @@ registered.
 Settings
 --------
 
-``OPENWISP_NOTIFICATION_HTML_EMAIL``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+``OPENWISP_NOTIFICATIONS_HTML_EMAIL``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 +-----------+------------+
 |   type    |  ``bool``  |
@@ -412,8 +412,8 @@ If ``True``, attaches markdown rendered HTML of notification message in email no
 If ``False``, HTML rendering of notification message will be disabled and a plain
 text email is sent.
 
-``OPENWISP_NOTIFICATION_EMAIL_TEMPLATE``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+``OPENWISP_NOTIFICATIONS_EMAIL_TEMPLATE``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 +-----------+--------------------------------------------------+
 |   type    |  ``str``                                         |
@@ -452,8 +452,8 @@ See `openwisp_notifications/email_template.html <https://github.com/pandafy/open
 master/openwisp_notifications/templates/openwisp_notifications/email_template.html>`_
 for reference implementation.
 
-``OPENWISP_NOTIFICATION_EMAIL_LOGO``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+``OPENWISP_NOTIFICATIONS_EMAIL_LOGO``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 +-----------+----------------------------------------------------------------------------------------------+
 |   type    |  ``str``                                                                                     |

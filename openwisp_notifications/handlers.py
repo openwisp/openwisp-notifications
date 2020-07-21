@@ -141,11 +141,11 @@ def send_email_notification(sender, instance, created, **kwargs):
         from_email=settings.DEFAULT_FROM_EMAIL,
         to=[instance.recipient.email],
     )
-    if app_settings.OPENWISP_NOTIFICATION_HTML_EMAIL:
+    if app_settings.OPENWISP_NOTIFICATIONS_HTML_EMAIL:
         html_message = render_to_string(
-            app_settings.OPENWISP_NOTIFICATION_EMAIL_TEMPLATE,
+            app_settings.OPENWISP_NOTIFICATIONS_EMAIL_TEMPLATE,
             context=dict(
-                OPENWISP_NOTIFICATION_EMAIL_LOGO=app_settings.OPENWISP_NOTIFICATION_EMAIL_LOGO,
+                OPENWISP_NOTIFICATIONS_EMAIL_LOGO=app_settings.OPENWISP_NOTIFICATIONS_EMAIL_LOGO,
                 notification=instance,
                 target_url=target_url,
             ),

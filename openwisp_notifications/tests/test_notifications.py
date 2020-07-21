@@ -411,7 +411,7 @@ class TestNotifications(TestOrganizationMixin, TestCase):
             )
             self.assertEqual(content_type, 'text/html')
             self.assertIn(
-                f'<img src="{app_settings.OPENWISP_NOTIFICATION_EMAIL_LOGO}"'
+                f'<img src="{app_settings.OPENWISP_NOTIFICATIONS_EMAIL_LOGO}"'
                 ' alt="Logo" id="logo" class="logo">',
                 html_message,
             )
@@ -506,7 +506,7 @@ class TestNotifications(TestOrganizationMixin, TestCase):
         self.assertEqual(len(mail.outbox), 0)
         unregister_notification_type('test_type')
 
-    @patch.object(app_settings, 'OPENWISP_NOTIFICATION_HTML_EMAIL', False)
+    @patch.object(app_settings, 'OPENWISP_NOTIFICATIONS_HTML_EMAIL', False)
     def test_no_html_email(self, *args):
         operator = self._create_operator()
         self.notification_options.update(
