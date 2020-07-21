@@ -2,9 +2,8 @@
 const notificationReadStatus = new Map();
 const notificationTimeoutMap = new Map();
 const notificationSocket = new ReconnectingWebSocket(
-    `ws://${window.location.host}/ws/notifications/`
+    `ws://${notificationApiHost.host}/ws/notifications/`
 );
-const notificationSound = new Audio('/static/openwisp_notifications/audio/notification_bell.mp3');
 const notificationObserver = new IntersectionObserver(notificationIntersectionObserver, {
     threshold: 1,
     root: document.querySelector('.ow-notification-wrapper')
@@ -35,7 +34,7 @@ function initNotificationDropDown($) {
 
 function notificationWidget($) {
 
-    let nextPageUrl = '/api/v1/notifications/',
+    let nextPageUrl = getAbsoluteUrl('/api/v1/notifications/'),
         renderedPages = 2,
         busy = false,
         fetchedPages = [],
@@ -67,6 +66,10 @@ function notificationWidget($) {
         $.ajax({
             type: 'GET',
             url: nextPageUrl,
+            xhrFields: {
+                withCredentials: true
+            },
+            crossDomain: true,
             success: function (res) {
                 nextPageUrl = res.next;
                 if (res.count === 0) {
@@ -188,10 +191,14 @@ function notificationWidget($) {
     $('#ow-mark-all-read').click(function () {
         $.ajax({
             type: 'POST',
-            url: `/api/v1/notifications/read/`,
+            url: getAbsoluteUrl('/api/v1/notifications/read/'),
             headers: {
                 'X-CSRFToken': $('input[name="csrfmiddlewaretoken"]').val()
             },
+            xhrFields: {
+                withCredentials: true
+            },
+            crossDomain: true,
             success: function () {
                 refreshNotificationWidget();
                 $('#ow-show-unread').html('Show unread only');
@@ -295,4 +302,8 @@ function notificationIntersectionObserver(entries) {
             }
         }
     });
+}
+
+function getAbsoluteUrl(url) {
+    return notificationApiHost.origin + url;
 }

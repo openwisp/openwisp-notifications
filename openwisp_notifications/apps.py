@@ -14,3 +14,6 @@ class OpenwispNotificationsConfig(AppConfig):
         notify.connect(
             notify_handler, dispatch_uid='openwisp_notifications.model.notifications'
         )
+
+        # Add CORS configuration checks
+        from openwisp_notifications.checks import check_cors_configuration  # noqa

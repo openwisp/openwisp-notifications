@@ -39,6 +39,8 @@ INSTALLED_APPS = [
     'openwisp_notifications',
     # channels
     'channels',
+    # CORS
+    'corsheaders',
 ]
 
 STATICFILES_FINDERS = [
@@ -51,6 +53,7 @@ AUTH_USER_MODEL = 'openwisp_users.User'
 SITE_ID = 1
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -69,7 +72,6 @@ USE_I18N = False
 USE_L10N = False
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
-CORS_ORIGIN_ALLOW_ALL = True
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'
 EMAIL_PORT = '1025'
@@ -101,6 +103,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'openwisp_utils.admin_theme.context_processor.menu_items',
                 'openwisp_utils.admin_theme.context_processor.admin_theme_settings',
+                'openwisp_notifications.context_processors.notification_api_settings',
             ],
         },
     },

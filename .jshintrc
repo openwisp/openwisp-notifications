@@ -6,7 +6,9 @@
     "globals": {
         "django": true,
         "gettext": true,
-        "ReconnectingWebSocket": true
+        "ReconnectingWebSocket": true,
+        "notificationApiHost": true,
+        "notificationSound": true
     },
     "browser": true
 }
