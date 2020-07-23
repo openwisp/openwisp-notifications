@@ -305,3 +305,16 @@ class TestNotificationApi(TestCase, TestOrganizationMixin, AuthenticationMixin):
             self.assertDictEqual(response.data, {'detail': NOT_FOUND_ERROR})
             # Check Karen's notification is not deleted
             self.assertEqual(Notification.objects.count(), 1)
+
+    def test_list_view_notification_cache(self):
+        number_of_notifications = 20
+        url = reverse(f'{self.app_label}:notifications_list')
+        url = f'{url}?page_size={number_of_notifications}'
+        operator = self._get_operator()
+        for _ in range(number_of_notifications):
+            notify.send(sender=self.admin, type='default', target=operator)
+
+        with self.assertNumQueries(3):
+            response = self.client.get(url)
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.data['count'], number_of_notifications)

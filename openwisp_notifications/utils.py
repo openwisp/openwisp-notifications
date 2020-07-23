@@ -6,13 +6,12 @@ class NotificationException(Exception):
     pass
 
 
-def _get_object_link(obj, field, url_only=False, absolute_url=False):
-    content_type = getattr(obj, f'{field}_content_type', None)
-    object_id = getattr(obj, f'{field}_object_id', None)
+def _get_object_link(obj, field, url_only=False, absolute_url=False, *args, **kwargs):
+    related_obj = getattr(obj, field)
     try:
         url = reverse(
-            f'admin:{content_type.app_label}_{content_type.model}_change',
-            args=[object_id],
+            f'admin:{related_obj._meta.app_label}_{related_obj._meta.model_name}_change',
+            args=[related_obj.id],
         )
         if absolute_url:
             url = _get_absolute_url(url)

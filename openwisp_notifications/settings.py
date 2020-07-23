@@ -3,21 +3,21 @@ from notifications.settings import CONFIG_DEFAULTS
 
 CONFIG_DEFAULTS.update({'USE_JSONFIELD': True})
 
-OPENWISP_NOTIFICATION_EMAIL_TEMPLATE = getattr(
+OPENWISP_NOTIFICATIONS_EMAIL_TEMPLATE = getattr(
     settings,
-    'OPENWISP_NOTIFICATION_EMAIL_TEMPLATE',
+    'OPENWISP_NOTIFICATIONS_EMAIL_TEMPLATE',
     'openwisp_notifications/email_template.html',
 )
 
-OPENWISP_NOTIFICATION_EMAIL_LOGO = getattr(
+OPENWISP_NOTIFICATIONS_EMAIL_LOGO = getattr(
     settings,
-    'OPENWISP_NOTIFICATION_EMAIL_LOGO',
+    'OPENWISP_NOTIFICATIONS_EMAIL_LOGO',
     'https://raw.githubusercontent.com/openwisp/openwisp-notifications/master/openwisp_notifications/'
     'static/openwisp_notifications/images/openwisp-logo.png',
 )
 
-OPENWISP_NOTIFICATION_HTML_EMAIL = getattr(
-    settings, 'OPENWISP_NOTIFICATION_HTML_EMAIL', True
+OPENWISP_NOTIFICATIONS_HTML_EMAIL = getattr(
+    settings, 'OPENWISP_NOTIFICATIONS_HTML_EMAIL', True
 )
 
 OPENWISP_NOTIFICATIONS_HOST = getattr(settings, 'OPENWISP_NOTIFICATIONS_HOST', None)
@@ -25,6 +25,10 @@ OPENWISP_NOTIFICATIONS_SOUND = getattr(
     settings,
     'OPENWISP_NOTIFICATIONS_SOUND',
     '/static/openwisp_notifications/audio/notification_bell.mp3',
+)
+
+OPENWISP_NOTIFICATIONS_CACHE_TIMEOUT = getattr(
+    settings, 'OPENWISP_NOTIFICATIONS_CACHE_TIMEOUT', 2 * 24 * 60 * 60
 )
 
 

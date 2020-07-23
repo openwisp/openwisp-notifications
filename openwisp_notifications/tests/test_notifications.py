@@ -1,16 +1,17 @@
 from datetime import timedelta
 from unittest.mock import patch
 
-import openwisp_notifications.settings as app_settings
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.core import mail
+from django.core.cache import cache
 from django.core.exceptions import ImproperlyConfigured
 from django.template import TemplateDoesNotExist
 from django.test import TestCase
 from django.utils import timezone
 from django.utils.html import strip_tags
 from django.utils.timesince import timesince
+from openwisp_notifications import settings as app_settings
 from openwisp_notifications.handlers import notify_handler
 from openwisp_notifications.signals import notify
 from openwisp_notifications.swapper import load_model
@@ -410,7 +411,7 @@ class TestNotifications(TestOrganizationMixin, TestCase):
             )
             self.assertEqual(content_type, 'text/html')
             self.assertIn(
-                f'<img src="{app_settings.OPENWISP_NOTIFICATION_EMAIL_LOGO}"'
+                f'<img src="{app_settings.OPENWISP_NOTIFICATIONS_EMAIL_LOGO}"'
                 ' alt="Logo" id="logo" class="logo">',
                 html_message,
             )
@@ -505,7 +506,7 @@ class TestNotifications(TestOrganizationMixin, TestCase):
         self.assertEqual(len(mail.outbox), 0)
         unregister_notification_type('test_type')
 
-    @patch.object(app_settings, 'OPENWISP_NOTIFICATION_HTML_EMAIL', False)
+    @patch.object(app_settings, 'OPENWISP_NOTIFICATIONS_HTML_EMAIL', False)
     def test_no_html_email(self, *args):
         operator = self._create_operator()
         self.notification_options.update(
@@ -521,3 +522,36 @@ class TestNotifications(TestOrganizationMixin, TestCase):
         )
         self.assertEqual(email.subject, '[example.com] Default Notification Subject')
         self.assertFalse(email.alternatives)
+
+    def test_related_objects_database_query(self):
+        operator = self._get_operator()
+        self.notification_options.update(
+            {'action_object': operator, 'target': operator}
+        )
+        self._create_notification()
+        with self.assertNumQueries(2):
+            # 2 queries since admin is already chached
+            n = notification_queryset.first()
+            self.assertEqual(n.actor, self.admin)
+            self.assertEqual(n.action_object, operator)
+            self.assertEqual(n.target, operator)
+
+    @patch.object(app_settings, 'OPENWISP_NOTIFICATIONS_CACHE_TIMEOUT', 0)
+    def test_notification_cache_timeout(self):
+        # Timeout=0 means value is not cached
+        operator = self._get_operator()
+        self.notification_options.update(
+            {'action_object': operator, 'target': operator}
+        )
+        self._create_notification()
+
+        n = notification_queryset.first()
+        with self.assertNumQueries(3):
+            # Expect database query for each operation, nothing is cached
+            self.assertEqual(n.actor, self.admin)
+            self.assertEqual(n.action_object, operator)
+            self.assertEqual(n.target, operator)
+
+        # Test cache is not set
+        self.assertIsNone(cache.get(Notification._cache_key(self.admin.pk)))
+        self.assertIsNone(cache.get(Notification._cache_key(operator.pk)))

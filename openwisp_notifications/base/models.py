@@ -1,6 +1,7 @@
 import logging
 
 from django.conf import settings
+from django.contrib.contenttypes.models import ContentType
 from django.contrib.sites.models import Site
 from django.core.cache import cache
 from django.db import models
@@ -10,6 +11,7 @@ from django.utils.html import mark_safe
 from django.utils.translation import ugettext_lazy as _
 from markdown import markdown
 from notifications.base.models import AbstractNotification as BaseNotifcation
+from openwisp_notifications import settings as app_settings
 from openwisp_notifications.types import (
     NOTIFICATION_CHOICES,
     get_notification_configuration,
@@ -22,19 +24,46 @@ logger = logging.getLogger(__name__)
 
 
 class AbstractNotification(UUIDModel, BaseNotifcation):
-    COUNT_CACHE_KEY = 'ow2-unread-notifications-{0}'
+    CACHE_KEY_PREFIX = 'ow-notifications-'
     type = models.CharField(max_length=30, null=True, choices=NOTIFICATION_CHOICES)
+    _actor = BaseNotifcation.actor
+    _action_object = BaseNotifcation.action_object
+    _target = BaseNotifcation.target
 
     class Meta(BaseNotifcation.Meta):
         abstract = True
+
+    def __init__(self, *args, **kwargs):
+        related_objs = [
+            (opt, kwargs.pop(opt, None)) for opt in ('target', 'action_object', 'actor')
+        ]
+        super().__init__(*args, **kwargs)
+        for opt, obj in related_objs:
+            if obj is not None:
+                setattr(self, f'{opt}_object_id', obj.pk)
+                setattr(
+                    self, f'{opt}_content_type', ContentType.objects.get_for_model(obj),
+                )
 
     def __str__(self):
         return self.timesince()
 
     @classmethod
-    def invalidate_cache(cls, user):
-        """ invalidate cache for user """
-        cache.delete(cls.COUNT_CACHE_KEY.format(user.pk))
+    def _cache_key(cls, *args):
+        args = map(str, args)
+        key = '-'.join(args)
+        return f'{cls.CACHE_KEY_PREFIX}{key}'
+
+    @classmethod
+    def count_cache_key(cls, user_pk):
+        return cls._cache_key(f'unread-{user_pk}')
+
+    @classmethod
+    def invalidate_unread_cache(cls, user):
+        """
+        Invalidate unread cache for user.
+        """
+        cache.delete(cls.count_cache_key(user.pk))
 
     @cached_property
     def message(self):
@@ -85,6 +114,34 @@ class AbstractNotification(UUIDModel, BaseNotifcation):
             return self.data.get('email_subject')
         else:
             return self.message
+
+    def _related_object(self, field):
+        obj_id = getattr(self, f'{field}_object_id')
+        obj_content_type_id = getattr(self, f'{field}_content_type_id')
+        if not obj_id:
+            return
+        cache_key = self._cache_key(obj_content_type_id, obj_id)
+        obj = cache.get(cache_key)
+        if not obj:
+            obj = getattr(self, f'_{field}')
+            cache.set(
+                cache_key,
+                obj,
+                timeout=app_settings.OPENWISP_NOTIFICATIONS_CACHE_TIMEOUT,
+            )
+        return obj
+
+    @cached_property
+    def actor(self):
+        return self._related_object('actor')
+
+    @cached_property
+    def action_object(self):
+        return self._related_object('action_object')
+
+    @cached_property
+    def target(self):
+        return self._related_object('target')
 
 
 class AbstractNotificationUser(TimeStampedEditableModel):

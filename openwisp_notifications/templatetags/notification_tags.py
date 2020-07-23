@@ -15,7 +15,7 @@ register = Library()
 
 def get_notifications_count(context):
     user_pk = context['user'].is_authenticated and context['user'].pk
-    cache_key = Notification.COUNT_CACHE_KEY.format(user_pk)
+    cache_key = Notification.count_cache_key(user_pk)
     count = cache.get(cache_key)
     if count is None:
         count = base_notification_unread(context)
