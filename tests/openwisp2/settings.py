@@ -152,7 +152,7 @@ CELERY_BEAT_SCHEDULE = {
     'delete_old_notifications': {
         'task': 'openwisp_notifications.tasks.delete_old_notifications',
         'schedule': timedelta(days=1),
-        'args': None
+        'args': (90,)
     },
 }
 

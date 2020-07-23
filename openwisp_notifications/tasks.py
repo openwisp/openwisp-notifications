@@ -30,12 +30,12 @@ def delete_obsolete_notifications(instance_app_label, instance_model, instance_i
 
 
 @shared_task
-def delete_old_notifications():
+def delete_old_notifications(days):
     """
-    Delete notifications having 'timestamp' more than 90 days scheduled every day.
+    Delete notifications having 'timestamp' more than n days scheduled every day.
     """
     where = (
-        Q(timestamp<=timezone.now() - timedelta(days=90))
+        Q(timestamp_lte=(timestamp=timezone.now() - timedelta(days=days)))
     )
     Notification.objects.filter(where).delete()
 
