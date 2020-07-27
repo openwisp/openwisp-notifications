@@ -22,7 +22,6 @@ from openwisp_notifications.types import (
     register_notification_type,
     unregister_notification_type,
 )
-from openwisp_notifications.utils import NotificationException
 
 from openwisp_users.models import Group, OrganizationUser
 from openwisp_users.tests.utils import TestOrganizationMixin
@@ -495,15 +494,7 @@ class TestNotifications(TestOrganizationMixin, TestCase):
         }
         register_notification_type('test_type', test_type)
         self._create_notification()
-        n = notification_queryset.first()
-        self.assertEqual(
-            n.message,
-            '<p>Error while generating notification message, notification data may have been deleted.</p>',
-        )
-        with self.assertRaises(NotificationException):
-            n.email_subject
-        # Ensure email is not sent for such notification
-        self.assertEqual(len(mail.outbox), 0)
+        self.assertIsNone(notification_queryset.first())
         unregister_notification_type('test_type')
 
     @patch.object(app_settings, 'OPENWISP_NOTIFICATIONS_HTML_EMAIL', False)

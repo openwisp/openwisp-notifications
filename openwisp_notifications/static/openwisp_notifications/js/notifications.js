@@ -75,7 +75,7 @@ function notificationWidget($) {
             crossDomain: true,
             success: function (res) {
                 nextPageUrl = res.next;
-                if (res.count === 0) {
+                if ((res.count === 0) || ((res.results.length === 0) && (nextPageUrl === null) )) {
                     // If response does not have any notification, show no-notifications message.
                     $('.ow-no-notifications').removeClass('ow-hide');
                     $('#ow-mark-all-read').addClass('disabled');
@@ -84,6 +84,9 @@ function notificationWidget($) {
                     }
                     busy = false;
                 } else {
+                    if (res.results.length === 0 && nextPageUrl !== null){
+                        fetchNextPage();
+                    }
                     fetchedPages.push(res.results);
                     appendPage();
                     // Remove 'no new notification' message.

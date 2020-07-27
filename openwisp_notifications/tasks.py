@@ -25,3 +25,8 @@ def delete_obsolete_notifications(instance_app_label, instance_model, instance_i
         | Q(target_object_id=instance_id)
     )
     Notification.objects.filter(where).delete()
+
+
+@shared_task
+def delete_notification(notification_id):
+    Notification.objects.filter(pk=notification_id).delete()

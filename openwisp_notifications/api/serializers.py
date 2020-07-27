@@ -1,6 +1,13 @@
+import logging
+
+from django.db import models
+from openwisp_notifications.exceptions import NotificationRenderException
 from openwisp_notifications.swapper import load_model
-from openwisp_notifications.utils import NotificationException, _get_object_link
+from openwisp_notifications.utils import _get_object_link
 from rest_framework import serializers
+from rest_framework.exceptions import NotFound
+
+logger = logging.getLogger(__name__)
 
 Notification = load_model('Notification')
 
@@ -8,6 +15,18 @@ Notification = load_model('Notification')
 class ContentTypeField(serializers.Field):
     def to_representation(self, obj):
         return obj.model
+
+
+class CustomListSerializer(serializers.ListSerializer):
+    def to_representation(self, data):
+        iterable = data.all() if isinstance(data, models.Manager) else data
+        data_list = []
+        for item in iterable:
+            try:
+                data_list.append(self.child.to_representation(item))
+            except NotificationRenderException as e:
+                logger.error(e)
+        return data_list
 
 
 class NotificationSerializer(serializers.ModelSerializer):
@@ -32,8 +51,9 @@ class NotificationSerializer(serializers.ModelSerializer):
     def data(self):
         try:
             return super().data
-        except NotificationException:
-            return None
+        except NotificationRenderException as e:
+            logger.error(e)
+            raise NotFound
 
 
 class NotificationListSerializer(NotificationSerializer):
@@ -48,3 +68,4 @@ class NotificationListSerializer(NotificationSerializer):
             'level',
         ]
         exclude = None
+        list_serializer_class = CustomListSerializer

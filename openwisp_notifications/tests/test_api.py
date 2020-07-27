@@ -1,9 +1,15 @@
 import uuid
+from unittest.mock import patch
 
+from django.core.cache import cache
 from django.test import TestCase
 from django.urls import reverse
 from openwisp_notifications.signals import notify
 from openwisp_notifications.swapper import load_model
+from openwisp_notifications.types import (
+    register_notification_type,
+    unregister_notification_type,
+)
 from rest_framework.exceptions import ErrorDetail
 
 from openwisp_users.tests.test_api import AuthenticationMixin
@@ -318,3 +324,83 @@ class TestNotificationApi(TestCase, TestOrganizationMixin, AuthenticationMixin):
             response = self.client.get(url)
             self.assertEqual(response.status_code, 200)
             self.assertEqual(response.data['count'], number_of_notifications)
+
+    def test_malformed_notifications(self):
+        test_type = {
+            'verbose_name': 'Test Notification Type',
+            'level': 'warning',
+            'verb': 'testing',
+            'message': '{notification.actor.random}',
+            'email_subject': '[{site.name}] {notification.actor.random}',
+        }
+        register_notification_type('test_type', test_type)
+
+        with self.subTest('Test list notifications'):
+            notify.send(sender=self.admin, type='default')
+            notify.send(sender=self.admin, type='test_type')
+            url = reverse(f'{self.app_label}:notifications_list')
+            response = self.client.get(url)
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.data['count'], 1)
+            self.assertEqual(
+                response.data['next'], None,
+            )
+            self.assertEqual(response.data['previous'], None)
+            self.assertEqual(len(response.data['results']), 1)
+
+        with self.subTest('Test retrieve notification'):
+            [(_, [n])] = notify.send(sender=self.admin, type='test_type')
+            url = reverse(f'{self.app_label}:notification_detail', kwargs={'pk': n.id})
+            response = self.client.get(url)
+            self.assertEqual(response.status_code, 404)
+            self.assertDictEqual(response.data, {'detail': NOT_FOUND_ERROR})
+
+        unregister_notification_type('test_type')
+
+    @patch('openwisp_notifications.tasks.delete_obsolete_notifications.delay')
+    def test_obsolete_notifications_busy_worker(self, mocked_task):
+        """
+        This test simulates deletion of related object when all celery
+        workers are busy and related objects are not cached.
+        """
+        operator = self._get_operator()
+        test_type = {
+            'verbose_name': 'Test Notification Type',
+            'level': 'warning',
+            'verb': 'testing',
+            'message': 'Test notification for {notification.target.pk}',
+            'email_subject': '[{site.name}] {notification.target.pk}',
+        }
+        register_notification_type('test_type', test_type)
+
+        notify.send(sender=self.admin, type='test_type', target=operator)
+        notification = Notification.objects.first()
+        self.assertEqual(
+            notification.message, f'<p>Test notification for {operator.pk}</p>'
+        )
+        operator.delete()
+        notification.refresh_from_db()
+
+        # Delete target object from cache
+        cache_key = Notification._cache_key(
+            notification.target_content_type_id, notification.target_object_id
+        )
+        cache.delete(cache_key)
+        self.assertIsNone(cache.get(cache_key))
+
+        with self.subTest('Test list notifications'):
+            url = reverse(f'{self.app_label}:notifications_list')
+            response = self.client.get(url)
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.data['count'], 1)
+            self.assertFalse(response.data['results'])
+
+        with self.subTest('Test retrieve notification'):
+            url = reverse(
+                f'{self.app_label}:notification_detail', kwargs={'pk': notification.id}
+            )
+            response = self.client.get(url)
+            self.assertEqual(response.status_code, 404)
+            self.assertDictEqual(response.data, {'detail': NOT_FOUND_ERROR})
+
+        unregister_notification_type('test_type')
