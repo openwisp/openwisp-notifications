@@ -120,3 +120,33 @@ class TestAdmin(TestOrganizationMixin, TestCase):
         res = self.client.get(self._url)
         self.assertContains(res, 'https://example.com')
         self.assertNotContains(res, 'window.location')
+
+    def test_jquery_import(self):
+        response = self.client.get(self._url)
+        self.assertInHTML(
+            '<script type="text/javascript" src="/static/admin/js/jquery.init.js">',
+            str(response.content),
+            1,
+        )
+        self.assertInHTML(
+            '<script type="text/javascript" src="/static/admin/js/vendor/jquery/jquery.min.js">',
+            str(response.content),
+            1,
+        )
+
+        response = self.client.get(reverse('admin:sites_site_changelist'))
+        self.assertInHTML(
+            '<script type="text/javascript" src="/static/admin/js/jquery.init.js">',
+            str(response.content),
+            1,
+        )
+        self.assertInHTML(
+            '<script type="text/javascript" src="/static/admin/js/vendor/jquery/jquery.min.js">',
+            str(response.content),
+            1,
+        )
+
+    def test_login_load_javascript(self):
+        self.client.logout()
+        response = self.client.get(reverse('admin:login'))
+        self.assertNotContains(response, 'notifications.js')
