@@ -2,10 +2,6 @@ from django.contrib.sites.models import Site
 from django.urls import NoReverseMatch, reverse
 
 
-class NotificationException(Exception):
-    pass
-
-
 def _get_object_link(obj, field, url_only=False, absolute_url=False, *args, **kwargs):
     related_obj = getattr(obj, field)
     try:

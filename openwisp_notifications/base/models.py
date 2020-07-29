@@ -12,11 +12,12 @@ from django.utils.translation import ugettext_lazy as _
 from markdown import markdown
 from notifications.base.models import AbstractNotification as BaseNotifcation
 from openwisp_notifications import settings as app_settings
+from openwisp_notifications.exceptions import NotificationRenderException
 from openwisp_notifications.types import (
     NOTIFICATION_CHOICES,
     get_notification_configuration,
 )
-from openwisp_notifications.utils import NotificationException, _get_object_link
+from openwisp_notifications.utils import _get_object_link
 
 from openwisp_utils.base import TimeStampedEditableModel, UUIDModel
 
@@ -87,11 +88,13 @@ class AbstractNotification(UUIDModel, BaseNotifcation):
                     md_text = render_to_string(
                         config['message_template'], context=dict(notification=self)
                     ).strip()
-            except AttributeError as e:
+            except (AttributeError, KeyError) as e:
+                from openwisp_notifications.tasks import delete_notification
+
                 logger.error(e)
-                md_text = (
-                    'Error while generating notification message,'
-                    ' notification data may have been deleted.'
+                delete_notification.delay(notification_id=self.pk)
+                raise NotificationRenderException(
+                    'Error in rendering notification message.'
                 )
             # clean up
             self.actor_link = self.action_link = self.target_link = None
@@ -107,9 +110,14 @@ class AbstractNotification(UUIDModel, BaseNotifcation):
                 return config['email_subject'].format(
                     site=Site.objects.get_current(), notification=self
                 )
-            except AttributeError as e:
+            except (AttributeError, KeyError) as e:
+                from openwisp_notifications.tasks import delete_notification
+
                 logger.error(e)
-                raise NotificationException('Error while generating notification')
+                delete_notification.delay(notification_id=self.pk)
+                raise NotificationRenderException(
+                    'Error while generating notification email'
+                )
         elif self.data.get('email_subject', None):
             return self.data.get('email_subject')
         else:

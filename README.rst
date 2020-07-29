@@ -542,6 +542,23 @@ It sets the number of seconds the notification contents should be stored in the 
 If you want cached notification content to never expire, then set it to ``None``.
 Set it to ``0`` if you don't want to store notification contents in cache at all.
 
+
+Exceptions
+----------
+
+``NotificationRenderException``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code-block:: python
+
+    openwisp_notifications.exceptions.NotificationRenderException
+
+Raised when notification properties(``email`` or ``message``) cannot be rendered from
+concerned *notification type*. It sub-classes ``Exception`` class.
+
+It can be raised due to accessing non-existing keys like missing related objects
+in ``email`` or ``message`` setting of concerend *notification type*.
+
 REST API
 --------
 

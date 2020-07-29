@@ -12,10 +12,11 @@ from django.template.loader import render_to_string
 from django.utils import timezone
 from django.utils.html import strip_tags
 from openwisp_notifications import settings as app_settings
+from openwisp_notifications.exceptions import NotificationRenderException
 from openwisp_notifications.swapper import load_model
 from openwisp_notifications.tasks import delete_obsolete_notifications
 from openwisp_notifications.types import get_notification_configuration
-from openwisp_notifications.utils import NotificationException, _get_object_link
+from openwisp_notifications.utils import _get_object_link
 from openwisp_notifications.websockets import handlers as ws_handlers
 
 User = get_user_model()
@@ -120,7 +121,7 @@ def send_email_notification(sender, instance, created, **kwargs):
         return
     try:
         subject = instance.email_subject
-    except NotificationException:
+    except NotificationRenderException:
         # Do not send email if notification is malformed.
         return
     url = instance.data.get('url', '') if instance.data else None

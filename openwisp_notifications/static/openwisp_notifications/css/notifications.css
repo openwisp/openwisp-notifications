@@ -105,7 +105,7 @@
 }
 .ow-notification-elem {
   cursor: pointer;
-  padding: 10px;
+  padding: 10px 20px;
   transition: 0.4s;
   color: black;
   font-weight: bold;
@@ -116,7 +116,7 @@
   color: white;
 }
 .ow-notification-elem p{
-  margin: 5px auto;
+  margin: 5px auto 0px auto;
 }
 .ow-notification-meta{
   display: flex;
