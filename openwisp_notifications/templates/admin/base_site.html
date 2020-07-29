@@ -34,9 +34,9 @@
         const notificationApiHost = window.location;
       {% endif %}
       {% if debug %}
-        const webSocketProtocol = 'ws'
+        const webSocketProtocol = 'ws';
       {% else %}
-        const webSocketProtocol = 'wss'
+        const webSocketProtocol = 'wss';
       {% endif %}
       const notificationSound = new Audio('{{ OPENWISP_NOTIFICATIONS_SOUND }}');
     </script>
