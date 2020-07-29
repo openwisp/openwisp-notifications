@@ -115,7 +115,7 @@ settings.
     urlpatterns = [
         path('admin/', admin.site.urls),
         path('api/v1/', include(('openwisp_users.api.urls', 'users'), namespace='users')),
-        path('', include('openwisp_notifications.urls', namespace='openwisp_notifications')),
+        path('', include('openwisp_notifications.urls', namespace='notifications')),
     ]
 
     urlpatterns += staticfiles_urlpatterns()

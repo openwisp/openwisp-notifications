@@ -14,7 +14,7 @@ NOT_FOUND_ERROR = ErrorDetail(string='Not found.', code='not_found')
 
 
 class TestNotificationApi(TestCase, TestOrganizationMixin, AuthenticationMixin):
-    app_label = 'openwisp_notifications'
+    app_label = 'notifications'
 
     def setUp(self):
         self.admin = self._get_admin(self)

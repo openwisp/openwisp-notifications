@@ -13,5 +13,5 @@ def get_urls(api_views=None, social_views=None):
     return urls
 
 
-app_name = 'openwisp_notifications'
+app_name = 'notifications'
 urlpatterns = get_urls()
