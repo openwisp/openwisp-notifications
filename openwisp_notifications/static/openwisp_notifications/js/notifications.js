@@ -2,7 +2,7 @@
 const notificationReadStatus = new Map();
 const notificationTimeoutMap = new Map();
 const notificationSocket = new ReconnectingWebSocket(
-    `ws://${notificationApiHost.host}/ws/notifications/`,
+    `${webSocketProtocol}://${notificationApiHost.host}/ws/notifications/`,
     null, {
         debug: false
     }
