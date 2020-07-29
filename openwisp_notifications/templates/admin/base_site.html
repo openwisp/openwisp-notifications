@@ -33,6 +33,11 @@
       {% else %}
         const notificationApiHost = window.location;
       {% endif %}
+      {% if debug %}
+        const webSocketProtocol = 'ws'
+      {% else %}
+        const webSocketProtocol = 'wss'
+      {% endif %}
       const notificationSound = new Audio('{{ OPENWISP_NOTIFICATIONS_SOUND }}');
     </script>
     <script type="text/javascript" src="{% static 'openwisp_notifications/js/vendor/reconnecting-websocket.min.js' %}"></script>

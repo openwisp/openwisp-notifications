@@ -8,7 +8,8 @@
         "gettext": true,
         "ReconnectingWebSocket": true,
         "notificationApiHost": true,
-        "notificationSound": true
+        "notificationSound": true,
+        "webSocketProtocol": true
     },
     "browser": true
 }

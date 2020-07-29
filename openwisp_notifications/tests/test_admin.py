@@ -150,3 +150,14 @@ class TestAdmin(TestOrganizationMixin, TestCase):
         self.client.logout()
         response = self.client.get(reverse('admin:login'))
         self.assertNotContains(response, 'notifications.js')
+
+    def test_websocket_protocol(self):
+        with self.subTest('Test in production environment'):
+            response = self.client.get(self._url)
+            self.assertContains(response, 'wss')
+
+        with self.subTest('Test in development environment'):
+            with self.settings(DEBUG=True, INTERNAL_IPS=['127.0.0.1']):
+                response = self.client.get(self._url)
+                self.assertNotContains(response, 'wss')
+                self.assertContains(response, 'ws')
