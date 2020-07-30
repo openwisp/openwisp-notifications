@@ -27,7 +27,7 @@ class TestNotificationApi(TestCase, TestOrganizationMixin, AuthenticationMixin):
         self.client.force_login(self.admin)
 
     def test_list_notification_api(self):
-        number_of_notifications = 20
+        number_of_notifications = 11
         url = reverse(f'{self.app_label}:notifications_list')
         for _ in range(number_of_notifications):
             notify.send(sender=self.admin, type='default', target=self.admin)
@@ -52,7 +52,7 @@ class TestNotificationApi(TestCase, TestOrganizationMixin, AuthenticationMixin):
                 next_response.data['previous'],
                 'http://testserver/api/v1/notifications/',
             )
-            self.assertEqual(len(next_response.data['results']), 10)
+            self.assertEqual(len(next_response.data['results']), 1)
 
         with self.subTest('Test "page_size" query'):
             page_size = 5
@@ -313,7 +313,7 @@ class TestNotificationApi(TestCase, TestOrganizationMixin, AuthenticationMixin):
             self.assertEqual(Notification.objects.count(), 1)
 
     def test_list_view_notification_cache(self):
-        number_of_notifications = 20
+        number_of_notifications = 5
         url = reverse(f'{self.app_label}:notifications_list')
         url = f'{url}?page_size={number_of_notifications}'
         operator = self._get_operator()
