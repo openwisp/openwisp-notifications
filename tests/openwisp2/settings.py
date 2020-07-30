@@ -172,6 +172,8 @@ OPENWISP_ADMIN_SHOW_USERLINKS_BLOCK = True
 OPENWISP_API_DOCS = True
 OPENWISP_USERS_AUTH_API = True
 
+TEST_RUNNER = 'openwisp_utils.tests.TimeLoggingTestRunner'
+
 # local settings must be imported before test runner otherwise they'll be ignored
 try:
     from openwisp2.local_settings import *

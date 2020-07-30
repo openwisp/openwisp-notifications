@@ -69,19 +69,18 @@ class TestAdmin(TestOrganizationMixin, TestCase):
         self.assertContains(r, self._expected_output())
 
     def test_non_zero_notifications(self):
+        patched_function = 'openwisp_notifications.templatetags.notification_tags.base_notification_unread'
         with self.subTest("Test UI for less than 100 notifications"):
-            no_of_notifications = 10
-            for _ in range(no_of_notifications):
-                notify.send(**self.notification_options)
-            r = self.client.get(self._url)
-            self.assertContains(r, self._expected_output('10'))
+            with patch(patched_function, return_value=10):
+                r = self.client.get(self._url)
+                self.assertContains(r, self._expected_output('10'))
+
+        Notification.invalidate_unread_cache(self.admin)
 
         with self.subTest("Test UI for 99+ notifications"):
-            no_of_notifications = 100
-            for _ in range(no_of_notifications):
-                notify.send(**self.notification_options)
-            r = self.client.get(self._url)
-            self.assertContains(r, self._expected_output('99+'))
+            with patch(patched_function, return_value=100):
+                r = self.client.get(self._url)
+                self.assertContains(r, self._expected_output('99+'))
 
     def test_cached_value(self):
         self.client.get(self._url)
