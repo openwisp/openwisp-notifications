@@ -38,9 +38,7 @@
       {% else %}
         const webSocketProtocol = 'wss';
       {% endif %}
-      {% if OPENWISP_NOTIFICATIONS_SOUND %}
-        const notificationSound = new Audio('{{ OPENWISP_NOTIFICATIONS_SOUND }}');
-      {% endif %}
+      const notificationSound = new Audio('{{ OPENWISP_NOTIFICATIONS_SOUND | default:"" }}');
     </script>
     <script type="text/javascript" src="{% static 'openwisp_notifications/js/vendor/reconnecting-websocket.min.js' %}"></script>
     <script type="text/javascript" src="{% static 'openwisp_notifications/js/notifications.js' %}"></script>
