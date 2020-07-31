@@ -15,8 +15,6 @@ class TestAdmin(BaseTestAdmin):
 
 
 class TestNotifications(BaseTestNotifications):
-    app_label = 'sample_notifications'
-
     # Used only for testing openwisp-notifications
     def test_test_app_object_created_notification(self):
         from openwisp_users.models import OrganizationUser
@@ -38,7 +36,7 @@ class TestNotifications(BaseTestNotifications):
 
 
 class TestNotificationAPI(BaseTestNotificationApi):
-    app_label = 'sample_notifications'
+    pass
 
 
 del BaseTestAdmin

@@ -36,8 +36,6 @@ ten_minutes_ago = start_time - timedelta(minutes=10)
 
 
 class TestNotifications(TestOrganizationMixin, TestCase):
-    app_label = 'openwisp_notifications'
-
     def setUp(self):
         self.admin = self._create_admin()
         self.notification_options = dict(
