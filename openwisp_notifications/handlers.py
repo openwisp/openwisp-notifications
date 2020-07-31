@@ -73,9 +73,9 @@ def notify_handler(**kwargs):
         (kwargs.pop(opt, None), opt) for opt in ('target', 'action_object')
     ]
 
-    new_notifications = []
+    notification_list = []
     for recipient in recipients:
-        newnotify = Notification(
+        notification = Notification(
             recipient=recipient,
             actor=actor,
             verb=str(verb),
@@ -89,18 +89,18 @@ def notify_handler(**kwargs):
         # Set optional objects
         for obj, opt in optional_objs:
             if obj is not None:
-                setattr(newnotify, '%s_object_id' % opt, obj.pk)
+                setattr(notification, '%s_object_id' % opt, obj.pk)
                 setattr(
-                    newnotify,
+                    notification,
                     '%s_content_type' % opt,
                     ContentType.objects.get_for_model(obj),
                 )
         if kwargs and EXTRA_DATA:
-            newnotify.data = kwargs
-        newnotify.save()
-        new_notifications.append(newnotify)
+            notification.data = kwargs
+        notification.save()
+        notification_list.append(notification)
 
-    return new_notifications
+    return notification_list
 
 
 @receiver(post_save, sender=User, dispatch_uid='create_notificationuser')

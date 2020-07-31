@@ -396,6 +396,43 @@ An example usage is shown below.
 **Note**: It will raise ``ImproperlyConfigured`` exception if the concerned notification type is not
 registered.
 
+Passing extra data to notifications
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+If needed, additional data, not known beforehand, can be included in the notification message.
+
+A perfect example for this case is an error notification, the error message will vary
+depending on what has happened, so we cannot know until the notification is generated.
+
+Here's how to do it:
+
+.. code-block:: python
+
+    from openwisp_notifications.types import register_notification_type
+
+    register_notification_type('error_type', {
+        'verbose_name': 'Error',
+        'level': 'error',
+        'verb': 'error',
+        'message': 'Error: {error}',
+        'email_subject': 'Error subject: {error}',
+    })
+
+Then in the application code:
+
+.. code-block:: python
+
+    from openwisp_notifications.signals import notify
+
+    try:
+        operation_which_can_fail()
+    except Exception as error:
+        notify.send(
+            type='error_type',
+            sender=sender,
+            error=str(error)
+        )
+
 Settings
 --------
 
