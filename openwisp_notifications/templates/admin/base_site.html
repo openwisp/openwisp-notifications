@@ -3,8 +3,8 @@
 
 {% block extrastyle %}
   {{ block.super }}
-  <link rel="stylesheet" type="text/css" href="{% static 'openwisp_notifications/css/loader.css' %}" />
-  <link rel="stylesheet" type="text/css" href="{% static 'openwisp_notifications/css/notifications.css' %}" />
+  <link rel="stylesheet" type="text/css" href="{% static 'openwisp-notifications/css/loader.css' %}" />
+  <link rel="stylesheet" type="text/css" href="{% static 'openwisp-notifications/css/notifications.css' %}" />
 {% endblock extrastyle %}
 
 {% block extrahead %}
@@ -17,7 +17,7 @@
 
 {% block userlinks %}
   <div class="ow-notifications" id="openwisp_notifications">
-    <img class="bell-icon" src="{% static 'openwisp_notifications/images/icons/icon-bell.svg' %}" />
+    <img class="bell-icon" src="{% static 'openwisp-notifications/images/icons/icon-bell.svg' %}" />
     {% unread_notifications %}
   </div>
   {% csrf_token %}
@@ -40,7 +40,7 @@
       {% endif %}
       const notificationSound = new Audio('{{ OPENWISP_NOTIFICATIONS_SOUND | default:"" }}');
     </script>
-    <script type="text/javascript" src="{% static 'openwisp_notifications/js/vendor/reconnecting-websocket.min.js' %}"></script>
-    <script type="text/javascript" src="{% static 'openwisp_notifications/js/notifications.js' %}"></script>
+    <script type="text/javascript" src="{% static 'openwisp-notifications/js/vendor/reconnecting-websocket.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'openwisp-notifications/js/notifications.js' %}"></script>
   {% endif %}
 {% endblock footer %}

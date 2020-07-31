@@ -496,7 +496,7 @@ for reference implementation.
 |   type    |  ``str``                                                                                     |
 +-----------+----------------------------------------------------------------------------------------------+
 |  default  |  `OpenWISP logo <https://raw.githubusercontent.com/openwisp/openwisp-notifications/master/ \ |
-|           |  openwisp_notifications/static/openwisp_notifications/images/openwisp-logo.png>`_            |
+|           |  openwisp_notifications/static/openwisp-notifications/images/openwisp-logo.png>`_            |
 +-----------+----------------------------------------------------------------------------------------------+
 
 This setting takes the URL of the logo to be displayed on email notification.
@@ -554,7 +554,7 @@ for more information on ``SESSION_COOKIE_DOMAIN`` and ``CSRF_COOKIE_DOMAIN``.
 |   type    |  ``str``                                                                                   |
 +-----------+--------------------------------------------------------------------------------------------+
 |  default  |  `notification_bell.mp3 <https://github.com/openwisp/openwisp-notifications/tree/master/ \ |
-|           |  openwisp_notifications/static/openwisp_notifications/audio/notification_bell.mp3>`_       |
+|           |  openwisp_notifications/static/openwisp-notifications/audio/notification_bell.mp3>`_       |
 +-----------+--------------------------------------------------------------------------------------------+
 
 This setting defines notification sound to be played when notification is received
@@ -1112,7 +1112,7 @@ Attributions
 Icons
 ~~~~~
 
-`Icons <https://github.com/openwisp/openwisp-notifications/tree/master/openwisp_notifications/static/openwisp_notifications/images/icons/>`_
+`Icons <https://github.com/openwisp/openwisp-notifications/tree/master/openwisp_notifications/static/openwisp-notifications/images/icons/>`_
 used are taken from `Font Awesome <https://fontawesome.com/>`_ project.
 
 LICENSE: `https://fontawesome.com/license <https://fontawesome.com/license>`_
@@ -1120,7 +1120,7 @@ LICENSE: `https://fontawesome.com/license <https://fontawesome.com/license>`_
 Sound
 ~~~~~
 
-`Notification sound <https://github.com/openwisp/openwisp-notifications/tree/master/openwisp_notifications/static/openwisp_notifications/audio>`_
+`Notification sound <https://github.com/openwisp/openwisp-notifications/tree/master/openwisp_notifications/static/openwisp-notifications/audio>`_
 is taken from `Notification Sounds <https://notificationsounds.com/>`_.
 
 LICENSE: `Creative Commons Attribution license <https://creativecommons.org/licenses/by/4.0/legalcode>`_
