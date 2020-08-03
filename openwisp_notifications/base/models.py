@@ -82,8 +82,9 @@ class AbstractNotification(UUIDModel, BaseNotifcation):
 
             config = get_notification_configuration(self.type)
             try:
+                data = self.data or {}
                 if 'message' in config:
-                    md_text = config['message'].format(notification=self)
+                    md_text = config['message'].format(notification=self, **data)
                 else:
                     md_text = render_to_string(
                         config['message_template'], context=dict(notification=self)
@@ -107,8 +108,9 @@ class AbstractNotification(UUIDModel, BaseNotifcation):
         if self.type:
             try:
                 config = get_notification_configuration(self.type)
+                data = self.data or {}
                 return config['email_subject'].format(
-                    site=Site.objects.get_current(), notification=self
+                    site=Site.objects.get_current(), notification=self, **data
                 )
             except (AttributeError, KeyError) as e:
                 from openwisp_notifications.tasks import delete_notification

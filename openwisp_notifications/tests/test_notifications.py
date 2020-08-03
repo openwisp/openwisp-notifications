@@ -82,6 +82,30 @@ class TestNotifications(TestOrganizationMixin, TestCase):
         self.assertEqual(n.message, 'Test Notification Description')
         self.assertEqual(n.recipient, self.admin)
 
+    def test_create_with_extra_data(self):
+        register_notification_type(
+            'error_type',
+            {
+                'verbose_name': 'Error',
+                'level': 'error',
+                'verb': 'error',
+                'message': 'Error: {error}',
+                'email_subject': 'Error subject: {error}',
+            },
+        )
+        error = '500 Internal Server Error'
+        notify.send(
+            type='error_type',
+            url='https://localhost:8000/admin',
+            recipient=self.admin,
+            sender=self.admin,
+            error=error,
+        )
+        self.assertEqual(notification_queryset.count(), 1)
+        n = notification_queryset.first()
+        self.assertIn(f'Error: {error}', n.message)
+        self.assertEqual(n.email_subject, f'Error subject: {error}')
+
     def test_superuser_notifications_disabled(self):
         self.assertEqual(self.admin.notificationuser.email, True)
         self.admin.notificationuser.receive = False
