@@ -115,9 +115,13 @@ def create_notificationuser_settings(sender, instance, **kwargs):
 def send_email_notification(sender, instance, created, **kwargs):
     # Abort if new notification is not created or
     # notification recipient opted out of email notifications
-    if not created or not (
-        instance.recipient.notificationuser.email and instance.recipient.email
-    ):
+    if instance.recipient.notificationuser.email is not None:
+        email_preference = instance.recipient.notificationuser.email
+    else:
+        email_preference = get_notification_configuration(instance.type).get(
+            'email_notification', True
+        )
+    if not created or not (email_preference and instance.recipient.email):
         return
     try:
         subject = instance.email_subject

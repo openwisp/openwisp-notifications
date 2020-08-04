@@ -165,7 +165,7 @@ class AbstractNotificationUser(TimeStampedEditableModel):
         _('receive notifications'), default=True, help_text=_(_RECEIVE_HELP)
     )
     email = models.BooleanField(
-        _('email notifications'), default=True, help_text=_(_RECEIVE_HELP)
+        _('email notifications'), null=True, help_text=_(_RECEIVE_HELP)
     )
 
     class Meta:

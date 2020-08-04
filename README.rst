@@ -277,21 +277,23 @@ You can think of notification type as a template for notifications.
 
 These properties can be configured for each notification type:
 
-+------------------+--------------------------------------------------------------------------------+
-|   **Property**   |                         **Description**                                        |
-+------------------+--------------------------------------------------------------------------------+
-|      level       | Sets ``level`` attribute of the notification.                                  |
-+------------------+--------------------------------------------------------------------------------+
-|      verb        | Sets ``verb`` attribute of the notification.                                   |
-+------------------+--------------------------------------------------------------------------------+
-|      name        | Sets display name of notification type.                                        |
-+------------------+--------------------------------------------------------------------------------+
-|     message      | Sets ``message`` attribute of the notification.                                |
-+------------------+--------------------------------------------------------------------------------+
-|  email_subject   | Sets subject of the email notification.                                        |
-+------------------+--------------------------------------------------------------------------------+
-| message_template | Path to file having template for message of the notification.                  |
-+------------------+--------------------------------------------------------------------------------+
++------------------------+-----------------------------------------------------------------+
+| **Property**           |                         **Description**                         |
++------------------------+-----------------------------------------------------------------+
+| ``level``              | Sets ``level`` attribute of the notification.                   |
++------------------------+-----------------------------------------------------------------+
+| ``verb``               | Sets ``verb`` attribute of the notification.                    |
++------------------------+-----------------------------------------------------------------+
+| ``name``               | Sets display name of notification type.                         |
++------------------------+-----------------------------------------------------------------+
+| ``message``            | Sets ``message`` attribute of the notification.                 |
++------------------------+-----------------------------------------------------------------+
+| ``email_subject``      | Sets subject of the email notification.                         |
++------------------------+-----------------------------------------------------------------+
+| ``message_template``   | Path to file having template for message of the notification.   |
++------------------------+-----------------------------------------------------------------+
+| ``email_notification`` | Sets email preference for notifications. Defaults to ``True``.  |
++------------------------+-----------------------------------------------------------------+
 
 **Note**: A notification type configuration should contain atleast one of ``message`` or ``message_template``
 settings. If both of them are present, ``message`` is given preference over ``message_template``.

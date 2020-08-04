@@ -107,7 +107,7 @@ class TestNotifications(TestOrganizationMixin, TestCase):
         self.assertEqual(n.email_subject, f'Error subject: {error}')
 
     def test_superuser_notifications_disabled(self):
-        self.assertEqual(self.admin.notificationuser.email, True)
+        self.assertEqual(self.admin.notificationuser.email, None)
         self.admin.notificationuser.receive = False
         self.admin.notificationuser.save()
         self.assertEqual(self.admin.notificationuser.email, False)
@@ -567,3 +567,60 @@ class TestNotifications(TestOrganizationMixin, TestCase):
         # Test cache is not set
         self.assertIsNone(cache.get(Notification._cache_key(self.admin.pk)))
         self.assertIsNone(cache.get(Notification._cache_key(operator.pk)))
+
+    def test_notification_type_email_notification_setting_true(self):
+        test_type = {
+            'verbose_name': 'Test Notification Type',
+            'level': 'info',
+            'verb': 'testing',
+            'message': 'Test message',
+            'email_subject': 'Test Email Subject',
+            'notification_email': True,
+        }
+
+        register_notification_type('test_type', test_type)
+        self.notification_options.pop('email_subject')
+        self.notification_options.update({'type': 'test_type'})
+
+        with self.subTest('Test "email_notification" setting not defined'):
+            self._create_notification()
+            self.assertEqual(len(mail.outbox), 1)
+            self.assertIsNotNone(mail.outbox.pop())
+
+        with self.subTest('Test user email preference not defined'):
+            self._create_notification()
+            self.assertEqual(len(mail.outbox), 1)
+            self.assertIsNotNone(mail.outbox.pop())
+
+        with self.subTest('Test user email preference is "False"'):
+            self.admin.notificationuser.email = False
+            self.admin.save()
+            self.assertEqual(len(mail.outbox), 0)
+
+        unregister_notification_type('test_type')
+
+    def test_notification_type_email_notification_setting_false(self):
+        test_type = {
+            'verbose_name': 'Test Notification Type',
+            'level': 'info',
+            'verb': 'testing',
+            'message': 'Test message',
+            'email_subject': 'Test Email Subject',
+            'email_notification': False,
+        }
+
+        register_notification_type('test_type', test_type)
+        self.notification_options.pop('email_subject')
+        self.notification_options.update({'type': 'test_type'})
+
+        with self.subTest('Test user email preference not defined'):
+            self._create_notification()
+            self.assertEqual(len(mail.outbox), 0)
+
+        with self.subTest('Test user email preference is "True"'):
+            self.admin.notificationuser.email = True
+            self.admin.save()
+            self._create_notification()
+            self.assertEqual(len(mail.outbox), 1)
+
+        unregister_notification_type('test_type')
