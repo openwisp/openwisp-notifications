@@ -3,7 +3,6 @@ import logging
 from django.db import models
 from openwisp_notifications.exceptions import NotificationRenderException
 from openwisp_notifications.swapper import load_model
-from openwisp_notifications.utils import _get_object_link
 from rest_framework import serializers
 from rest_framework.exceptions import NotFound
 
@@ -30,7 +29,6 @@ class CustomListSerializer(serializers.ListSerializer):
 
 
 class NotificationSerializer(serializers.ModelSerializer):
-    target_object_url = serializers.SerializerMethodField()
     actor_content_type = ContentTypeField(read_only=True)
     target_content_type = ContentTypeField(read_only=True)
     action_object_content_type = ContentTypeField(read_only=True)
@@ -38,14 +36,11 @@ class NotificationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Notification
         exclude = ['description', 'deleted', 'public']
-        extra_fields = ['message', 'email_subject', 'target_object_url']
+        extra_fields = ['message', 'email_subject', 'target_url']
 
     def get_field_names(self, declared_fields, info):
         model_fields = super().get_field_names(declared_fields, info)
         return model_fields + self.Meta.extra_fields
-
-    def get_target_object_url(self, obj):
-        return _get_object_link(obj, 'target', url_only=True, absolute_url=True)
 
     @property
     def data(self):
@@ -62,7 +57,7 @@ class NotificationListSerializer(NotificationSerializer):
             'id',
             'message',
             'unread',
-            'target_object_url',
+            'target_url',
             'email_subject',
             'timestamp',
             'level',

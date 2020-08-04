@@ -154,7 +154,7 @@ function notificationWidget($) {
         }
 
         return `<div class="ow-notification-elem ${klass}" id=ow-${elem.id}
-                        data-location="${elem.target_object_url}">
+                        data-location="${elem.target_url}">
                     <div class="ow-notification-meta">
                         <div class="ow-notification-level-wrapper">
                             <div class="ow-notify-${elem.level} icon"></div>
@@ -267,7 +267,7 @@ function initWebSockets($) {
         }
         // Check whether to display notification toast
         if (data.notification) {
-            let toast = $(`<div class="ow-notification-toast" data-location="${data.notification.target_object_url}"
+            let toast = $(`<div class="ow-notification-toast" data-location="${data.notification.target_url}"
                             id="ow-${data.notification.id}">
                                 <div style="display:flex">
                                     <div class="icon ow-notify-${data.notification.level}"></div>

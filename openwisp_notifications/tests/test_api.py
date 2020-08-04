@@ -96,7 +96,7 @@ class TestNotificationApi(TestCase, TestOrganizationMixin, AuthenticationMixin):
             self.assertIn('id', n)
             self.assertIn('message', n)
             self.assertTrue(n['unread'])
-            self.assertIn('target_object_url', n)
+            self.assertIn('target_url', n)
             self.assertEqual(
                 n['email_subject'], '[example.com] Default Notification Subject'
             )

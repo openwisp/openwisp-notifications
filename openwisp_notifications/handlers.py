@@ -16,7 +16,6 @@ from openwisp_notifications.exceptions import NotificationRenderException
 from openwisp_notifications.swapper import load_model
 from openwisp_notifications.tasks import delete_obsolete_notifications
 from openwisp_notifications.types import get_notification_configuration
-from openwisp_notifications.utils import _get_object_link
 from openwisp_notifications.websockets import handlers as ws_handlers
 
 User = get_user_model()
@@ -129,9 +128,7 @@ def send_email_notification(sender, instance, created, **kwargs):
     if url:
         target_url = url
     elif instance.target:
-        target_url = _get_object_link(
-            instance, field='target', url_only=True, absolute_url=True
-        )
+        target_url = instance.target_url
     else:
         target_url = None
     if target_url:
