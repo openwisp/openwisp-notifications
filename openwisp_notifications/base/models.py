@@ -6,6 +6,7 @@ from django.contrib.sites.models import Site
 from django.core.cache import cache
 from django.db import models
 from django.template.loader import render_to_string
+from django.urls import reverse
 from django.utils.functional import cached_property
 from django.utils.html import mark_safe
 from django.utils.translation import ugettext_lazy as _
@@ -17,7 +18,7 @@ from openwisp_notifications.types import (
     NOTIFICATION_CHOICES,
     get_notification_configuration,
 )
-from openwisp_notifications.utils import _get_object_link
+from openwisp_notifications.utils import _get_absolute_url, _get_object_link
 
 from openwisp_utils.base import TimeStampedEditableModel, UUIDModel
 
@@ -82,11 +83,20 @@ class AbstractNotification(UUIDModel, BaseNotifcation):
 
     @cached_property
     def message(self):
+        return self.get_message()
+
+    @property
+    def email_message(self):
+        return self.get_message(email_message=True)
+
+    def get_message(self, email_message=False):
         if self.type:
             # setting links in notification object for message rendering
             self.actor_link = self.actor_url
             self.action_link = self.action_url
-            self.target_link = self.target_url
+            self.target_link = (
+                self.target_url if not email_message else self.redirect_view_url
+            )
 
             config = get_notification_configuration(self.type)
             try:
@@ -160,6 +170,12 @@ class AbstractNotification(UUIDModel, BaseNotifcation):
     @cached_property
     def target(self):
         return self._related_object('target')
+
+    @property
+    def redirect_view_url(self):
+        return _get_absolute_url(
+            reverse('notifications:notification_read_redirect', args=(self.pk,))
+        )
 
 
 class AbstractNotificationUser(TimeStampedEditableModel):

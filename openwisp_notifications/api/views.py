@@ -1,3 +1,5 @@
+from django.http import HttpResponseRedirect
+from django.urls import reverse
 from django_filters.rest_framework import DjangoFilterBackend
 from openwisp_notifications.api.serializers import (
     NotificationListSerializer,
@@ -14,6 +16,11 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from openwisp_users.api.authentication import BearerAuthentication
+
+UNAUTHORIZED_STATUS_CODES = (
+    status.HTTP_401_UNAUTHORIZED,
+    status.HTTP_403_FORBIDDEN,
+)
 
 Notification = load_model('Notification')
 
@@ -48,13 +55,32 @@ class NotificationDetailView(BaseNotificationView, RetrieveDestroyAPIView):
     serializer_class = NotificationSerializer
     lookup_field = 'pk'
 
-    def patch(self, request, pk):
-        return self._mark_notification_read(pk)
+    def patch(self, request, *args, **kwargs):
+        return self._mark_notification_read()
 
-    def _mark_notification_read(self, notification_id):
+    def _mark_notification_read(self):
         notification = self.get_object()
         notification.mark_as_read()
         return Response(status=status.HTTP_200_OK,)
+
+
+class NotificationReadRedirect(BaseNotificationView):
+    lookup_field = 'pk'
+
+    def get(self, request, *args, **kwargs):
+        notification = self.get_object()
+        notification.mark_as_read()
+        return HttpResponseRedirect(notification.target_url)
+
+    def handle_exception(self, exc):
+        response = super().handle_exception(exc)
+        if response.status_code not in UNAUTHORIZED_STATUS_CODES:
+            return response
+
+        redirect_url = '{admin_login}?next={path}'.format(
+            admin_login=reverse('admin:login'), path=self.request.path
+        )
+        return HttpResponseRedirect(redirect_url)
 
 
 class NotificationReadAllView(BaseNotificationView):
@@ -69,3 +95,4 @@ class NotificationReadAllView(BaseNotificationView):
 notifications_list = NotificationListView.as_view()
 notification_detail = NotificationDetailView.as_view()
 notifications_read_all = NotificationReadAllView.as_view()
+notification_read_redirect = NotificationReadRedirect.as_view()

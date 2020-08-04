@@ -383,9 +383,6 @@ class TestNotifications(TestOrganizationMixin, TestCase):
 
     def test_notification_type_email(self):
         operator = self._create_operator()
-        target_url = _get_absolute_url(
-            reverse('admin:openwisp_users_user_change', args=(operator.pk,))
-        )
         email_body = '{message}\n\nFor more information see {target_url}.'
         self.notification_options.update({'type': 'default'})
 
@@ -418,7 +415,7 @@ class TestNotifications(TestOrganizationMixin, TestCase):
             self.assertEqual(content_type, 'text/html')
             self.assertIn(n.message, html_message)
             self.assertNotIn(
-                f'<a href="{target_url}">', html_message,
+                f'<a href="{n.redirect_view_url}">', html_message,
             )
 
         with self.subTest('Test email with target object'):
@@ -429,7 +426,9 @@ class TestNotifications(TestOrganizationMixin, TestCase):
             html_message, content_type = email.alternatives.pop()
             self.assertEqual(
                 email.body,
-                email_body.format(message=strip_tags(n.message), target_url=target_url),
+                email_body.format(
+                    message=strip_tags(n.message), target_url=n.redirect_view_url
+                ),
             )
             self.assertEqual(
                 email.subject, '[example.com] Default Notification Subject'
@@ -442,7 +441,7 @@ class TestNotifications(TestOrganizationMixin, TestCase):
             )
             self.assertIn(n.message, html_message)
             self.assertIn(
-                f'<a href="{target_url}">For further information see'
+                f'<a href="{n.redirect_view_url}">For further information see'
                 f' "{n.target_content_type.model}: {n.target}".</a>',
                 html_message,
             )
@@ -524,9 +523,6 @@ class TestNotifications(TestOrganizationMixin, TestCase):
     @patch.object(app_settings, 'OPENWISP_NOTIFICATIONS_HTML_EMAIL', False)
     def test_no_html_email(self, *args):
         operator = self._create_operator()
-        target_url = _get_absolute_url(
-            reverse('admin:openwisp_users_user_change', args=(operator.pk,))
-        )
         self.notification_options.update(
             {'type': 'default', 'target': operator, 'url': None}
         )
@@ -535,7 +531,7 @@ class TestNotifications(TestOrganizationMixin, TestCase):
         n = notification_queryset.first()
         self.assertEqual(
             email.body,
-            f'{strip_tags(n.message)}\n\nFor more information see {target_url}.',
+            f'{strip_tags(n.message)}\n\nFor more information see {n.redirect_view_url}.',
         )
         self.assertEqual(email.subject, '[example.com] Default Notification Subject')
         self.assertFalse(email.alternatives)

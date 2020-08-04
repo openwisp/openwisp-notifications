@@ -128,7 +128,7 @@ def send_email_notification(sender, instance, created, **kwargs):
     if url:
         target_url = url
     elif instance.target:
-        target_url = instance.target_url
+        target_url = instance.redirect_view_url
     else:
         target_url = None
     if target_url:
