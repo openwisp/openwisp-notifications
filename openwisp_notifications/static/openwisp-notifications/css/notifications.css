@@ -80,7 +80,7 @@
   text-align: left;
   width: 425px;
   text-transform: none;
-  background-color: whitesmoke;
+  background-color: #efefef;
   border-radius: 5px;
   box-shadow: 0px 0px 5px 1px black;
   font-size: 12px;
@@ -90,9 +90,10 @@
   cursor: pointer;
 }
 .ow-notification-dropdown .filters {
-  margin: 10px;
+  margin: 12px 18px 10px;
   display: flex;
   justify-content: space-between;
+  font-weight: 500;
 }
 .ow-notification-dropdown .disabled {
   color: grey !important;
@@ -107,35 +108,45 @@
   cursor: pointer;
   padding: 10px 20px;
   transition: 0.4s;
-  color: black;
+  color: #333333;
   font-weight: bold;
-  background-color: whitesmoke;
+  background-color: #efefef;
 }
 .ow-notification-elem.unread{
-  background: #464646;
-  color: white;
+  background: #515151;
+  color: #fff;
 }
 .ow-notification-elem p{
   margin: 5px auto 0px auto;
+  font-weight: normal;
 }
 .ow-notification-meta{
   display: flex;
   justify-content: space-between;
-  color: #777;;
+  color: #777;
   -webkit-text-stroke: 0.2px white;
   padding: 1px 0px;
 }
-.ow-notification-elem:hover .ow-notification-meta{
-  color: white;
+.ow-notification-date {
+  font-weight: normal;
 }
 .ow-notification-elem a {
   color: #df5d43 !important;
+  border-bottom: 0 !important;
+  font-weight: bold;
 }
-.ow-notification-elem:hover a{
-  color: white !important;
+.ow-notification-elem.unread .ow-notification-meta {
+  color: #fff;
 }
-.ow-notification-elem:hover{
-  background-color: #df5d43 !important;
+.ow-notification-elem:not(.unread):hover {
+  background: #fff;
+  color: #000;
+}
+.ow-notification-elem:not(.unread):hover .ow-notification-meta {
+  color: #000;
+}
+.ow-notification-elem.unread:hover {
+  background: #000;
 }
 .ow-no-notifications {
   color: #464646;
@@ -143,7 +154,7 @@
   font-weight: bold;
   font-size: small;
   padding: 8px;
-  background-color: whitesmoke;
+  background: #efefef;
 }
 
 /* Loader */
@@ -151,7 +162,7 @@
   box-shadow: 0px 0px 5px 1px black;
   position: absolute;
   top: 0px;
-  background: whitesmoke;
+  background: #efefef;
   z-index: -1;
   width: 100%;
   border-radius: 5px;
@@ -176,12 +187,16 @@
   min-width: 15px;
   background-repeat: no-repeat;
   filter: invert(46%) sepia(4%) saturate(139%) hue-rotate(317deg) brightness(99%) contrast(85%);
+  margin: -1px 1px 0 0;
 }
 .ow-notification-elem:hover .icon{
-  filter: invert(95%) sepia(5%) saturate(0%) hue-rotate(81deg) brightness(104%) contrast(109%);
+  filter: invert(20%) sepia(1%) saturate(139%) hue-rotate(317deg) brightness(99%) contrast(85%);
 }
 .ow-notification-elem.unread .icon {
-  filter: invert(46%) sepia(90%) saturate(1688%) hue-rotate(334deg) brightness(92%) contrast(89%);
+  filter: invert(95%) sepia(1%) saturate(139%) hue-rotate(317deg) brightness(99%) contrast(85%);
+}
+.ow-notification-elem.unread:hover .icon {
+  filter: invert(100%) sepia(0%) saturate(139%) hue-rotate(317deg) brightness(100%) contrast(85%);
 }
 .ow-notify-info {
   background-image: url('/static/openwisp-notifications/images/icons/icon-info.svg');

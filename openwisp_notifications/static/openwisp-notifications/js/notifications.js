@@ -11,6 +11,9 @@ const notificationObserver = new IntersectionObserver(notificationIntersectionOb
     threshold: 1,
     root: document.querySelector('.ow-notification-wrapper')
 });
+if (typeof gettext === 'undefined') {
+    var gettext = function(word){ return word; };
+}
 
 (function ($) {
     $(document).ready(function () {
@@ -137,7 +140,18 @@ function notificationWidget($) {
     }
 
     function notificationListItem(elem) {
-        let timestamp;
+        let klass,
+            timestamp = new Date(elem.timestamp),
+            lang = navigator.language || navigator.userLanguage,
+            date = timestamp.toLocaleDateString(
+                lang, {day: 'numeric', month: 'short', year: 'numeric'}
+            ),
+            time = timestamp.toLocaleTimeString(
+                lang, {hour: 'numeric', minute: 'numeric'}
+            ),
+            at = gettext('at'),
+            datetime = `${date} ${at} ${time}`;
+
         if (!notificationReadStatus.has(elem.id)) {
             if (elem.unread) {
                 notificationReadStatus.set(elem.id, 'unread');
@@ -145,13 +159,7 @@ function notificationWidget($) {
                 notificationReadStatus.set(elem.id, 'read');
             }
         }
-        let klass = notificationReadStatus.get(elem.id);
-        let elem_timestamp = new Date(elem.timestamp);
-        if (elem_timestamp.toDateString() !== new Date().toDateString()) {
-            timestamp = `${elem_timestamp.toLocaleDateString()} at ${elem_timestamp.toLocaleTimeString()}`;
-        } else {
-            timestamp = elem_timestamp.toLocaleTimeString();
-        }
+        klass = notificationReadStatus.get(elem.id);
 
         return `<div class="ow-notification-elem ${klass}" id=ow-${elem.id}
                         data-location="${elem.target_url}">
@@ -160,7 +168,7 @@ function notificationWidget($) {
                             <div class="ow-notify-${elem.level} icon"></div>
                             <div class="ow-notification-level-text">${elem.level}</div>
                         </div>
-                        <div>${timestamp}</div>
+                        <div class="ow-notification-date">${datetime}</div>
                     </div>
                     ${elem.message}
                 </div>`;
@@ -220,7 +228,7 @@ function notificationWidget($) {
         let elem = $(this);
         // If notification is unread then send read request
         if (elem.hasClass('unread')) {
-            markNotificationRead($, elem[0]);
+            markNotificationRead(elem.get(0));
         }
         window.location = elem.data('location');
     });
@@ -288,7 +296,7 @@ function initWebSockets($) {
     };
     // Make toast message clickable
     $(document).on('click', '.ow-notification-toast', function () {
-        markNotificationRead($(this)[0]);
+        markNotificationRead($(this).get(0));
         window.location = $(this).data('location');
     });
 }
