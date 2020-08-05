@@ -26,6 +26,16 @@ class TestNotificationApi(TestCase, TestOrganizationMixin, AuthenticationMixin):
         self.admin = self._get_admin(self)
         self.client.force_login(self.admin)
 
+    def _get_path(self, url_name, *args, **kwargs):
+        path = reverse(f'{self.url_namespace}:{url_name}', args=args)
+        if not kwargs:
+            return path
+        query_params = []
+        for key, value in kwargs.items():
+            query_params.append(f'{key}={value}')
+        query_string = '&'.join(query_params)
+        return f'{path}?{query_string}'
+
     def test_list_notification_api(self):
         number_of_notifications = 11
         url = reverse(f'{self.url_namespace}:notifications_list')
@@ -36,8 +46,8 @@ class TestNotificationApi(TestCase, TestOrganizationMixin, AuthenticationMixin):
             response = self.client.get(url)
             self.assertEqual(response.status_code, 200)
             self.assertEqual(response.data['count'], number_of_notifications)
-            self.assertEqual(
-                response.data['next'], 'http://testserver/api/v1/notifications/?page=2',
+            self.assertIn(
+                self._get_path('notifications_list', page=2), response.data['next'],
             )
             self.assertEqual(response.data['previous'], None)
             self.assertEqual(len(response.data['results']), 10)
@@ -48,9 +58,8 @@ class TestNotificationApi(TestCase, TestOrganizationMixin, AuthenticationMixin):
             self.assertEqual(
                 next_response.data['next'], None,
             )
-            self.assertEqual(
-                next_response.data['previous'],
-                'http://testserver/api/v1/notifications/',
+            self.assertIn(
+                self._get_path('notifications_list'), next_response.data['previous'],
             )
             self.assertEqual(len(next_response.data['results']), 1)
 
@@ -60,9 +69,9 @@ class TestNotificationApi(TestCase, TestOrganizationMixin, AuthenticationMixin):
             response = self.client.get(url)
             self.assertEqual(response.status_code, 200)
             self.assertEqual(response.data['count'], number_of_notifications)
-            self.assertEqual(
+            self.assertIn(
+                self._get_path('notifications_list', page=2, page_size=page_size),
                 response.data['next'],
-                f'http://testserver/api/v1/notifications/?page=2&page_size={page_size}',
             )
             self.assertEqual(response.data['previous'], None)
             self.assertEqual(len(response.data['results']), page_size)
@@ -70,13 +79,13 @@ class TestNotificationApi(TestCase, TestOrganizationMixin, AuthenticationMixin):
             next_response = self.client.get(response.data['next'])
             self.assertEqual(next_response.status_code, 200)
             self.assertEqual(next_response.data['count'], number_of_notifications)
-            self.assertEqual(
+            self.assertIn(
+                self._get_path('notifications_list', page=3, page_size=page_size),
                 next_response.data['next'],
-                f'http://testserver/api/v1/notifications/?page=3&page_size={page_size}',
             )
-            self.assertEqual(
+            self.assertIn(
+                self._get_path('notifications_list', page_size=page_size),
                 next_response.data['previous'],
-                f'http://testserver/api/v1/notifications/?page_size={page_size}',
             )
             self.assertEqual(len(next_response.data['results']), page_size)
 
@@ -211,7 +220,7 @@ class TestNotificationApi(TestCase, TestOrganizationMixin, AuthenticationMixin):
             self.assertFalse(Notification.objects.all())
 
     def test_anonymous_user(self):
-        exp_response_data = {
+        response_data = {
             'detail': ErrorDetail(
                 string='Authentication credentials were not provided.',
                 code='not_authenticated',
@@ -224,7 +233,7 @@ class TestNotificationApi(TestCase, TestOrganizationMixin, AuthenticationMixin):
             url = reverse(f'{self.url_namespace}:notifications_list')
             response = self.client.get(url)
             self.assertEqual(response.status_code, 401)
-            self.assertEqual(response.data, exp_response_data)
+            self.assertEqual(response.data, response_data)
 
         with self.subTest('Test for rnotification detail API'):
             url = reverse(
@@ -232,7 +241,7 @@ class TestNotificationApi(TestCase, TestOrganizationMixin, AuthenticationMixin):
             )
             response = self.client.get(url)
             self.assertEqual(response.status_code, 401)
-            self.assertEqual(response.data, exp_response_data)
+            self.assertEqual(response.data, response_data)
 
     def test_bearer_authentication(self):
         self.client.logout()

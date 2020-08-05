@@ -13,7 +13,7 @@ OPENWISP_NOTIFICATIONS_EMAIL_LOGO = getattr(
     settings,
     'OPENWISP_NOTIFICATIONS_EMAIL_LOGO',
     'https://raw.githubusercontent.com/openwisp/openwisp-notifications/master/openwisp_notifications/'
-    'static/openwisp_notifications/images/openwisp-logo.png',
+    'static/openwisp-notifications/images/openwisp-logo.png',
 )
 
 OPENWISP_NOTIFICATIONS_HTML_EMAIL = getattr(
@@ -24,7 +24,7 @@ OPENWISP_NOTIFICATIONS_HOST = getattr(settings, 'OPENWISP_NOTIFICATIONS_HOST', N
 OPENWISP_NOTIFICATIONS_SOUND = getattr(
     settings,
     'OPENWISP_NOTIFICATIONS_SOUND',
-    '/static/openwisp_notifications/audio/notification_bell.mp3',
+    '/static/openwisp-notifications/audio/notification_bell.mp3',
 )
 
 OPENWISP_NOTIFICATIONS_CACHE_TIMEOUT = getattr(

@@ -184,16 +184,16 @@
   filter: invert(46%) sepia(90%) saturate(1688%) hue-rotate(334deg) brightness(92%) contrast(89%);
 }
 .ow-notify-info {
-  background-image: url('/static/openwisp_notifications/images/icons/icon-info.svg');
+  background-image: url('/static/openwisp-notifications/images/icons/icon-info.svg');
 }
 .ow-notify-warning {
-  background-image: url('/static/openwisp_notifications/images/icons/icon-warning.svg');
+  background-image: url('/static/openwisp-notifications/images/icons/icon-warning.svg');
 }
 .ow-notify-error {
-  background-image: url('/static/openwisp_notifications/images/icons/icon-error.svg');
+  background-image: url('/static/openwisp-notifications/images/icons/icon-error.svg');
 }
 .ow-notify-success {
-  background-image: url('/static/openwisp_notifications/images/icons/icon-success.svg');
+  background-image: url('/static/openwisp-notifications/images/icons/icon-success.svg');
 }
 
 

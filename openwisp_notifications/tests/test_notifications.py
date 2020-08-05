@@ -9,6 +9,7 @@ from django.core.exceptions import ImproperlyConfigured
 from django.db.models.signals import pre_delete
 from django.template import TemplateDoesNotExist
 from django.test import TestCase
+from django.urls import reverse
 from django.utils import timezone
 from django.utils.html import strip_tags
 from django.utils.timesince import timesince
@@ -23,6 +24,7 @@ from openwisp_notifications.types import (
     register_notification_type,
     unregister_notification_type,
 )
+from openwisp_notifications.utils import _get_absolute_url
 
 from openwisp_users.models import Group, OrganizationUser
 from openwisp_users.tests.utils import TestOrganizationMixin
@@ -316,12 +318,15 @@ class TestNotifications(TestOrganizationMixin, TestCase):
             self.assertEqual(n.email_subject, '[example.com] Messsage Template Subject')
 
         with self.subTest('Links in notification message'):
-            exp_message = (
+            url = _get_absolute_url(
+                reverse('admin:openwisp_users_user_change', args=(self.admin.pk,))
+            )
+            message = (
                 '<p>info : None message template verb </p>\n'
-                f'<p><a href="http://example.com/admin/openwisp_users/user/{self.admin.id}/change/">admin</a>'
+                f'<p><a href="{url}">admin</a>'
                 '\nreports\n<a href="#">None</a>\nmessage template verb.</p>'
             )
-            self.assertEqual(n.message, exp_message)
+            self.assertEqual(n.message, message)
 
     def test_register_unregister_notification_type(self):
         test_type = {
@@ -378,10 +383,10 @@ class TestNotifications(TestOrganizationMixin, TestCase):
 
     def test_notification_type_email(self):
         operator = self._create_operator()
-        exp_target_url = (
-            f'http://example.com/admin/openwisp_users/user/{operator.id}/change/'
+        target_url = _get_absolute_url(
+            reverse('admin:openwisp_users_user_change', args=(operator.pk,))
         )
-        exp_email_body = '{message}\n\nFor more information see {target_url}.'
+        email_body = '{message}\n\nFor more information see {target_url}.'
         self.notification_options.update({'type': 'default'})
 
         with self.subTest('Test email with URL option'):
@@ -391,7 +396,7 @@ class TestNotifications(TestOrganizationMixin, TestCase):
             n = notification_queryset.first()
             self.assertEqual(
                 email.body,
-                exp_email_body.format(
+                email_body.format(
                     message=strip_tags(n.message),
                     target_url=self.notification_options['url'],
                 ),
@@ -413,7 +418,7 @@ class TestNotifications(TestOrganizationMixin, TestCase):
             self.assertEqual(content_type, 'text/html')
             self.assertIn(n.message, html_message)
             self.assertNotIn(
-                f'<a href="{exp_target_url}">', html_message,
+                f'<a href="{target_url}">', html_message,
             )
 
         with self.subTest('Test email with target object'):
@@ -424,9 +429,7 @@ class TestNotifications(TestOrganizationMixin, TestCase):
             html_message, content_type = email.alternatives.pop()
             self.assertEqual(
                 email.body,
-                exp_email_body.format(
-                    message=strip_tags(n.message), target_url=exp_target_url
-                ),
+                email_body.format(message=strip_tags(n.message), target_url=target_url),
             )
             self.assertEqual(
                 email.subject, '[example.com] Default Notification Subject'
@@ -439,7 +442,7 @@ class TestNotifications(TestOrganizationMixin, TestCase):
             )
             self.assertIn(n.message, html_message)
             self.assertIn(
-                f'<a href="{exp_target_url}">For further information see'
+                f'<a href="{target_url}">For further information see'
                 f' "{n.target_content_type.model}: {n.target}".</a>',
                 html_message,
             )
@@ -521,6 +524,9 @@ class TestNotifications(TestOrganizationMixin, TestCase):
     @patch.object(app_settings, 'OPENWISP_NOTIFICATIONS_HTML_EMAIL', False)
     def test_no_html_email(self, *args):
         operator = self._create_operator()
+        target_url = _get_absolute_url(
+            reverse('admin:openwisp_users_user_change', args=(operator.pk,))
+        )
         self.notification_options.update(
             {'type': 'default', 'target': operator, 'url': None}
         )
@@ -529,8 +535,7 @@ class TestNotifications(TestOrganizationMixin, TestCase):
         n = notification_queryset.first()
         self.assertEqual(
             email.body,
-            f'{strip_tags(n.message)}\n\nFor more information see'
-            f' http://example.com/admin/openwisp_users/user/{operator.id}/change/.',
+            f'{strip_tags(n.message)}\n\nFor more information see {target_url}.',
         )
         self.assertEqual(email.subject, '[example.com] Default Notification Subject')
         self.assertFalse(email.alternatives)

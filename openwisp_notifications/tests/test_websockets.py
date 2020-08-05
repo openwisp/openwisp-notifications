@@ -49,12 +49,12 @@ class TestNotificationSockets:
         n = await create_notification(admin_user)
         response = await communicator.receive_json_from()
         response = await communicator.receive_json_from()
-        exp_res = {
+        expected_response = {
             'notification_count': 1,
             'reload_widget': True,
             'notification': NotificationListSerializer(n).data,
         }
-        assert response == exp_res
+        assert response == expected_response
         await communicator.disconnect()
 
     async def test_read_notification(self, admin_user, admin_client):
@@ -62,12 +62,12 @@ class TestNotificationSockets:
         communicator = await self._get_communicator(admin_client)
         await notification_operation(n, mark_read=True)
         response = await communicator.receive_json_from(timeout=2)
-        exp_response = {
+        expected_response = {
             'notification_count': 0,
             'reload_widget': False,
             'notification': None,
         }
-        assert response == exp_response
+        assert response == expected_response
         await communicator.disconnect()
 
     async def test_delete_notification(self, admin_user, admin_client):
@@ -75,12 +75,12 @@ class TestNotificationSockets:
         communicator = await self._get_communicator(admin_client)
         await notification_operation(n, delete=True)
         response = await communicator.receive_json_from()
-        exp_response = {
+        expected_response = {
             'notification_count': 0,
             'reload_widget': True,
             'notification': None,
         }
-        assert response == exp_response
+        assert response == expected_response
         await communicator.disconnect()
 
     async def test_unauthenticated_user(self, client):

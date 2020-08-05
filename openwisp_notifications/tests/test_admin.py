@@ -98,7 +98,7 @@ class TestAdmin(TestOrganizationMixin, TestCase):
     def test_default_notification_setting(self):
         res = self.client.get(self._url)
         self.assertContains(
-            res, '/static/openwisp_notifications/audio/notification_bell.mp3'
+            res, '/static/openwisp-notifications/audio/notification_bell.mp3'
         )
         self.assertContains(res, 'window.location')
 
@@ -109,7 +109,7 @@ class TestAdmin(TestOrganizationMixin, TestCase):
         res = self.client.get(self._url)
         self.assertContains(res, '/static/notification.mp3')
         self.assertNotContains(
-            res, '/static/openwisp_notifications/audio/notification_bell.mp3'
+            res, '/static/openwisp-notifications/audio/notification_bell.mp3'
         )
 
     @patch.object(
