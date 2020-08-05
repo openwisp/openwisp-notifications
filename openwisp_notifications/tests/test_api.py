@@ -38,7 +38,7 @@ class TestNotificationApi(TestCase, TestOrganizationMixin, AuthenticationMixin):
 
     def test_list_notification_api(self):
         number_of_notifications = 11
-        url = reverse(f'{self.url_namespace}:notifications_list')
+        url = self._get_path('notifications_list')
         for _ in range(number_of_notifications):
             notify.send(sender=self.admin, type='default', target=self.admin)
 
@@ -102,7 +102,7 @@ class TestNotificationApi(TestCase, TestOrganizationMixin, AuthenticationMixin):
             )
 
     def test_list_notification_filtering(self):
-        url = reverse(f'{self.url_namespace}:notifications_list')
+        url = self._get_path('notifications_list')
         notify.send(sender=self.admin, type='default', target=self.admin)
         notify.send(sender=self.admin, type='default', target=self.admin)
         # Mark one notification as read
@@ -137,7 +137,7 @@ class TestNotificationApi(TestCase, TestOrganizationMixin, AuthenticationMixin):
         for _ in range(number_of_notifications):
             notify.send(sender=self.admin, type='default', target=self.admin)
 
-        url = reverse(f'{self.url_namespace}:notifications_read_all')
+        url = self._get_path('notifications_read_all')
         response = self.client.post(url)
         self.assertEqual(response.status_code, 200)
         self.assertIsNone(response.data)
@@ -150,9 +150,7 @@ class TestNotificationApi(TestCase, TestOrganizationMixin, AuthenticationMixin):
         n = Notification.objects.first()
 
         with self.subTest('Test for non-existing notification'):
-            url = reverse(
-                f'{self.url_namespace}:notification_detail', kwargs={'pk': uuid.uuid4()}
-            )
+            url = self._get_path('notification_detail', uuid.uuid4())
             response = self.client.get(url)
             self.assertEqual(response.status_code, 404)
             self.assertDictEqual(
@@ -160,9 +158,7 @@ class TestNotificationApi(TestCase, TestOrganizationMixin, AuthenticationMixin):
             )
 
         with self.subTest('Test retrieving details for existing notification'):
-            url = reverse(
-                f'{self.url_namespace}:notification_detail', kwargs={'pk': n.id}
-            )
+            url = self._get_path('notification_detail', n.pk)
             response = self.client.get(url)
             self.assertEqual(response.status_code, 200)
             data = response.data
@@ -176,9 +172,7 @@ class TestNotificationApi(TestCase, TestOrganizationMixin, AuthenticationMixin):
         n = Notification.objects.first()
 
         with self.subTest('Test for non-existing notification'):
-            url = reverse(
-                f'{self.url_namespace}:notification_detail', kwargs={'pk': uuid.uuid4()}
-            )
+            url = self._get_path('notification_detail', uuid.uuid4())
             response = self.client.patch(url)
             self.assertEqual(response.status_code, 404)
             self.assertDictEqual(
@@ -187,9 +181,7 @@ class TestNotificationApi(TestCase, TestOrganizationMixin, AuthenticationMixin):
 
         with self.subTest('Test for existing notificaton'):
             self.assertTrue(n.unread)
-            url = reverse(
-                f'{self.url_namespace}:notification_detail', kwargs={'pk': n.id}
-            )
+            url = self._get_path('notification_detail', n.pk)
             response = self.client.patch(url)
             self.assertEqual(response.status_code, 200)
             self.assertIsNone(response.data)
@@ -201,9 +193,7 @@ class TestNotificationApi(TestCase, TestOrganizationMixin, AuthenticationMixin):
         n = Notification.objects.first()
 
         with self.subTest('Test for non-existing notification'):
-            url = reverse(
-                f'{self.url_namespace}:notification_detail', kwargs={'pk': uuid.uuid4()}
-            )
+            url = self._get_path('notification_detail', uuid.uuid4())
             response = self.client.delete(url)
             self.assertEqual(response.status_code, 404)
             self.assertDictEqual(
@@ -211,9 +201,7 @@ class TestNotificationApi(TestCase, TestOrganizationMixin, AuthenticationMixin):
             )
 
         with self.subTest('Test for valid notificaton'):
-            url = reverse(
-                f'{self.url_namespace}:notification_detail', kwargs={'pk': n.id}
-            )
+            url = self._get_path('notification_detail', n.pk)
             response = self.client.delete(url)
             self.assertEqual(response.status_code, 204)
             self.assertIsNone(response.data)
@@ -230,15 +218,13 @@ class TestNotificationApi(TestCase, TestOrganizationMixin, AuthenticationMixin):
         self.client.logout()
 
         with self.subTest('Test for list notifications API'):
-            url = reverse(f'{self.url_namespace}:notifications_list')
+            url = self._get_path('notifications_list')
             response = self.client.get(url)
             self.assertEqual(response.status_code, 401)
             self.assertEqual(response.data, response_data)
 
         with self.subTest('Test for rnotification detail API'):
-            url = reverse(
-                f'{self.url_namespace}:notification_detail', kwargs={'pk': uuid.uuid4()}
-            )
+            url = self._get_path('notification_detail', uuid.uuid4())
             response = self.client.get(url)
             self.assertEqual(response.status_code, 401)
             self.assertEqual(response.data, response_data)
@@ -250,44 +236,36 @@ class TestNotificationApi(TestCase, TestOrganizationMixin, AuthenticationMixin):
         token = self._obtain_auth_token(username='admin', password='tester')
 
         with self.subTest('Test listing all notifications'):
-            url = reverse(f'{self.url_namespace}:notifications_list')
+            url = self._get_path('notifications_list')
             response = self.client.get(url, HTTP_AUTHORIZATION=f'Bearer {token}')
             self.assertEqual(response.status_code, 200)
             self.assertEqual(len(response.data['results']), 1)
 
         with self.subTest('Test marking all notifications as read'):
-            url = reverse(f'{self.url_namespace}:notifications_read_all')
+            url = self._get_path('notifications_read_all')
             response = self.client.post(url, HTTP_AUTHORIZATION=f'Bearer {token}')
             self.assertEqual(response.status_code, 200)
             self.assertIsNone(response.data)
 
         with self.subTest('Test retrieving notification'):
-            url = reverse(
-                f'{self.url_namespace}:notification_detail', kwargs={'pk': n.id}
-            )
+            url = self._get_path('notification_detail', n.pk)
             response = self.client.get(url, HTTP_AUTHORIZATION=f'Bearer {token}')
             self.assertEqual(response.status_code, 200)
             self.assertEqual(response.data['id'], str(n.id))
 
         with self.subTest('Test marking a notification as read'):
-            url = reverse(
-                f'{self.url_namespace}:notification_detail', kwargs={'pk': n.id}
-            )
+            url = self._get_path('notification_detail', n.pk)
             response = self.client.patch(url, HTTP_AUTHORIZATION=f'Bearer {token}')
             self.assertEqual(response.status_code, 200)
             self.assertIsNone(response.data)
 
         with self.subTest('Test redirect read view'):
-            url = reverse(
-                f'{self.url_namespace}:notification_read_redirect', kwargs={'pk': n.id}
-            )
+            url = self._get_path('notification_read_redirect', n.pk)
             response = self.client.get(url, HTTP_AUTHORIZATION=f'Bearer {token}')
             self.assertEqual(response.status_code, 302)
 
         with self.subTest('Test deleting notification'):
-            url = reverse(
-                f'{self.url_namespace}:notification_detail', kwargs={'pk': n.id}
-            )
+            url = self._get_path('notification_detail', n.pk)
             response = self.client.delete(url, HTTP_AUTHORIZATION=f'Bearer {token}')
             self.assertEqual(response.status_code, 204)
             self.assertIsNone(response.data)
@@ -301,7 +279,7 @@ class TestNotificationApi(TestCase, TestOrganizationMixin, AuthenticationMixin):
         self.client.force_login(joe)
 
         with self.subTest('Test listing all notifications'):
-            url = reverse(f'{self.url_namespace}:notifications_list')
+            url = self._get_path('notifications_list')
             response = self.client.get(url)
             self.assertEqual(response.status_code, 200)
             self.assertEqual(response.data['count'], 0)
@@ -309,7 +287,7 @@ class TestNotificationApi(TestCase, TestOrganizationMixin, AuthenticationMixin):
             self.assertEqual(response.data['next'], None)
 
         with self.subTest('Test marking all notifications as read'):
-            url = reverse(f'{self.url_namespace}:notifications_read_all')
+            url = self._get_path('notifications_read_all')
             response = self.client.post(url)
             self.assertEqual(response.status_code, 200)
             self.assertIsNone(response.data)
@@ -318,17 +296,13 @@ class TestNotificationApi(TestCase, TestOrganizationMixin, AuthenticationMixin):
             self.assertTrue(n.unread)
 
         with self.subTest('Test retrieving notification'):
-            url = reverse(
-                f'{self.url_namespace}:notification_detail', kwargs={'pk': n.id}
-            )
+            url = self._get_path('notification_detail', n.pk)
             response = self.client.get(url)
             self.assertEqual(response.status_code, 404)
             self.assertDictEqual(response.data, {'detail': NOT_FOUND_ERROR})
 
         with self.subTest('Test marking a notification as read'):
-            url = reverse(
-                f'{self.url_namespace}:notification_detail', kwargs={'pk': n.id}
-            )
+            url = self._get_path('notification_detail', n.pk)
             response = self.client.patch(url)
             self.assertEqual(response.status_code, 404)
             self.assertDictEqual(response.data, {'detail': NOT_FOUND_ERROR})
@@ -337,9 +311,7 @@ class TestNotificationApi(TestCase, TestOrganizationMixin, AuthenticationMixin):
             self.assertTrue(n.unread)
 
         with self.subTest('Test deleting notification'):
-            url = reverse(
-                f'{self.url_namespace}:notification_detail', kwargs={'pk': n.id}
-            )
+            url = self._get_path('notification_detail', n.pk)
             response = self.client.delete(url)
             self.assertEqual(response.status_code, 404)
             self.assertDictEqual(response.data, {'detail': NOT_FOUND_ERROR})
@@ -348,8 +320,7 @@ class TestNotificationApi(TestCase, TestOrganizationMixin, AuthenticationMixin):
 
     def test_list_view_notification_cache(self):
         number_of_notifications = 5
-        url = reverse(f'{self.url_namespace}:notifications_list')
-        url = f'{url}?page_size={number_of_notifications}'
+        url = self._get_path('notifications_list', page_size=number_of_notifications)
         operator = self._get_operator()
         for _ in range(number_of_notifications):
             notify.send(sender=self.admin, type='default', target=operator)
@@ -372,7 +343,7 @@ class TestNotificationApi(TestCase, TestOrganizationMixin, AuthenticationMixin):
         with self.subTest('Test list notifications'):
             notify.send(sender=self.admin, type='default')
             notify.send(sender=self.admin, type='test_type')
-            url = reverse(f'{self.url_namespace}:notifications_list')
+            url = self._get_path('notifications_list')
             response = self.client.get(url)
             self.assertEqual(response.status_code, 200)
             self.assertEqual(response.data['count'], 1)
@@ -384,9 +355,7 @@ class TestNotificationApi(TestCase, TestOrganizationMixin, AuthenticationMixin):
 
         with self.subTest('Test retrieve notification'):
             [(_, [n])] = notify.send(sender=self.admin, type='test_type')
-            url = reverse(
-                f'{self.url_namespace}:notification_detail', kwargs={'pk': n.id}
-            )
+            url = self._get_path('notification_detail', n.pk)
             response = self.client.get(url)
             self.assertEqual(response.status_code, 404)
             self.assertDictEqual(response.data, {'detail': NOT_FOUND_ERROR})
@@ -425,17 +394,14 @@ class TestNotificationApi(TestCase, TestOrganizationMixin, AuthenticationMixin):
         self.assertIsNone(cache.get(cache_key))
 
         with self.subTest('Test list notifications'):
-            url = reverse(f'{self.url_namespace}:notifications_list')
+            url = self._get_path('notifications_list')
             response = self.client.get(url)
             self.assertEqual(response.status_code, 200)
             self.assertEqual(response.data['count'], 1)
             self.assertFalse(response.data['results'])
 
         with self.subTest('Test retrieve notification'):
-            url = reverse(
-                f'{self.url_namespace}:notification_detail',
-                kwargs={'pk': notification.id},
-            )
+            url = self._get_path('notification_read_redirect', notification.pk)
             response = self.client.get(url)
             self.assertEqual(response.status_code, 404)
             self.assertDictEqual(response.data, {'detail': NOT_FOUND_ERROR})
@@ -451,18 +417,13 @@ class TestNotificationApi(TestCase, TestOrganizationMixin, AuthenticationMixin):
         notification = Notification.objects.first()
 
         with self.subTest('Test non-existent notification'):
-            url = reverse(
-                f'{self.url_namespace}:notification_read_redirect', args=(uuid.uuid4(),)
-            )
+            url = self._get_path('notification_read_redirect', uuid.uuid4())
             response = self.client.get(url)
             self.assertEqual(response.status_code, 404)
             self.assertDictEqual(response.data, {'detail': NOT_FOUND_ERROR})
 
         with self.subTest('Test existent notification'):
-            url = reverse(
-                f'{self.url_namespace}:notification_read_redirect',
-                args=(notification.pk,),
-            )
+            url = self._get_path('notification_read_redirect', notification.pk)
             response = self.client.get(url)
             self.assertEqual(response.status_code, 302)
             self.assertEqual(response.url, notification.target_url)
