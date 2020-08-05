@@ -1,16 +1,11 @@
 'use strict';
 const notificationReadStatus = new Map();
-const notificationTimeoutMap = new Map();
 const notificationSocket = new ReconnectingWebSocket(
     `${webSocketProtocol}://${notificationApiHost.host}/ws/notifications/`,
     null, {
         debug: false
     }
 );
-const notificationObserver = new IntersectionObserver(notificationIntersectionObserver, {
-    threshold: 1,
-    root: document.querySelector('.ow-notification-wrapper')
-});
 if (typeof gettext === 'undefined') {
     var gettext = function(word){ return word; };
 }
@@ -52,9 +47,6 @@ function notificationWidget($) {
         page.forEach(function (notification) {
             let elem = $(notificationListItem(notification));
             div.append(elem);
-            if (notification.unread) {
-                notificationObserver.observe(elem[0]);
-            }
         });
         return div;
     }
@@ -223,7 +215,7 @@ function notificationWidget($) {
         });
     });
 
-    // Handler for marking single notification as read
+    // Handler for marking notification as read and opening target url
     $('.ow-notification-wrapper').on('click', '.ow-notification-elem', function () {
         let elem = $(this);
         // If notification is unread then send read request
@@ -233,6 +225,13 @@ function notificationWidget($) {
         window.location = elem.data('location');
     });
 
+    // Handler for marking notification as read on mouseout event
+    $('.ow-notification-wrapper').on('mouseleave', '.ow-notification-elem', function () {
+        let elem = $(this);
+        if (elem.hasClass('unread')) {
+            markNotificationRead(elem.get(0));
+        }
+    });
     $('.ow-notification-wrapper').bind('refreshNotificationWidget', refreshNotificationWidget);
 }
 
@@ -249,7 +248,6 @@ function markNotificationRead(elem) {
         throw error;
     }
     notificationReadStatus.set(elemId, 'read');
-    notificationObserver.unobserve(elem);
 }
 
 function initWebSockets($) {
@@ -299,23 +297,6 @@ function initWebSockets($) {
     $(document).on('click', '.ow-notification-toast', function () {
         markNotificationRead($(this).get(0));
         window.location = $(this).data('location');
-    });
-}
-
-function notificationIntersectionObserver(entries) {
-    entries.forEach(function (entry) {
-        let elem = entry.target;
-        if (elem.classList.contains('unread')) {
-            if (entry.isIntersecting === true) {
-                let timeoutId = setTimeout(function () {
-                    markNotificationRead(elem);
-                }, 1000);
-                notificationTimeoutMap.set(elem.id, timeoutId);
-            } else {
-                clearTimeout(notificationTimeoutMap.get(elem.id));
-                notificationTimeoutMap.delete(elem.id);
-            }
-        }
     });
 }
 
