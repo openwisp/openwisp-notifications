@@ -276,12 +276,13 @@ function initWebSockets($) {
             let toast = $(`<div class="ow-notification-toast ${data.notification.level}"
                                 data-location="${data.notification.target_url}"
                                 id="ow-${data.notification.id}">
+                                <div class="icon ow-notify-close btn" role="button" tabindex="1"></div>
                                 <div style="display:flex">
                                     <div class="icon ow-notify-${data.notification.level}"></div>
                                     ${data.notification.message}
                                 </div>
                            </div>`);
-            $('.ow-notifications').before(toast);
+            $('.ow-notification-toast-wrapper').prepend(toast);
             notificationSound.currentTime = 0;
             notificationSound.play();
             toast.slideDown('slow', function () {
@@ -289,7 +290,7 @@ function initWebSockets($) {
                     toast.slideUp('slow', function () {
                         toast.remove();
                     });
-                }, 4000);
+                }, 15000);
             });
         }
     };
@@ -297,6 +298,11 @@ function initWebSockets($) {
     $(document).on('click', '.ow-notification-toast', function () {
         markNotificationRead($(this).get(0));
         window.location = $(this).data('location');
+    });
+    $(document).on('click', '.ow-notification-toast .ow-notify-close.btn', function () {
+        let toast = $(this).parent();
+        markNotificationRead(toast.get(0));
+        toast.slideUp('slow');
     });
 }
 
