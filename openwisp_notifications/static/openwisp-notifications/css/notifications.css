@@ -48,21 +48,24 @@
 }
 
 /* Toasts for new notification */
-.ow-notification-toast{
+.ow-notification-toast-wrapper {
   position: fixed;
+  top: 10px;
+  z-index: 10000;
   left: 0;
   right: 0;
   margin: auto;
+}
+.ow-notification-toast{
+  margin: 2px auto;
   width: fit-content;
   text-transform: none;
-  top: 27px;
   display: none;
   cursor: pointer;
   border: #fff solid 1px;
-  padding: 0.5em 1.1em;
+  padding: 0.5em 0.1em 0.5em 1.1em;
   border-radius: 4px;
   font-size: 12px;
-  z-index: 10000;
   border-color: rgba(0, 0, 0, 0.7);
 }
 #container .ow-notification-toast a{
@@ -87,6 +90,11 @@
 .ow-notification-toast p{
   margin: 0.5em;
   font-weight: 500;
+}
+.ow-notification-toast .ow-notify-close.btn{
+  min-width: 10px;
+  min-height: 10px;
+  float: right;
 }
 .ow-notification-toast.info .icon {
   filter: invert(30%) sepia(3%);
@@ -236,6 +244,9 @@
 }
 .ow-notify-success {
   background-image: url('/static/openwisp-notifications/images/icons/icon-success.svg');
+}
+.ow-notify-close {
+  background-image: url('/static/openwisp-notifications/images/icons/icon-close.svg');
 }
 
 

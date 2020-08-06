@@ -51,5 +51,10 @@ def notification_widget():
     )
 
 
+def notification_toast():
+    return format_html('<div class="ow-notification-toast-wrapper"></div>')
+
+
 register.simple_tag(takes_context=True)(unread_notifications)
 register.simple_tag(takes_context=False)(notification_widget)
+register.simple_tag(takes_context=False)(notification_toast)
