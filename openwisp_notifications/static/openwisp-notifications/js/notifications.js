@@ -290,7 +290,7 @@ function initWebSockets($) {
                     toast.slideUp('slow', function () {
                         toast.remove();
                     });
-                }, 15000);
+                }, 30000);
             });
         }
     };

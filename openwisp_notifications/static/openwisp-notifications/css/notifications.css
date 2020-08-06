@@ -50,20 +50,22 @@
 /* Toasts for new notification */
 .ow-notification-toast-wrapper {
   position: fixed;
-  top: 10px;
-  z-index: 10000;
+  top: 20px;
+  z-index: 10001;
   left: 0;
   right: 0;
   margin: auto;
+  height: 0px;
+  overflow: visible;
 }
 .ow-notification-toast{
-  margin: 2px auto;
+  margin: 5px auto;
   width: fit-content;
   text-transform: none;
   display: none;
   cursor: pointer;
   border: #fff solid 1px;
-  padding: 0.5em 0.1em 0.5em 1.1em;
+  padding: 0.5em 1em 0.5em 1.1em;
   border-radius: 4px;
   font-size: 12px;
   border-color: rgba(0, 0, 0, 0.7);
@@ -82,7 +84,12 @@
   background-color: #d04124;
   color: #fff;
 }
-#container .ow-notification-toast.error a{ color: #fff; }
+#container .ow-notification-toast.error a,
+#container .ow-notification-toast.success a{ color: #fff; }
+.ow-notification-toast.success{
+  background-color: #1daa2d;
+  color: #fff;
+}
 .ow-notification-toast > div{
   display: flex;
   align-items: center;
@@ -92,9 +99,13 @@
   font-weight: 500;
 }
 .ow-notification-toast .ow-notify-close.btn{
-  min-width: 10px;
-  min-height: 10px;
+  min-width: 12px;
+  min-height: 12px;
   float: right;
+  position: relative;
+  right: -2px;
+  bottom: -8px;
+  background-size: 9px;
 }
 .ow-notification-toast.info .icon {
   filter: invert(30%) sepia(3%);
@@ -102,14 +113,14 @@
 .ow-notification-toast.warning .icon {
   filter: invert(20%) sepia(90%) saturate(5000%) hue-rotate(366deg) brightness(92%) contrast(96%);
 }
-.ow-notification-toast.error .icon {
+.ow-notification-toast.error .icon, .ow-notification-toast.success .icon {
   filter: invert(100%) sepia(0%);
 }
 
 /* Notification widget dropdown */
 .ow-notification-dropdown {
   position: absolute;
-  z-index: 99;
+  z-index: 10000;
   right: 100px;
   border: 2px solid #464646;
   text-align: left;
