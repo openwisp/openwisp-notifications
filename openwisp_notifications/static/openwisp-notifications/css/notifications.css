@@ -128,7 +128,7 @@
 }
 .ow-notification-wrapper {
   overflow-y: auto;
-  max-height: 70vh;
+  max-height: 580px;
   height: 100%;
 }
 .ow-notification-elem {
@@ -266,5 +266,11 @@
   #user-tools .user {
     line-height: 40px;
     margin-right: 3px;
+  }
+}
+
+@media screen and (max-height: 768px){
+  .ow-notification-wrapper {
+    max-height: 70vh;
   }
 }

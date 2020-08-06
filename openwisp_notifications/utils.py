@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib.sites.models import Site
 from django.urls import NoReverseMatch, reverse
 
@@ -18,7 +19,8 @@ def _get_object_link(obj, field, url_only=False, absolute_url=False, *args, **kw
 
 def _get_absolute_url(url):
     site = Site.objects.get_current()
-    return f'https://{site.domain}{url}'
+    protocol = 'http' if getattr(settings, 'DEBUG', False) else 'https'
+    return f'{protocol}://{site.domain}{url}'
 
 
 def normalize_unread_count(unread_count):

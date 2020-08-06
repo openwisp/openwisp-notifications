@@ -37,8 +37,8 @@ class TestNotificationApi(TestCase, TestOrganizationMixin, AuthenticationMixin):
         return f'{path}?{query_string}'
 
     def test_list_notification_api(self):
-        number_of_notifications = 11
-        url = self._get_path('notifications_list')
+        number_of_notifications = 21
+        url = reverse(f'{self.url_namespace}:notifications_list')
         for _ in range(number_of_notifications):
             notify.send(sender=self.admin, type='default', target=self.admin)
 
@@ -50,7 +50,7 @@ class TestNotificationApi(TestCase, TestOrganizationMixin, AuthenticationMixin):
                 self._get_path('notifications_list', page=2), response.data['next'],
             )
             self.assertEqual(response.data['previous'], None)
-            self.assertEqual(len(response.data['results']), 10)
+            self.assertEqual(len(response.data['results']), 20)
 
             next_response = self.client.get(response.data['next'])
             self.assertEqual(next_response.status_code, 200)
