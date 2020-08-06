@@ -6,7 +6,7 @@
   border-bottom-right-radius: 3px;
 }
 
-/* Nntification bell */
+/* Notification bell */
 .ow-notifications {
   float: right;
   display: block;
@@ -49,26 +49,53 @@
 
 /* Toasts for new notification */
 .ow-notification-toast{
-  background-color: #d04124;
   position: fixed;
   left: 0;
   right: 0;
   margin: auto;
   width: fit-content;
   text-transform: none;
-  top: 5%;
+  top: 27px;
   display: none;
   cursor: pointer;
-  border: white solid 0.1px;
-  padding: 0.5em;
+  border: #fff solid 1px;
+  padding: 0.5em 1.1em;
+  border-radius: 4px;
+  font-size: 12px;
+  z-index: 10000;
+  border-color: rgba(0, 0, 0, 0.7);
 }
+#container .ow-notification-toast a{
+  border-bottom: 0 none;
+}
+.ow-notification-toast.info,
+.ow-notification-toast.warning{
+  background-color: #efefef;
+  color: #333333;
+}
+#container .ow-notification-toast.info a,
+#container .ow-notification-toast.warning a{ color: #df5d43; }
+.ow-notification-toast.error{
+  background-color: #d04124;
+  color: #fff;
+}
+#container .ow-notification-toast.error a{ color: #fff; }
 .ow-notification-toast > div{
   display: flex;
   align-items: center;
 }
 .ow-notification-toast p{
   margin: 0.5em;
-  font-weight: bold;
+  font-weight: 500;
+}
+.ow-notification-toast.info .icon {
+  filter: invert(30%) sepia(3%);
+}
+.ow-notification-toast.warning .icon {
+  filter: invert(20%) sepia(90%) saturate(5000%) hue-rotate(366deg) brightness(92%) contrast(96%);
+}
+.ow-notification-toast.error .icon {
+  filter: invert(100%) sepia(0%);
 }
 
 /* Notification widget dropdown */

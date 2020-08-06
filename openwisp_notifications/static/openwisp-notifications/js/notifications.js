@@ -275,8 +275,9 @@ function initWebSockets($) {
         }
         // Check whether to display notification toast
         if (data.notification) {
-            let toast = $(`<div class="ow-notification-toast" data-location="${data.notification.target_url}"
-                            id="ow-${data.notification.id}">
+            let toast = $(`<div class="ow-notification-toast ${data.notification.level}"
+                                data-location="${data.notification.target_url}"
+                                id="ow-${data.notification.id}">
                                 <div style="display:flex">
                                     <div class="icon ow-notify-${data.notification.level}"></div>
                                     ${data.notification.message}
