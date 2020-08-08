@@ -299,7 +299,8 @@ function initWebSockets($) {
         markNotificationRead($(this).get(0));
         window.location = $(this).data('location');
     });
-    $(document).on('click', '.ow-notification-toast .ow-notify-close.btn', function () {
+    $(document).on('click', '.ow-notification-toast .ow-notify-close.btn', function (event) {
+        event.stopPropagation();
         let toast = $(this).parent();
         markNotificationRead(toast.get(0));
         toast.slideUp('slow');
