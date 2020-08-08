@@ -1,10 +1,13 @@
+from openwisp_notifications.base.forms import NotificationSettingForm
+
+
 class NotificationSettingAdminMixin:
     fields = ['type', 'organization', 'web', 'email']
     readonly_fields = [
         'type',
         'organization',
     ]
-    empty_value_display = 'All'
+    form = NotificationSettingForm
 
     def get_readonly_fields(self, request, obj=None):
         if request.user.is_superuser:
@@ -18,10 +21,12 @@ class NotificationSettingAdminMixin:
     def has_delete_permission(self, request, obj=None):
         return request.user.is_superuser
 
-    def formfield_for_dbfield(self, db_field, request, **kwargs):
-        if db_field.name == 'organization':
-            kwargs['empty_label'] = 'All'
-        return super().formfield_for_dbfield(db_field, request, **kwargs)
-    
     def get_queryset(self, request):
         return super().get_queryset(request).prefetch_related('organization')
+
+    class Media:
+        extends = True
+        js = [
+            'admin/js/jquery.init.js',
+            'openwisp-notifications/js/notification-settings.js',
+        ]
