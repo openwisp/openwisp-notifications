@@ -8,5 +8,5 @@ def get_routes(consumer=None):
     if not consumer:
         consumer = ow_consumers
     return [
-        path('ws/notifications/', consumer.NotificationConsumer),
+        path('ws/notification/', consumer.NotificationConsumer),
     ]
