@@ -197,6 +197,9 @@ if os.environ.get('SAMPLE_APP', False):
     OPENWISP_NOTIFICATIONS_NOTIFICATIONUSER_MODEL = (
         'sample_notifications.NotificationUser'
     )
+    OPENWISP_NOTIFICATIONS_NOTIFICATIONSETTING_MODEL = (
+        'sample_notifications.NotificationSetting'
+    )
     TEMPLATES[0]['DIRS'].insert(
         0, os.path.join(BASE_DIR, 'sample_notifications', 'templates')
     )

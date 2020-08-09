@@ -5,7 +5,7 @@ NOTIFICATION_TYPES = {
     'default': {
         'level': 'info',
         'verb': 'default verb',
-        'name': 'Default Type',
+        'verbose_name': 'Default Type',
         'email_subject': '[{site.name}] Default Notification Subject',
         'message': (
             'Default notification with {notification.verb} and level {notification.level}'

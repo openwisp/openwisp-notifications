@@ -7,6 +7,7 @@ import django.utils.timezone
 import jsonfield.fields
 import model_utils.fields
 import uuid
+from swapper import get_model_name
 from openwisp_notifications.types import NOTIFICATION_CHOICES
 
 
@@ -14,65 +15,12 @@ class Migration(migrations.Migration):
 
     initial = True
 
+    dependencies = [
+        migrations.swappable_dependency(settings.AUTH_USER_MODEL),
+        ('openwisp_users', '0009_create_organization_owners'),
+    ]
+
     operations = [
-        migrations.CreateModel(
-            name='NotificationUser',
-            fields=[
-                (
-                    'id',
-                    models.UUIDField(
-                        default=uuid.uuid4,
-                        editable=False,
-                        primary_key=True,
-                        serialize=False,
-                    ),
-                ),
-                (
-                    'created',
-                    model_utils.fields.AutoCreatedField(
-                        default=django.utils.timezone.now,
-                        editable=False,
-                        verbose_name='created',
-                    ),
-                ),
-                (
-                    'modified',
-                    model_utils.fields.AutoLastModifiedField(
-                        default=django.utils.timezone.now,
-                        editable=False,
-                        verbose_name='modified',
-                    ),
-                ),
-                (
-                    'receive',
-                    models.BooleanField(
-                        default=True,
-                        help_text='note: non-superadmin users receive notifications only for organizations of which they are member of.',
-                        verbose_name='receive notifications',
-                    ),
-                ),
-                (
-                    'email',
-                    models.BooleanField(
-                        default=True,
-                        help_text='note: non-superadmin users receive notifications only for organizations of which they are member of.',
-                        verbose_name='email notifications',
-                    ),
-                ),
-                (
-                    'user',
-                    models.OneToOneField(
-                        on_delete=django.db.models.deletion.CASCADE,
-                        to=settings.AUTH_USER_MODEL,
-                    ),
-                ),
-                ('details', models.CharField(blank=True, max_length=64, null=True)),
-            ],
-            options={
-                'verbose_name': 'user notification settings',
-                'verbose_name_plural': 'user notification settings',
-            },
-        ),
         migrations.CreateModel(
             name='Notification',
             fields=[
@@ -169,5 +117,80 @@ class Migration(migrations.Migration):
                 'abstract': False,
                 'index_together': {('recipient', 'unread')},
             },
+        ),
+        migrations.CreateModel(
+            name='NotificationSetting',
+            fields=[
+                (
+                    'id',
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                (
+                    'type',
+                    models.CharField(
+                        choices=NOTIFICATION_CHOICES,
+                        max_length=30,
+                        null=True,
+                        verbose_name='Notification Type',
+                    ),
+                ),
+                (
+                    'web',
+                    models.BooleanField(
+                        null=True,
+                        blank=True,
+                        help_text='Note: Non-superadmin users receive notifications only for organizations of which they are member of.',
+                        verbose_name='web notifications',
+                    ),
+                ),
+                (
+                    'email',
+                    models.BooleanField(
+                        null=True,
+                        blank=True,
+                        help_text='Note: Non-superadmin users receive notifications only for organizations of which they are member of.',
+                        verbose_name='email notifications',
+                    ),
+                ),
+                ('details', models.CharField(blank=True, max_length=64, null=True)),
+                (
+                    'organization',
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to=get_model_name('openwisp_users', 'Organization'),
+                    ),
+                ),
+                (
+                    'user',
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+            ],
+            options={
+                'verbose_name': 'user notification settings',
+                'verbose_name_plural': 'user notification settings',
+                'ordering': ['organization', 'type'],
+                'abstract': False,
+            },
+        ),
+        migrations.AddConstraint(
+            model_name='notificationsetting',
+            constraint=models.UniqueConstraint(
+                fields=('organization', 'type', 'user'),
+                name='unique_notification_setting',
+            ),
+        ),
+        migrations.AddIndex(
+            model_name='notificationsetting',
+            index=models.Index(
+                fields=['type', 'organization'], name='sample_noti_type_b2cb70_idx'
+            ),
         ),
     ]

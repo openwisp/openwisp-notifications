@@ -1,3 +1,4 @@
+import uuid
 from unittest.mock import patch
 
 from django.contrib.admin.sites import AdminSite
@@ -7,6 +8,7 @@ from django.test import TestCase
 from django.urls import reverse
 
 from openwisp_notifications import settings as app_settings
+from openwisp_notifications.admin import NotificationSettingInline
 from openwisp_notifications.signals import notify
 from openwisp_notifications.swapper import load_model
 from openwisp_users.tests.utils import TestOrganizationMixin
@@ -14,21 +16,29 @@ from openwisp_users.tests.utils import TestOrganizationMixin
 from .test_helpers import MessagingRequest
 
 Notification = load_model('Notification')
+NotificationSetting = load_model('NotificationSetting')
 notification_queryset = Notification.objects.order_by('-timestamp')
 
 
-class MockSuperUser:
+class MockUser:
+    def __init__(self, is_superuser=False):
+        self.is_superuser = is_superuser
+        self.id = uuid.uuid4()
+
     def has_perm(self, perm):
         return True
 
     @property
     def pk(self):
-        return 1
+        return self.id
 
 
 User = get_user_model()
-request = MessagingRequest()
-request.user = MockSuperUser()
+su_request = MessagingRequest()
+su_request.user = MockUser(is_superuser=True)
+
+op_request = MessagingRequest()
+op_request.user = MockUser(is_superuser=False)
 
 
 class TestAdmin(TestOrganizationMixin, TestCase):
@@ -54,6 +64,7 @@ class TestAdmin(TestOrganizationMixin, TestCase):
             url='localhost:8000/admin',
         )
         self.site = AdminSite()
+        self.ns_inline = NotificationSettingInline(NotificationSetting, self.site)
 
     @property
     def _url(self):
@@ -160,3 +171,43 @@ class TestAdmin(TestOrganizationMixin, TestCase):
                 response = self.client.get(self._url)
                 self.assertNotContains(response, 'wss')
                 self.assertContains(response, 'ws')
+
+    def test_notification_setting_inline_read_only_fields(self):
+        with self.subTest('Test for superuser'):
+            self.assertListEqual(self.ns_inline.get_readonly_fields(su_request), [])
+
+        with self.subTest('Test for non-superuser'):
+            self.assertListEqual(
+                self.ns_inline.get_readonly_fields(op_request),
+                ['type', 'organization'],
+            )
+
+    def test_notification_setting_inline_add_permission(self):
+        with self.subTest('Test for superuser'):
+            self.assertTrue(self.ns_inline.has_add_permission(su_request))
+
+        with self.subTest('Test for non-superuser'):
+            self.assertFalse(self.ns_inline.has_add_permission(op_request),)
+
+    def test_notification_setting_inline_delete_permission(self):
+        with self.subTest('Test for superuser'):
+            self.assertTrue(self.ns_inline.has_delete_permission(su_request))
+
+        with self.subTest('Test for non-superuser'):
+            self.assertFalse(self.ns_inline.has_delete_permission(op_request))
+
+    def test_notification_setting_inline_organization_formfield(self):
+        response = self.client.get(
+            reverse('admin:openwisp_users_user_change', args=(self.admin.pk,))
+        )
+        self.assertContains(response, '<option value="" selected>All</option>')
+
+    def test_notification_setting_inline_admin_has_change_permission(self):
+        with self.subTest('Test for superuser'):
+            self.assertTrue(self.ns_inline.has_change_permission(su_request),)
+
+        with self.subTest('Test for non-superuser'):
+            self.assertFalse(self.ns_inline.has_change_permission(op_request),)
+            self.assertTrue(
+                self.ns_inline.has_change_permission(op_request, obj=op_request.user),
+            )
