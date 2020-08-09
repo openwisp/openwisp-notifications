@@ -32,6 +32,7 @@ Available features
 - Configurable email theme
 - `Definition of notification types <#notification-types>`_
 - `Possibility to register new notification types <#registering--unregistering-notification-types>`_
+- `Preference for receiving notifications <#notification-preferences>`_
 - TODO: add more
 
 Install development version
@@ -210,6 +211,14 @@ While development, you can configure it to localhost as shown below:
 
     INTERNAL_IPS = ['127.0.0.1']
 
+Run migrations
+
+.. code-block:: shell
+
+    ./manage.py migrate
+
+**Note**: Running migrations is also required for creating `notification settings <#notification-preferences>`_ apart from creating database schema.
+
 Sending notifications
 ---------------------
 
@@ -304,21 +313,23 @@ You can think of notification type as a template for notifications.
 
 These properties can be configured for each notification type:
 
-+------------------+--------------------------------------------------------------------------------+
-|   **Property**   |                         **Description**                                        |
-+------------------+--------------------------------------------------------------------------------+
-|      level       | Sets ``level`` attribute of the notification.                                  |
-+------------------+--------------------------------------------------------------------------------+
-|      verb        | Sets ``verb`` attribute of the notification.                                   |
-+------------------+--------------------------------------------------------------------------------+
-|      name        | Sets display name of notification type.                                        |
-+------------------+--------------------------------------------------------------------------------+
-|     message      | Sets ``message`` attribute of the notification.                                |
-+------------------+--------------------------------------------------------------------------------+
-|  email_subject   | Sets subject of the email notification.                                        |
-+------------------+--------------------------------------------------------------------------------+
-| message_template | Path to file having template for message of the notification.                  |
-+------------------+--------------------------------------------------------------------------------+
++------------------------+-----------------------------------------------------------------+
+| **Property**           |                         **Description**                         |
++------------------------+-----------------------------------------------------------------+
+| ``level``              | Sets ``level`` attribute of the notification.                   |
++------------------------+-----------------------------------------------------------------+
+| ``verb``               | Sets ``verb`` attribute of the notification.                    |
++------------------------+-----------------------------------------------------------------+
+| ``name``               | Sets display name of notification type.                         |
++------------------------+-----------------------------------------------------------------+
+| ``message``            | Sets ``message`` attribute of the notification.                 |
++------------------------+-----------------------------------------------------------------+
+| ``email_subject``      | Sets subject of the email notification.                         |
++------------------------+-----------------------------------------------------------------+
+| ``message_template``   | Path to file having template for message of the notification.   |
++------------------------+-----------------------------------------------------------------+
+| ``email_notification`` | Sets email preference for notifications. Defaults to ``True``.  |
++------------------------+-----------------------------------------------------------------+
 
 **Note**: A notification type configuration should contain atleast one of ``message`` or ``message_template``
 settings. If both of them are present, ``message`` is given preference over ``message_template``.
@@ -340,6 +351,9 @@ from scratch. An example to extend default message template is shown below.
 **Note**: You can access all attributes of the notification using ``notification`` variables in your message
 template as shown above. Additionally attributes ``actor_link``, ``action_link`` and ``target_link`` are
 also available for providing hyperlinks to respective object.
+
+**Note**: After writing code for registering or unregistering notification types, it is recommended to run
+database migrations to create notification settlings for these notification types.
 
 Registering / Unregistering Notification Types
 ----------------------------------------------
@@ -459,6 +473,25 @@ Then in the application code:
             sender=sender,
             error=str(error)
         )
+
+Notification Preferences
+------------------------
+
+*openwisp-notifications* allows users to select their preferred way of receiving notifications.
+Users can choose from web or email notifications. These settings have been categorized
+over notification type and organization, therefore allowing users to only receive notifications
+from selected organization or notification type.
+
+.. image:: https://github.com/openwisp/openwisp-notifications/blob/master/docs/images/notification-settings.png
+
+Notification settings are automatically created for all notification types and organizations for all users.
+While superusers can add or delete notification settings for everyone, staff users can only modify their
+preferred ways for receiving notifications. With provided functionality, users can choose to receive both
+web and email notifications or only web notifications. Users can also stop receiving notifications
+by disabling both web and email option for a notification setting.
+
+**Note**: If a user has not configured their email preference for a particular notification setting,
+then ``email_notification`` option of concerned notification type will be used.
 
 Scheduled deletion of notifications
 -----------------------------------
@@ -734,6 +767,27 @@ Delete a notification
 
     DELETE /api/v1/notification/{pk}/
 
+List user's notification setting
+################################
+
+.. code-block:: text
+
+    GET /api/v1/notification/user-setting/
+
+Get notification setting details
+################################
+
+.. code-block:: text
+
+    GET /api/v1/notification/user-setting/{pk}/
+
+Update notification setting details
+###################################
+
+.. code-block:: text
+
+    PATCH /api/v1/notification/user-setting/{pk}/
+
 Installing for development
 --------------------------
 
@@ -961,7 +1015,7 @@ Add the following to your ``settings.py``:
 
     # Setting models for swapper module
     OPENWISP_NOTIFICATIONS_NOTIFICATION_MODEL = 'mynotifications.Notification'
-    OPENWISP_NOTIFICATIONS_NOTIFICATIONUSER_MODEL = 'mynotifications.NotificationUser'
+    OPENWISP_NOTIFICATIONS_NOTIFICATIONSETTING_MODEL = 'mynotifications.NotificationSetting'
 
 9. Create database migrations
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -993,7 +1047,7 @@ For example:
 
 .. code-block:: python
 
-    from openwisp_notifications.admin import NotificationAdmin, NotificationUserInline
+    from openwisp_notifications.admin import NotificationAdmin, NotificationSettingInline
 
     NotificationAdmin.list_display.insert(1, 'my_custom_field')
     NotificationAdmin.ordering = ['-my_custom_field']
@@ -1007,27 +1061,28 @@ monkey patching, you can proceed as follows:
 .. code-block:: python
 
     from django.contrib import admin
-    from openwisp_notifications.admin import NotificationAdmin as BaseNotificationAdmin
     from openwisp_notifications.admin import (
-        NotificationUserInline as BaseNotificationUserInline,
+        NotificationSettingAdmin as BaseNotificationSettingAdmin,
+    )
+    from openwisp_notifications.admin import (
+        NotificationSettingInline as BaseNotificationSettingInline,
     )
     from openwisp_notifications.swapper import load_model
 
-    Notification = load_model('Notification')
-    NotificationUser = load_model('NotificationUser')
+    NotificationSetting = load_model('NotificationSetting')
 
-    admin.site.unregister(Notification)
-    admin.site.unregister(NotificationUser)
+    admin.site.unregister(NotificationSettingAdmin)
+    admin.site.unregister(NotificationSettingInline)
 
 
-    @admin.register(Notification)
-    class NotificationAdmin(BaseNotificationAdmin):
+    @admin.register(NotificationSetting)
+    class NotificationSettingAdmin(BaseNotificationSettingAdmin):
         # add your changes here
         pass
 
 
-    @admin.register(NotificationUser)
-    class NotificationUserInline(BaseNotificationUserInline):
+    @admin.register(NotificationSetting)
+    class NotificationSettingInline(BaseNotificationSettingInline):
         # add your changes here
         pass
 
