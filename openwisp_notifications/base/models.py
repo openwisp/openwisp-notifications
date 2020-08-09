@@ -5,6 +5,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.sites.models import Site
 from django.core.cache import cache
 from django.db import models
+from django.db.models.constraints import UniqueConstraint
 from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils.functional import cached_property
@@ -12,6 +13,7 @@ from django.utils.html import mark_safe
 from django.utils.translation import ugettext_lazy as _
 from markdown import markdown
 from notifications.base.models import AbstractNotification as BaseNotification
+from swapper import get_model_name
 
 from openwisp_notifications import settings as app_settings
 from openwisp_notifications.exceptions import NotificationRenderException
@@ -201,3 +203,53 @@ class AbstractNotificationUser(TimeStampedEditableModel):
         if not self.receive:
             self.email = self.receive
         return super(AbstractNotificationUser, self).save(*args, **kwargs)
+
+
+class AbstractNotificationSetting(UUIDModel):
+    _RECEIVE_HELP = (
+        'Note: Non-superadmin users receive '
+        'notifications only for organizations '
+        'of which they are member of.'
+    )
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    type = models.CharField(
+        max_length=30,
+        null=True,
+        choices=NOTIFICATION_CHOICES,
+        verbose_name='Notification Type',
+    )
+    organization = models.ForeignKey(
+        get_model_name('openwisp_users', 'Organization'), on_delete=models.CASCADE,
+    )
+    web = models.BooleanField(
+        _('web notifications'), null=True, blank=True, help_text=_(_RECEIVE_HELP)
+    )
+    email = models.BooleanField(
+        _('email notifications'), null=True, blank=True, help_text=_(_RECEIVE_HELP)
+    )
+
+    class Meta:
+        abstract = True
+        constraints = [
+            UniqueConstraint(
+                fields=['organization', 'type', 'user'],
+                name='unique_notification_setting',
+            ),
+        ]
+        verbose_name = _('user notification settings')
+        verbose_name_plural = verbose_name
+        ordering = ['organization', 'type']
+        indexes = [
+            models.Index(fields=['type', 'organization']),
+        ]
+
+    def __str__(self):
+        return '{type} {organization}'.format(
+            type=self.type,
+            organization=self.organization if self.organization else 'All',
+        )
+
+    def save(self, *args, **kwargs):
+        if not self.web:
+            self.email = self.web
+        return super().save(*args, **kwargs)

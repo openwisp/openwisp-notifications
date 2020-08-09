@@ -3,7 +3,11 @@ from django.urls import reverse
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status
 from rest_framework.authentication import SessionAuthentication
-from rest_framework.generics import GenericAPIView, RetrieveDestroyAPIView
+from rest_framework.generics import (
+    GenericAPIView,
+    RetrieveDestroyAPIView,
+    RetrieveUpdateAPIView,
+)
 from rest_framework.mixins import ListModelMixin
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
@@ -12,6 +16,7 @@ from rest_framework.response import Response
 from openwisp_notifications.api.serializers import (
     NotificationListSerializer,
     NotificationSerializer,
+    NotificationSettingSerializer,
 )
 from openwisp_notifications.handlers import clear_notification_cache
 from openwisp_notifications.swapper import load_model
@@ -23,6 +28,7 @@ UNAUTHORIZED_STATUS_CODES = (
 )
 
 Notification = load_model('Notification')
+NotificationSetting = load_model('NotificationSetting')
 
 
 class NotificationPaginator(PageNumberPagination):
@@ -92,7 +98,32 @@ class NotificationReadAllView(BaseNotificationView):
         return Response(status=status.HTTP_200_OK)
 
 
+class BaseNotificationSettingView(GenericAPIView):
+    model = NotificationSetting
+    serializer_class = NotificationSettingSerializer
+    authentication_classes = [BearerAuthentication, SessionAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return NotificationSetting.objects.filter(user=self.request.user)
+
+
+class NotificationSettingListView(BaseNotificationSettingView, ListModelMixin):
+    pagination_class = NotificationPaginator
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['organization', 'type']
+
+    def get(self, request, *args, **kwargs):
+        return self.list(request, *args, **kwargs)
+
+
+class NotificationSettingView(BaseNotificationSettingView, RetrieveUpdateAPIView):
+    lookup_field = 'pk'
+
+
 notifications_list = NotificationListView.as_view()
 notification_detail = NotificationDetailView.as_view()
 notifications_read_all = NotificationReadAllView.as_view()
 notification_read_redirect = NotificationReadRedirect.as_view()
+notification_setting_list = NotificationSettingListView.as_view()
+notification_setting = NotificationSettingView.as_view()

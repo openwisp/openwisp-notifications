@@ -3,6 +3,7 @@ from django.db import models
 from openwisp_notifications.base.models import (
     AbstractNotification,
     AbstractNotificationUser,
+    AbstractNotificationSetting,
 )
 
 # Only for testing openwisp_notifications
@@ -30,9 +31,12 @@ class Notification(DetailsModel, AbstractNotification):
 
 
 class NotificationUser(DetailsModel, AbstractNotificationUser):
-    details = models.CharField(max_length=64, blank=True, null=True)
-
     class Meta(AbstractNotificationUser.Meta):
+        abstract = False
+
+
+class NotificationSetting(DetailsModel, AbstractNotificationSetting):
+    class Meta(AbstractNotificationSetting.Meta):
         abstract = False
 
 

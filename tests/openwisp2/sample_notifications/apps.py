@@ -15,7 +15,7 @@ class SampleNotificationsConfig(OpenwispNotificationsConfig):
         register_notification_type(
             'object_created',
             {
-                'name': 'Object created',
+                'verbose_name': 'Object created',
                 'verb': 'created',
                 'level': 'info',
                 'message': '{notification.target} object {notification.verb}.',

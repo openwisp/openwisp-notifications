@@ -10,6 +10,7 @@ from openwisp_notifications.swapper import load_model
 logger = logging.getLogger(__name__)
 
 Notification = load_model('Notification')
+NotificationSetting = load_model('NotificationSetting')
 
 
 class ContentTypeField(serializers.Field):
@@ -65,3 +66,10 @@ class NotificationListSerializer(NotificationSerializer):
         ]
         exclude = None
         list_serializer_class = CustomListSerializer
+
+
+class NotificationSettingSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = NotificationSetting
+        exclude = ['user']
+        read_only_fields = ['organization', 'type']

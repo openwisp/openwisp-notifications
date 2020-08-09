@@ -1,5 +1,5 @@
 # isort:skip_file
-from openwisp_notifications.admin import NotificationUserInline  # noqa
+from openwisp_notifications.admin import NotificationSettingInline  # noqa
 
 
 # Used for testing of openwisp-notifications

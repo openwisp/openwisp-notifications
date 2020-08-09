@@ -3,6 +3,9 @@ from openwisp_notifications.tests.test_admin import TestAdmin as BaseTestAdmin
 from openwisp_notifications.tests.test_api import (
     TestNotificationApi as BaseTestNotificationApi,
 )
+from openwisp_notifications.tests.test_notification_setting import (
+    TestNotificationSetting as BaseTestNotificationSetting,
+)
 from openwisp_notifications.tests.test_notifications import (
     TestNotifications as BaseTestNotifications,
 )
@@ -23,7 +26,7 @@ class TestNotifications(BaseTestNotifications):
 
         org = self._get_org()
         operator = self._get_operator()
-        OrganizationUser.objects.create(user=operator, organization=org)
+        OrganizationUser.objects.create(user=operator, organization=org, is_admin=True)
         oum_obj = TestApp(organization=org, name='Test')
         oum_obj.save()
 
@@ -40,6 +43,11 @@ class TestNotificationAPI(BaseTestNotificationApi):
     pass
 
 
+class TestNotificationSetting(BaseTestNotificationSetting):
+    pass
+
+
 del BaseTestAdmin
 del BaseTestNotifications
 del BaseTestNotificationApi
+del BaseTestNotificationSetting
