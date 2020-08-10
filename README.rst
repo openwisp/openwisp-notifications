@@ -209,7 +209,7 @@ Notifications can be created using the ``notify`` signal. Eg:
     )
 
 The above code snippet creates and sends a notification to all users belonging to the ``Operators``
-group if they have opted-in to receive notifications. Non-superadmin users receive notifications
+group if they have opted-in to receive notifications. Non-superusers receive notifications
 only for organizations which they are a member of.
 
 **Note**: If recipient is not provided, it defaults to all superusers. If the target is provided, users
@@ -363,7 +363,7 @@ with same name(not to be confused with verbose_name).
 
 **Note**: You can use ``site`` and ``notification`` variables while defining ``message`` and
 ``email_subject`` configuration of notification type. They refer to objects of
-``django.contrib.sites.models.Site`` and ``openwisp_notifications.models.Notification`` repectively.
+``django.contrib.sites.models.Site`` and ``openwisp_notifications.models.Notification`` respectively.
 This allows you to use any of their attributes in your configuration. Similarly to ``message_template``,
 ``message`` property can also be formatted using markdown.
 
@@ -513,7 +513,7 @@ publicly accessible from the internet. Otherwise, the logo may not be displayed 
 |  default  |  Any domain defined in ``ALLOWED_HOST`` |
 +-----------+-----------------------------------------+
 
-This setting defines the domain at which API and Web Socket communitcate for
+This setting defines the domain at which API and Web Socket communicate for
 working of notification widget.
 
 **Note**: You don't need to configure this setting if you
@@ -528,7 +528,7 @@ If your root domain is ``example.com`` and API and Web Socket are hosted at
 
 This feature requires you to allow `CORS <https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS>`_
 on your server. We use ``django-cors-headers`` module to easily setup CORS headers.
-Please refer `django-core-headers's setup documentation <https://github.com/adamchainz/django-cors-headers#setup>`_.
+Please refer `django-core-headers' setup documentation <https://github.com/adamchainz/django-cors-headers#setup>`_.
 
 Configure ``django-cors-headers`` settings as follows:
 
@@ -594,7 +594,7 @@ Raised when notification properties(``email`` or ``message``) cannot be rendered
 concerned *notification type*. It sub-classes ``Exception`` class.
 
 It can be raised due to accessing non-existing keys like missing related objects
-in ``email`` or ``message`` setting of concerend *notification type*.
+in ``email`` or ``message`` setting of concerned *notification type*.
 
 REST API
 --------

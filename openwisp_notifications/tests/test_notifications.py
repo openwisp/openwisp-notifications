@@ -223,13 +223,13 @@ class TestNotifications(TestOrganizationMixin, TestCase):
         OrganizationUser.objects.create(user=operator, organization=testorg)
         self.assertIsNotNone(operator.notificationuser)
         self.notification_options.pop('recipient')
-        recipents = (self.admin, operator)
+        recipients = (self.admin, operator)
         operator.organization_id = testorg.id
         self.notification_options.update({'target': operator})
         n = self._create_notification().pop()
         if n[0] is notify_handler:
             notifications = n[1]
-            for notification, recipient in zip(notifications, recipents):
+            for notification, recipient in zip(notifications, recipients):
                 self.assertEqual(notification.recipient, recipient)
         else:
             self.fail()
@@ -543,7 +543,7 @@ class TestNotifications(TestOrganizationMixin, TestCase):
         )
         self._create_notification()
         with self.assertNumQueries(2):
-            # 2 queries since admin is already chached
+            # 2 queries since admin is already cached
             n = notification_queryset.first()
             self.assertEqual(n.actor, self.admin)
             self.assertEqual(n.action_object, operator)

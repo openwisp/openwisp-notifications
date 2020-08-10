@@ -12,7 +12,7 @@ INTERNAL_IPS = ['127.0.0.1']
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'openwisp_notfications.db'),
+        'NAME': os.path.join(BASE_DIR, 'openwisp_notifications.db'),
     }
 }
 

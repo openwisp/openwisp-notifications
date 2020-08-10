@@ -179,7 +179,7 @@ class TestNotificationApi(TestCase, TestOrganizationMixin, AuthenticationMixin):
                 response.data, {'detail': NOT_FOUND_ERROR},
             )
 
-        with self.subTest('Test for existing notificaton'):
+        with self.subTest('Test for existing notification'):
             self.assertTrue(n.unread)
             url = self._get_path('notification_detail', n.pk)
             response = self.client.patch(url)
@@ -200,7 +200,7 @@ class TestNotificationApi(TestCase, TestOrganizationMixin, AuthenticationMixin):
                 response.data, {'detail': NOT_FOUND_ERROR},
             )
 
-        with self.subTest('Test for valid notificaton'):
+        with self.subTest('Test for valid notification'):
             url = self._get_path('notification_detail', n.pk)
             response = self.client.delete(url)
             self.assertEqual(response.status_code, 204)
@@ -223,7 +223,7 @@ class TestNotificationApi(TestCase, TestOrganizationMixin, AuthenticationMixin):
             self.assertEqual(response.status_code, 401)
             self.assertEqual(response.data, response_data)
 
-        with self.subTest('Test for rnotification detail API'):
+        with self.subTest('Test for notification detail API'):
             url = self._get_path('notification_detail', uuid.uuid4())
             response = self.client.get(url)
             self.assertEqual(response.status_code, 401)
