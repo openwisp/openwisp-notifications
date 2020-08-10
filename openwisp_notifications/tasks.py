@@ -11,20 +11,24 @@ def delete_obsolete_notifications(instance_app_label, instance_model, instance_i
     """
     Delete notifications having 'instance' as actor, action or target object.
     """
-    instance_content_type = ContentType.objects.get_by_natural_key(
-        instance_app_label, instance_model
-    )
-    where = (
-        Q(actor_content_type=instance_content_type)
-        | Q(action_object_content_type=instance_content_type)
-        | Q(target_content_type=instance_content_type)
-    )
-    where = where & (
-        Q(actor_object_id=instance_id)
-        | Q(action_object_object_id=instance_id)
-        | Q(target_object_id=instance_id)
-    )
-    Notification.objects.filter(where).delete()
+    try:
+        instance_content_type = ContentType.objects.get_by_natural_key(
+            instance_app_label, instance_model
+        )
+    except ContentType.DoesNotExist:
+        return
+    else:
+        where = (
+            Q(actor_content_type=instance_content_type)
+            | Q(action_object_content_type=instance_content_type)
+            | Q(target_content_type=instance_content_type)
+        )
+        where = where & (
+            Q(actor_object_id=instance_id)
+            | Q(action_object_object_id=instance_id)
+            | Q(target_object_id=instance_id)
+        )
+        Notification.objects.filter(where).delete()
 
 
 @shared_task
