@@ -41,11 +41,12 @@ def notification_widget():
                 <span class="btn" id="ow-mark-all-read" tabindex="1" role="button">Mark all as read</span>
                 <span class="btn" id="ow-show-unread" tabindex="2" role="button">Show unread only</span>
             </div>
-            <div class="ow-notification-wrapper ow-round-bottom-border"></div>
+            <div class="ow-notification-wrapper ow-round-bottom-border">
+                <div id="ow-notifications-loader" class="ow-hide"><div class="loader"></div></div>
+            </div>
             <div class="ow-no-notifications ow-round-bottom-border ow-hide">
                 <p>No new notification.</p>
             </div>
-            <div class="loader-wrapper"><div class="loader"></div></div>
         </div>
         '''
     )
