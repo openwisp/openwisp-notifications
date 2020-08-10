@@ -194,9 +194,6 @@ if os.environ.get('SAMPLE_APP', False):
     EXTENDED_APPS.append('openwisp_notifications')
     INSTALLED_APPS.append('openwisp2.sample_notifications')
     OPENWISP_NOTIFICATIONS_NOTIFICATION_MODEL = 'sample_notifications.Notification'
-    OPENWISP_NOTIFICATIONS_NOTIFICATIONUSER_MODEL = (
-        'sample_notifications.NotificationUser'
-    )
     OPENWISP_NOTIFICATIONS_NOTIFICATIONSETTING_MODEL = (
         'sample_notifications.NotificationSetting'
     )

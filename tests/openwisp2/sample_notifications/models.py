@@ -2,7 +2,6 @@
 from django.db import models
 from openwisp_notifications.base.models import (
     AbstractNotification,
-    AbstractNotificationUser,
     AbstractNotificationSetting,
 )
 
@@ -28,11 +27,6 @@ class Notification(DetailsModel, AbstractNotification):
     class Meta(AbstractNotification.Meta):
         abstract = False
         app_label = 'sample_notifications'
-
-
-class NotificationUser(DetailsModel, AbstractNotificationUser):
-    class Meta(AbstractNotificationUser.Meta):
-        abstract = False
 
 
 class NotificationSetting(DetailsModel, AbstractNotificationSetting):
