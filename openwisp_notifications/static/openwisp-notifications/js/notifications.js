@@ -52,7 +52,7 @@ function notificationWidget($) {
     }
 
     function appendPage() {
-        $('.ow-notification-wrapper').append(pageContainer(fetchedPages[lastRenderedPage]));
+        $('#ow-notifications-loader').before(pageContainer(fetchedPages[lastRenderedPage]));
         if (lastRenderedPage >= renderedPages) {
             $('.ow-notification-wrapper div:first').remove();
         }
@@ -68,6 +68,13 @@ function notificationWidget($) {
                 withCredentials: true
             },
             crossDomain: true,
+            beforeSend: function(){
+                $('.ow-no-notifications').addClass('ow-hide');
+                $('#ow-notifications-loader').removeClass('ow-hide');
+            },
+            complete: function(){
+                $('#ow-notifications-loader').addClass('ow-hide');
+            },
             success: function (res) {
                 nextPageUrl = res.next;
                 if ((res.count === 0) || ((res.results.length === 0) && (nextPageUrl === null) )) {
@@ -84,8 +91,7 @@ function notificationWidget($) {
                     }
                     fetchedPages.push(res.results);
                     appendPage();
-                    // Remove 'no new notification' message.
-                    $('.ow-no-notifications').addClass('ow-hide');
+                    // Enable filters
                     $('.btn').removeClass('disabled');
                 }
             },
@@ -172,7 +178,7 @@ function notificationWidget($) {
     }
 
     function refreshNotificationWidget(e = null, url = '/api/v1/notifications/') {
-        $('.ow-notification-wrapper').empty();
+        $('.ow-notification-wrapper > div').remove('.page');
         fetchedPages.length = 0;
         lastRenderedPage = 0;
         nextPageUrl = url;
