@@ -568,3 +568,14 @@ class TestNotifications(TestOrganizationMixin, TestCase):
         # Test cache is not set
         self.assertIsNone(cache.get(Notification._cache_key(self.admin.pk)))
         self.assertIsNone(cache.get(Notification._cache_key(operator.pk)))
+
+    def test_notification_target_content_type_deleted(self):
+        operator = self._get_operator()
+        self.notification_options.update(
+            {'action_object': operator, 'target': operator, 'type': 'default'}
+        )
+        self._create_notification()
+        ContentType.objects.get_for_model(operator._meta.model).delete()
+        ContentType.objects.clear_cache()
+        # DoesNotExists exception should not be raised.
+        operator.delete()
