@@ -164,7 +164,7 @@ def clear_notification_cache(sender, instance, **kwargs):
         Notification.invalidate_unread_cache(instance.recipient)
     except AttributeError:
         return
-    # Reload notification only if notification is created or deleleted
+    # Reload notification only if notification is created or deleted
     # Display when a new notification is created
     ws_handlers.notification_update_handler(
         recipient=instance.recipient,

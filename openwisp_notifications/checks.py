@@ -19,7 +19,7 @@ def check_cors_configuration(app_configs, **kwargs):
                 hint=(
                     '"django-cors-headers" is either not installed or improperly configured.'
                     ' CORS configuration is required for using "OPENWISP_NOTIFICATIONS_HOST" settings.'
-                    ' Congifure equivalent CORS rules on your server if you are not using'
+                    ' Configure equivalent CORS rules on your server if you are not using'
                     ' "django-cors-headers".'
                 ),
                 obj='Settings',

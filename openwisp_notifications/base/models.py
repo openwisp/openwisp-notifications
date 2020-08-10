@@ -11,7 +11,7 @@ from django.utils.functional import cached_property
 from django.utils.html import mark_safe
 from django.utils.translation import ugettext_lazy as _
 from markdown import markdown
-from notifications.base.models import AbstractNotification as BaseNotifcation
+from notifications.base.models import AbstractNotification as BaseNotification
 from openwisp_notifications import settings as app_settings
 from openwisp_notifications.exceptions import NotificationRenderException
 from openwisp_notifications.types import (
@@ -25,14 +25,14 @@ from openwisp_utils.base import TimeStampedEditableModel, UUIDModel
 logger = logging.getLogger(__name__)
 
 
-class AbstractNotification(UUIDModel, BaseNotifcation):
+class AbstractNotification(UUIDModel, BaseNotification):
     CACHE_KEY_PREFIX = 'ow-notifications-'
     type = models.CharField(max_length=30, null=True, choices=NOTIFICATION_CHOICES)
-    _actor = BaseNotifcation.actor
-    _action_object = BaseNotifcation.action_object
-    _target = BaseNotifcation.target
+    _actor = BaseNotification.actor
+    _action_object = BaseNotification.action_object
+    _target = BaseNotification.target
 
-    class Meta(BaseNotifcation.Meta):
+    class Meta(BaseNotification.Meta):
         abstract = True
 
     def __init__(self, *args, **kwargs):
