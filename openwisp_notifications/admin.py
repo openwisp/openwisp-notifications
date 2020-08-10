@@ -6,13 +6,7 @@ from openwisp_users.admin import UserAdmin
 from openwisp_utils.admin import AlwaysHasChangedMixin
 
 Notification = load_model('Notification')
-NotificationUser = load_model('NotificationUser')
 NotificationSetting = load_model('NotificationSetting')
-
-
-class NotificationUserInline(AlwaysHasChangedMixin, admin.StackedInline):
-    model = NotificationUser
-    fields = ['receive', 'email']
 
 
 class NotificationSettingInline(

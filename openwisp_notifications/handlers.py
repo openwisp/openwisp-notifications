@@ -29,7 +29,6 @@ EXTRA_DATA = app_settings.get_config()['USE_JSONFIELD']
 User = get_user_model()
 
 Notification = load_model('Notification')
-NotificationUser = load_model('NotificationUser')
 NotificationSetting = load_model('NotificationSetting')
 NotificationsAppConfig = apps.get_app_config(NotificationSetting._meta.app_label)
 
