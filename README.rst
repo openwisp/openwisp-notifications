@@ -79,7 +79,6 @@ Setup (integrate into an existing Django project)
         'openwisp_notifications',
         # channels
         'channels',
-     ]
     ]
 
 Add ``notification_api_settings`` context processor:
@@ -127,10 +126,10 @@ Add routes for websockets:
     # In yourproject/routing.py
     from channels.auth import AuthMiddlewareStack
     from channels.routing import ProtocolTypeRouter, URLRouter
-    from openwisp_notifications.websockets import routing as ws_routing
+    from openwisp_notifications.websockets.routing import get_routes
 
     application = ProtocolTypeRouter(
-        {'websocket': AuthMiddlewareStack(URLRouter(ws_routing.websocket_urlpatterns))}
+        {'websocket': AuthMiddlewareStack(URLRouter(get_routes()))}
     )
 
 Configure caching (you may use a different cache storage if you want):
@@ -182,6 +181,17 @@ Configure channel layers (you may user a `different channel layer <https://chann
             },
         },
     }
+
+By default, websockets communicate over ``wss`` protocol. If for some reason, you want them to communicate
+over ``ws`` protocol e.g. while development, you will need to configure ``INTERNAL_IPS`` setting accordingly.
+For more information please refer to
+`"INTERNAL_IPS" section of Django's settings documentation<https://docs.djangoproject.com/en/3.0/ref/settings/#internal-ips>`_.
+
+While development, you can configure it to localhost as shown below:
+
+.. code-block:: python
+
+    INTERNAL_IPS = ['127.0.0.1']
 
 Sending notifications
 ---------------------
@@ -634,8 +644,8 @@ the results in conjunction with the ``page`` parameter.
 
 .. code-block:: text
 
-    GET /api/v1/notifications/?page_size=10
-    GET api/v1/notifications/?page_size=10&page=2
+    GET /api/v1/notification/?page_size=10
+    GET /api/v1/notification/?page_size=10&page=2
 
 List of endpoints
 ~~~~~~~~~~~~~~~~~
@@ -650,35 +660,35 @@ List user's notifications
 
 .. code-block:: text
 
-    GET /api/v1/notifications/
+    GET /api/v1/notification/
 
 Mark all user's notifications read
 ##################################
 
 .. code-block:: text
 
-    POST /api/v1/notifications/read/
+    POST /api/v1/notification/read/
 
 Get notification details
 ########################
 
 .. code-block:: text
 
-    GET /api/v1/notifications/{pk}/
+    GET /api/v1/notification/{pk}/
 
 Mark a notification read
 ########################
 
 .. code-block:: text
 
-    PATCH /api/v1/notifications/{pk}/
+    PATCH /api/v1/notification/{pk}/
 
 Delete a notification
 #####################
 
 .. code-block:: text
 
-    DELETE /api/v1/notifications/{pk}/
+    DELETE /api/v1/notification/{pk}/
 
 Installing for development
 --------------------------

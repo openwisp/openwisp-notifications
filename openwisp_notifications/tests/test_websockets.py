@@ -37,7 +37,7 @@ class TestNotificationSockets:
         session_id = admin_client.cookies['sessionid'].value
         communicator = WebsocketCommunicator(
             application,
-            path='ws/notifications/',
+            path='ws/notification/',
             headers=[(b'cookie', f'sessionid={session_id}'.encode('ascii'),)],
         )
         connected, subprotocol = await communicator.connect()

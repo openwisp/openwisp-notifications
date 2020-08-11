@@ -1,7 +1,7 @@
 'use strict';
 const notificationReadStatus = new Map();
 const notificationSocket = new ReconnectingWebSocket(
-    `${webSocketProtocol}://${notificationApiHost.host}/ws/notifications/`,
+    `${webSocketProtocol}://${notificationApiHost.host}/ws/notification/`,
     null, {
         debug: false
     }
@@ -35,7 +35,7 @@ function initNotificationDropDown($) {
 
 function notificationWidget($) {
 
-    let nextPageUrl = getAbsoluteUrl('/api/v1/notifications/'),
+    let nextPageUrl = getAbsoluteUrl('/api/v1/notification/'),
         renderedPages = 2,
         busy = false,
         fetchedPages = [],
@@ -177,11 +177,11 @@ function notificationWidget($) {
         onUpdate();
     }
 
-    function refreshNotificationWidget(e = null, url = '/api/v1/notifications/') {
+    function refreshNotificationWidget(e = null, url = '/api/v1/notification/') {
         $('.ow-notification-wrapper > div').remove('.page');
         fetchedPages.length = 0;
         lastRenderedPage = 0;
-        nextPageUrl = url;
+        nextPageUrl = getAbsoluteUrl(url);
         notificationReadStatus.clear();
         $('.ow-notification-wrapper').scroll();
     }
@@ -191,10 +191,10 @@ function notificationWidget($) {
     // Handler for filtering unread notifications
     $('#ow-show-unread').click(function () {
         if ($(this).html() === 'Show unread only') {
-            refreshNotificationWidget(null, '/api/v1/notifications/?unread=true');
+            refreshNotificationWidget(null, '/api/v1/notification/?unread=true');
             $(this).html('Show all');
         } else {
-            refreshNotificationWidget(null, '/api/v1/notifications/');
+            refreshNotificationWidget(null, '/api/v1/notification/');
             $(this).html('Show unread only');
         }
     });
@@ -203,7 +203,7 @@ function notificationWidget($) {
     $('#ow-mark-all-read').click(function () {
         $.ajax({
             type: 'POST',
-            url: getAbsoluteUrl('/api/v1/notifications/read/'),
+            url: getAbsoluteUrl('/api/v1/notification/read/'),
             headers: {
                 'X-CSRFToken': $('input[name="csrfmiddlewaretoken"]').val()
             },
