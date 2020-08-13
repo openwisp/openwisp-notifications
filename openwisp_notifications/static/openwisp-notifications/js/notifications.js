@@ -172,9 +172,10 @@ function notificationWidget($) {
                 </div>`;
     }
 
-    function initNotificationWidget($) {
+    function initNotificationWidget() {
         $('.ow-notification-wrapper').on('scroll', onUpdate);
-        onUpdate();
+        $('.ow-notification-wrapper').trigger('refreshNotificationWidget');
+        $('.ow-notifications').off('click', initNotificationWidget);
     }
 
     function refreshNotificationWidget(e = null, url = '/api/v1/notification/') {
@@ -186,7 +187,7 @@ function notificationWidget($) {
         $('.ow-notification-wrapper').scroll();
     }
 
-    initNotificationWidget($);
+    $('.ow-notifications').on('click', initNotificationWidget);
 
     // Handler for filtering unread notifications
     $('#ow-show-unread').click(function () {
