@@ -1,8 +1,9 @@
+from swapper import swappable_setting
+
 from openwisp_notifications.base.models import (
     AbstractNotification,
     AbstractNotificationUser,
 )
-from swapper import swappable_setting
 
 
 class Notification(AbstractNotification):

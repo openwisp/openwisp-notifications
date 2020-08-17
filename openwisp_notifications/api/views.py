@@ -1,12 +1,6 @@
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 from django_filters.rest_framework import DjangoFilterBackend
-from openwisp_notifications.api.serializers import (
-    NotificationListSerializer,
-    NotificationSerializer,
-)
-from openwisp_notifications.handlers import clear_notification_cache
-from openwisp_notifications.swapper import load_model
 from rest_framework import status
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.generics import GenericAPIView, RetrieveDestroyAPIView
@@ -15,6 +9,12 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
+from openwisp_notifications.api.serializers import (
+    NotificationListSerializer,
+    NotificationSerializer,
+)
+from openwisp_notifications.handlers import clear_notification_cache
+from openwisp_notifications.swapper import load_model
 from openwisp_users.api.authentication import BearerAuthentication
 
 UNAUTHORIZED_STATUS_CODES = (

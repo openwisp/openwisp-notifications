@@ -4,6 +4,7 @@ from celery import shared_task
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import Q
 from django.utils import timezone
+
 from openwisp_notifications.swapper import load_model
 
 Notification = load_model('Notification')

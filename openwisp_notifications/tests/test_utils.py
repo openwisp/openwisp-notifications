@@ -4,9 +4,9 @@ from unittest.mock import patch
 import swapper
 from django.core import management
 from django.test import TestCase
+
 from openwisp_notifications import settings as app_settings
 from openwisp_notifications.swapper import load_model
-
 from openwisp_users.tests.utils import TestOrganizationMixin
 
 Notification = load_model('Notification')

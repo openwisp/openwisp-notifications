@@ -1,4 +1,5 @@
 from django.urls import path
+
 from openwisp_notifications.api import views
 
 app_name = 'openwisp_notifications'

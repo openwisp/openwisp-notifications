@@ -5,6 +5,7 @@ from django.utils.html import format_html
 from notifications.templatetags.notifications_tags import (
     notifications_unread as base_notification_unread,
 )
+
 from openwisp_notifications.swapper import load_model
 from openwisp_notifications.utils import normalize_unread_count
 

@@ -4,14 +4,14 @@ from unittest.mock import patch
 from django.core.cache import cache
 from django.test import TestCase
 from django.urls import reverse
+from rest_framework.exceptions import ErrorDetail
+
 from openwisp_notifications.signals import notify
 from openwisp_notifications.swapper import load_model
 from openwisp_notifications.types import (
     register_notification_type,
     unregister_notification_type,
 )
-from rest_framework.exceptions import ErrorDetail
-
 from openwisp_users.tests.test_api import AuthenticationMixin
 from openwisp_users.tests.utils import TestOrganizationMixin
 

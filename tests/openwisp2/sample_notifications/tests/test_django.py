@@ -18,6 +18,7 @@ class TestNotifications(BaseTestNotifications):
     # Used only for testing openwisp-notifications
     def test_test_app_object_created_notification(self):
         from openwisp_users.models import OrganizationUser
+
         from ..models import TestApp
 
         org = self._get_org()
