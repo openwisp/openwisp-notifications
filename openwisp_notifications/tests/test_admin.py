@@ -5,10 +5,10 @@ from django.contrib.auth import get_user_model
 from django.core.cache import cache
 from django.test import TestCase
 from django.urls import reverse
+
 from openwisp_notifications import settings as app_settings
 from openwisp_notifications.signals import notify
 from openwisp_notifications.swapper import load_model
-
 from openwisp_users.tests.utils import TestOrganizationMixin
 
 from .test_helpers import MessagingRequest

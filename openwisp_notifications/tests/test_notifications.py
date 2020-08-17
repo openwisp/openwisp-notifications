@@ -13,6 +13,7 @@ from django.urls import reverse
 from django.utils import timezone
 from django.utils.html import strip_tags
 from django.utils.timesince import timesince
+
 from openwisp_notifications import settings as app_settings
 from openwisp_notifications import tasks
 from openwisp_notifications.handlers import notify_handler
@@ -26,7 +27,6 @@ from openwisp_notifications.types import (
     unregister_notification_type,
 )
 from openwisp_notifications.utils import _get_absolute_url
-
 from openwisp_users.models import Group, OrganizationUser
 from openwisp_users.tests.utils import TestOrganizationMixin
 

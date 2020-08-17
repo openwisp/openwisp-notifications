@@ -5,6 +5,7 @@ from channels.db import database_sync_to_async
 from channels.testing import WebsocketCommunicator
 from django.contrib.auth import get_user_model
 from openwisp2.routing import application
+
 from openwisp_notifications.api.serializers import NotificationListSerializer
 from openwisp_notifications.signals import notify
 from openwisp_notifications.swapper import load_model

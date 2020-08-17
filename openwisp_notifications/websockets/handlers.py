@@ -1,5 +1,6 @@
 from asgiref.sync import async_to_sync
 from channels import layers
+
 from openwisp_notifications.api.serializers import NotFound, NotificationListSerializer
 
 

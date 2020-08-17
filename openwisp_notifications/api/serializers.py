@@ -1,10 +1,11 @@
 import logging
 
 from django.db import models
-from openwisp_notifications.exceptions import NotificationRenderException
-from openwisp_notifications.swapper import load_model
 from rest_framework import serializers
 from rest_framework.exceptions import NotFound
+
+from openwisp_notifications.exceptions import NotificationRenderException
+from openwisp_notifications.swapper import load_model
 
 logger = logging.getLogger(__name__)
 

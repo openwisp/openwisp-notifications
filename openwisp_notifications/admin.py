@@ -1,6 +1,6 @@
 from django.contrib import admin
-from openwisp_notifications.swapper import load_model
 
+from openwisp_notifications.swapper import load_model
 from openwisp_users.admin import UserAdmin
 from openwisp_utils.admin import AlwaysHasChangedMixin
 

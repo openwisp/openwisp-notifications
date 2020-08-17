@@ -11,6 +11,7 @@ from django.dispatch import receiver
 from django.template.loader import render_to_string
 from django.utils import timezone
 from django.utils.html import strip_tags
+
 from openwisp_notifications import settings as app_settings
 from openwisp_notifications.exceptions import NotificationRenderException
 from openwisp_notifications.swapper import load_model

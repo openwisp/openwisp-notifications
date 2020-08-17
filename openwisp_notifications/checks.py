@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.core import checks
+
 from openwisp_notifications import settings as app_settings
 
 

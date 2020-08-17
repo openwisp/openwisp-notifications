@@ -8,8 +8,8 @@ class OpenwispNotificationsConfig(AppConfig):
     verbose_name = _('Notifications')
 
     def ready(self):
-        from openwisp_notifications.signals import notify
         from openwisp_notifications.handlers import notify_handler
+        from openwisp_notifications.signals import notify
 
         notify.connect(
             notify_handler, dispatch_uid='openwisp_notifications.model.notifications'

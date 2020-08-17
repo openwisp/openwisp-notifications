@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand
-from openwisp_notifications.signals import notify
 
+from openwisp_notifications.signals import notify
 from openwisp_users.models import Organization
 
 

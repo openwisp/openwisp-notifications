@@ -2,6 +2,7 @@ import json
 
 from asgiref.sync import async_to_sync
 from channels.generic.websocket import WebsocketConsumer
+
 from openwisp_notifications.swapper import load_model
 from openwisp_notifications.utils import normalize_unread_count
 
