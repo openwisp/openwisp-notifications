@@ -1,5 +1,8 @@
+from datetime import datetime
+
 from django.contrib.messages.storage.fallback import FallbackStorage
 from django.http import HttpRequest
+from django.utils import timezone
 
 from openwisp_notifications.swapper import load_model
 from openwisp_notifications.tasks import ns_register_unregister_notification_type
@@ -11,6 +14,8 @@ from openwisp_notifications.types import (
 )
 
 NotificationSetting = load_model('NotificationSetting')
+
+TEST_DATETIME = datetime(2020, 5, 4, 0, 0, 0, 0, timezone.get_default_timezone())
 
 
 class MessagingRequest(HttpRequest):

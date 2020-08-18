@@ -3,6 +3,9 @@ from openwisp_notifications.tests.test_admin import TestAdmin as BaseTestAdmin
 from openwisp_notifications.tests.test_api import (
     TestNotificationApi as BaseTestNotificationApi,
 )
+from openwisp_notifications.tests.test_ignore_object_notification import (
+    TestIgnoreObjectNotification as BaseTestIgnoreObjectNotification,
+)
 from openwisp_notifications.tests.test_notification_setting import (
     TestNotificationSetting as BaseTestNotificationSetting,
 )
@@ -47,7 +50,12 @@ class TestNotificationSetting(BaseTestNotificationSetting):
     pass
 
 
+class TestIgnoreObjectNotification(BaseTestIgnoreObjectNotification):
+    pass
+
+
 del BaseTestAdmin
 del BaseTestNotifications
 del BaseTestNotificationApi
 del BaseTestNotificationSetting
+del BaseTestIgnoreObjectNotification

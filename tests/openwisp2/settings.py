@@ -174,7 +174,7 @@ ACCOUNT_AUTHENTICATED_LOGIN_REDIRECTS = False
 OPENWISP_ADMIN_SHOW_USERLINKS_BLOCK = True
 OPENWISP_API_DOCS = True
 OPENWISP_USERS_AUTH_API = True
-
+OPENWISP_NOTIFICATIONS_IGNORE_ENABLED_ADMIN = ['openwisp_users.admin.OrganizationAdmin']
 TEST_RUNNER = 'openwisp_utils.tests.TimeLoggingTestRunner'
 
 # local settings must be imported before test runner otherwise they'll be ignored
@@ -199,5 +199,8 @@ if os.environ.get('SAMPLE_APP', False):
             'templates',
         ),
     ]
+    OPENWISP_NOTIFICATIONS_IGNOREOBJECTNOTIFICATION_MODEL = (
+        'sample_notifications.IgnoreObjectNotification'
+    )
     # Celery auto detects tasks only from INSTALLED_APPS
     CELERY_IMPORTS = ('openwisp_notifications.tasks',)

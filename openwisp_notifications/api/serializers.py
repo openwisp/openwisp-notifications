@@ -11,6 +11,7 @@ logger = logging.getLogger(__name__)
 
 Notification = load_model('Notification')
 NotificationSetting = load_model('NotificationSetting')
+IgnoreObjectNotification = load_model('IgnoreObjectNotification')
 
 
 class ContentTypeField(serializers.Field):
@@ -73,3 +74,13 @@ class NotificationSettingSerializer(serializers.ModelSerializer):
         model = NotificationSetting
         exclude = ['user']
         read_only_fields = ['organization', 'type']
+
+
+class IgnoreObjectNotificationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = IgnoreObjectNotification
+        exclude = ['user']
+        read_only_fields = [
+            'object_content_type',
+            'object_id',
+        ]

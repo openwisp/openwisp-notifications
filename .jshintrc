@@ -9,7 +9,13 @@
         "ReconnectingWebSocket": true,
         "notificationApiHost": true,
         "notificationSound": true,
-        "webSocketProtocol": true
+        "notificationSocket": true,
+        "owNotifyObjectId": true,
+        "owNotifyAppLabel": true,
+        "owNotifyModelName": true,
+        "owIsChangeForm": true,
+        "getAbsoluteUrl": true,
+        "dateTimeStampToDateTimeLocaleString": true
     },
     "browser": true
 }

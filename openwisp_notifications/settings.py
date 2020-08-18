@@ -31,6 +31,10 @@ OPENWISP_NOTIFICATIONS_CACHE_TIMEOUT = getattr(
     settings, 'OPENWISP_NOTIFICATIONS_CACHE_TIMEOUT', 2 * 24 * 60 * 60
 )
 
+IGNORE_ENABLED_ADMIN = getattr(
+    settings, 'OPENWISP_NOTIFICATIONS_IGNORE_ENABLED_ADMIN', []
+)
+
 
 def get_config():
     user_config = getattr(settings, 'OPENWISP_NOTIFICATIONS_CONFIG', {})

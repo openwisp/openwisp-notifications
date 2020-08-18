@@ -4,6 +4,7 @@ from celery import shared_task
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import Q
+from django.db.utils import OperationalError
 from django.utils import timezone
 
 from openwisp_notifications.swapper import load_model, swapper_load_model
@@ -13,15 +14,17 @@ User = get_user_model()
 
 Notification = load_model('Notification')
 NotificationSetting = load_model('NotificationSetting')
+IgnoreObjectNotification = load_model('IgnoreObjectNotification')
 
 Organization = swapper_load_model('openwisp_users', 'Organization')
 OrganizationUser = swapper_load_model('openwisp_users', 'OrganizationUser')
 
 
 @shared_task
-def delete_obsolete_notifications(instance_app_label, instance_model, instance_id):
+def delete_obsolete_objects(instance_app_label, instance_model, instance_id):
     """
-    Delete notifications having 'instance' as actor, action or target object.
+    Delete Notification and IgnoreObjectNotification objects having
+    instance' as related objects..
     """
     try:
         instance_content_type = ContentType.objects.get_by_natural_key(
@@ -30,6 +33,7 @@ def delete_obsolete_notifications(instance_app_label, instance_model, instance_i
     except ContentType.DoesNotExist:
         return
     else:
+        # Delete Notification objects
         where = (
             Q(actor_content_type=instance_content_type)
             | Q(action_object_content_type=instance_content_type)
@@ -41,6 +45,15 @@ def delete_obsolete_notifications(instance_app_label, instance_model, instance_i
             | Q(target_object_id=instance_id)
         )
         Notification.objects.filter(where).delete()
+
+        # Delete IgnoreObjectNotification objects
+        try:
+            IgnoreObjectNotification.objects.filter(
+                object_id=instance_id, object_content_type_id=instance_content_type.pk
+            ).delete()
+        except OperationalError:
+            # Raised when an object is deleted in migration
+            return
 
 
 @shared_task
@@ -202,3 +215,11 @@ def ns_organization_created(instance_id):
     NotificationSetting.objects.bulk_create(
         notification_settings, ignore_conflicts=True
     )
+
+
+@shared_task
+def delete_ignore_object_notification(instance_id):
+    """
+    Deletes IgnoreObjectNotification object post it's expiration.
+    """
+    IgnoreObjectNotification.objects.filter(id=instance_id).delete()
