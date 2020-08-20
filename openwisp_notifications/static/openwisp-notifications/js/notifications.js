@@ -184,7 +184,7 @@ function notificationWidget($) {
         lastRenderedPage = 0;
         nextPageUrl = getAbsoluteUrl(url);
         notificationReadStatus.clear();
-        $('.ow-notification-wrapper').scroll();
+        onUpdate();
     }
 
     $('.ow-notifications').on('click', initNotificationWidget);
