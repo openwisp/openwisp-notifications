@@ -132,8 +132,26 @@
   font-size: 12px;
 }
 .ow-notification-dropdown .btn {
-  color: #df5d43;
   cursor: pointer;
+  box-shadow: inset 0px 1px 0px 0px #ffffff;
+  background: linear-gradient(to bottom, #ededed 5%, #dfdfdf 100%);
+  background-color: #ededed;
+  border-radius: 6px;
+  border: 1px solid #dcdcdc;
+  display: inline-block;
+  cursor: pointer;
+  color: #777777 !important;
+  font-size: 12px;
+  padding: 4px 15px;
+  text-decoration: none;
+  text-shadow: 0px 1px 0px #ffffff;
+}
+.ow-notification-dropdown .btn:hover {
+  background: linear-gradient(to bottom, #f6f6f6 5%, #e7e6e6 100%);
+}
+.ow-notification-dropdown .btn:active {
+  position: relative;
+  top: 1px;
 }
 .ow-notification-dropdown .filters {
   margin: 12px 18px 10px;
@@ -142,7 +160,8 @@
   font-weight: 500;
 }
 .ow-notification-dropdown .disabled {
-  color: grey !important;
+  color: rgba(0, 0, 0, 0.4) !important;
+  background: #dfdfdf;
   pointer-events: none;
 }
 .ow-notification-wrapper {
