@@ -4,10 +4,11 @@ import uuid
 
 import django.db.models.deletion
 from django.conf import settings
-from django.db import migrations, models
-from openwisp_notifications.types import NOTIFICATION_CHOICES
-from swapper import get_model_name
 from django.contrib.auth.management import create_permissions
+from django.db import migrations, models
+from swapper import get_model_name
+
+from openwisp_notifications.types import NOTIFICATION_CHOICES
 
 
 def create_notification_setting_groups_permissions(apps, schema_editor):
@@ -99,7 +100,10 @@ class Migration(migrations.Migration):
                     models.BooleanField(
                         null=True,
                         blank=True,
-                        help_text='Note: Non-superadmin users receive notifications only for organizations of which they are member of.',
+                        help_text=(
+                            'Note: Non-superadmin users receive notifications only '
+                            'for organizations of which they are member of.'
+                        ),
                         verbose_name='web notifications',
                     ),
                 ),
@@ -108,7 +112,10 @@ class Migration(migrations.Migration):
                     models.BooleanField(
                         null=True,
                         blank=True,
-                        help_text='Note: Non-superadmin users receive notifications only for organizations of which they are member of.',
+                        help_text=(
+                            'Note: Non-superadmin users receive notifications only '
+                            'for organizations of which they are member of.'
+                        ),
                         verbose_name='email notifications',
                     ),
                 ),

@@ -1,4 +1,5 @@
 from django.db import migrations, models
+
 from openwisp_notifications.types import NOTIFICATION_CHOICES
 
 
