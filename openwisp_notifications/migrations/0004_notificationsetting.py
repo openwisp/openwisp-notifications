@@ -3,10 +3,10 @@
 import uuid
 
 import django.db.models.deletion
+import swapper
 from django.conf import settings
 from django.contrib.auth.management import create_permissions
 from django.db import migrations, models
-from swapper import get_model_name
 
 from openwisp_notifications.types import NOTIFICATION_CHOICES
 
@@ -70,6 +70,7 @@ class Migration(migrations.Migration):
     dependencies = [
         ('openwisp_users', '0009_create_organization_owners'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
+        swapper.dependency('openwisp_users', 'Organization'),
         ('openwisp_notifications', '0003_notification_notification_type'),
     ]
 
@@ -123,7 +124,7 @@ class Migration(migrations.Migration):
                     'organization',
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
-                        to=get_model_name('openwisp_users', 'Organization'),
+                        to=swapper.get_model_name('openwisp_users', 'Organization'),
                     ),
                 ),
                 (

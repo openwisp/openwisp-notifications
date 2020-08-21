@@ -10,6 +10,7 @@ from openwisp_notifications.base.models import (
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils.translation import gettext_lazy as _
+from swapper import get_model_name
 
 from openwisp_notifications.signals import notify
 
@@ -37,7 +38,7 @@ class NotificationSetting(DetailsModel, AbstractNotificationSetting):
 class TestApp(UUIDModel):
     name = models.CharField(max_length=50)
     organization = models.ForeignKey(
-        'openwisp_users.Organization', on_delete=models.CASCADE,
+        get_model_name('openwisp_users', 'Organization'), on_delete=models.CASCADE,
     )
 
     class Meta:

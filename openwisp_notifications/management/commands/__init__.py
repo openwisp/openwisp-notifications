@@ -1,7 +1,9 @@
 from django.core.management.base import BaseCommand
 
 from openwisp_notifications.signals import notify
-from openwisp_users.models import Organization
+from openwisp_notifications.swapper import swapper_load_model
+
+Organization = swapper_load_model('openwisp_users', 'Organization')
 
 
 class BaseCreateNotificationCommand(BaseCommand):

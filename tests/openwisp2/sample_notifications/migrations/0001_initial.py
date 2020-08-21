@@ -5,9 +5,9 @@ import uuid
 import django.db.models.deletion
 import django.utils.timezone
 import jsonfield.fields
+import swapper
 from django.conf import settings
 from django.db import migrations, models
-from swapper import get_model_name
 
 from openwisp_notifications.types import NOTIFICATION_CHOICES
 
@@ -19,6 +19,7 @@ class Migration(migrations.Migration):
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
         ('openwisp_users', '0009_create_organization_owners'),
+        swapper.dependency('openwisp_users', 'Organization'),
     ]
 
     operations = [
@@ -169,7 +170,7 @@ class Migration(migrations.Migration):
                     'organization',
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
-                        to=get_model_name('openwisp_users', 'Organization'),
+                        to=swapper.get_model_name('openwisp_users', 'Organization'),
                     ),
                 ),
                 (
