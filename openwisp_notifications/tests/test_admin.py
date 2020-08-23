@@ -3,6 +3,7 @@ from unittest.mock import patch
 
 from django.contrib.admin.sites import AdminSite
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Permission
 from django.core.cache import cache
 from django.test import TestCase
 from django.urls import reverse
@@ -10,14 +11,15 @@ from django.urls import reverse
 from openwisp_notifications import settings as app_settings
 from openwisp_notifications.admin import NotificationSettingInline
 from openwisp_notifications.signals import notify
-from openwisp_notifications.swapper import load_model
-from openwisp_users.tests.utils import TestOrganizationMixin
+from openwisp_notifications.swapper import load_model, swapper_load_model
+from openwisp_users.tests.utils import TestMultitenantAdminMixin, TestOrganizationMixin
 
 from .test_helpers import MessagingRequest
 
 Notification = load_model('Notification')
 NotificationSetting = load_model('NotificationSetting')
 notification_queryset = Notification.objects.order_by('-timestamp')
+Group = swapper_load_model('openwisp_users', 'Group')
 
 
 class MockUser:
@@ -41,7 +43,7 @@ op_request = MessagingRequest()
 op_request.user = MockUser(is_superuser=False)
 
 
-class TestAdmin(TestOrganizationMixin, TestCase):
+class TestAdmin(TestOrganizationMixin, TestMultitenantAdminMixin, TestCase):
     """
     Tests notifications in admin
     """
@@ -213,3 +215,25 @@ class TestAdmin(TestOrganizationMixin, TestCase):
             self.assertTrue(
                 self.ns_inline.has_change_permission(op_request, obj=op_request.user),
             )
+
+    def test_org_admin_view_same_org_user_notification_setting(self):
+        org_owner = self._create_org_user(user=self._get_operator(), is_admin=True,)
+        org_admin = self._create_org_user(
+            user=self._create_user(
+                username='user', email='user@user.com', is_staff=True
+            ),
+            is_admin=True,
+        )
+        permissions = Permission.objects.all()
+        org_owner.user.user_permissions.set(permissions)
+        org_admin.user.user_permissions.set(permissions)
+        self.client.force_login(org_owner.user)
+
+        response = self.client.get(
+            reverse('admin:openwisp_users_user_change', args=(org_admin.user_id,)),
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'User notification settings')
+        self.assertNotContains(
+            response, '<option value="default" selected>Default Type</option>'
+        )
