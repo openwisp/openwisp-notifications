@@ -227,21 +227,22 @@ Notifications can be created using the ``notify`` signal. Eg:
 .. code-block:: python
 
     from django.contrib.auth import get_user_model
+    from swapper import load_model
+
     from openwisp_notifications.signals import notify
 
-    from openwisp_users.models import Group
-
     User = get_user_model()
+    Group = load_model('openwisp_users', 'Group')
     admin = User.objects.get(email='admin@admin.com')
     operators = Group.objects.get(name='Operator')
 
     notify.send(
-       sender=admin,
-       recipient=operators,
-       description="Test Notification",
-       verb="Test Notification",
-       email_subject='Test Email Subject',
-       url='https://localhost:8000/admin',
+        sender=admin,
+        recipient=operators,
+        description="Test Notification",
+        verb="Test Notification",
+        email_subject='Test Email Subject',
+        url='https://localhost:8000/admin',
     )
 
 The above code snippet creates and sends a notification to all users belonging to the ``Operators``

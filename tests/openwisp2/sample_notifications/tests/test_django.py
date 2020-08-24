@@ -1,4 +1,4 @@
-from openwisp_notifications.swapper import load_model
+from openwisp_notifications.swapper import load_model, swapper_load_model
 from openwisp_notifications.tests.test_admin import TestAdmin as BaseTestAdmin
 from openwisp_notifications.tests.test_api import (
     TestNotificationApi as BaseTestNotificationApi,
@@ -20,9 +20,9 @@ class TestAdmin(BaseTestAdmin):
 class TestNotifications(BaseTestNotifications):
     # Used only for testing openwisp-notifications
     def test_test_app_object_created_notification(self):
-        from openwisp_users.models import OrganizationUser
-
         from ..models import TestApp
+
+        OrganizationUser = swapper_load_model('openwisp_users', 'OrganizationUser')
 
         org = self._get_org()
         operator = self._get_operator()
