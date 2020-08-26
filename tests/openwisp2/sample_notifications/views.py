@@ -11,6 +11,12 @@ from openwisp_notifications.api.views import (
 from openwisp_notifications.api.views import (
     NotificationReadAllView as BaseNotificationReadAllView,
 )
+from openwisp_notifications.api.views import (
+    NotificationSettingListView as BaseNotificationSettingListView,
+)
+from openwisp_notifications.api.views import (
+    NotificationSettingView as BaseNotificationSettingView,
+)
 
 
 class NotificationListView(BaseNotificationListView):
@@ -33,6 +39,23 @@ class NotificationDetailView(BaseNotificationDetailView):
 class NotificationReadAllView(BaseNotificationReadAllView):
     """
     Marks all notifications as read
+    """
+
+    pass
+
+
+class NotificationSettingView(BaseNotificationSettingView):
+    """
+    Retrives details for a notification setting and provides
+    endpoints for updating and deleting them.
+    """
+
+    pass
+
+
+class NotificationSettingListView(BaseNotificationSettingListView):
+    """
+    Lists user's notification settings.
     """
 
     pass

@@ -15,6 +15,9 @@ OpenWISP Notifications Module
 Its main goal is to allow the other OpenWISP modules to notify users about
 meaningful events that happen in their network.
 
+.. figure:: https://drive.google.com/uc?export=view&id=1d603-pemsop1nnJeN49Y04hOcg8aHkoW
+   :align: center
+
 ------------
 
 .. contents:: **Table of Contents**:
@@ -27,13 +30,14 @@ Available features
 ------------------
 
 - `Sending notifications <#sending-notifications>`_
-- `Email notifications <#openwisp_notification_email_template>`_
-- Web notifications
-- Configurable email theme
+- `Web notifications <#web-notifications>`_
+- `Email notifications <#email-notifications>`_
+- `Configurable email theme <#openwisp_notifications_email_template>`_
 - `Definition of notification types <#notification-types>`_
 - `Possibility to register new notification types <#registering--unregistering-notification-types>`_
 - `Preference for receiving notifications <#notification-preferences>`_
-- TODO: add more
+- `Automatic cleanup of old notifications <#scheduled-deletion-of-notifications>`_
+- `Configurable host for API endpoints <#openwisp_notifications_host>`_
 
 Install development version
 ---------------------------
@@ -63,7 +67,6 @@ Setup (integrate into an existing Django project)
         'django.contrib.sessions',
         'django.contrib.messages',
         'django.contrib.staticfiles',
-        'openwisp_utils.admin_theme',
         'django.contrib.sites',
         'django_extensions',
         'allauth',
@@ -75,12 +78,20 @@ Setup (integrate into an existing Django project)
         'drf_yasg',
         'django_filters',
         'openwisp_users',
-        'django.contrib.admin',
         # notifications module
         'openwisp_notifications',
+        # add openwisp theme
+        # (must be loaded here)
+        'openwisp_utils.admin_theme',
+        'django.contrib.admin',
         # channels
         'channels',
     ]
+
+**Note**: ``openwisp_utils.admin_theme`` and ``django.contrib.admin`` should always
+follow ``openwisp_notifications`` in ``INSTALLED_APPS`` as shown in the example above.
+It might result in undesired behavior otherwise, e.g. notification bell not being
+shown on admin site.
 
 Add ``notification_api_settings`` context processor:
 
@@ -99,10 +110,6 @@ Add ``notification_api_settings`` context processor:
             },
         },
     ]
-
-**Note**: You can skip adding ``notification_api_settings`` context processor
-if you don't intend to use ``OPENWISP_NOTIFICATIONS_SOUND`` or ``OPENWISP_NOTIFICATIONS_HOST``
-settings.
 
 ``urls.py``:
 
@@ -154,7 +161,7 @@ Configure celery:
 
 .. code-block:: python
 
-    # here we show how to configure celery with Redis but you can
+    # Here we are showing how to configure celery with Redis but you can
     # use other brokers if you want, consult the celery docs
     CELERY_BROKER_URL = 'redis://localhost/1'
 
@@ -172,10 +179,11 @@ Configure celery beat:
 
 **Note**: You will only need to add ``CELERY_BEAT_SCHEDULE`` setting if you want
 automatic deletion of old notifications. Please read
-`Scheduled deletion of notifications <#scheduled-deletion-of-notifications>`_ section to learn
-more about this feature.
+`Scheduled deletion of notifications <#scheduled-deletion-of-notifications>`_
+section to learn more about this feature.
 
-If you decide to use redis (as shown in these examples), make sure the python dependencies are installed in your system:
+If you decide to use redis (as shown in these examples), make sure the python
+dependencies are installed in your system:
 
 .. code-block:: shell
 
@@ -187,7 +195,7 @@ Configure ``ASGI_APPLICATION``:
 
     ASGI_APPLICATION = 'yourproject.routing.application'
 
-Configure channel layers (you may user a `different channel layer <https://channels.readthedocs.io/en/latest/topics/channel_layers.html#configuration>`_):
+Configure channel layers (you may use a `different channel layer <https://channels.readthedocs.io/en/latest/topics/channel_layers.html#configuration>`_):
 
 .. code-block:: python
 
@@ -203,7 +211,7 @@ Configure channel layers (you may user a `different channel layer <https://chann
 By default, websockets communicate over ``wss`` protocol. If for some reason, you want them to communicate
 over ``ws`` protocol e.g. while development, you will need to configure ``INTERNAL_IPS`` setting accordingly.
 For more information please refer to
-`"INTERNAL_IPS" section of Django's settings documentation<https://docs.djangoproject.com/en/3.0/ref/settings/#internal-ips>`_.
+`"INTERNAL_IPS" section of Django's settings documentation <https://docs.djangoproject.com/en/3.0/ref/settings/#internal-ips>`_.
 
 While development, you can configure it to localhost as shown below:
 
@@ -217,7 +225,8 @@ Run migrations
 
     ./manage.py migrate
 
-**Note**: Running migrations is also required for creating `notification settings <#notification-preferences>`_ apart from creating database schema.
+**Note**: Running migrations is also required for creating `notification settings <#notification-preferences>`_
+apart from creating database schema.
 
 Sending notifications
 ---------------------
@@ -276,25 +285,68 @@ You can learn more about accepted parameters from `django-notifications document
 Additional ``notify`` keyword arguments
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-+---------------------+-----------------------------------------------------------------------------+
-|  **Parameter**      |                             **Description**                                 |
-+---------------------+-----------------------------------------------------------------------------+
-|  ``email_subject``  | Sets subject of email notification to be sent.                              |
-|                     |                                                                             |
-|                     | Defaults to the truncated description.                                      |
-+---------------------+-----------------------------------------------------------------------------+
-|       ``url``       | Adds a URL in the email text, eg:                                           |
-|                     |                                                                             |
-|                     | ``For more information see <url>.``                                         |
-|                     |                                                                             |
-|                     | Defaults to **None**, meaning the above message would                       |
-|                     | not be added to the email text.                                             |
-+---------------------+-----------------------------------------------------------------------------+
-|       ``type``      | Set values of other parameters based on predefined setting                  |
-|                     | ``OPENWISP_NOTIFICATIONS_TYPES``                                            |
-|                     |                                                                             |
-|                     | Defaults to **None** meaning you need to provide other arguments.           |
-+---------------------+-----------------------------------------------------------------------------+
++-------------------+-------------------------------------------------------------------+
+| **Parameter**     | **Description**                                                   |
++-------------------+-------------------------------------------------------------------+
+| ``email_subject`` | Sets subject of email notification to be sent.                    |
+|                   |                                                                   |
+|                   | Defaults to the notification message.                             |
++-------------------+-------------------------------------------------------------------+
+| ``url``           | Adds a URL in the email text, eg:                                 |
+|                   |                                                                   |
+|                   | ``For more information see <url>.``                               |
+|                   |                                                                   |
+|                   | Defaults to ``None``, meaning the above message would             |
+|                   | not be added to the email text.                                   |
++-------------------+-------------------------------------------------------------------+
+| ``type``          | Set values of other parameters based on registered                |
+|                   | `notification types <#notification-types>`_                       |
+|                   |                                                                   |
+|                   | Defaults to ``None`` meaning you need to provide other arguments. |
++-------------------+-------------------------------------------------------------------+
+
+Web Notifications
+-----------------
+
+*Openwisp Notifications* send a web notification to the recipients through
+django's admin site. Following are the components which allows browsing
+web notifications:
+
+Notification Widget
+~~~~~~~~~~~~~~~~~~~
+
+A javascript widget has been added to make consuming notifications easy for users.
+The notification widget provides following features:
+
+- A minimalistic UI to help getting things done quickly.
+- Dynamically loading notifications with infinite scrolling to prevent unnecessary
+  network requests.
+- Option to filter unread notifications.
+- Option to mark all notifications as read on a single click.
+
+.. figure:: https://drive.google.com/uc?export=view&id=1EnjVxp_hjJEmUOTGyaqhd5uYCcyWnRaY
+   :align: center
+
+Notification Toasts
+~~~~~~~~~~~~~~~~~~~
+
+A notification toast delivers notifications at real-time. This allows
+users to read notifications without even opening the notification widget.
+A notification bell is also played to alert each time a notification is
+displayed through notification toast.
+
+.. figure:: https://drive.google.com/uc?export=view&id=1Lm0caDi3_DdiYzKc02DX3Cn2smj6ptWG
+   :align: center
+
+Email Notifications
+-------------------
+
+Along with web notifications *OpenWISP Notification* also sends notifications
+through emails.
+
+Following notification email is generated by OpenWISP Notification in *OpenWISP Monitoring*:
+
+.. figure:: https://github.com/openwisp/openwisp-notifications/blob/master/docs/images/email-template.png
 
 Notification Cache
 ------------------
@@ -304,33 +356,36 @@ for a number of notifications. To optimize database queries, these objects are c
 `Django’s cache framework <https://docs.djangoproject.com/en/3.0/topics/cache/>`_.
 The cached values are updated automatically to reflect actual data from database. You can control
 the duration of caching these objects using
-`OPENWISP_NOTIFICATIONS_CACHE_TIMEOUT setting <#OPENWISP_NOTIFICATIONS_CACHE_TIMEOUT>`_
+`OPENWISP_NOTIFICATIONS_CACHE_TIMEOUT setting <#OPENWISP_NOTIFICATIONS_CACHE_TIMEOUT>`_.
 
 Notification Types
 ------------------
 
-**OpenWISP Notifications** simplifies configuring individual notification by using notification types.
-You can think of notification type as a template for notifications.
+**OpenWISP Notifications** simplifies configuring individual notification by
+using notification types. You can think of a notification type as a template
+for notifications.
 
 These properties can be configured for each notification type:
 
-+------------------------+-----------------------------------------------------------------+
-| **Property**           |                         **Description**                         |
-+------------------------+-----------------------------------------------------------------+
-| ``level``              | Sets ``level`` attribute of the notification.                   |
-+------------------------+-----------------------------------------------------------------+
-| ``verb``               | Sets ``verb`` attribute of the notification.                    |
-+------------------------+-----------------------------------------------------------------+
-| ``name``               | Sets display name of notification type.                         |
-+------------------------+-----------------------------------------------------------------+
-| ``message``            | Sets ``message`` attribute of the notification.                 |
-+------------------------+-----------------------------------------------------------------+
-| ``email_subject``      | Sets subject of the email notification.                         |
-+------------------------+-----------------------------------------------------------------+
-| ``message_template``   | Path to file having template for message of the notification.   |
-+------------------------+-----------------------------------------------------------------+
-| ``email_notification`` | Sets email preference for notifications. Defaults to ``True``.  |
-+------------------------+-----------------------------------------------------------------+
++------------------------+----------------------------------------------------------------+
+| **Property**           | **Description**                                                |
++------------------------+----------------------------------------------------------------+
+| ``level``              | Sets ``level`` attribute of the notification.                  |
++------------------------+----------------------------------------------------------------+
+| ``verb``               | Sets ``verb`` attribute of the notification.                   |
++------------------------+----------------------------------------------------------------+
+| ``verbose_name``       | Sets display name of notification type.                        |
++------------------------+----------------------------------------------------------------+
+| ``message``            | Sets ``message`` attribute of the notification.                |
++------------------------+----------------------------------------------------------------+
+| ``email_subject``      | Sets subject of the email notification.                        |
++------------------------+----------------------------------------------------------------+
+| ``message_template``   | Path to file having template for message of the notification.  |
++------------------------+----------------------------------------------------------------+
+| ``email_notification`` | Sets preference for email notifications. Defaults to ``True``. |
++------------------------+----------------------------------------------------------------+
+| ``web_notification``   | Sets preference for web notifications. Defaults to ``True``.   |
++------------------------+----------------------------------------------------------------+
 
 **Note**: A notification type configuration should contain atleast one of ``message`` or ``message_template``
 settings. If both of them are present, ``message`` is given preference over ``message_template``.
@@ -343,30 +398,30 @@ from scratch. An example to extend default message template is shown below.
 
 .. code-block:: jinja2
 
-    # In templates/openwisp_notifications/your_message_template.md
+    # In templates/your_notifications/your_message_template.md
     {% extends 'openwisp_notifications/default_message.md' %}
     {% block body %}
         [{{ notification.target }}]({{ notification.target_link }}) has malfunctioned.
     {% endblock body %}
 
 **Note**: You can access all attributes of the notification using ``notification`` variables in your message
-template as shown above. Additionally attributes ``actor_link``, ``action_link`` and ``target_link`` are
+template as shown above. Additional attributes ``actor_link``, ``action_link`` and ``target_link`` are
 also available for providing hyperlinks to respective object.
 
 **Note**: After writing code for registering or unregistering notification types, it is recommended to run
-database migrations to create notification settlings for these notification types.
+database migrations to create `notification settlings <#notification-preferences>`_ for these notification types.
 
 Registering / Unregistering Notification Types
 ----------------------------------------------
 
 **OpenWISP Notifications** provides registering and unregistering notifications through utility functions
-``openwisp_notifications.types.register_notification_type`` and ``openwisp_notifications.types.unregister_notification_type``. Using
-these functions you can register or unregister notification types from anywhere in your code.
+``openwisp_notifications.types.register_notification_type`` and ``openwisp_notifications.types.unregister_notification_type``.
+Using these functions you can register or unregister notification types from your code.
 
 register_notification_type
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-This function is used to register a new notification type from anywhere in your code.
+This function is used to register a new notification type from your code.
 
 Syntax:
 
@@ -374,13 +429,13 @@ Syntax:
 
     register_notification_type(type_name, type_config)
 
-+---------------+--------------------------------------------------------------+
-|   Parameter   |                     Description                              |
-+---------------+--------------------------------------------------------------+
-|   type_name   | A ``str`` defining name of the notification type.            |
-+---------------+--------------------------------------------------------------+
-|  type_config  | A ``dict`` defining configuration of the notification type.  |
-+---------------+--------------------------------------------------------------+
++---------------+-------------------------------------------------------------+
+| **Parameter** | **Description**                                             |
++---------------+-------------------------------------------------------------+
+| type_name     | A ``str`` defining name of the notification type.           |
++---------------+-------------------------------------------------------------+
+| type_config   | A ``dict`` defining configuration of the notification type. |
++---------------+-------------------------------------------------------------+
 
 An example usage has been shown below.
 
@@ -394,14 +449,16 @@ An example usage has been shown below.
         'verb': 'added',
         'verbose_name': 'device added',
         'message': '[{notification.target}]({notification.target_link}) was {notification.verb} at {notification.timestamp}',
-        'email_subject' : '[{site.name}] A device has been added'
+        'email_subject' : '[{site.name}] A device has been added',
+        'web_notification': True,
+        'email_notification': True,
     }
 
     # Register your custom notification type
     register_notification_type('custom_type', custom_type)
 
 **Note**: It will raise ``ImproperlyConfigured`` exception if a notification type is already registered
-with same name(not to be confused with verbose_name).
+with same name(not to be confused with ``verbose_name``).
 
 **Note**: You can use ``site`` and ``notification`` variables while defining ``message`` and
 ``email_subject`` configuration of notification type. They refer to objects of
@@ -420,11 +477,11 @@ Syntax:
 
     unregister_notification_type(type_name)
 
-+---------------+--------------------------------------------------------------+
-|   Parameter   |                     Description                              |
-+---------------+--------------------------------------------------------------+
-|   type_name   | A ``str`` defining name of the notification type.            |
-+---------------+--------------------------------------------------------------+
++---------------+---------------------------------------------------+
+| **Parameter** | **Description**                                   |
++---------------+---------------------------------------------------+
+| type_name     | A ``str`` defining name of the notification type. |
++---------------+---------------------------------------------------+
 
 An example usage is shown below.
 
@@ -435,8 +492,8 @@ An example usage is shown below.
     # Unregister previously registered notification type
     unregister_notification_type('custom type')
 
-**Note**: It will raise ``ImproperlyConfigured`` exception if the concerned notification type is not
-registered.
+**Note**: It will raise ``ImproperlyConfigured`` exception if the concerned
+notification type is not registered.
 
 Passing extra data to notifications
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -475,6 +532,9 @@ Then in the application code:
             error=str(error)
         )
 
+**Note**: It is recommended that all notification types are registered or
+unregistered in ``ready`` method of your Django application's ``AppConfig``.
+
 Notification Preferences
 ------------------------
 
@@ -491,8 +551,9 @@ preferred ways for receiving notifications. With provided functionality, users c
 web and email notifications or only web notifications. Users can also stop receiving notifications
 by disabling both web and email option for a notification setting.
 
-**Note**: If a user has not configured their email preference for a particular notification setting,
-then ``email_notification`` option of concerned notification type will be used.
+**Note**: If a user has not configured their email or web preference for a particular notification setting,
+then ``email_notification`` or ``web_notification`` option of concerned notification type will be used
+respectively.
 
 Scheduled deletion of notifications
 -----------------------------------
@@ -527,11 +588,11 @@ Settings
 ``OPENWISP_NOTIFICATIONS_HTML_EMAIL``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-+-----------+------------+
-|   type    |  ``bool``  |
-+-----------+------------+
-|  default  |  ``True``  |
-+-----------+------------+
++---------+----------+
+| type    | ``bool`` |
++---------+----------+
+| default | ``True`` |
++---------+----------+
 
 If ``True``, attaches markdown rendered HTML of notification message in email notification.
 If ``False``, HTML rendering of notification message will be disabled and a plain
@@ -540,14 +601,14 @@ text email is sent.
 ``OPENWISP_NOTIFICATIONS_EMAIL_TEMPLATE``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-+-----------+--------------------------------------------------+
-|   type    |  ``str``                                         |
-+-----------+--------------------------------------------------+
-|  default  |  ``openwisp_notifications/email_template.html``  |
-+-----------+--------------------------------------------------+
++---------+------------------------------------------------+
+| type    | ``str``                                        |
++---------+------------------------------------------------+
+| default | ``openwisp_notifications/email_template.html`` |
++---------+------------------------------------------------+
 
 This setting takes the path to the template for email notifications. Thus, making it possible to
-customize email notification.You can either extend the default email template or write your own
+customize email notification. You can either extend the default email template or write your own
 email template from scratch. An example of extending default email template to customize styling is
 shown below.
 
@@ -580,26 +641,26 @@ for reference implementation.
 ``OPENWISP_NOTIFICATIONS_EMAIL_LOGO``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-+-----------+----------------------------------------------------------------------------------------------+
-|   type    |  ``str``                                                                                     |
-+-----------+----------------------------------------------------------------------------------------------+
-|  default  |  `OpenWISP logo <https://raw.githubusercontent.com/openwisp/openwisp-notifications/master/ \ |
-|           |  openwisp_notifications/static/openwisp-notifications/images/openwisp-logo.png>`_            |
-+-----------+----------------------------------------------------------------------------------------------+
++---------+---------------------------------------------------------------------------------------------+
+| type    | ``str``                                                                                     |
++---------+---------------------------------------------------------------------------------------------+
+| default | `OpenWISP logo <https://raw.githubusercontent.com/openwisp/openwisp-notifications/master/ \ |
+|         | openwisp_notifications/static/openwisp-notifications/images/openwisp-logo.png>`_            |
++---------+---------------------------------------------------------------------------------------------+
 
 This setting takes the URL of the logo to be displayed on email notification.
 
 **Note**: Provide a URL which points to the logo on your own web server. Ensure that the URL provided is
-publicly accessible from the internet. Otherwise, the logo may not be displayed in email.
+publicly accessible from the internet. Otherwise, the logo may not be displayed in the email.
 
 ``OPENWISP_NOTIFICATIONS_HOST``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-+-----------+-----------------------------------------+
-|   type    |  ``str``                                |
-+-----------+-----------------------------------------+
-|  default  |  Any domain defined in ``ALLOWED_HOST`` |
-+-----------+-----------------------------------------+
++---------+----------------------------------------+
+| type    | ``str``                                |
++---------+----------------------------------------+
+| default | Any domain defined in ``ALLOWED_HOST`` |
++---------+----------------------------------------+
 
 This setting defines the domain at which API and Web Socket communicate for
 working of notification widget.
@@ -633,17 +694,17 @@ Configure Django's settings as follows:
     CSRF_COOKIE_DOMAIN = 'example.com'
 
 Please refer to `Django's settings documentation <https://docs.djangoproject.com/en/3.0/ref/settings/>`_
-for more information on ``SESSION_COOKIE_DOMAIN`` and ``CSRF_COOKIE_DOMAIN``.
+for more information on ``SESSION_COOKIE_DOMAIN`` and ``CSRF_COOKIE_DOMAIN`` settings.
 
 ``OPENWISP_NOTIFICATIONS_SOUND``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-+-----------+--------------------------------------------------------------------------------------------+
-|   type    |  ``str``                                                                                   |
-+-----------+--------------------------------------------------------------------------------------------+
-|  default  |  `notification_bell.mp3 <https://github.com/openwisp/openwisp-notifications/tree/master/ \ |
-|           |  openwisp_notifications/static/openwisp-notifications/audio/notification_bell.mp3>`_       |
-+-----------+--------------------------------------------------------------------------------------------+
++---------+-------------------------------------------------------------------------------------------+
+| type    | ``str``                                                                                   |
++---------+-------------------------------------------------------------------------------------------+
+| default | `notification_bell.mp3 <https://github.com/openwisp/openwisp-notifications/tree/master/ \ |
+|         | openwisp_notifications/static/openwisp-notifications/audio/notification_bell.mp3>`_       |
++---------+-------------------------------------------------------------------------------------------+
 
 This setting defines notification sound to be played when notification is received
 in real-time on admin site.
@@ -657,16 +718,15 @@ Provide an absolute or relative path(hosted on your webserver) to audio file as 
 ``OPENWISP_NOTIFICATIONS_CACHE_TIMEOUT``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-+-----------+------------------------------------+
-|   type    |  ``int``                           |
-+-----------+------------------------------------+
-|  default  |  ``172800`` `(2 days, in seconds)` |
-+-----------+------------------------------------+
++---------+-----------------------------------+
+| type    | ``int``                           |
++---------+-----------------------------------+
+| default | ``172800`` `(2 days, in seconds)` |
++---------+-----------------------------------+
 
 It sets the number of seconds the notification contents should be stored in the cache.
 If you want cached notification content to never expire, then set it to ``None``.
 Set it to ``0`` if you don't want to store notification contents in cache at all.
-
 
 Exceptions
 ----------
@@ -740,8 +800,8 @@ List user's notifications
 
     GET /api/v1/notification/
 
-Mark all user's notifications read
-##################################
+Mark all user's notifications as read
+#####################################
 
 .. code-block:: text
 
@@ -1048,10 +1108,10 @@ For example:
 
 .. code-block:: python
 
-    from openwisp_notifications.admin import NotificationAdmin, NotificationSettingInline
+    from openwisp_notifications.admin import NotificationSettingInline
 
-    NotificationAdmin.list_display.insert(1, 'my_custom_field')
-    NotificationAdmin.ordering = ['-my_custom_field']
+    NotificationSettingInline.list_display.insert(1, 'my_custom_field')
+    NotificationSettingInline.ordering = ['-my_custom_field']
 
 2. Inheriting admin classes
 ###########################
@@ -1063,9 +1123,6 @@ monkey patching, you can proceed as follows:
 
     from django.contrib import admin
     from openwisp_notifications.admin import (
-        NotificationSettingAdmin as BaseNotificationSettingAdmin,
-    )
-    from openwisp_notifications.admin import (
         NotificationSettingInline as BaseNotificationSettingInline,
     )
     from openwisp_notifications.swapper import load_model
@@ -1074,12 +1131,6 @@ monkey patching, you can proceed as follows:
 
     admin.site.unregister(NotificationSettingAdmin)
     admin.site.unregister(NotificationSettingInline)
-
-
-    @admin.register(NotificationSetting)
-    class NotificationSettingAdmin(BaseNotificationSettingAdmin):
-        # add your changes here
-        pass
 
 
     @admin.register(NotificationSetting)
