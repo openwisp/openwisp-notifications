@@ -14,7 +14,10 @@ class NotificationSettingForm(ModelForm):
                 else instance.web_notification,
             }
         super().__init__(*args, **kwargs)
-        self.fields['organization'].choices = self.get_organization_choices()
+        try:
+            self.fields['organization'].choices = self.get_organization_choices()
+        except KeyError:
+            pass
 
     @classmethod
     def get_organization_choices(cls):
