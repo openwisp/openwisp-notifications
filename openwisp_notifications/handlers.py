@@ -59,25 +59,33 @@ def notify_handler(**kwargs):
     where = Q(is_superuser=True)
     where_group = Q()
     if target_org:
-        where = where | (Q(is_staff=True) & Q(openwisp_users_organization=target_org))
-        where_group = Q(openwisp_users_organization=target_org)
-
-    # We can only find notification setting if notification type and
-    # target organization is present.
-    if notification_type and target_org:
-        # Create notification for users who have opted for receiving notifications.
-        # For users who have not configured web_notifications,
-        # use default from notification type
-        web_notification = Q(notificationsetting__web=True)
-        if notification_template['web_notification']:
-            web_notification |= Q(notificationsetting__web=None)
-
-        notification_setting = web_notification & Q(
-            notificationsetting__type=notification_type,
-            notificationsetting__organization_id=target_org,
+        org_admin_query = Q(
+            openwisp_users_organizationuser__organization=target_org,
+            openwisp_users_organizationuser__is_admin=True,
         )
-        where = where & notification_setting
-        where_group = where_group & notification_setting
+        where = where | (Q(is_staff=True) & org_admin_query)
+        where_group = org_admin_query
+
+        # We can only find notification setting if notification type and
+        # target organization is present.
+        if notification_type:
+            # Create notification for users who have opted for receiving notifications.
+            # For users who have not configured web_notifications,
+            # use default from notification type
+            web_notification = Q(notificationsetting__web=True)
+            if notification_template['web_notification']:
+                web_notification |= Q(notificationsetting__web=None)
+
+            notification_setting = web_notification & Q(
+                notificationsetting__type=notification_type,
+                notificationsetting__organization_id=target_org,
+            )
+            where = where & notification_setting
+            where_group = where_group & notification_setting
+
+    # Ensure notifications are only sent to active user
+    where = where & Q(is_active=True)
+    where_group = where_group & Q(is_active=True)
 
     if recipient:
         # Check if recipient is User, Group or QuerySet

@@ -189,7 +189,7 @@ class TestNotifications(TestOrganizationMixin, TestCase):
             first_name='Target',
             last_name='user',
         )
-        OrganizationUser.objects.create(user=target, organization=org)
+        self._create_org_user(user=target, organization=org)
         target.organization_id = org.id
         self.notification_options.update({'target': target})
         self._create_notification()
@@ -198,7 +198,7 @@ class TestNotifications(TestOrganizationMixin, TestCase):
 
         # Test for group with target object of same organization
         # Adding operator to organization of target object
-        OrganizationUser.objects.create(user=operator, organization=org, is_admin=True)
+        self._create_org_user(user=operator, organization=org, is_admin=True)
         self._create_notification()
         self.assertEqual(notification_queryset.count(), 3)
         n = notification_queryset.first()
@@ -755,3 +755,56 @@ class TestNotifications(TestOrganizationMixin, TestCase):
         self.assertTrue(notification_type_config['email_notification'])
 
         unregister_notification_type('test_type')
+
+    def test_inactive_user_not_receive_notification(self):
+        target = self._get_org_user()
+        self.notification_options.update({'target': target})
+
+        with self.subTest('Test superuser is inactive'):
+            self.admin.is_active = False
+            self.admin.save()
+
+            self._create_notification()
+            self.assertEqual(notification_queryset.count(), 0)
+
+        # Create org admin
+        org_admin = self._create_org_user(user=self._get_operator(), is_admin=True)
+
+        with self.subTest('Test superuser is inactive but org admin is active'):
+            self._create_notification()
+            self.assertEqual(notification_queryset.count(), 1)
+            notification = notification_queryset.first()
+            self.assertEqual(notification.recipient, org_admin.user)
+
+        # Cleanup
+        notification_queryset.delete()
+
+        with self.subTest('Test both superuser and org admin is inactive'):
+            org_admin.user.is_active = False
+            org_admin.user.save()
+
+            self._create_notification()
+            self.assertEqual(notification_queryset.count(), 0)
+
+        with self.subTest('Test superuser is active and org admin is inactive'):
+            self.admin.is_active = True
+            self.admin.save()
+
+            self._create_notification()
+            self.assertEqual(notification_queryset.count(), 1)
+            notification = notification_queryset.first()
+            self.assertEqual(notification.recipient, self.admin)
+
+    def test_notification_received_only_by_org_admin(self):
+        self.admin.delete()
+        org_object = self._get_org_user()
+        self.notification_options.update({'sender': org_object, 'target': org_object})
+        self._create_org_user(
+            user=self._create_user(username='user', email='user@user.com')
+        )
+        org_admin = self._create_org_user(user=self._get_operator(), is_admin=True)
+
+        self._create_notification()
+        self.assertEqual(notification_queryset.count(), 1)
+        notification = notification_queryset.first()
+        self.assertEqual(notification.recipient, org_admin.user)
