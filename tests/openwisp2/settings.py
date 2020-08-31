@@ -25,7 +25,6 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'openwisp_utils.admin_theme',
     'django.contrib.sites',
     'django_extensions',
     'allauth',
@@ -37,8 +36,12 @@ INSTALLED_APPS = [
     'drf_yasg',
     'django_filters',
     'openwisp_users',
-    'django.contrib.admin',
+    # notifications module
     'openwisp_notifications',
+    # add openwisp theme
+    # (must be loaded here)
+    'openwisp_utils.admin_theme',
+    'django.contrib.admin',
     # channels
     'channels',
     # CORS
@@ -78,20 +81,11 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'
 EMAIL_PORT = '1025'
 
-EXTENDED_APPS = ['openwisp_notifications']
-
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [
-            os.path.join(
-                os.path.dirname(os.path.dirname(BASE_DIR)),
-                'openwisp_notifications',
-                'templates',
-            )
-        ],
         'OPTIONS': {
             'loaders': [
                 'django.template.loaders.filesystem.Loader',
@@ -191,14 +185,19 @@ except ImportError:
 
 if os.environ.get('SAMPLE_APP', False):
     INSTALLED_APPS.remove('openwisp_notifications')
-    EXTENDED_APPS.append('openwisp_notifications')
+    EXTENDED_APPS = ['openwisp_notifications']
     INSTALLED_APPS.append('openwisp2.sample_notifications')
     OPENWISP_NOTIFICATIONS_NOTIFICATION_MODEL = 'sample_notifications.Notification'
     OPENWISP_NOTIFICATIONS_NOTIFICATIONSETTING_MODEL = (
         'sample_notifications.NotificationSetting'
     )
-    TEMPLATES[0]['DIRS'].insert(
-        0, os.path.join(BASE_DIR, 'sample_notifications', 'templates')
-    )
+    TEMPLATES[0]['DIRS'] = [
+        os.path.join(BASE_DIR, 'sample_notifications', 'templates'),
+        os.path.join(
+            os.path.dirname(os.path.dirname(BASE_DIR)),
+            'openwisp_notifications',
+            'templates',
+        ),
+    ]
     # Celery auto detects tasks only from INSTALLED_APPS
     CELERY_IMPORTS = ('openwisp_notifications.tasks',)
