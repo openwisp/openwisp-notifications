@@ -1,12 +1,32 @@
-*****************************
-OpenWISP Notifications Module
-*****************************
+**********************
+OpenWISP Notifications
+**********************
 
 .. image:: https://travis-ci.org/openwisp/openwisp-notifications.svg?branch=master
    :target: https://travis-ci.org/openwisp/openwisp-notifications
 
 .. image:: https://coveralls.io/repos/github/openwisp/openwisp-notifications/badge.svg?branch=master
    :target: https://coveralls.io/github/openwisp/openwisp-notifications?branch=master
+
+.. image:: https://requires.io/github/openwisp/openwisp-notifications/requirements.svg?branch=master
+   :target: https://requires.io/github/openwisp/openwisp-notifications/requirements/?branch=master
+   :alt: Requirements Status
+
+.. image:: https://img.shields.io/gitter/room/nwjs/nw.js.svg
+   :target: https://gitter.im/openwisp/general
+   :alt: chat
+
+.. image:: https://badge.fury.io/py/openwisp-notifications.svg
+   :target: http://badge.fury.io/py/openwisp-notifications
+   :alt: Pypi Version
+
+.. image:: https://pepy.tech/badge/openwisp-notifications
+   :target: https://pepy.tech/project/openwisp-notifications
+   :alt: downloads
+
+.. image:: https://img.shields.io/badge/code%20style-black-000000.svg
+   :target: https://pypi.org/project/black/
+   :alt: code style: black
 
 ------------
 
