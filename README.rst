@@ -67,6 +67,7 @@ Install stable version from pypi
 Install from pypi:
 
 .. code-block:: shell
+
     pip install openwisp-notifications
 
 Install development version
@@ -129,13 +130,13 @@ Add ``notification_api_settings`` context processor:
 
     TEMPLATES = [
         {
-            ...
+            # ...
             'OPTIONS': {
-                ...
+                # ...
                 'context_processors': [
-                    ...
+                    # ...
                     'openwisp_notifications.context_processors.notification_api_settings',
-                    ...
+                    # ...
                 ],
             },
         },
@@ -426,7 +427,7 @@ Defining ``message_template``
 You can either extend default message template or write your own markdown formatted message template
 from scratch. An example to extend default message template is shown below.
 
-.. code-block:: jinja2
+.. code-block:: django
 
     # In templates/your_notifications/your_message_template.md
     {% extends 'openwisp_notifications/default_message.md' %}
@@ -642,7 +643,7 @@ customize email notification. You can either extend the default email template o
 email template from scratch. An example of extending default email template to customize styling is
 shown below.
 
-.. code-block:: jinja2
+.. code-block:: django
 
     {% extends 'openwisp_notifications/email_template.html' %}
     {% block styles %}
