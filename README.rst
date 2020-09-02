@@ -4,9 +4,11 @@ OpenWISP Notifications
 
 .. image:: https://travis-ci.org/openwisp/openwisp-notifications.svg?branch=master
    :target: https://travis-ci.org/openwisp/openwisp-notifications
+   :alt: CI build status
 
 .. image:: https://coveralls.io/repos/github/openwisp/openwisp-notifications/badge.svg?branch=master
    :target: https://coveralls.io/github/openwisp/openwisp-notifications?branch=master
+   :alt: Test Coverage
 
 .. image:: https://requires.io/github/openwisp/openwisp-notifications/requirements.svg?branch=master
    :target: https://requires.io/github/openwisp/openwisp-notifications/requirements/?branch=master
@@ -58,6 +60,14 @@ Available features
 - `Preference for receiving notifications <#notification-preferences>`_
 - `Automatic cleanup of old notifications <#scheduled-deletion-of-notifications>`_
 - `Configurable host for API endpoints <#openwisp_notifications_host>`_
+
+Install stable version from pypi
+--------------------------------
+
+Install from pypi:
+
+.. code-block:: shell
+    pip install openwisp-notifications
 
 Install development version
 ---------------------------

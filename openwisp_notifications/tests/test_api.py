@@ -306,6 +306,7 @@ class TestNotificationApi(TestCase, TestOrganizationMixin, AuthenticationMixin):
         joe = self._create_user(username='joe', email='joe@joe.com')
         karen = self._create_user(username='karen', email='karen@karen.com')
         notify.send(sender=self.admin, type='default', recipient=karen)
+        n = Notification.objects.first()
         self.client.force_login(joe)
 
         with self.subTest('Test listing all notifications'):
@@ -322,7 +323,7 @@ class TestNotificationApi(TestCase, TestOrganizationMixin, AuthenticationMixin):
             self.assertEqual(response.status_code, 200)
             self.assertIsNone(response.data)
             # Check Karen's notification is still unread
-            n = Notification.objects.first()
+            n.refresh_from_db()
             self.assertTrue(n.unread)
 
         with self.subTest('Test retrieving notification'):
@@ -337,7 +338,7 @@ class TestNotificationApi(TestCase, TestOrganizationMixin, AuthenticationMixin):
             self.assertEqual(response.status_code, 404)
             self.assertDictEqual(response.data, {'detail': NOT_FOUND_ERROR})
             # Check Karen's notification is still unread
-            n = Notification.objects.first()
+            n.refresh_from_db()
             self.assertTrue(n.unread)
 
         with self.subTest('Test deleting notification'):
