@@ -147,15 +147,11 @@ class TestAdmin(TestOrganizationMixin, TestMultitenantAdminMixin, TestCase):
         )
 
         response = self.client.get(reverse('admin:sites_site_changelist'))
-        self.assertInHTML(
-            '<script type="text/javascript" src="/static/admin/js/jquery.init.js">',
-            str(response.content),
-            1,
+        self.assertIn(
+            '/static/admin/js/jquery.init.js', str(response.content), 1,
         )
-        self.assertInHTML(
-            '<script type="text/javascript" src="/static/admin/js/vendor/jquery/jquery.min.js">',
-            str(response.content),
-            1,
+        self.assertIn(
+            '/static/admin/js/vendor/jquery/jquery.min.js', str(response.content), 1,
         )
 
     def test_login_load_javascript(self):
