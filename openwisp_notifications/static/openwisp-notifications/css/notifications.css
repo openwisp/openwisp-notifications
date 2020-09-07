@@ -20,6 +20,11 @@
   margin-left: 10px;
   cursor: pointer;
 }
+#ow-notification-btn {
+  background-color: #464646;
+  border: none;
+  padding: 0px;
+}
 .ow-notifications span {
   position: absolute;
   top: 3px;
@@ -203,14 +208,17 @@
 .ow-notification-elem.unread .ow-notification-meta {
   color: #fff;
 }
-.ow-notification-elem:not(.unread):hover {
+.ow-notification-elem:not(.unread):hover,
+.ow-notification-elem:not(.unread):focus {
   background: #fff;
   color: #000;
 }
-.ow-notification-elem:not(.unread):hover .ow-notification-meta {
+.ow-notification-elem:not(.unread):hover .ow-notification-meta,
+.ow-notification-elem:not(.unread):focus .ow-notification-meta {
   color: #000;
 }
-.ow-notification-elem.unread:hover {
+.ow-notification-elem.unread:hover,
+.ow-notification-elem.unread:focus {
   background: #000;
 }
 .ow-no-notifications {

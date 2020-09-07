@@ -31,6 +31,27 @@ function initNotificationDropDown($) {
             $('.ow-notification-dropdown').addClass('ow-hide');
         }
     });
+
+    // Handler for adding accessibility from keyboard events
+    $(document).focusin(function(e){
+        // Hide notification widget if focus is shifted to an element outside it
+        e.stopPropagation();
+        if ($('.ow-notification-dropdown').has(e.target).length === 0){
+            // Don't hide if focus changes to notification bell icon
+            if (e.target != $('#ow-notification-btn').get(0)) {
+                $('.ow-notification-dropdown').addClass('ow-hide');
+            }
+        }
+    });
+
+    $('.ow-notification-dropdown').on('keyup', '*', function(e){
+        e.stopPropagation();
+        // Hide notification widget on "Escape" key
+        if (e.keyCode == 27){
+            $('.ow-notification-dropdown').addClass('ow-hide');
+            $('#ow-notification-btn').focus();
+        }
+    });
 }
 
 function notificationWidget($) {
@@ -160,7 +181,7 @@ function notificationWidget($) {
         klass = notificationReadStatus.get(elem.id);
 
         return `<div class="ow-notification-elem ${klass}" id=ow-${elem.id}
-                        data-location="${elem.target_url}">
+                        data-location="${elem.target_url}" role="link" tabindex="0">
                     <div class="ow-notification-meta">
                         <div class="ow-notification-level-wrapper">
                             <div class="ow-notify-${elem.level} icon"></div>
@@ -223,7 +244,11 @@ function notificationWidget($) {
     });
 
     // Handler for marking notification as read and opening target url
-    $('.ow-notification-wrapper').on('click', '.ow-notification-elem', function () {
+    $('.ow-notification-wrapper').on('click keypress', '.ow-notification-elem', function (e) {
+        // Open target URL only when "Enter" key is pressed
+        if ((e.type === 'keypress') && (e.which !== 13)){
+            return;
+        }
         let elem = $(this);
         // If notification is unread then send read request
         if (elem.hasClass('unread')) {
@@ -233,7 +258,7 @@ function notificationWidget($) {
     });
 
     // Handler for marking notification as read on mouseout event
-    $('.ow-notification-wrapper').on('mouseleave', '.ow-notification-elem', function () {
+    $('.ow-notification-wrapper').on('mouseleave focusout', '.ow-notification-elem', function () {
         let elem = $(this);
         if (elem.hasClass('unread')) {
             markNotificationRead(elem.get(0));
