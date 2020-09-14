@@ -229,6 +229,13 @@
   padding: 8px;
   background: #efefef;
 }
+.ow-notification-dropdown .btn:focus,
+.ow-notification-elem:focus,
+.ow-notification-elem a:focus,
+.ow-notifications:focus,
+.ow-notification-dropdown .btn:focus {
+  outline: 0.5px dotted rgba(0, 0, 0, 0.25);
+}
 
 /* Loader */
 #ow-notifications-loader {
