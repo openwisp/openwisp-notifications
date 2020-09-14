@@ -586,6 +586,16 @@ by disabling both web and email option for a notification setting.
 then ``email_notification`` or ``web_notification`` option of concerned notification type will be used
 respectively.
 
+Object Notification Preferences
+-------------------------------
+*OpenWISP Notifications* allows users to even define notification preferences based on target object.
+Users can disable notifications for any object for a desired period of time.
+Using the widget on an object's admin form, a user can disable notifications for that object
+for a day, week, month or even forever.
+
+**Note**: This feature requires configuring `"OPENWISP_NOTIFICATIONS_IGNORE_ENABLED_ADMIN" <#openwisp-notifications-object-notification-widget>`_
+to enable the widget on admin site of required models.
+
 Scheduled deletion of notifications
 -----------------------------------
 
@@ -759,6 +769,26 @@ It sets the number of seconds the notification contents should be stored in the 
 If you want cached notification content to never expire, then set it to ``None``.
 Set it to ``0`` if you don't want to store notification contents in cache at all.
 
+``OPENWISP_NOTIFICATIONS_IGNORE_ENABLED_ADMIN``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
++-----------+-----------+
+|   type    |  ``list`` |
++-----------+-----------+
+|  default  |  []       |
++-----------+-----------+
+
+This setting enables object notification widget on admin site of desired models which
+allows user to `disable notifications for that object. <#object-notification-preferences>`_.
+You are required to provide a list of dotted paths to desired model admin.
+
+E.g., if you want to enable the widget for objects of ``openwisp_users.models.User``
+model, then configure the setting as following:
+
+.. code-block:: python
+
+    OPENWISP_NOTIFICATIONS_IGNORE_ENABLED_ADMIN = ['openwisp_users.admin.UserAdmin']
+
 Exceptions
 ----------
 
@@ -879,6 +909,34 @@ Update notification setting details
 .. code-block:: text
 
     PATCH /api/v1/notification/user-setting/{pk}/
+
+List user's object notification setting
+#######################################
+
+.. code-block:: text
+
+    GET /api/v1/notification/ignore/
+
+Get object notification setting details
+#######################################
+
+.. code-block:: text
+
+    GET /api/v1/notification/ignore/{app_label}/{model_name}/{object_id}/
+
+Create object notification setting
+##################################
+
+.. code-block:: text
+
+    PUT /api/v1/notification/ignore/{app_label}/{model_name}/{object_id}/
+
+Delete object notification setting
+##################################
+
+.. code-block:: text
+
+    DELETE /api/v1/notification/ignore/{app_label}/{model_name}/{object_id}/
 
 Installing for development
 --------------------------
@@ -1108,6 +1166,7 @@ Add the following to your ``settings.py``:
     # Setting models for swapper module
     OPENWISP_NOTIFICATIONS_NOTIFICATION_MODEL = 'mynotifications.Notification'
     OPENWISP_NOTIFICATIONS_NOTIFICATIONSETTING_MODEL = 'mynotifications.NotificationSetting'
+    OPENWISP_NOTIFICATIONS_IGNOREOBJECTNOTIFICATION_MODEL = 'mynotifications.IgnoreObjectNotification'
 
 9. Create database migrations
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

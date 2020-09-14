@@ -30,6 +30,7 @@
 {% block footer %}
   {{ block.super }}
   {% if request.user.is_authenticated %}
+    <script type="text/javascript" src="{% static 'openwisp-notifications/js/vendor/reconnecting-websocket.min.js' %}"></script>
     <script type="text/javascript">
       {% if OPENWISP_NOTIFICATIONS_HOST %}
         const notificationApiHost = new URL('{{ OPENWISP_NOTIFICATIONS_HOST }}');
@@ -42,8 +43,14 @@
         const webSocketProtocol = 'wss';
       {% endif %}
       const notificationSound = new Audio('{{ OPENWISP_NOTIFICATIONS_SOUND | default:"" }}');
+      // Create websocket connection
+      const notificationSocket = new ReconnectingWebSocket(
+          `${webSocketProtocol}://${notificationApiHost.host}/ws/notification/`,
+          null, {
+              debug: false
+          }
+      );
     </script>
-    <script type="text/javascript" src="{% static 'openwisp-notifications/js/vendor/reconnecting-websocket.min.js' %}"></script>
     <script type="text/javascript" src="{% static 'openwisp-notifications/js/notifications.js' %}"></script>
   {% endif %}
 {% endblock footer %}

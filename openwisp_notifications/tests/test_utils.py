@@ -5,6 +5,7 @@ import swapper
 from django.core import management
 from django.test import TestCase
 
+from openwisp_notifications import checks
 from openwisp_notifications import settings as app_settings
 from openwisp_notifications.swapper import load_model
 from openwisp_users.tests.utils import TestOrganizationMixin
@@ -42,3 +43,43 @@ class TestUtils(TestCase, TestOrganizationMixin):
         ), StringIO() as stderr:
             management.call_command('check', stderr=stderr)
             self.assertIn('django-cors-headers', stderr.getvalue())
+
+    def test_ow_object_notification_setting_improperly_configured(self):
+        def run_check():
+            return checks.check_ow_object_notification_widget_setting(None).pop()
+
+        with self.subTest('Test setting is not a list'):
+            with patch.object(app_settings, 'IGNORE_ENABLED_ADMIN', tuple()):
+                error_message = (
+                    '"OPENWISP_NOTIFICATIONS_IGNORE_ENABLED_ADMIN" should be a list'
+                )
+                error = run_check()
+                self.assertIn(error_message, error.hint)
+
+        with self.subTest('Test setting does not contains dotted path string'):
+            with patch.object(app_settings, 'IGNORE_ENABLED_ADMIN', [0]):
+                error_message = (
+                    '"OPENWISP_NOTIFICATIONS_IGNORE_ENABLED_ADMIN" should contain '
+                    'dotted path string to ModelAdmin'
+                )
+                error = run_check()
+                self.assertIn(error_message, error.hint)
+
+        with self.subTest('Test setting dotted path is invalid'):
+            path = 'openwisp_notifications.admin.DeviceAdmin'
+            with patch.object(app_settings, 'IGNORE_ENABLED_ADMIN', [path]):
+                error_message = (
+                    f'Failed to import "{path}" defined in '
+                    '"OPENWISP_NOTIFICATIONS_IGNORE_ENABLED_ADMIN".'
+                )
+                error = run_check()
+                self.assertIn(error_message, error.hint)
+
+        with self.subTest('Test setting dotted path is not subclass of ModelAdmin'):
+            path = 'openwisp_notifications.admin.NotificationSettingInline'
+            with patch.object(app_settings, 'IGNORE_ENABLED_ADMIN', [path]):
+                error_message = (
+                    f'"{path}" does not subclasses "django.contrib.admin.ModelAdmin"'
+                )
+                error = run_check()
+                self.assertIn(error_message, error.hint)

@@ -3,6 +3,7 @@ from django.db import models
 from openwisp_notifications.base.models import (
     AbstractNotification,
     AbstractNotificationSetting,
+    AbstractIgnoreObjectNotification,
 )
 
 # Only for testing openwisp_notifications
@@ -32,6 +33,11 @@ class Notification(DetailsModel, AbstractNotification):
 
 class NotificationSetting(DetailsModel, AbstractNotificationSetting):
     class Meta(AbstractNotificationSetting.Meta):
+        abstract = False
+
+
+class IgnoreObjectNotification(DetailsModel, AbstractIgnoreObjectNotification):
+    class Meta(AbstractIgnoreObjectNotification.Meta):
         abstract = False
 
 
