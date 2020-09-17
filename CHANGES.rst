@@ -8,7 +8,7 @@ Features
 ~~~~~~~~
 
 - Added support for Django 3.1
-- `Added feature to silence notifications for specific objects \
+- Added possibility of `silencing notifications for specific objects \
   temporarily or permanently <https://github.com/openwisp/openwisp-notifications#silencing-notifications-for-specific-objects-temporarily-or-permanently>`_
 
 Bugfixes
