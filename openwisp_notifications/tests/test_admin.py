@@ -282,3 +282,8 @@ class TestAdmin(TestOrganizationMixin, TestMultitenantAdminMixin, TestCase):
             reverse('admin:openwisp_users_user_change', args=(self.admin.pk,))
         )
         UserAdmin.Media = None
+
+    def test_ignore_notification_widget_add_view(self):
+        url = reverse('admin:openwisp_users_organization_add')
+        response = self.client.get(url)
+        self.assertNotContains(response, 'owIsChangeForm')
