@@ -10,12 +10,11 @@
 .ow-notifications {
   float: right;
   display: block;
-  padding: 0 20px;
+  padding: 1px 20px 0px 20px;
   color: #fff;
   line-height: 40px;
   border: 0 none !important;
   position: relative;
-  bottom: -1px;
   right: -5px;
   margin-left: 10px;
   cursor: pointer;
@@ -301,7 +300,7 @@
     display: block !important;
     line-height: 40px !important;
     position: absolute;
-    top: 43px;
+    top: 42px;
     right: 113px;
   }
 }
