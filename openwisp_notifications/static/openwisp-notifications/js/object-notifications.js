@@ -52,6 +52,14 @@ function initObjectNotificationDropdown($) {
             $('.ow-object-notification-option-container').addClass('ow-hide');
         }
     });
+    $('.ow-object-notification-option-container').on('keyup', '*', function(e){
+        e.stopPropagation();
+        // Hide dropdown on "Escape" key
+        if (e.keyCode == 27){
+            $('.ow-object-notification-option-container').addClass('ow-hide');
+            $('#ow-object-notify').focus();
+        }
+    });
 }
 
 function addObjectNotificationHandlers($) {
