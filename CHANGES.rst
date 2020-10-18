@@ -1,6 +1,17 @@
 Changelog
 =========
 
+Version 0.2.1 [2020-10-18]
+--------------------------
+
+Bugfixes
+~~~~~~~~
+
+- Fixed *ignore notification widget* loading on *add views* of admin site
+- Fixed *notification widget* partially covering entire webpage
+- Resolved accessibility issue with the *ignore notification widget*:
+  added ``Escape`` key handler for the *ignore notification widget*
+
 Version 0.2.0 [2020-09-17]
 --------------------------
 
