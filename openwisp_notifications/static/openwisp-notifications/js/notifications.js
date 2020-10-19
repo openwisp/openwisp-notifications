@@ -1,6 +1,7 @@
 'use strict';
 const notificationReadStatus = new Map();
 const userLanguage = navigator.language || navigator.userLanguage;
+const owWindowId = String(Date.now());
 
 if (typeof gettext === 'undefined') {
     var gettext = function(word){ return word; };
@@ -11,8 +12,31 @@ if (typeof gettext === 'undefined') {
         notificationWidget($);
         initNotificationDropDown($);
         initWebSockets($);
+        owNotificationWindow.set();
     });
+    $(window).on('beforeunload', function () {owNotificationWindow.remove();});
+    $(window).on('storage', function () {owNotificationWindow.set();});
 })(django.jQuery);
+
+const owNotificationWindow = {
+    set: function(){
+        // Sets the first opened window
+        // Sets another window when first opened window get closed
+        if (localStorage.getItem('owWindow') === null) {
+            localStorage.setItem('owWindow',owWindowId);
+        }
+    },
+    remove: function () {
+        // Removes the window then tab/window gets closed
+        if (localStorage.getItem('owWindow') === owWindowId){
+            localStorage.removeItem('owWindow');
+        }
+    },
+    canPlaySound: function(){
+        // Returns true if the owWindow is the current window
+        return localStorage.getItem('owWindow') === owWindowId;
+    },
+};
 
 function initNotificationDropDown($) {
     $('.ow-notifications').click(function (e) {
@@ -307,8 +331,11 @@ function initWebSockets($) {
                                 </div>
                            </div>`);
             $('.ow-notification-toast-wrapper').prepend(toast);
-            notificationSound.currentTime = 0;
-            notificationSound.play();
+            if (owNotificationWindow.canPlaySound()){
+                // To prevent playing of sound from multiple window
+                notificationSound.currentTime = 0;
+                notificationSound.play();
+            }
             toast.slideDown('slow', function () {
                 setTimeout(function () {
                     toast.slideUp('slow', function () {
