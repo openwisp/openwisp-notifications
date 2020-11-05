@@ -14,7 +14,7 @@ Notification = load_model('Notification')
 Organization = swapper.load_model('openwisp_users', 'Organization')
 
 
-class TestUtils(TestCase, TestOrganizationMixin):
+class TestManagementCommands(TestCase, TestOrganizationMixin):
     def test_create_notification_command(self):
         admin = self._get_admin()
         management.call_command('create_notification')
@@ -33,19 +33,25 @@ class TestUtils(TestCase, TestOrganizationMixin):
         management.call_command('populate_notification_preferences')
         mocked_task.assert_called_once()
 
+
+class TestChecks(TestCase, TestOrganizationMixin):
     @patch.object(
         app_settings, 'OPENWISP_NOTIFICATIONS_HOST', 'https://example.com',
     )
     def test_cors_not_configured(self):
         # If INSTALLED_APPS not configured
-        with self.modify_settings(
+        with patch(
+            'openwisp_notifications.types.NOTIFICATION_TYPES', dict()
+        ), self.modify_settings(
             INSTALLED_APPS={'remove': 'corsheaders'}
         ), StringIO() as stderr:
             management.call_command('check', stderr=stderr)
             self.assertIn('django-cors-headers', stderr.getvalue())
 
         # If MIDDLEWARE not configured
-        with self.modify_settings(
+        with patch(
+            'openwisp_notifications.types.NOTIFICATION_TYPES', dict()
+        ), self.modify_settings(
             MIDDLEWARE={'remove': 'corsheaders.middleware.CorsMiddleware'}
         ), StringIO() as stderr:
             management.call_command('check', stderr=stderr)

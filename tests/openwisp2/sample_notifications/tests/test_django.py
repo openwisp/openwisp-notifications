@@ -12,6 +12,10 @@ from openwisp_notifications.tests.test_notification_setting import (
 from openwisp_notifications.tests.test_notifications import (
     TestNotifications as BaseTestNotifications,
 )
+from openwisp_notifications.tests.test_utils import TestChecks as BaseTestChecks
+from openwisp_notifications.tests.test_utils import (
+    TestManagementCommands as BaseTestManageCommands,
+)
 
 Notification = load_model('Notification')
 
@@ -51,6 +55,14 @@ class TestNotificationSetting(BaseTestNotificationSetting):
 
 
 class TestIgnoreObjectNotification(BaseTestIgnoreObjectNotification):
+    pass
+
+
+class TestManagementCommands(BaseTestManageCommands):
+    pass
+
+
+class TestChecks(BaseTestChecks):
     pass
 
 
