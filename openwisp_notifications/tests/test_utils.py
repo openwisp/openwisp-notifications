@@ -26,6 +26,13 @@ class TestUtils(TestCase, TestOrganizationMixin):
         self.assertEqual(n.actor, default_org)
         self.assertEqual(n.recipient, admin)
 
+    @patch(
+        'openwisp_notifications.tasks.ns_register_unregister_notification_type.delay'
+    )
+    def test_populate_notification_preferences_command(self, mocked_task):
+        management.call_command('populate_notification_preferences')
+        mocked_task.assert_called_once()
+
     @patch.object(
         app_settings, 'OPENWISP_NOTIFICATIONS_HOST', 'https://example.com',
     )
