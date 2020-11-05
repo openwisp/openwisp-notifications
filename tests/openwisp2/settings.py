@@ -162,6 +162,11 @@ else:
     CELERY_TASK_EAGER_PROPAGATES = True
     CELERY_BROKER_URL = 'memory://'
 
+# Workaround for stalled migrate command
+CELERY_BROKER_TRANSPORT_OPTIONS = {
+    'max_retries': 10,
+}
+
 CELERY_BEAT_SCHEDULE = {
     'delete_old_notifications': {
         'task': 'openwisp_notifications.tasks.delete_old_notifications',

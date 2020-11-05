@@ -1,3 +1,6 @@
+import logging
+
+from celery.exceptions import OperationalError
 from django.apps import apps
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -23,6 +26,8 @@ from openwisp_notifications.exceptions import NotificationRenderException
 from openwisp_notifications.swapper import load_model, swapper_load_model
 from openwisp_notifications.types import get_notification_configuration
 from openwisp_notifications.websockets import handlers as ws_handlers
+
+logger = logging.getLogger(__name__)
 
 EXTRA_DATA = app_settings.get_config()['USE_JSONFIELD']
 
@@ -250,7 +255,17 @@ def related_object_deleted(sender, instance, **kwargs):
     dispatch_uid='register_unregister_notification_types',
 )
 def notification_type_registered_unregistered_handler(sender, **kwargs):
-    tasks.ns_register_unregister_notification_type.delay()
+    try:
+        tasks.ns_register_unregister_notification_type.delay()
+    except OperationalError:
+        logger.warn(
+            '\tCelery broker is unreachable, skipping populating data for user(s) '
+            'notification preference(s).\n'
+            '\tMake sure that celery broker is running and reachable by celery workers.\n'
+            '\tYou can use following command later '
+            'to populate data for user(s) notification preference(s).\n\n'
+            '\t\t python manage.py populate_notification_preferences\n'
+        )
 
 
 @receiver(

@@ -1,12 +1,13 @@
 from datetime import timedelta
 from unittest.mock import patch
 
+from celery.exceptions import OperationalError
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.core import mail
 from django.core.cache import cache
 from django.core.exceptions import ImproperlyConfigured
-from django.db.models.signals import pre_delete
+from django.db.models.signals import post_migrate, pre_delete
 from django.template import TemplateDoesNotExist
 from django.test import TestCase
 from django.urls import reverse
@@ -16,7 +17,7 @@ from django.utils.timesince import timesince
 
 from openwisp_notifications import settings as app_settings
 from openwisp_notifications import tasks
-from openwisp_notifications.handlers import notify_handler
+from openwisp_notifications.handlers import NotificationsAppConfig, notify_handler
 from openwisp_notifications.signals import notify
 from openwisp_notifications.swapper import load_model, swapper_load_model
 from openwisp_notifications.tests.test_helpers import (
@@ -808,3 +809,14 @@ class TestNotifications(TestOrganizationMixin, TestCase):
         self.assertEqual(notification_queryset.count(), 1)
         notification = notification_queryset.first()
         self.assertEqual(notification.recipient, org_admin.user)
+
+    @patch(
+        'openwisp_notifications.tasks.ns_register_unregister_notification_type.delay',
+        side_effect=OperationalError,
+    )
+    @patch('logging.Logger.warning')
+    def test_post_migrate_handler_celery_broker_unreachable(self, mocked_logger, *args):
+        post_migrate.send(
+            sender=NotificationsAppConfig, app_config=NotificationsAppConfig
+        )
+        mocked_logger.assert_called_once()
