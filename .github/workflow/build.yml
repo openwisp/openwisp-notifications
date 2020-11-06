@@ -1,0 +1,65 @@
+name: OpenWISP CI Build
+
+on:
+  push:
+    branches:
+      - master
+      - dev
+  pull_request:
+    branches:
+      - master
+      - dev
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    services:
+      - redis
+    strategy:
+        matrix:
+          python-version:
+            - 3.6
+            - 3.7
+          django-version:
+            - django~=2.2"
+            - django~=3.0"
+            - django~=3.1"
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install system packages
+      uses: ryankurte/action-apt@v0.1
+      with:
+          packages:
+            - sqlite3
+            - gdal-bin
+
+    - name: Install dependencies
+      run: |
+        pip install -U pip wheel
+        pip install ${{ matrix.django-version }}
+        pip install -U -r requirements-test.txt
+        npm install -g jshint stylelint
+
+    - name: Install openwisp-notifications
+      run: python setup.py -q develop
+
+    - name: QA checks
+      run: ./run-qa-checks
+
+    - name: Tests
+      run: |
+        SAMPLE_APP=1 coverage run --source=openwisp_notifications runtests.py
+        coverage run -a --source=openwisp_notifications runtests.py
+
+    - name: Coveralls
+      uses: coverallsapp/github-action@master
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
