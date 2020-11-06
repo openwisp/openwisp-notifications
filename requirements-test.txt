@@ -1,8 +1,8 @@
-coveralls
-django-redis
+coveralls~=2.1
+django-redis~=4.12
 django-cors-headers~=3.4
 openwisp-utils[qa]~=0.6
-redis
-channels_redis
-pytest-asyncio
-pytest-django
+redis~=3.5
+channels_redis~=3.2
+pytest-asyncio~=0.14
+pytest-django~=4.1.0
