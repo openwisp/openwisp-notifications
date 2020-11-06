@@ -2,8 +2,8 @@
 OpenWISP Notifications
 **********************
 
-.. image:: https://travis-ci.org/openwisp/openwisp-notifications.svg?branch=master
-   :target: https://travis-ci.org/openwisp/openwisp-notifications
+.. image:: https://github.com/openwisp/openwisp-notifications/workflows/OpenWISP%20CI%20Build/badge.svg?branch=master
+   :target: https://github.com/openwisp/openwisp-notifications/actions?query=workflow%3A%22OpenWISP+CI+Build%22
    :alt: CI build status
 
 .. image:: https://coveralls.io/repos/github/openwisp/openwisp-notifications/badge.svg?branch=master
