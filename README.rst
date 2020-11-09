@@ -385,7 +385,7 @@ Notification Cache
 
 In a typical OpenWISP installation, ``actor``, ``action_object`` and ``target`` objects are same
 for a number of notifications. To optimize database queries, these objects are cached using
-`Django’s cache framework <https://docs.djangoproject.com/en/3.0/topics/cache/>`_.
+`Django's cache framework <https://docs.djangoproject.com/en/3.0/topics/cache/>`_.
 The cached values are updated automatically to reflect actual data from database. You can control
 the duration of caching these objects using
 `OPENWISP_NOTIFICATIONS_CACHE_TIMEOUT setting <#OPENWISP_NOTIFICATIONS_CACHE_TIMEOUT>`_.
