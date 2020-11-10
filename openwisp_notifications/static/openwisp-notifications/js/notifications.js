@@ -12,29 +12,43 @@ if (typeof gettext === 'undefined') {
         notificationWidget($);
         initNotificationDropDown($);
         initWebSockets($);
-        owNotificationWindow.set();
+        owNotificationWindow.init($);
     });
-    $(window).on('beforeunload', function () {owNotificationWindow.remove();});
-    $(window).on('storage', function () {owNotificationWindow.set();});
 })(django.jQuery);
 
 const owNotificationWindow = {
-    set: function(){
-        // Sets the first opened window
-        // Sets another window when first opened window get closed
-        if (localStorage.getItem('owWindow') === null) {
-            localStorage.setItem('owWindow',owWindowId);
-        }
+    // Following functions are used to decide which window has authority
+    // to play notification alert sound when multiple windows are open.
+
+    init: function init($) {
+        // Get authority to play notification sound
+        // when current window is in focus
+        $(window).on('focus', function() {owNotificationWindow.set();});
+
+        // Give up the authority to play sound before
+        // closing the window
+        $(window).on('beforeunload', function() {owNotificationWindow.remove();});
+
+        // Get authority to play notification sound when
+        // other windows are closed
+        $(window).on('storage', function () {
+            if (localStorage.getItem('owWindowId') === null) {
+                owNotificationWindow.set();
+            }
+        });
+    },
+    set: function() {
+        localStorage.setItem('owWindowId', owWindowId);
     },
     remove: function () {
-        // Removes the window then tab/window gets closed
-        if (localStorage.getItem('owWindow') === owWindowId){
-            localStorage.removeItem('owWindow');
+        if (localStorage.getItem('owWindowId') === owWindowId) {
+            localStorage.removeItem('owWindowId');
         }
     },
-    canPlaySound: function(){
-        // Returns true if the owWindow is the current window
-        return localStorage.getItem('owWindow') === owWindowId;
+    canPlaySound: function() {
+        // Returns whether current window has the authority to play
+        // notification sound
+        return localStorage.getItem('owWindowId') === owWindowId;
     },
 };
 
@@ -332,7 +346,7 @@ function initWebSockets($) {
                            </div>`);
             $('.ow-notification-toast-wrapper').prepend(toast);
             if (owNotificationWindow.canPlaySound()){
-                // To prevent playing of sound from multiple window
+                // Play notification sound only from authorized window
                 notificationSound.currentTime = 0;
                 notificationSound.play();
             }
