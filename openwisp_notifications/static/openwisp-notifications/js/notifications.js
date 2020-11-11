@@ -19,16 +19,13 @@ if (typeof gettext === 'undefined') {
 const owNotificationWindow = {
     // Following functions are used to decide which window has authority
     // to play notification alert sound when multiple windows are open.
-
     init: function init($) {
         // Get authority to play notification sound
         // when current window is in focus
-        $(window).on('focus', function() {owNotificationWindow.set();});
-
+        $(window).on('focus load', function() {owNotificationWindow.set();});
         // Give up the authority to play sound before
         // closing the window
         $(window).on('beforeunload', function() {owNotificationWindow.remove();});
-
         // Get authority to play notification sound when
         // other windows are closed
         $(window).on('storage', function () {
