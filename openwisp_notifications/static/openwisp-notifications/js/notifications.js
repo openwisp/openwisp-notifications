@@ -1,6 +1,7 @@
 'use strict';
 const notificationReadStatus = new Map();
 const userLanguage = navigator.language || navigator.userLanguage;
+const owWindowId = String(Date.now());
 
 if (typeof gettext === 'undefined') {
     var gettext = function(word){ return word; };
@@ -11,8 +12,42 @@ if (typeof gettext === 'undefined') {
         notificationWidget($);
         initNotificationDropDown($);
         initWebSockets($);
+        owNotificationWindow.init($);
     });
 })(django.jQuery);
+
+const owNotificationWindow = {
+    // Following functions are used to decide which window has authority
+    // to play notification alert sound when multiple windows are open.
+    init: function init($) {
+        // Get authority to play notification sound
+        // when current window is in focus
+        $(window).on('focus load', function() {owNotificationWindow.set();});
+        // Give up the authority to play sound before
+        // closing the window
+        $(window).on('beforeunload', function() {owNotificationWindow.remove();});
+        // Get authority to play notification sound when
+        // other windows are closed
+        $(window).on('storage', function () {
+            if (localStorage.getItem('owWindowId') === null) {
+                owNotificationWindow.set();
+            }
+        });
+    },
+    set: function() {
+        localStorage.setItem('owWindowId', owWindowId);
+    },
+    remove: function () {
+        if (localStorage.getItem('owWindowId') === owWindowId) {
+            localStorage.removeItem('owWindowId');
+        }
+    },
+    canPlaySound: function() {
+        // Returns whether current window has the authority to play
+        // notification sound
+        return localStorage.getItem('owWindowId') === owWindowId;
+    },
+};
 
 function initNotificationDropDown($) {
     $('.ow-notifications').click(function (e) {
@@ -307,8 +342,11 @@ function initWebSockets($) {
                                 </div>
                            </div>`);
             $('.ow-notification-toast-wrapper').prepend(toast);
-            notificationSound.currentTime = 0;
-            notificationSound.play();
+            if (owNotificationWindow.canPlaySound()){
+                // Play notification sound only from authorized window
+                notificationSound.currentTime = 0;
+                notificationSound.play();
+            }
             toast.slideDown('slow', function () {
                 setTimeout(function () {
                     toast.slideUp('slow', function () {
