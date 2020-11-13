@@ -4,9 +4,10 @@ from unittest.mock import patch
 import pytest
 from channels.db import database_sync_to_async
 from channels.testing import WebsocketCommunicator
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
-from openwisp2.routing import application
+from django.utils.module_loading import import_string
 
 from openwisp_notifications.api.serializers import NotificationListSerializer
 from openwisp_notifications.signals import notify
@@ -51,10 +52,12 @@ def create_object_notification(admin_user):
 @pytest.mark.asyncio
 @pytest.mark.django_db(transaction=True)
 class TestNotificationSockets:
+    application = import_string(getattr(settings, 'ASGI_APPLICATION'))
+
     async def _get_communicator(self, admin_client):
         session_id = admin_client.cookies['sessionid'].value
         communicator = WebsocketCommunicator(
-            application,
+            self.application,
             path='ws/notification/',
             headers=[(b'cookie', f'sessionid={session_id}'.encode('ascii'),)],
         )
