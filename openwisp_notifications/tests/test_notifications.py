@@ -31,6 +31,7 @@ from openwisp_notifications.types import (
 )
 from openwisp_notifications.utils import _get_absolute_url
 from openwisp_users.tests.utils import TestOrganizationMixin
+from openwisp_utils.tests import capture_any_output
 
 User = get_user_model()
 
@@ -523,6 +524,7 @@ class TestNotifications(TestOrganizationMixin, TestCase):
 
         unregister_notification_type('test_type')
 
+    @capture_any_output()
     def test_notification_invalid_message_attribute(self):
         self.notification_options.update({'type': 'test_type'})
         test_type = {
