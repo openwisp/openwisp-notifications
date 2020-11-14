@@ -1,7 +1,7 @@
-django-notifications-hq>=1.6,<1.7
-channels~=2.4
+django-notifications-hq~=1.6.0
+channels~=2.4.0
 openwisp-users~=0.4.0
-openwisp-utils[rest]~=0.6
-swapper~=1.1
-markdown>=3.2,<3.3
-celery~=4.4
+openwisp-utils[rest]~=0.6.0
+swapper~=1.1.0
+markdown~=3.2.0
+celery~=4.4.0
