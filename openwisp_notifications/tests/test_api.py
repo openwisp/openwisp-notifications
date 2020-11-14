@@ -18,6 +18,7 @@ from openwisp_notifications.tests.test_helpers import (
 )
 from openwisp_users.tests.test_api import AuthenticationMixin
 from openwisp_users.tests.utils import TestOrganizationMixin
+from openwisp_utils.tests import capture_any_output
 
 Notification = load_model('Notification')
 NotificationSetting = load_model('NotificationSetting')
@@ -421,6 +422,7 @@ class TestNotificationApi(TestCase, TestOrganizationMixin, AuthenticationMixin):
             self.assertEqual(response.status_code, 200)
             self.assertEqual(response.data['count'], number_of_notifications)
 
+    @capture_any_output()
     def test_malformed_notifications(self):
         test_type = {
             'verbose_name': 'Test Notification Type',
@@ -455,6 +457,7 @@ class TestNotificationApi(TestCase, TestOrganizationMixin, AuthenticationMixin):
 
         unregister_notification_type('test_type')
 
+    @capture_any_output()
     @patch('openwisp_notifications.tasks.delete_obsolete_objects.delay')
     def test_obsolete_notifications_busy_worker(self, mocked_task):
         """
