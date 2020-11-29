@@ -163,9 +163,10 @@ Add routes for websockets:
 
 .. code-block:: python
 
-    # In yourproject/routing.py
+    # In yourproject/asgi.py
     from channels.auth import AuthMiddlewareStack
     from channels.routing import ProtocolTypeRouter, URLRouter
+    from django.core.asgi import get_asgi_application
     from openwisp_notifications.websockets.routing import get_routes
 
     application = ProtocolTypeRouter(
@@ -225,7 +226,7 @@ Configure ``ASGI_APPLICATION``:
 
 .. code-block:: python
 
-    ASGI_APPLICATION = 'yourproject.routing.application'
+    ASGI_APPLICATION = 'yourproject.asgi.application'
 
 Configure channel layers (you may use a `different channel layer <https://channels.readthedocs.io/en/latest/topics/channel_layers.html#configuration>`_):
 

@@ -8,5 +8,5 @@ def get_routes(consumer=None):
     if not consumer:
         consumer = ow_consumers
     return [
-        path('ws/notification/', consumer.NotificationConsumer),
+        path('ws/notification/', consumer.NotificationConsumer.as_asgi()),
     ]
