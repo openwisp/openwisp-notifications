@@ -1,4 +1,7 @@
-from openwisp_notifications.base.forms import NotificationSettingForm
+from openwisp_notifications.base.forms import (
+    GeneralSettingForm,
+    NotificationSettingForm,
+)
 
 
 class NotificationSettingAdminMixin:
@@ -30,3 +33,7 @@ class NotificationSettingAdminMixin:
             'admin/js/jquery.init.js',
             'openwisp-notifications/js/notification-settings.js',
         ]
+
+
+class GeneralSettingAdminMixin:
+    form = GeneralSettingForm

@@ -36,6 +36,7 @@ User = get_user_model()
 Notification = load_model('Notification')
 NotificationSetting = load_model('NotificationSetting')
 IgnoreObjectNotification = load_model('IgnoreObjectNotification')
+GeneralSetting = load_model('GeneralSetting')
 NotificationsAppConfig = apps.get_app_config(NotificationSetting._meta.app_label)
 
 Group = swapper_load_model('openwisp_users', 'Group')
@@ -178,7 +179,12 @@ def send_email_notification(sender, instance, created, **kwargs):
 
     if not (email_preference and instance.recipient.email):
         return
-
+    try:
+        general_setting = instance.recipient.generalsetting
+        if general_setting.email_notification:
+            return
+    except GeneralSetting.DoesNotExist:
+        pass
     try:
         subject = instance.email_subject
     except NotificationRenderException:
@@ -227,6 +233,14 @@ def clear_notification_cache(sender, instance, **kwargs):
         return
     # Reload notification only if notification is created or deleted
     # Display when a new notification is created
+    try:
+        general_setting = instance.recipient.generalsetting
+        if general_setting.web_notification:
+            if kwargs.get('created'):
+                instance.delete()
+                return
+    except GeneralSetting.DoesNotExist:
+        pass
     ws_handlers.notification_update_handler(
         recipient=instance.recipient,
         reload_widget=kwargs.get('created', True),

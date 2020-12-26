@@ -33,3 +33,11 @@ class NotificationSettingForm(ModelForm):
             'web': widgets.CheckboxInput,
             'email': widgets.CheckboxInput,
         }
+
+
+class GeneralSettingForm(ModelForm):
+    class Meta:
+        widgets = {
+            'web': widgets.CheckboxInput,
+            'email': widgets.CheckboxInput,
+        }

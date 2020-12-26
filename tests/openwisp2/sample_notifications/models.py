@@ -4,6 +4,7 @@ from openwisp_notifications.base.models import (
     AbstractNotification,
     AbstractNotificationSetting,
     AbstractIgnoreObjectNotification,
+    AbstractGeneralSetting,
 )
 
 # Only for testing openwisp_notifications
@@ -38,6 +39,11 @@ class NotificationSetting(DetailsModel, AbstractNotificationSetting):
 
 class IgnoreObjectNotification(DetailsModel, AbstractIgnoreObjectNotification):
     class Meta(AbstractIgnoreObjectNotification.Meta):
+        abstract = False
+
+
+class GeneralSetting(DetailsModel, AbstractGeneralSetting):
+    class Meta(AbstractGeneralSetting.Meta):
         abstract = False
 
 
