@@ -167,12 +167,6 @@ class TestAdmin(TestOrganizationMixin, TestMultitenantAdminMixin, TestCase):
             response = self.client.get(self._url)
             self.assertContains(response, 'wss')
 
-        with self.subTest('Test in development environment'):
-            with self.settings(DEBUG=True, INTERNAL_IPS=['127.0.0.1']):
-                response = self.client.get(self._url)
-                self.assertNotContains(response, 'wss')
-                self.assertContains(response, 'ws')
-
     def test_notification_setting_inline_read_only_fields(self):
         with self.subTest('Test for superuser'):
             self.assertListEqual(self.ns_inline.get_readonly_fields(su_request), [])
