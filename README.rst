@@ -240,11 +240,6 @@ Configure channel layers (you may use a `different channel layer <https://channe
         },
     }
 
-By default, websockets communicate over ``wss`` protocol. If for some reason, you want them to communicate
-over ``ws`` protocol e.g. while development, you will need to configure ``INTERNAL_IPS`` setting accordingly.
-For more information please refer to
-`"INTERNAL_IPS" section of Django's settings documentation <https://docs.djangoproject.com/en/3.0/ref/settings/#internal-ips>`_.
-
 While development, you can configure it to localhost as shown below:
 
 .. code-block:: python

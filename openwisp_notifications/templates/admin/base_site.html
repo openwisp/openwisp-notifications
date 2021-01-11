@@ -37,11 +37,7 @@
       {% else %}
         const notificationApiHost = window.location;
       {% endif %}
-      {% if debug %}
-        const webSocketProtocol = 'ws';
-      {% else %}
-        const webSocketProtocol = 'wss';
-      {% endif %}
+      const webSocketProtocol = notificationApiHost.protocol === 'http:' ? 'ws' : 'wss';
       const notificationSound = new Audio('{{ OPENWISP_NOTIFICATIONS_SOUND | default:"" }}');
       // Create websocket connection
       const notificationSocket = new ReconnectingWebSocket(
