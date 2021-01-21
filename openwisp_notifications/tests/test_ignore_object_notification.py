@@ -1,6 +1,6 @@
 from unittest.mock import patch
 
-from django.test import TestCase
+from django.test import TransactionTestCase
 from django.utils import timezone
 
 from openwisp_notifications.signals import notify
@@ -12,7 +12,7 @@ Notification = load_model('Notification')
 on_queryset = IgnoreObjectNotification.objects
 
 
-class TestIgnoreObjectNotification(TestOrganizationMixin, TestCase):
+class TestIgnoreObjectNotification(TestOrganizationMixin, TransactionTestCase):
     def setUp(self):
         self.obj = self._get_org_user()
         self.admin = self._get_admin()

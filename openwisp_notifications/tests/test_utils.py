@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 import swapper
 from django.core import management
-from django.test import TestCase
+from django.test import TransactionTestCase
 
 from openwisp_notifications import checks
 from openwisp_notifications import settings as app_settings
@@ -14,7 +14,7 @@ Notification = load_model('Notification')
 Organization = swapper.load_model('openwisp_users', 'Organization')
 
 
-class TestManagementCommands(TestCase, TestOrganizationMixin):
+class TestManagementCommands(TransactionTestCase, TestOrganizationMixin):
     def test_create_notification_command(self):
         admin = self._get_admin()
         management.call_command('create_notification')
@@ -34,7 +34,7 @@ class TestManagementCommands(TestCase, TestOrganizationMixin):
         mocked_task.assert_called_once()
 
 
-class TestChecks(TestCase, TestOrganizationMixin):
+class TestChecks(TransactionTestCase, TestOrganizationMixin):
     @patch.object(
         app_settings, 'OPENWISP_NOTIFICATIONS_HOST', 'https://example.com',
     )

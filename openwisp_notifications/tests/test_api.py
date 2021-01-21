@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 from django.contrib.contenttypes.models import ContentType
 from django.core.cache import cache
-from django.test import TestCase
+from django.test import TransactionTestCase
 from django.urls import reverse
 from django.utils import timezone
 from rest_framework.exceptions import ErrorDetail
@@ -30,7 +30,9 @@ OrganizationUser = swapper_load_model('openwisp_users', 'OrganizationUser')
 NOT_FOUND_ERROR = ErrorDetail(string='Not found.', code='not_found')
 
 
-class TestNotificationApi(TestCase, TestOrganizationMixin, AuthenticationMixin):
+class TestNotificationApi(
+    TransactionTestCase, TestOrganizationMixin, AuthenticationMixin
+):
     url_namespace = 'notifications'
 
     def setUp(self):

@@ -6,7 +6,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
 from django.core.cache import cache
 from django.forms.widgets import MediaOrderConflictWarning
-from django.test import TestCase, override_settings
+from django.test import TransactionTestCase, override_settings
 from django.urls import reverse
 
 from openwisp_notifications import settings as app_settings
@@ -46,7 +46,7 @@ op_request = MessagingRequest()
 op_request.user = MockUser(is_superuser=False)
 
 
-class TestAdmin(TestOrganizationMixin, TestMultitenantAdminMixin, TestCase):
+class TestAdmin(TestOrganizationMixin, TestMultitenantAdminMixin, TransactionTestCase):
     """
     Tests notifications in admin
     """

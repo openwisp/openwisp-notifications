@@ -6,6 +6,7 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.core.mail import EmailMultiAlternatives
+from django.db import transaction
 from django.db.models import Q
 from django.db.models.query import QuerySet
 from django.db.models.signals import (
@@ -275,10 +276,12 @@ def notification_type_registered_unregistered_handler(sender, **kwargs):
 )
 def notification_setting_org_user_created(instance, **kwargs):
     if instance.is_admin:
-        tasks.ns_organization_user_added_or_updated.delay(
-            instance_id=instance.pk,
-            instance_user_id=instance.user_id,
-            instance_org_id=instance.organization_id,
+        transaction.on_commit(
+            lambda: tasks.ns_organization_user_added_or_updated.delay(
+                instance_id=instance.pk,
+                instance_user_id=instance.user_id,
+                instance_org_id=instance.organization_id,
+            )
         )
 
 

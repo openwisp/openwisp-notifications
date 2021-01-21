@@ -1,5 +1,5 @@
 from django.core.exceptions import ImproperlyConfigured
-from django.test import TestCase
+from django.test import TransactionTestCase
 
 from openwisp_notifications.handlers import (
     notification_type_registered_unregistered_handler,
@@ -29,7 +29,7 @@ OrganizationUser = swapper_load_model('openwisp_users', 'OrganizationUser')
 ns_queryset = NotificationSetting.objects.filter(type='default')
 
 
-class TestNotificationSetting(TestOrganizationMixin, TestCase):
+class TestNotificationSetting(TestOrganizationMixin, TransactionTestCase):
     def tearDown(self):
         super().tearDown()
         try:

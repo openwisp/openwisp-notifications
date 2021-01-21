@@ -9,7 +9,7 @@ from django.core.cache import cache
 from django.core.exceptions import ImproperlyConfigured
 from django.db.models.signals import post_migrate, pre_delete
 from django.template import TemplateDoesNotExist
-from django.test import TestCase
+from django.test import TransactionTestCase
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.html import strip_tags
@@ -46,7 +46,7 @@ ten_minutes_ago = start_time - timedelta(minutes=10)
 notification_queryset = Notification.objects.order_by('-timestamp')
 
 
-class TestNotifications(TestOrganizationMixin, TestCase):
+class TestNotifications(TestOrganizationMixin, TransactionTestCase):
     def setUp(self):
         self.admin = self._create_admin()
         self.notification_options = dict(
