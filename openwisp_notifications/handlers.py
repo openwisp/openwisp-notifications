@@ -5,6 +5,7 @@ from django.apps import apps
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
+from django.core.cache import cache
 from django.core.mail import EmailMultiAlternatives
 from django.db.models import Q
 from django.db.models.query import QuerySet
@@ -316,3 +317,19 @@ def schedule_object_notification_deletion(instance, created, **kwargs):
         tasks.delete_ignore_object_notification.apply_async(
             (instance.pk,), eta=instance.valid_till
         )
+
+
+def register_notification_observation(model, signal):
+    signal.connect(
+        update_notification_cache,
+        sender=model,
+        dispatch_uid='{}_{}_update_notification_cache'.format(
+            str(signal), model.__name__
+        ),
+    )
+
+
+def update_notification_cache(sender, instance, **kwargs):
+    content_type = ContentType.objects.get_for_model(instance)
+    cache_key = Notification._cache_key(content_type.id, instance.id)
+    cache.delete(cache_key)
