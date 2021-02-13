@@ -28,7 +28,9 @@ class SampleNotificationsConfig(OpenwispNotificationsConfig):
         )
 
     def connect_recievers(self):
-        from openwisp_notifications.handlers import register_notification_observation
+        from openwisp_notifications.handlers import register_notification_cache_update
 
         Organization = load_model('openwisp_users', 'Organization')
-        register_notification_observation(Organization, post_save)
+        register_notification_cache_update(
+            Organization, post_save, signal_uid="post_save"
+        )
