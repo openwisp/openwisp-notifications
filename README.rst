@@ -385,10 +385,12 @@ The cached values are updated automatically to reflect actual data from database
 the duration of caching these objects using
 `OPENWISP_NOTIFICATIONS_CACHE_TIMEOUT setting <#OPENWISP_NOTIFICATIONS_CACHE_TIMEOUT>`_.
 
-**register_notification_cache_update**
-This function is used to register a signal of a model which is being used as an ``actor``, ``action_object``
-and ``target`` objects. As these values are cached for the optimization purpose so their cached values are
-need to be changed when they are changed. You can register any signal you want which will delete the cached value.
+Cache invalidation
+~~~~~~~~~~~~~~~~~~
+
+The function ``register_notification_cache_update`` can be used to register a signal of a model which is being used as an
+``actor``, ``action_object`` and ``target`` objects. As these values are cached for the optimization purpose so their cached 
+values are need to be changed when they are changed. You can register any signal you want which will delete the cached value.
 To register a signal you need to include following code in your ``apps.py``.
 
 .. code-block:: python
@@ -404,7 +406,7 @@ To register a signal you need to include following code in your ``apps.py``.
         from openwisp_notifications.handlers import register_notification_cache_update
 
         model = load_model('app_name', 'model_name')
-        register_notification_cache_update(model, post_save, signal_uid="post_save")
+        register_notification_cache_update(model, post_save, signal_uid="myapp_mymodel_notification_cache_invalidation")
 
 **Note**: You need to import ``register_notification_cache_update`` inside the ``ready`` function or 
 you can define another funtion to register signals which will be called in ``ready`` and then it will be 

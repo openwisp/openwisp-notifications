@@ -838,8 +838,11 @@ class TestNotifications(TestOrganizationMixin, TestCase):
         )
         self._create_notification()
         content_type = ContentType.objects.get_for_model(operator._meta.model)
-        operator.username = "new operation name"
+        operator.username = 'new operator name'
         operator.save()
         cache_key = Notification._cache_key(content_type.id, operator.id)
         _cache = cache.get(cache_key, None)
         self.assertEqual(_cache, None)
+        self._create_notification()
+        new_cache = cache.get(cache_key, None)
+        self.assertEqual(new_cache.username, 'new operator name')

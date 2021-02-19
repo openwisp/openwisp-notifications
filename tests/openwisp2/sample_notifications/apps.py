@@ -32,5 +32,5 @@ class SampleNotificationsConfig(OpenwispNotificationsConfig):
 
         Organization = load_model('openwisp_users', 'Organization')
         register_notification_cache_update(
-            Organization, post_save, signal_uid="post_save"
+            Organization, post_save, signal_uid='post_save'
         )
