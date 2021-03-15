@@ -3,6 +3,9 @@ from django.contrib.auth.models import Permission
 from django.db import migrations
 
 from openwisp_notifications.migrations import get_swapped_model
+from openwisp_users.migrations import (
+    create_default_groups as base_create_default_groups,
+)
 
 
 def create_default_groups(apps, schema_editor):
@@ -52,6 +55,9 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
+        migrations.RunPython(
+            base_create_default_groups, reverse_code=migrations.RunPython.noop
+        ),
         migrations.RunPython(
             create_default_groups, reverse_code=migrations.RunPython.noop
         ),
