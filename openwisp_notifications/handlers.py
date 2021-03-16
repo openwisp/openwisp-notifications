@@ -1,6 +1,5 @@
 import logging
 
-import swapper
 from celery.exceptions import OperationalError
 from django.apps import apps
 from django.conf import settings
@@ -63,9 +62,7 @@ def notify_handler(**kwargs):
     )
     verb = notification_template.get('verb', kwargs.pop('verb', None))
     target_org = getattr(target, 'organization_id', None)
-    user_model_name = swapper.split(
-        swapper.get_model_name('openwisp_users', 'Organization')
-    )[0]
+    user_app_name = User._meta.app_label
 
     where = Q(is_superuser=True)
     not_where = Q()
@@ -73,8 +70,8 @@ def notify_handler(**kwargs):
     if target_org:
         org_admin_query = Q(
             **{
-                f'{user_model_name}_organizationuser__organization': target_org,
-                f'{user_model_name}_organizationuser__is_admin': True,
+                f'{user_app_name}_organizationuser__organization': target_org,
+                f'{user_app_name}_organizationuser__is_admin': True,
             }
         )
         where = where | (Q(is_staff=True) & org_admin_query)
