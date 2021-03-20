@@ -10,15 +10,15 @@
 {% block extrahead %}
   {{ block.super }}
   {% if not media.js and 'jquery' not in block.super %}
-    <script type="text/javascript" src="{% static 'admin/js/vendor/jquery/jquery.min.js' %}"></script>
-    <script type="text/javascript" src="{% static 'admin/js/jquery.init.js' %}"></script>
+    <script src="{% static 'admin/js/vendor/jquery/jquery.min.js' %}"></script>
+    <script src="{% static 'admin/js/jquery.init.js' %}"></script>
   {% endif %}
 {% endblock %}
 
 {% block userlinks %}
   <div class="ow-notifications" id="openwisp_notifications">
     <button id="ow-notification-btn">
-      <img class="bell-icon" src="{% static 'openwisp-notifications/images/icons/icon-bell.svg' %}" />
+      <img class="bell-icon" src="{% static 'openwisp-notifications/images/icons/icon-bell.svg' %}" alt="{% trans 'bell icon' %}" />
     </button>
     {% unread_notifications %}
   </div>
