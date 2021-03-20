@@ -9,7 +9,7 @@
 
 {% block extrahead %}
   {{ block.super }}
-  {% if not media.js %}
+  {% if not media.js and 'jquery' not in block.super %}
     <script src="{% static 'admin/js/vendor/jquery/jquery.min.js' %}"></script>
     <script src="{% static 'admin/js/jquery.init.js' %}"></script>
   {% endif %}
