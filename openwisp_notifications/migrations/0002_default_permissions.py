@@ -8,7 +8,7 @@ from openwisp_users.migrations import (
 )
 
 
-def create_default_groups(apps, schema_editor):
+def add_default_permissions(apps, schema_editor):
     group = get_swapped_model(apps, 'openwisp_users', 'Group')
 
     # To populate all the permissions
@@ -18,16 +18,11 @@ def create_default_groups(apps, schema_editor):
         app_config.models_module = None
 
     operator = group.objects.filter(name='Operator')
-    if operator.count() == 0:
-        operator = group.objects.create(name='Operator')
-    else:
-        operator = operator.first()
+    operator = operator.first()
 
     admin = group.objects.filter(name='Administrator')
-    if admin.count() == 0:
-        admin = group.objects.create(name='Administrator')
-    else:
-        admin = admin.first()
+    admin = admin.first()
+
     permissions = [
         Permission.objects.get(
             content_type__app_label='openwisp_notifications',
@@ -59,6 +54,6 @@ class Migration(migrations.Migration):
             base_create_default_groups, reverse_code=migrations.RunPython.noop
         ),
         migrations.RunPython(
-            create_default_groups, reverse_code=migrations.RunPython.noop
+            add_default_permissions, reverse_code=migrations.RunPython.noop
         ),
     ]
