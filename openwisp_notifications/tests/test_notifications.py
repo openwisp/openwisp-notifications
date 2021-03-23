@@ -7,7 +7,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.core import mail
 from django.core.cache import cache
 from django.core.exceptions import ImproperlyConfigured
-from django.db.models.signals import post_migrate, post_save, pre_delete
+from django.db.models.signals import post_migrate, pre_delete
 from django.template import TemplateDoesNotExist
 from django.test import TestCase
 from django.urls import reverse
@@ -17,11 +17,7 @@ from django.utils.timesince import timesince
 
 from openwisp_notifications import settings as app_settings
 from openwisp_notifications import tasks
-from openwisp_notifications.handlers import (
-    NotificationsAppConfig,
-    notify_handler,
-    register_notification_cache_update,
-)
+from openwisp_notifications.handlers import NotificationsAppConfig, notify_handler
 from openwisp_notifications.signals import notify
 from openwisp_notifications.swapper import load_model, swapper_load_model
 from openwisp_notifications.tests.test_helpers import (
@@ -64,9 +60,6 @@ class TestNotifications(TestOrganizationMixin, TestCase):
 
     def _create_notification(self):
         return notify.send(**self.notification_options)
-
-    def _register_notification_cache_update(self, model, signal, signal_uid):
-        register_notification_cache_update(model, signal, signal_uid=signal_uid)
 
     def test_create_notification(self):
         operator = super()._create_operator()
@@ -829,20 +822,3 @@ class TestNotifications(TestOrganizationMixin, TestCase):
             sender=NotificationsAppConfig, app_config=NotificationsAppConfig
         )
         mocked_logger.assert_called_once()
-
-    def test_notification_cache_update(self):
-        operator = self._get_operator()
-        self._register_notification_cache_update(User, post_save, 'post_save')
-        self.notification_options.update(
-            {'action_object': operator, 'target': operator, 'type': 'default'}
-        )
-        self._create_notification()
-        content_type = ContentType.objects.get_for_model(operator._meta.model)
-        operator.username = 'new operator name'
-        operator.save()
-        cache_key = Notification._cache_key(content_type.id, operator.id)
-        _cache = cache.get(cache_key, None)
-        self.assertEqual(_cache, None)
-        self._create_notification()
-        new_cache = cache.get(cache_key, None)
-        self.assertEqual(new_cache.username, 'new operator name')

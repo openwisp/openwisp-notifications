@@ -4,6 +4,8 @@ from swapper import load_model
 from openwisp_notifications.apps import OpenwispNotificationsConfig
 from openwisp_notifications.types import register_notification_type
 
+from .signals import test_app_name_changed
+
 
 class SampleNotificationsConfig(OpenwispNotificationsConfig):
     name = 'openwisp2.sample_notifications'
@@ -31,6 +33,13 @@ class SampleNotificationsConfig(OpenwispNotificationsConfig):
         from openwisp_notifications.handlers import register_notification_cache_update
 
         Organization = load_model('openwisp_users', 'Organization')
+        from .models import TestApp
+
         register_notification_cache_update(
-            Organization, post_save, signal_uid='post_save'
+            Organization, post_save, dispatch_uid='organization_post_save_invalidation'
+        )
+        register_notification_cache_update(
+            TestApp,
+            test_app_name_changed,
+            dispatch_uid='test_app_name_changed_invalidation',
         )
