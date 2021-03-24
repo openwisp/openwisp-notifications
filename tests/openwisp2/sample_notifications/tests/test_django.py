@@ -15,7 +15,7 @@ from openwisp_notifications.tests.test_notification_setting import (
 from openwisp_notifications.tests.test_notifications import (
     TestNotifications as BaseTestNotifications,
 )
-from openwisp_notifications.tests.test_transaction_notifications import (
+from openwisp_notifications.tests.test_notifications import (
     TestTransactionNotifications as BaseTestTransactionNotifications,
 )
 from openwisp_notifications.tests.test_utils import TestChecks as BaseTestChecks
@@ -75,6 +75,8 @@ class TestTransactionNotifications(BaseTestTransactionNotifications):
         test_app.save()
         notification = Notification.objects.get(target_content_type=content_type)
         self.assertEqual(notification.target.name, test_app.name)
+        test_app_cache = cache.get(cache_key, None)
+        self.assertEqual(test_app_cache.name, test_app.name)
 
 
 class TestNotificationAPI(BaseTestNotificationApi):

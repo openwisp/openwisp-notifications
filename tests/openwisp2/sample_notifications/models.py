@@ -63,11 +63,12 @@ class TestApp(UUIDModel):
 
     def _check_name_changed(self):
         try:
-            obj = self.__class__.objects.get(id=self.id)
+            obj = self._meta.model.objects.get(id=self.id)
         except ObjectDoesNotExist:
-            obj = None
-        if obj is not None and obj.name != self.name:
-            test_app_name_changed.send(sender=self.__class__, instance=self)
+            return
+        else:
+            if obj.name != self.name:
+                test_app_name_changed.send(sender=self.__class__, instance=self)
 
 
 @receiver(post_save, sender=TestApp, dispatch_uid='test_app_object_created')
