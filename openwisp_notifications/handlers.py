@@ -5,7 +5,9 @@ from django.apps import apps
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
+from django.core.cache import cache
 from django.core.mail import EmailMultiAlternatives
+from django.db import transaction
 from django.db.models import Q
 from django.db.models.query import QuerySet
 from django.db.models.signals import (
@@ -319,3 +321,19 @@ def schedule_object_notification_deletion(instance, created, **kwargs):
         tasks.delete_ignore_object_notification.apply_async(
             (instance.pk,), eta=instance.valid_till
         )
+
+
+def register_notification_cache_update(model, signal, dispatch_uid=None):
+    signal.connect(
+        update_notification_cache, sender=model, dispatch_uid=dispatch_uid,
+    )
+
+
+def update_notification_cache(sender, instance, **kwargs):
+    def invalidate_cache():
+        content_type = ContentType.objects.get_for_model(instance)
+        cache_key = Notification._cache_key(content_type.id, instance.id)
+        cache.delete(cache_key)
+
+    # execute cache invalidation only after changes have been committed to the DB
+    transaction.on_commit(invalidate_cache)
