@@ -2,9 +2,14 @@ from django.contrib.auth.management import create_permissions
 from django.contrib.auth.models import Permission
 from django.db import migrations
 
+from openwisp_notifications.migrations import get_swapped_model
+from openwisp_users.migrations import (
+    create_default_groups as base_create_default_groups,
+)
 
-def create_default_groups(apps, schema_editor):
-    group = apps.get_model('openwisp_users', 'group')
+
+def add_default_permissions(apps, schema_editor):
+    group = get_swapped_model(apps, 'openwisp_users', 'Group')
 
     # To populate all the permissions
     for app_config in apps.get_app_configs():
@@ -13,16 +18,11 @@ def create_default_groups(apps, schema_editor):
         app_config.models_module = None
 
     operator = group.objects.filter(name='Operator')
-    if operator.count() == 0:
-        operator = group.objects.create(name='Operator')
-    else:
-        operator = operator.first()
+    operator = operator.first()
 
     admin = group.objects.filter(name='Administrator')
-    if admin.count() == 0:
-        admin = group.objects.create(name='Administrator')
-    else:
-        admin = admin.first()
+    admin = admin.first()
+
     permissions = [
         Permission.objects.get(
             content_type__app_label='openwisp_notifications',
@@ -51,6 +51,9 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.RunPython(
-            create_default_groups, reverse_code=migrations.RunPython.noop
+            base_create_default_groups, reverse_code=migrations.RunPython.noop
+        ),
+        migrations.RunPython(
+            add_default_permissions, reverse_code=migrations.RunPython.noop
         ),
     ]

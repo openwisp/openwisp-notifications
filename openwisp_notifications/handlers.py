@@ -62,14 +62,17 @@ def notify_handler(**kwargs):
     )
     verb = notification_template.get('verb', kwargs.pop('verb', None))
     target_org = getattr(target, 'organization_id', None)
+    user_app_name = User._meta.app_label
 
     where = Q(is_superuser=True)
     not_where = Q()
     where_group = Q()
     if target_org:
         org_admin_query = Q(
-            openwisp_users_organizationuser__organization=target_org,
-            openwisp_users_organizationuser__is_admin=True,
+            **{
+                f'{user_app_name}_organizationuser__organization': target_org,
+                f'{user_app_name}_organizationuser__is_admin': True,
+            }
         )
         where = where | (Q(is_staff=True) & org_admin_query)
         where_group = org_admin_query

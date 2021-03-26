@@ -8,6 +8,7 @@ from django.conf import settings
 from django.contrib.auth.management import create_permissions
 from django.db import migrations, models
 
+from openwisp_notifications.migrations import get_swapped_model
 from openwisp_notifications.types import NOTIFICATION_CHOICES
 
 
@@ -18,7 +19,7 @@ def create_notification_setting_groups_permissions(apps, schema_editor):
     create_permissions(app_config, apps=apps, verbosity=0)
     app_config.models_module = None
 
-    Group = apps.get_model('openwisp_users', 'group')
+    Group = get_swapped_model(apps, 'openwisp_users', 'Group')
     Permission = apps.get_model('auth', 'Permission')
 
     operator = Group.objects.filter(name='Operator')
@@ -49,7 +50,7 @@ def create_notification_setting_groups_permissions(apps, schema_editor):
 
 
 def reverse_notification_setting_groups_permissions(apps, schema_editor):
-    Group = apps.get_model('openwisp_users', 'group')
+    Group = get_swapped_model(apps, 'openwisp_users', 'Group')
     operator = Group.objects.filter(name='Operator').first()
     administrator = Group.objects.filter(name='Administrator').first()
 
@@ -68,7 +69,6 @@ def reverse_notification_setting_groups_permissions(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('openwisp_users', '0009_create_organization_owners'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
         swapper.dependency('openwisp_users', 'Organization'),
         ('openwisp_notifications', '0003_notification_notification_type'),
