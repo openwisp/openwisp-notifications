@@ -210,14 +210,14 @@ def send_email_notification(sender, instance, created, **kwargs):
             ),
         )
         mail.attach_alternative(html_message, 'text/html')
-    
+
     try:
         mail.send()
         # flag as emailed
         instance.emailed = True
     except Exception as e:
         logger.exception(f'Notification email sending failed : {str(e)}')
-    
+
     instance.save()
 
 
