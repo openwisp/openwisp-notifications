@@ -1,5 +1,6 @@
 import logging
 
+from smtplib import SMTPException
 from celery.exceptions import OperationalError
 from django.apps import apps
 from django.conf import settings
@@ -213,12 +214,14 @@ def send_email_notification(sender, instance, created, **kwargs):
 
     try:
         mail.send()
+        
+    except SMTPException as e:
+        logger.exception(f'Notification email sending failed : {str(e)}')
+        
+    else:
         # flag as emailed
         instance.emailed = True
-    except Exception as e:
-        logger.exception(f'Notification email sending failed : {str(e)}')
-
-    instance.save()
+        instance.save()
 
 
 @receiver(post_save, sender=Notification, dispatch_uid='clear_notification_cache_saved')
