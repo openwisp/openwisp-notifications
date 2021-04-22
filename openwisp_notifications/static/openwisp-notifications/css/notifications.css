@@ -295,16 +295,6 @@
   }
 }
 
-@media (max-width: 1024px) {
-  .ow-notifications {
-    display: block !important;
-    line-height: 40px !important;
-    position: absolute;
-    top: 42px;
-    right: 113px;
-  }
-}
-
 @media screen and (min-width: 1025px){
   .ow-notification-dropdown {
     width: 500px;
