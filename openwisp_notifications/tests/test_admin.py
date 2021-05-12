@@ -139,12 +139,10 @@ class TestAdmin(TestOrganizationMixin, TestMultitenantAdminMixin, TestCase):
     def test_jquery_import(self):
         response = self.client.get(self._url)
         self.assertInHTML(
-            '<script type="text/javascript" src="/static/admin/js/jquery.init.js">',
-            str(response.content),
-            1,
+            '<script src="/static/admin/js/jquery.init.js">', str(response.content), 1,
         )
         self.assertInHTML(
-            '<script type="text/javascript" src="/static/admin/js/vendor/jquery/jquery.min.js">',
+            '<script src="/static/admin/js/vendor/jquery/jquery.min.js">',
             str(response.content),
             1,
         )

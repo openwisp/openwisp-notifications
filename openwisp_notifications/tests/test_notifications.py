@@ -7,9 +7,9 @@ from django.contrib.contenttypes.models import ContentType
 from django.core import mail
 from django.core.cache import cache
 from django.core.exceptions import ImproperlyConfigured
-from django.db.models.signals import post_migrate, pre_delete
+from django.db.models.signals import post_migrate, post_save, pre_delete
 from django.template import TemplateDoesNotExist
-from django.test import TestCase
+from django.test import TestCase, TransactionTestCase
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.html import strip_tags
@@ -17,7 +17,11 @@ from django.utils.timesince import timesince
 
 from openwisp_notifications import settings as app_settings
 from openwisp_notifications import tasks
-from openwisp_notifications.handlers import NotificationsAppConfig, notify_handler
+from openwisp_notifications.handlers import (
+    NotificationsAppConfig,
+    notify_handler,
+    register_notification_cache_update,
+)
 from openwisp_notifications.signals import notify
 from openwisp_notifications.swapper import load_model, swapper_load_model
 from openwisp_notifications.tests.test_helpers import (
@@ -822,3 +826,42 @@ class TestNotifications(TestOrganizationMixin, TestCase):
             sender=NotificationsAppConfig, app_config=NotificationsAppConfig
         )
         mocked_logger.assert_called_once()
+
+
+class TestTransactionNotifications(TestOrganizationMixin, TransactionTestCase):
+    def setUp(self):
+        self.admin = self._create_admin()
+        self.notification_options = dict(
+            sender=self.admin,
+            description='Test Notification',
+            level='info',
+            verb='Test Notification',
+            email_subject='Test Email subject',
+            url='https://localhost:8000/admin',
+        )
+
+    def _create_notification(self):
+        return notify.send(**self.notification_options)
+
+    def test_notification_cache_update(self):
+        operator = self._get_operator()
+        register_notification_cache_update(
+            User, post_save, 'operator_name_changed_invalidation'
+        )
+        self.notification_options.update(
+            {'action_object': operator, 'target': operator, 'type': 'default'}
+        )
+        self._create_notification()
+        content_type = ContentType.objects.get_for_model(operator._meta.model)
+        cache_key = Notification._cache_key(content_type.id, operator.id)
+        operator_cache = cache.get(cache_key, None)
+        self.assertEqual(operator_cache.username, operator.username)
+        operator.username = 'new operator name'
+        operator.save()
+        notification = Notification.objects.get(target_content_type=content_type)
+        cache_key = Notification._cache_key(content_type.id, operator.id)
+        self._create_notification()
+        operator_cache = cache.get(cache_key, None)
+        self.assertEqual(notification.target.username, 'new operator name')
+        # Done for populating cache
+        self.assertEqual(operator_cache.username, 'new operator name')
