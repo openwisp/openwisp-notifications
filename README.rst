@@ -1027,7 +1027,7 @@ Install your forked repo:
 
     git clone git://github.com/<your_fork>/openwisp-notifications
     cd openwisp-notifications/
-    python setup.py develop
+    pip install -e .
 
 Install test requirements:
 
