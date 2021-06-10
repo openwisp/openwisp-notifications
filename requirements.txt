@@ -1,8 +1,9 @@
 django-notifications-hq~=1.6.0
 channels~=2.4.0
 # TODO set the next point release of openwisp-users when ready
-openwisp-users @ https://github.com/openwisp/openwisp-users/tarball/master
-openwisp-utils[rest]
+openwisp-users @ https://github.com/openwisp/openwisp-users/tarball/issues/253-register-menu-groups
+# TODO set the next point release of openwisp-utils when ready
+openwisp-utils[rest] @ https://github.com/openwisp/openwisp-utils/tarball/dev
 swapper~=1.1.0
 markdown~=3.2.0
 celery~=4.4.0
