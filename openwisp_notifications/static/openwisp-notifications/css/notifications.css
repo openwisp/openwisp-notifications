@@ -5,47 +5,41 @@
   border-bottom-left-radius: 3px;
   border-bottom-right-radius: 3px;
 }
+#header{
+  overflow: visible;
+}
 
 /* Notification bell */
 .ow-notifications {
-  float: right;
-  display: block;
-  padding: 1px 20px 0px 20px;
-  color: #fff;
-  line-height: 40px;
-  border: 0 none !important;
+  padding: 4px 14px;
   position: relative;
-  right: -5px;
-  margin-left: 10px;
   cursor: pointer;
 }
 #ow-notification-btn {
-  background-color: #464646;
+  background-color: transparent;
   border: none;
   padding: 0px;
+  cursor: pointer;
 }
 .ow-notifications span {
   position: absolute;
-  top: 3px;
-  left: 27px;
+  top: -7px;
+  right: -1px;
   min-width: 15px;
   height: 15px;
-  display: block;
-  line-height: 14px;
-  text-align: center;
-  border-radius: 5px;
-  padding: 1px;
-  font-weight: bold;
-  color: rgba(255, 255, 255, 0.8);
   background-color: #d04124;
-  border: 1px solid #464646;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 3px 3px;
+  border-radius: 11px;
 }
 .ow-notifications:hover span,
 .ow-notifications:focus span {
   background-color: #d9553b;
 }
 .ow-notifications .bell-icon {
-  height: 14px;
+  height: 20px;
   vertical-align: middle;
   position: relative;
   top: -1px;
@@ -125,28 +119,26 @@
 .ow-notification-dropdown {
   position: absolute;
   z-index: 10000;
-  right: 100px;
-  border: 2px solid #464646;
+  right: 32px;
   text-align: left;
   width: 425px;
   text-transform: none;
-  background-color: #efefef;
-  border-radius: 5px;
-  box-shadow: 0px 0px 5px 1px black;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 0 0 1px #dadce0;
   font-size: 12px;
+  top: 52px;
 }
 .ow-notification-dropdown .btn {
   cursor: pointer;
   box-shadow: inset 0px 1px 0px 0px #ffffff;
-  background: linear-gradient(to bottom, #ededed 5%, #dfdfdf 100%);
-  background-color: #ededed;
   border-radius: 6px;
   border: 1px solid #dcdcdc;
   display: inline-block;
   cursor: pointer;
   color: #777777 !important;
   font-size: 12px;
-  padding: 4px 15px;
+  padding: 10px 15px;
   text-decoration: none;
   text-shadow: 0px 1px 0px #ffffff;
 }
@@ -158,10 +150,11 @@
   top: 1px;
 }
 .ow-notification-dropdown .filters {
-  margin: 12px 18px 10px;
+  padding: 12px 22px;
   display: flex;
   justify-content: space-between;
   font-weight: 500;
+  border-bottom: 2px solid #5f5f5f26;
 }
 .ow-notification-dropdown .disabled {
   color: rgba(0, 0, 0, 0.4) !important;
@@ -172,17 +165,17 @@
   overflow-y: auto;
   max-height: 580px;
   height: 100%;
+  overflow-y: overlay;
 }
 .ow-notification-elem {
   cursor: pointer;
-  padding: 10px 20px;
+  padding: 0px 22px;
   transition: 0.4s;
   color: #333333;
   font-weight: bold;
-  background-color: #efefef;
 }
 .ow-notification-elem.unread{
-  background: #515151;
+  background: #333333;
   color: #fff;
 }
 .ow-notification-elem p{
@@ -226,7 +219,6 @@
   font-weight: bold;
   font-size: small;
   padding: 8px;
-  background: #efefef;
 }
 .ow-notification-dropdown .btn:focus,
 .ow-notification-elem:focus,
@@ -239,6 +231,7 @@
 /* Loader */
 #ow-notifications-loader {
   height: 3em;
+  padding: 8px;
 }
 #ow-notifications-loader .loader {
   margin : 0px auto;
@@ -285,6 +278,10 @@
 }
 .ow-notify-close {
   background-image: url('/static/openwisp-notifications/images/icons/icon-close.svg');
+}
+.ow-notification-inner {
+  border-bottom: 1px solid #00000026;
+  padding: 16px 0px;
 }
 
 
