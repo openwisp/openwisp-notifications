@@ -352,7 +352,7 @@ function initWebSockets($) {
             toast.slideDown('slow', function () {
                 setTimeout(function () {
                     toast.slideUp('slow', function () {
-                        // toast.remove();
+                        toast.remove();
                     });
                 }, 30000);
             });

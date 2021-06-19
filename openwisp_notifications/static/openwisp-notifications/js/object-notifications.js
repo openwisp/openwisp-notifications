@@ -15,9 +15,9 @@
 
 function getObjectNotificationComponent() {
     return `
-    <div class="ow-object-notification-container">
+    <li class="ow-object-notification-container">
         <button id="ow-object-notify" class="ow-object-notify button" title="You are receiving notifications for this object.">
-            <div class="ow-icon ow-object-notify-bell"></div>
+            <i class="ow-icon ow-object-notify-bell"></i>
             <p id="ow-unsubscribe-label">Unsubscribe</p>
         </button>
         <div class="ow-object-notification-option-container ow-hide">
@@ -29,7 +29,7 @@ function getObjectNotificationComponent() {
             <button data-days=-1 class="ow-notification-option disable-notification">Permanently</button>
             <div id="ow-object-notification-loader" class="ow-hide"><div class="loader"></div></div>
         </div>
-    </div>
+    </li>
     `;
 }
 
@@ -120,8 +120,8 @@ function addObjectNotificationHandlers($) {
             },
             crossDomain: true,
             success: function () {
-                $('#ow-object-notify > div.ow-icon').removeClass('ow-object-notify-slash-bell');
-                $('#ow-object-notify > div.ow-icon').addClass('ow-object-notify-bell');
+                $('#ow-object-notify > i.ow-icon').removeClass('ow-object-notify-slash-bell');
+                $('#ow-object-notify > i.ow-icon').addClass('ow-object-notify-bell');
                 $('#ow-unsubscribe-label').html('Unsubscribe');
                 $('#ow-object-notify').prop('title', 'You are receiving notifications for this object.');
 
@@ -178,8 +178,8 @@ function updateObjectNotificationHelpText($, validTill) {
     $('.ow-notification-option.disable-notification').addClass('ow-hide');
     $('.ow-object-notification-option-container > button:visible:first').focus();
 
-    $('#ow-object-notify > div.ow-icon').removeClass('ow-object-notify-bell');
-    $('#ow-object-notify > div.ow-icon').addClass('ow-object-notify-slash-bell');
+    $('#ow-object-notify > i.ow-icon').removeClass('ow-object-notify-bell');
+    $('#ow-object-notify > i.ow-icon').addClass('ow-object-notify-slash-bell');
     $('#ow-unsubscribe-label').html('Unsubscribed');
     $('#ow-object-notify').prop('title', 'You have disabled notifications for this object.');
 }
