@@ -15,18 +15,17 @@
   {% endif %}
 {% endblock %}
 
-{% block nav-global %}
-  <div class="ow-notifications" id="openwisp_notifications">
-    <button id="ow-notification-btn">
-      <img class="bell-icon" src="{% static 'openwisp-notifications/images/icons/icon-bell.svg' %}" alt="{% trans 'bell icon' %}" />
-    </button>
+{% block user-tools %}
+  {{ block.super }}
+  <div class="ow-notifications toggle-btn" id="openwisp_notifications">
+    <button id="ow-notification-btn"></button>
     {% unread_notifications %}
   </div>
   {% csrf_token %}
   {% notification_toast %}
   {% notification_widget %}
-{% endblock %}
-
+{% endblock  %}
+  
 {% block footer %}
   {{ block.super }}
   {% if request.user.is_authenticated %}

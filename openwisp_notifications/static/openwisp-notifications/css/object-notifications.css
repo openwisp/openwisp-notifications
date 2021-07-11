@@ -1,26 +1,26 @@
 .ow-icon {
-  width: 24px;
-  background-position: center;
-  height: 24px;
-  background-size: 18px;
-  filter: invert(1);
-  background-repeat: no-repeat;
+  width: 16px;
+  height: 16px;
+  background: #fff;
+  -webkit-mask-size: 16px;
+  -webkit-mask-repeat: no-repeat;
+  mask-size: 16px;
+  mask-repeat: no-repeat;
+  margin-right: 2px;
 }
 .object-tools {
   display: flex;
 }
+.ow-object-notify {
+  padding: 5px 10px;
+  display: flex;
+  align-items: center;
+}
 
 /* Object Notification */
-.ow-object-notify {
-  cursor: pointer;
-  display: flex;
-  border-radius: 8px;
-  padding: 3px 15px;
-  background: #df5d43;
-  font-weight: 700;
-}
+
 .ow-object-notify:active,
-.ow-object-notify:focus{
+.ow-object-notify:focus {
   outline: 0 none;
 }
 #ow-unsubscribe-label {
@@ -37,7 +37,7 @@
   width: 200px;
   margin-top: 5px;
   border-radius: 8px;
-  box-shadow: 0 0 0 1px #dadce0;
+  box-shadow: 0px 1px 3px #00000040;
 }
 .ow-notification-option {
   cursor: pointer;
@@ -70,13 +70,15 @@
 
 /* Icons */
 .ow-object-notify-bell {
-  background-image: url('/static/openwisp-notifications/images/icons/icon-bell.svg');
+  mask-image: url('/static/openwisp-notifications/images/icons/icon-bell.svg');
+  -webkit-mask-image: url('/static/openwisp-notifications/images/icons/icon-bell.svg');
 }
 .ow-object-notify-slash-bell {
-  background-image: url('/static/openwisp-notifications/images/icons/icon-bell-slash.svg');
+  mask-image: url('/static/openwisp-notifications/images/icons/icon-bell-slash.svg');
+  -webkit-mask-image: url('/static/openwisp-notifications/images/icons/icon-bell-slash.svg');
 }
 
-@media screen and (max-width: 768px){
+@media screen and (max-width: 768px) {
   .object-tools {
     justify-content: space-between;
     overflow: visible !important;
