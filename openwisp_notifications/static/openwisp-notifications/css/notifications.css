@@ -131,9 +131,10 @@
   text-transform: none;
   background-color: #fff;
   border-radius: 8px;
-  box-shadow: 0 0 0 1px #dadce0;
+  box-shadow: 4px 4px 12px 0px rgba(0, 0, 0, 0.12);
+  border: 1px solid rgba(0, 0, 0, 0.07);
   font-size: 12px;
-  top: 52px;
+  top: 49px;
 }
 .ow-notification-dropdown .btn {
   cursor: pointer;
@@ -155,11 +156,11 @@
   top: 1px;
 }
 .ow-notification-dropdown .filters {
-  padding: 8px 22px;
+  padding: 16px 22px;
   display: flex;
   justify-content: space-between;
   font-weight: 500;
-  border-bottom: 2px solid #dcdcdc;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
 }
 .ow-notification-dropdown .disabled {
   color: rgba(0, 0, 0, 0.4) !important;
@@ -174,7 +175,7 @@
 }
 .ow-notification-elem {
   cursor: pointer;
-  padding: 0px 22px;
+  padding: 0;
   transition: 0.4s;
   color: #333333;
   font-weight: bold;
@@ -288,9 +289,10 @@
   background-image: url('/static/openwisp-notifications/images/icons/icon-close.svg');
 }
 .ow-notification-inner {
-  border-bottom: 1px solid #00000026;
-  padding: 16px 0px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  padding: 16px 22px;
 }
+.ow-notification-elem:last-child .ow-notification-inner { border-bottom: none }
 
 @media screen and (max-width: 600px) {
   .ow-notification-dropdown {
