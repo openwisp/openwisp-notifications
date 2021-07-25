@@ -136,25 +136,13 @@
   font-size: 12px;
   top: 49px;
 }
-.ow-notification-dropdown .btn {
-  cursor: pointer;
-  box-shadow: inset 0px 1px 0px 0px #ffffff;
-  border-radius: 6px;
-  border: 1px solid #dcdcdc;
-  display: inline-block;
-  color: #777777 !important;
-  font-size: 12px;
-  padding: 7px 14px;
-  text-decoration: none;
-  text-shadow: 0px 1px 0px #ffffff;
+.ow-notification-dropdown .toggle-btn {
+  color: #777;
 }
-.ow-notification-dropdown .btn:hover {
-  background: linear-gradient(to bottom, #f6f6f6 5%, #e7e6e6 100%);
-}
-.ow-notification-dropdown .btn:active {
+.ow-notification-dropdown .toggle-btn:active {
   position: relative;
   top: 1px;
-}
+} 
 .ow-notification-dropdown .filters {
   padding: 16px 22px;
   display: flex;
@@ -229,8 +217,11 @@
 .ow-notification-elem:focus,
 .ow-notification-elem a:focus,
 .ow-notifications:focus,
-.ow-notification-dropdown .btn:focus {
+.ow-notification-dropdown .toggle-btn:focus {
   outline: 0.5px dotted rgba(0, 0, 0, 0.25);
+}
+.ow-notification-dropdown .toggle-btn:focus{
+  background: #fff;
 }
 
 /* Loader */

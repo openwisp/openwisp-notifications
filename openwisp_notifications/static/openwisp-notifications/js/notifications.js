@@ -144,7 +144,7 @@ function notificationWidget($) {
                     fetchedPages.push(res.results);
                     appendPage();
                     // Enable filters
-                    $('.btn').removeClass('disabled');
+                    $('.toggle-btn').removeClass('disabled');
                 }
             },
             error: function (error) {
