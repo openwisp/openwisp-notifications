@@ -13,14 +13,19 @@
   cursor: pointer;
 }
 #ow-notification-btn {
-  background: url(../images/icons/icon-bell.svg);
+  mask: url(../images/icons/icon-bell.svg) no-repeat;
+  -webkit-mask: url(../images/icons/icon-bell.svg) no-repeat;
   padding: 0px;
   cursor: pointer;
   width: 22px;
   height: 22px;
-  background-size: 22px;
-  background-repeat: no-repeat;
+  mask-size: 22px;
+  -webkit-mask-size: 22px;
   border: 0px;
+  background: #777;
+}
+.ow-notifications.toggle-btn:hover #ow-notification-btn{
+  background: #d04124;
 }
 .ow-notifications span {
   position: absolute;
