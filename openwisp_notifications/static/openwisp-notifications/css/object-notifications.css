@@ -50,7 +50,7 @@
   -webkit-mask-image: url('/static/openwisp-notifications/images/icons/icon-bell.svg');
   display: inline-block;
   width: 15px;
-  height: 15px;
+  height: 14px;
   position: relative;
   bottom: -2px;
 }
