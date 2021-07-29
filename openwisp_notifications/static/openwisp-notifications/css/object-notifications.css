@@ -24,42 +24,19 @@
 }
 #ow-unsubscribe-label {
   line-height: 20px;
-  font-size: 11px;
   margin: auto;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 .ow-object-notification-option-container {
-  background-color: #ffffff;
-  position: absolute;
-  z-index: 9999;
   width: 200px;
   margin-top: 5px;
-  border-radius: 8px;
-  box-shadow: 0px 1px 3px #00000040;
-}
-.ow-notification-option {
-  cursor: pointer;
-  width: 100%;
-  border: none;
-}
-.ow-notification-option:hover,
-.ow-notification-option:focus,
-.ow-notification-option:active {
-  background-color: #515151;
-  color: #fff;
-  outline: 0 none;
-}
-.ow-object-notification-option-container p,
-.ow-notification-option {
-  margin: auto;
-  font-size: 12px;
-  padding: 8px 0;
-  font-weight: normal;
 }
 #ow-notification-help-text {
   padding: 10px 10px;
+  margin: 0;
   color: #828282;
+  background: rgba(255, 255, 255, 0.5);
 }
 #ow-object-notification-loader .loader {
   height: 3em;
@@ -71,6 +48,11 @@
 .ow-object-notify-bell {
   mask-image: url('/static/openwisp-notifications/images/icons/icon-bell.svg');
   -webkit-mask-image: url('/static/openwisp-notifications/images/icons/icon-bell.svg');
+  display: inline-block;
+  width: 15px;
+  height: 15px;
+  position: relative;
+  bottom: -2px;
 }
 .ow-object-notify-slash-bell {
   mask-image: url('/static/openwisp-notifications/images/icons/icon-bell-slash.svg');
