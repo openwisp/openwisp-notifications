@@ -40,8 +40,8 @@ class TestChecks(TestCase, TestOrganizationMixin):
     )
     def test_cors_not_configured(self):
         # If INSTALLED_APPS not configured
-        with patch(
-            'openwisp_notifications.types.NOTIFICATION_TYPES', dict()
+        with patch('openwisp_notifications.types.NOTIFICATION_TYPES', dict(),), patch(
+            'openwisp_utils.admin_theme.menu.MENU', {}
         ), self.modify_settings(
             INSTALLED_APPS={'remove': 'corsheaders'}
         ), StringIO() as stderr:

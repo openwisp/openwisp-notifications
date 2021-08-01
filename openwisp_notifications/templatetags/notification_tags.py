@@ -39,8 +39,10 @@ def notification_widget():
         '''
         <div class="ow-notification-dropdown ow-hide">
             <div class="filters">
-                <span class="btn" id="ow-mark-all-read" tabindex="0" role="button">Mark all as read</span>
-                <span class="btn" id="ow-show-unread" tabindex="0" role="button">Show unread only</span>
+                <span class="toggle-btn" id="ow-mark-all-read" tabindex="0" role="button">
+                Mark all as read</span>
+                <span class="toggle-btn" id="ow-show-unread" tabindex="0" role="button">
+                Show unread only</span>
             </div>
             <div class="ow-notification-wrapper ow-round-bottom-border">
                 <div id="ow-notifications-loader" class="ow-hide"><div class="loader"></div></div>

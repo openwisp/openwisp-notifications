@@ -144,7 +144,7 @@ function notificationWidget($) {
                     fetchedPages.push(res.results);
                     appendPage();
                     // Enable filters
-                    $('.btn').removeClass('disabled');
+                    $('.toggle-btn').removeClass('disabled');
                 }
             },
             error: function (error) {
@@ -204,14 +204,16 @@ function notificationWidget($) {
 
         return `<div class="ow-notification-elem ${klass}" id=ow-${elem.id}
                         data-location="${elem.target_url}" role="link" tabindex="0">
-                    <div class="ow-notification-meta">
+                    <div class="ow-notification-inner">
+                        <div class="ow-notification-meta">
                         <div class="ow-notification-level-wrapper">
                             <div class="ow-notify-${elem.level} icon"></div>
                             <div class="ow-notification-level-text">${elem.level}</div>
                         </div>
                         <div class="ow-notification-date">${datetime}</div>
-                    </div>
+                        </div>
                     ${elem.message}
+                    </div>
                 </div>`;
     }
 

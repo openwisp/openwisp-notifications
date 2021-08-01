@@ -15,21 +15,21 @@
 
 function getObjectNotificationComponent() {
     return `
-    <div class="ow-object-notification-container">
-        <button id="ow-object-notify" class="ow-object-notify button" title="You are receiving notifications for this object.">
-            <div class="ow-icon ow-object-notify-bell"></div>
-            <p id="ow-unsubscribe-label">Unsubscribe</p>
-        </button>
-        <div class="ow-object-notification-option-container ow-hide">
+    <li class="ow-object-notification-container">
+        <a id="ow-object-notify" class="ow-object-notify" title="You are receiving notifications for this object.">
+            <span class="ow-icon ow-object-notify-bell"></span>
+            <span id="ow-unsubscribe-label">Unsubscribe</span>
+        </a>
+        <div class="ow-object-notification-option-container option-container ow-hide">
             <p id="ow-notification-help-text">Disable notifications for</p>
             <button data-days=0 class="ow-hide ow-notification-option" id="ow-enable-notification">Enable Notifications</button>
-            <button data-days=1 class="ow-notification-option disable-notification">1 Day</button>
-            <button data-days=7 class="ow-notification-option disable-notification">1 Week</button>
-            <button data-days=30 class="ow-notification-option disable-notification">1 Month</button>
-            <button data-days=-1 class="ow-notification-option disable-notification">Permanently</button>
+            <button data-days=1 class="ow-notification-option option disable-notification">1 Day</button>
+            <button data-days=7 class="ow-notification-option option disable-notification">1 Week</button>
+            <button data-days=30 class="ow-notification-option option disable-notification">1 Month</button>
+            <button data-days=-1 class="ow-notification-option option disable-notification">Permanently</button>
             <div id="ow-object-notification-loader" class="ow-hide"><div class="loader"></div></div>
         </div>
-    </div>
+    </li>
     `;
 }
 
@@ -120,8 +120,8 @@ function addObjectNotificationHandlers($) {
             },
             crossDomain: true,
             success: function () {
-                $('#ow-object-notify > div.ow-icon').removeClass('ow-object-notify-slash-bell');
-                $('#ow-object-notify > div.ow-icon').addClass('ow-object-notify-bell');
+                $('#ow-object-notify > span.ow-icon').removeClass('ow-object-notify-slash-bell');
+                $('#ow-object-notify > span.ow-icon').addClass('ow-object-notify-bell');
                 $('#ow-unsubscribe-label').html('Unsubscribe');
                 $('#ow-object-notify').prop('title', 'You are receiving notifications for this object.');
 
@@ -178,8 +178,8 @@ function updateObjectNotificationHelpText($, validTill) {
     $('.ow-notification-option.disable-notification').addClass('ow-hide');
     $('.ow-object-notification-option-container > button:visible:first').focus();
 
-    $('#ow-object-notify > div.ow-icon').removeClass('ow-object-notify-bell');
-    $('#ow-object-notify > div.ow-icon').addClass('ow-object-notify-slash-bell');
+    $('#ow-object-notify > span.ow-icon').removeClass('ow-object-notify-bell');
+    $('#ow-object-notify > span.ow-icon').addClass('ow-object-notify-slash-bell');
     $('#ow-unsubscribe-label').html('Unsubscribed');
     $('#ow-object-notify').prop('title', 'You have disabled notifications for this object.');
 }
