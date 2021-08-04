@@ -50,15 +50,18 @@ const owNotificationWindow = {
 };
 
 function initNotificationDropDown($) {
-    $('.ow-notifications').click(function (e) {
-        e.stopPropagation();
+    $('.ow-notifications').click(function () {
         $('.ow-notification-dropdown').toggleClass('ow-hide');
     });
 
     $(document).click(function (e) {
         e.stopPropagation();
-        // Check if the clicked area is dropDown or not
-        if ($('.ow-notification-dropdown').has(e.target).length === 0) {
+        // Check if the clicked area is dropDown / notification-btn or not
+        if (
+            $('.ow-notification-dropdown').has(e.target).length === 0 &&
+            !$(e.target).is($('#ow-notification-btn')) &&
+            !$(e.target).is($('.ow-notifications'))
+        ) {
             $('.ow-notification-dropdown').addClass('ow-hide');
         }
     });

@@ -1,5 +1,5 @@
 .ow-hide {
-  display: none;
+  display: none!important;
 }
 .ow-round-bottom-border {
   border-bottom-left-radius: 3px;
@@ -223,12 +223,18 @@
 .ow-notification-dropdown .btn:focus,
 .ow-notification-elem:focus,
 .ow-notification-elem a:focus,
-.ow-notifications:focus,
 .ow-notification-dropdown .toggle-btn:focus {
   outline: 0.5px dotted rgba(0, 0, 0, 0.25);
 }
 .ow-notification-dropdown .toggle-btn:focus{
   background: #fff;
+}
+.ow-notifications:focus-within{
+  background: #eeeeee69;
+}
+.ow-notifications:focus-within #ow-notification-btn,
+.ow-notifications:focus  #ow-notification-btn{
+  background: #df5d43;
 }
 
 /* Loader */

@@ -1,13 +1,3 @@
-.ow-icon {
-  width: 16px;
-  height: 16px;
-  background: #fff;
-  -webkit-mask-size: 16px;
-  -webkit-mask-repeat: no-repeat;
-  mask-size: 16px;
-  mask-repeat: no-repeat;
-  margin-right: 2px;
-}
 .object-tools {
   display: flex;
 }
@@ -48,17 +38,27 @@
 .ow-object-notify-bell {
   mask-image: url('/static/openwisp-notifications/images/icons/icon-bell.svg');
   -webkit-mask-image: url('/static/openwisp-notifications/images/icons/icon-bell.svg');
-  display: inline-block;
-  width: 15px;
-  height: 14px;
-  position: relative;
-  bottom: -2px;
 }
 .ow-object-notify-slash-bell {
   mask-image: url('/static/openwisp-notifications/images/icons/icon-bell-slash.svg');
   -webkit-mask-image: url('/static/openwisp-notifications/images/icons/icon-bell-slash.svg');
 }
-
+#ow-object-notify .ow-icon {
+  display: inline-block;
+  width: 15px;
+  height: 15px;
+  position: relative;
+  bottom: -2px;
+  background: #fff;
+  -webkit-mask-size: 15px;
+  -webkit-mask-repeat: no-repeat;
+  mask-size: 15px;
+  mask-repeat: no-repeat;
+  margin-right: 2px;
+}
+#ow-object-notify span{
+  pointer-events: none;
+}
 @media screen and (max-width: 768px) {
   .object-tools {
     justify-content: space-between;
