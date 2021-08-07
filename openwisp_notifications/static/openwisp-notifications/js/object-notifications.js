@@ -16,7 +16,7 @@
 function getObjectNotificationComponent() {
     return `
     <li class="ow-object-notification-container">
-        <a id="ow-object-notify" class="ow-object-notify" title="You are receiving notifications for this object.">
+        <a href="#" id="ow-object-notify" class="ow-object-notify" title="You are receiving notifications for this object.">
             <span class="ow-icon ow-object-notify-bell"></span>
             <span id="ow-unsubscribe-label">Unsubscribe</span>
         </a>
@@ -35,13 +35,16 @@ function getObjectNotificationComponent() {
 
 function initObjectNotificationDropdown($) {
     $(document).on('click', '.ow-object-notify', function (e) {
-        e.stopPropagation();
+        e.preventDefault();
         $('.ow-object-notification-option-container').toggleClass('ow-hide');
     });
     $(document).click(function (e) {
         e.stopPropagation();
-        // Check if the clicked area is dropDown or not
-        if ($('.ow-object-notification-option-container').has(e.target).length === 0) {
+        // Check if the clicked area is dropDown / ow-notify-btn or not
+        if (
+            $('.ow-object-notification-option-container').has(e.target).length === 0 &&
+            !$(e.target).is($('.ow-object-notify'))
+        ) {
             $('.ow-object-notification-option-container').addClass('ow-hide');
         }
     });
