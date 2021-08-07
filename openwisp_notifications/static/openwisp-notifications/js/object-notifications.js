@@ -34,7 +34,8 @@ function getObjectNotificationComponent() {
 }
 
 function initObjectNotificationDropdown($) {
-    $(document).on('click', '.ow-object-notify', function () {
+    $(document).on('click', '.ow-object-notify', function (e) {
+        e.preventDefault();
         $('.ow-object-notification-option-container').toggleClass('ow-hide');
     });
     $(document).click(function (e) {
