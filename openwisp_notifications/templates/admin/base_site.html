@@ -17,10 +17,10 @@
 
 {% block user-tools %}
   {{ block.super }}
-  <div class="ow-notifications toggle-btn" id="openwisp_notifications">
-    <button id="ow-notification-btn"></button>
+  <button class="ow-notifications toggle-btn" id="openwisp_notifications">
+    <span id="ow-notification-btn"></span>
     {% unread_notifications %}
-  </div>
+  </button>
   {% csrf_token %}
   {% notification_toast %}
   {% notification_widget %}

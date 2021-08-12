@@ -59,7 +59,6 @@ function initNotificationDropDown($) {
         // Check if the clicked area is dropDown / notification-btn or not
         if (
             $('.ow-notification-dropdown').has(e.target).length === 0 &&
-            !$(e.target).is($('#ow-notification-btn')) &&
             !$(e.target).is($('.ow-notifications'))
         ) {
             $('.ow-notification-dropdown').addClass('ow-hide');
@@ -72,7 +71,7 @@ function initNotificationDropDown($) {
         e.stopPropagation();
         if ($('.ow-notification-dropdown').has(e.target).length === 0){
             // Don't hide if focus changes to notification bell icon
-            if (e.target != $('#ow-notification-btn').get(0)) {
+            if (e.target != $('#openwisp_notifications').get(0)) {
                 $('.ow-notification-dropdown').addClass('ow-hide');
             }
         }
@@ -83,7 +82,7 @@ function initNotificationDropDown($) {
         // Hide notification widget on "Escape" key
         if (e.keyCode == 27){
             $('.ow-notification-dropdown').addClass('ow-hide');
-            $('#ow-notification-btn').focus();
+            $('#openwisp_notifications').focus();
         }
     });
 }
