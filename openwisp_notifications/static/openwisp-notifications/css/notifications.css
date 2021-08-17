@@ -16,7 +16,7 @@
   mask: url(../images/icons/icon-bell.svg) no-repeat;
   -webkit-mask: url(../images/icons/icon-bell.svg) no-repeat;
   padding: 0px;
-  cursor: pointer;
+  pointer-events: none;
   width: 22px;
   height: 22px;
   mask-size: 22px;
@@ -24,10 +24,10 @@
   border: 0px;
   background: #777;
 }
-.ow-notifications.toggle-btn:hover #ow-notification-btn{
-  background: #d04124;
+.ow-notifications.toggle-btn:hover #ow-notification-btn,.ow-notifications:focus #ow-notification-btn{
+  background: #df5d43;
 }
-.ow-notifications span {
+#ow-notification-count {
   position: absolute;
   top: -4px;
   left: 30px;
@@ -225,16 +225,6 @@
 .ow-notification-elem a:focus,
 .ow-notification-dropdown .toggle-btn:focus {
   outline: 0.5px dotted rgba(0, 0, 0, 0.25);
-}
-.ow-notification-dropdown .toggle-btn:focus{
-  background: #fff;
-}
-.ow-notifications:focus-within{
-  background: #eeeeee69;
-}
-.ow-notifications:focus-within #ow-notification-btn,
-.ow-notifications:focus  #ow-notification-btn{
-  background: #df5d43;
 }
 
 /* Loader */
