@@ -156,9 +156,7 @@ def ns_register_unregister_notification_type(
 
 
 @shared_task
-def create_notification_settings_for_org_user(
-    org_user_id, instance_user_id, instance_org_id
-):
+def create_notification_settings_for_org_user(org_user_id, user_id, org_id):
     """
     Adds notification settings for all notification types when a new
     organization user is added.
@@ -167,9 +165,7 @@ def create_notification_settings_for_org_user(
     for notification_type in NOTIFICATION_TYPES.keys():
         notification_settings.append(
             NotificationSetting(
-                user_id=instance_user_id,
-                organization_id=instance_org_id,
-                type=notification_type,
+                user_id=user_id, organization_id=org_id, type=notification_type,
             )
         )
 
@@ -179,14 +175,12 @@ def create_notification_settings_for_org_user(
 
 
 @shared_task
-def ns_organization_user_deleted(instance_user_id, instance_org_id):
+def ns_organization_user_deleted(user_id, org_id):
     """
     Deletes notification settings for all notification types when
     an organization user is deleted.
     """
-    NotificationSetting.objects.filter(
-        user_id=instance_user_id, organization_id=instance_org_id
-    ).delete()
+    NotificationSetting.objects.filter(user_id=user_id, organization_id=org_id).delete()
 
 
 @shared_task

@@ -282,8 +282,8 @@ def notification_setting_org_user_created(instance, created, **kwargs):
     if created and instance.is_admin:
         tasks.create_notification_settings_for_org_user.delay(
             org_user_id=instance.pk,
-            instance_user_id=instance.user_id,
-            instance_org_id=instance.organization_id,
+            user_id=instance.user_id,
+            org_id=instance.organization_id,
         )
 
 
@@ -312,8 +312,8 @@ def notification_setting_org_user_org_updated(instance, **kwargs):
             # The OrganizationUser is promoted to admin status
             tasks.create_notification_settings_for_org_user.delay(
                 org_user_id=instance.pk,
-                instance_user_id=instance.user_id,
-                instance_org_id=instance.organization_id,
+                user_id=instance.user_id,
+                org_id=instance.organization_id,
             )
     elif instance.is_admin and instance.organization_id != db_instance.organization_id:
         # Organization of the OrganizationUser has changed.
@@ -324,8 +324,8 @@ def notification_setting_org_user_org_updated(instance, **kwargs):
         ).delete()
         tasks.create_notification_settings_for_org_user.delay(
             org_user_id=instance.pk,
-            instance_user_id=instance.user_id,
-            instance_org_id=instance.organization_id,
+            user_id=instance.user_id,
+            org_id=instance.organization_id,
         )
 
 
@@ -336,7 +336,7 @@ def notification_setting_org_user_org_updated(instance, **kwargs):
 )
 def notification_setting_delete_org_user(instance, **kwargs):
     tasks.ns_organization_user_deleted.delay(
-        instance_user_id=instance.user_id, instance_org_id=instance.organization_id
+        user_id=instance.user_id, org_id=instance.organization_id
     )
 
 
