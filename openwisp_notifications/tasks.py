@@ -156,11 +156,23 @@ def ns_register_unregister_notification_type(
 
 
 @shared_task
-def create_notification_settings_for_org_user(org_user_id, user_id, org_id):
+def update_org_user_notificationsetting(org_user_id, user_id, org_id, is_org_admin):
     """
     Adds notification settings for all notification types when a new
     organization user is added.
     """
+    notification_settings = []
+    user = User.objects.get(pk=user_id)
+    # The following query covers conditions for change in admin status
+    # and organization field of related OrganizationUser objects
+    NotificationSetting.objects.filter(user=user).exclude(
+        organization_id__in=user.organizations_managed
+    ).delete()
+
+    if not is_org_admin:
+        return
+
+    # Create new notification settings
     notification_settings = []
     for notification_type in NOTIFICATION_TYPES.keys():
         notification_settings.append(
@@ -169,6 +181,8 @@ def create_notification_settings_for_org_user(org_user_id, user_id, org_id):
             )
         )
 
+    # NotificationSettings deleeted by user should
+    # not be re-created again due to UniqueConstraint
     NotificationSetting.objects.bulk_create(
         notification_settings, ignore_conflicts=True
     )

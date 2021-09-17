@@ -2,7 +2,7 @@ from openwisp_notifications.base.forms import NotificationSettingForm
 
 
 class NotificationSettingAdminMixin:
-    fields = ['type', 'organization', 'web', 'email']
+    fields = ['type', 'organization', 'web', 'email', 'deleted']
     readonly_fields = [
         'type',
         'organization',
@@ -19,10 +19,18 @@ class NotificationSettingAdminMixin:
         return request.user.is_superuser
 
     def has_delete_permission(self, request, obj=None):
-        return request.user.is_superuser
+        # A notification is considered deleted when the delete
+        # boolean field is set. A user can never delete
+        # NotificationSettting from the database.
+        return False
 
     def get_queryset(self, request):
-        return super().get_queryset(request).prefetch_related('organization')
+        return (
+            super()
+            .get_queryset(request)
+            .filter(deleted=False)
+            .prefetch_related('organization')
+        )
 
     class Media:
         extends = True

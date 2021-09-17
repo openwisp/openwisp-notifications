@@ -225,3 +225,21 @@ class TestNotificationSetting(TestOrganizationMixin, TestCase):
         ns = ns_queryset.first()
         self.assertEqual(ns.organization, default_org)
         self.assertEqual(ns.user, org_user.user)
+
+    def test_create_deleted_notificationsetting(self):
+        self._create_staff_org_admin()
+        ns = ns_queryset.first()
+        ns.deleted = True
+        ns.full_clean()
+        ns.save()
+
+        new_ns = NotificationSetting(
+            organization=ns.organization, user=ns.user, type=ns.type
+        )
+        new_ns.full_clean()
+        new_ns.save()
+        self.assertEqual(ns_queryset.count(), 1)
+        self.assertNotEqual(ns, new_ns)
+
+    def test_deleted_notificationsetting_not_autocreated(self):
+        pass

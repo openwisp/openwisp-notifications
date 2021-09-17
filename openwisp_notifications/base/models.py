@@ -5,6 +5,7 @@ from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.sites.models import Site
 from django.core.cache import cache
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models.constraints import UniqueConstraint
 from django.template.loader import render_to_string
@@ -203,6 +204,7 @@ class AbstractNotificationSetting(UUIDModel):
     email = models.BooleanField(
         _('email notifications'), null=True, blank=True, help_text=_(_RECEIVE_HELP)
     )
+    deleted = models.BooleanField(_('Delete'), null=True, blank=True, default=False,)
 
     class Meta:
         abstract = True
@@ -235,6 +237,26 @@ class AbstractNotificationSetting(UUIDModel):
         if self.web == self.type_config['web_notification']:
             self.web = None
         return super().full_clean(*args, **kwargs)
+
+    def validate_unique(self, exclude=None):
+        try:
+            return super().validate_unique(exclude=exclude)
+        except ValidationError as error:
+            try:
+                assert (
+                    'User notification settings with this Organization, '
+                    'Notification Type and User already exists.'
+                ) in error.message_dict['__all__']
+                # If user is adding a notificationsetting that they
+                # marked deleted then, delete the older notification setting
+                self._meta.model.objects.filter(
+                    user_id=self.user_id,
+                    organization=self.organization_id,
+                    type=self.type,
+                    deleted=True,
+                ).delete()
+            except (AttributeError, KeyError, AssertionError):
+                raise error
 
     @property
     def type_config(self):

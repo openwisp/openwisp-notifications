@@ -184,7 +184,7 @@ class TestAdmin(TestOrganizationMixin, TestMultitenantAdminMixin, TestCase):
 
     def test_notification_setting_inline_delete_permission(self):
         with self.subTest('Test for superuser'):
-            self.assertTrue(self.ns_inline.has_delete_permission(su_request))
+            self.assertFalse(self.ns_inline.has_delete_permission(su_request))
 
         with self.subTest('Test for non-superuser'):
             self.assertFalse(self.ns_inline.has_delete_permission(op_request))
@@ -206,6 +206,12 @@ class TestAdmin(TestOrganizationMixin, TestMultitenantAdminMixin, TestCase):
             self.assertTrue(
                 self.ns_inline.has_change_permission(op_request, obj=op_request.user),
             )
+
+    def test_queryset_not_contains_deleted_notification_setting(self):
+        pass
+
+    def test_notificationsetting_delete_field(self):
+        pass
 
     def test_org_admin_view_same_org_user_notification_setting(self):
         org_owner = self._create_org_user(user=self._get_operator(), is_admin=True,)
@@ -279,3 +285,6 @@ class TestAdmin(TestOrganizationMixin, TestMultitenantAdminMixin, TestCase):
         url = reverse('admin:openwisp_users_organization_add')
         response = self.client.get(url)
         self.assertNotContains(response, 'owIsChangeForm')
+
+    def test_user_deletes_notification_preference(self):
+        pass

@@ -10,13 +10,7 @@ from django.core.mail import EmailMultiAlternatives
 from django.db import transaction
 from django.db.models import Q
 from django.db.models.query import QuerySet
-from django.db.models.signals import (
-    post_delete,
-    post_migrate,
-    post_save,
-    pre_delete,
-    pre_save,
-)
+from django.db.models.signals import post_delete, post_migrate, post_save, pre_delete
 from django.dispatch import receiver
 from django.template.loader import render_to_string
 from django.utils import timezone
@@ -85,7 +79,9 @@ def notify_handler(**kwargs):
             # Create notification for users who have opted for receiving notifications.
             # For users who have not configured web_notifications,
             # use default from notification type
-            web_notification = Q(notificationsetting__web=True)
+            web_notification = Q(notificationsetting__web=True) & Q(
+                notificationsetting__deleted=False
+            )
             if notification_template['web_notification']:
                 web_notification |= Q(notificationsetting__web=None)
 
@@ -278,55 +274,13 @@ def notification_type_registered_unregistered_handler(sender, **kwargs):
     sender=OrganizationUser,
     dispatch_uid='create_orguser_notification_setting',
 )
-def notification_setting_org_user_created(instance, created, **kwargs):
-    if created and instance.is_admin:
-        tasks.create_notification_settings_for_org_user.delay(
-            org_user_id=instance.pk,
-            user_id=instance.user_id,
-            org_id=instance.organization_id,
-        )
-
-
-@receiver(
-    pre_save,
-    sender=OrganizationUser,
-    dispatch_uid='update_orguser_notification_setting',
-)
-def notification_setting_org_user_org_updated(instance, **kwargs):
-    # This method does not handles a case where user of
-    # an OrganizationUser changes
-    try:
-        db_instance = OrganizationUser.objects.get(pk=instance.id)
-    except OrganizationUser.DoesNotExist:
-        # This is a new instance, the post_save handler will
-        # create NotificationSetting for this
-        return
-
-    if instance.is_admin != db_instance.is_admin:
-        if instance.is_admin is False:
-            # The OrganizationUser is demoted from admin status
-            NotificationSetting.objects.filter(
-                organization_id=db_instance.organization_id, user_id=db_instance.user_id
-            ).delete()
-        else:
-            # The OrganizationUser is promoted to admin status
-            tasks.create_notification_settings_for_org_user.delay(
-                org_user_id=instance.pk,
-                user_id=instance.user_id,
-                org_id=instance.organization_id,
-            )
-    elif instance.is_admin and instance.organization_id != db_instance.organization_id:
-        # Organization of the OrganizationUser has changed.
-        # Delete NotificationSetting for previous organization
-        # Create NotificationSetting for new organization
-        NotificationSetting.objects.filter(
-            organization_id=db_instance.organization_id, user_id=db_instance.user_id
-        ).delete()
-        tasks.create_notification_settings_for_org_user.delay(
-            org_user_id=instance.pk,
-            user_id=instance.user_id,
-            org_id=instance.organization_id,
-        )
+def organization_user_post_save(instance, created, **kwargs):
+    tasks.update_org_user_notificationsetting.delay(
+        org_user_id=instance.pk,
+        user_id=instance.user_id,
+        org_id=instance.organization_id,
+        is_org_admin=instance.is_admin,
+    )
 
 
 @receiver(
