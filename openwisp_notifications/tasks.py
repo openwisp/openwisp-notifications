@@ -156,21 +156,13 @@ def ns_register_unregister_notification_type(
 
 
 @shared_task
-def ns_organization_user_added_or_updated(
-    instance_id, instance_user_id, instance_org_id
+def create_notification_settings_for_org_user(
+    org_user_id, instance_user_id, instance_org_id
 ):
     """
     Adds notification settings for all notification types when a new
     organization user is added.
     """
-    # If OrganizationUser's organization is updated then,
-    # delete notification setttings related to old organizations.
-    old_organization = OrganizationUser.objects.filter(pk=instance_id).values(
-        'organization'
-    )
-    NotificationSetting.objects.filter(organization_id__in=old_organization).delete()
-
-    # Create new notification settings
     notification_settings = []
     for notification_type in NOTIFICATION_TYPES.keys():
         notification_settings.append(

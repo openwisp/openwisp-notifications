@@ -128,13 +128,30 @@ class TestNotificationSetting(TestOrganizationMixin, TestCase):
 
         self.assertEqual(ns_queryset.count(), 0)
 
-    def test_superuser_demoted_to_org_user(self):
+    def test_superuser_demoted_to_org_admin(self):
         admin = self._get_admin()
         admin.is_superuser = False
         admin.save()
         org = Organization.objects.get(name='default')
         OrganizationUser.objects.create(user=admin, organization=org, is_admin=True)
 
+        self.assertEqual(ns_queryset.count(), 1)
+
+    def test_org_admin_demoted_to_org_user(self):
+        org_user = self._create_staff_org_admin()
+        self.assertEqual(ns_queryset.count(), 1)
+        org_user.organizationowner.delete()
+        org_user.is_admin = False
+        org_user.full_clean()
+        org_user.save()
+        self.assertEqual(ns_queryset.count(), 0)
+
+    def test_org_user_promoted_to_org_admin(self):
+        org_user = self._create_org_user(user=self._create_operator(), is_admin=False)
+        self.assertEqual(ns_queryset.count(), 0)
+        org_user.is_admin = True
+        org_user.full_clean()
+        org_user.save()
         self.assertEqual(ns_queryset.count(), 1)
 
     def test_multiple_org_membership(self):
@@ -179,8 +196,32 @@ class TestNotificationSetting(TestOrganizationMixin, TestCase):
         self.assertNotEqual(org_user.organization_id, default_org.pk)
         self.assertEqual(ns_queryset.count(), 1)
         org_user.organization_id = default_org.pk
+        org_user.full_clean()
         org_user.save()
 
         self.assertEqual(ns_queryset.count(), 1)
         notification_setting = ns_queryset.first()
         self.assertEqual(notification_setting.organization.pk, default_org.pk)
+
+    def test_organization_user_no_change_save(self):
+        org_user = self._create_staff_org_admin()
+        ns = ns_queryset.first()
+        self.assertEqual(ns_queryset.count(), 1)
+        org_user.full_clean()
+        org_user.save()
+        self.assertEqual(ns_queryset.count(), 1)
+        update_ns = ns_queryset.first()
+        self.assertEqual(ns.id, update_ns.id)
+
+    def test_org_user_promoted_to_org_admin_with_org_change(self):
+        default_org = Organization.objects.get(slug='default')
+        org_user = self._create_org_user(user=self._create_operator(), is_admin=False)
+        self.assertEqual(ns_queryset.count(), 0)
+        org_user.is_admin = True
+        org_user.organization = default_org
+        org_user.full_clean()
+        org_user.save()
+        self.assertEqual(ns_queryset.count(), 1)
+        ns = ns_queryset.first()
+        self.assertEqual(ns.organization, default_org)
+        self.assertEqual(ns.user, org_user.user)

@@ -274,14 +274,56 @@ def notification_type_registered_unregistered_handler(sender, **kwargs):
 
 
 @receiver(
-    pre_save,
+    post_save,
     sender=OrganizationUser,
     dispatch_uid='create_orguser_notification_setting',
 )
-def notification_setting_org_user_created(instance, **kwargs):
-    if instance.is_admin:
-        tasks.ns_organization_user_added_or_updated.delay(
-            instance_id=instance.pk,
+def notification_setting_org_user_created(instance, created, **kwargs):
+    if created and instance.is_admin:
+        tasks.create_notification_settings_for_org_user.delay(
+            org_user_id=instance.pk,
+            instance_user_id=instance.user_id,
+            instance_org_id=instance.organization_id,
+        )
+
+
+@receiver(
+    pre_save,
+    sender=OrganizationUser,
+    dispatch_uid='update_orguser_notification_setting',
+)
+def notification_setting_org_user_org_updated(instance, **kwargs):
+    # This method does not handles a case where user of
+    # an OrganizationUser changes
+    try:
+        db_instance = OrganizationUser.objects.get(pk=instance.id)
+    except OrganizationUser.DoesNotExist:
+        # This is a new instance, the post_save handler will
+        # create NotificationSetting for this
+        return
+
+    if instance.is_admin != db_instance.is_admin:
+        if instance.is_admin is False:
+            # The OrganizationUser is demoted from admin status
+            NotificationSetting.objects.filter(
+                organization_id=db_instance.organization_id, user_id=db_instance.user_id
+            ).delete()
+        else:
+            # The OrganizationUser is promoted to admin status
+            tasks.create_notification_settings_for_org_user.delay(
+                org_user_id=instance.pk,
+                instance_user_id=instance.user_id,
+                instance_org_id=instance.organization_id,
+            )
+    elif instance.is_admin and instance.organization_id != db_instance.organization_id:
+        # Organization of the OrganizationUser has changed.
+        # Delete NotificationSetting for previous organization
+        # Create NotificationSetting for new organization
+        NotificationSetting.objects.filter(
+            organization_id=db_instance.organization_id, user_id=db_instance.user_id
+        ).delete()
+        tasks.create_notification_settings_for_org_user.delay(
+            org_user_id=instance.pk,
             instance_user_id=instance.user_id,
             instance_org_id=instance.organization_id,
         )
