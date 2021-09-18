@@ -32,5 +32,4 @@ class NotificationSettingForm(ModelForm):
         widgets = {
             'web': widgets.CheckboxInput,
             'email': widgets.CheckboxInput,
-            'deleted': widgets.CheckboxInput,
         }

@@ -79,9 +79,7 @@ def notify_handler(**kwargs):
             # Create notification for users who have opted for receiving notifications.
             # For users who have not configured web_notifications,
             # use default from notification type
-            web_notification = Q(notificationsetting__web=True) & Q(
-                notificationsetting__deleted=False
-            )
+            web_notification = Q(notificationsetting__web=True)
             if notification_template['web_notification']:
                 web_notification |= Q(notificationsetting__web=None)
 
@@ -295,8 +293,10 @@ def notification_setting_delete_org_user(instance, **kwargs):
 
 
 @receiver(post_save, sender=User, dispatch_uid='user_notification_setting')
-def notification_setting_user_created(instance, created, **kwargs):
-    tasks.ns_user_created.delay(instance.pk, instance.is_superuser, created)
+def update_superuser_notification_settings(instance, created, **kwargs):
+    tasks.update_superuser_notification_settings.delay(
+        instance.pk, instance.is_superuser, created
+    )
 
 
 @receiver(

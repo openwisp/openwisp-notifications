@@ -41,4 +41,4 @@ def register_notification_type(type_name, type_config):
 
 def unregister_notification_type(type_name):
     base_unregister_notification_type(type_name)
-    NotificationSetting.objects.filter(type=type_name).delete()
+    NotificationSetting.objects.filter(type=type_name).update(deleted=True)

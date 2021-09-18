@@ -184,7 +184,7 @@ class TestAdmin(TestOrganizationMixin, TestMultitenantAdminMixin, TestCase):
 
     def test_notification_setting_inline_delete_permission(self):
         with self.subTest('Test for superuser'):
-            self.assertFalse(self.ns_inline.has_delete_permission(su_request))
+            self.assertTrue(self.ns_inline.has_delete_permission(su_request))
 
         with self.subTest('Test for non-superuser'):
             self.assertFalse(self.ns_inline.has_delete_permission(op_request))
@@ -206,22 +206,6 @@ class TestAdmin(TestOrganizationMixin, TestMultitenantAdminMixin, TestCase):
             self.assertTrue(
                 self.ns_inline.has_change_permission(op_request, obj=op_request.user),
             )
-
-    def test_queryset_not_contains_deleted_notification_setting(self):
-        ns = self.admin.notificationsetting_set.first()
-        ns.deleted = True
-        ns.save()
-        qs = self.ns_inline.get_queryset(su_request)
-        self.assertEqual(len(qs), 0)
-
-    def test_notificationsetting_delete_field(self):
-        with self.subTest('Test for operator'):
-            fields = self.ns_inline.get_fields(op_request)
-            self.assertNotIn('deleted', fields)
-
-        with self.subTest('Test for superuser'):
-            fields = self.ns_inline.get_fields(su_request)
-            self.assertIn('deleted', fields)
 
     def test_org_admin_view_same_org_user_notification_setting(self):
         org_owner = self._create_org_user(user=self._get_operator(), is_admin=True,)

@@ -85,7 +85,8 @@ class TestNotificationSetting(TestOrganizationMixin, TestCase):
         self.assertEqual(ns_queryset.count(), 2)
         org_user.delete()
         # OrganizationOwner can not be deleted before transferring ownership
-        self.assertEqual(ns_queryset.count(), 1)
+        self.assertEqual(ns_queryset.filter(deleted=False).count(), 1)
+        self.assertEqual(ns_queryset.filter(deleted=True).count(), 1)
 
     def test_register_notification_org_user(self):
         self._create_staff_org_admin()
@@ -107,10 +108,10 @@ class TestNotificationSetting(TestOrganizationMixin, TestCase):
         notification_type_registered_unregistered_handler(sender=self)
 
         # Notification Setting for "default" type are deleted
-        self.assertEqual(ns_queryset.count(), 0)
+        self.assertEqual(ns_queryset.filter(type='default', deleted=True).count(), 3)
 
         # Notification Settings for "test" type are created
-        queryset = NotificationSetting.objects
+        queryset = NotificationSetting.objects.filter(deleted=False)
         if NotificationSetting._meta.app_label == 'sample_notifications':
             self.assertEqual(queryset.count(), 6)
             self.assertEqual(queryset.filter(user=admin).count(), 4)
@@ -127,7 +128,7 @@ class TestNotificationSetting(TestOrganizationMixin, TestCase):
         admin.is_superuser = False
         admin.save()
 
-        self.assertEqual(ns_queryset.count(), 0)
+        self.assertEqual(ns_queryset.filter(deleted=True).count(), 1)
 
     def test_superuser_demoted_to_org_admin(self):
         admin = self._get_admin()
@@ -228,21 +229,6 @@ class TestNotificationSetting(TestOrganizationMixin, TestCase):
         ns = ns_queryset.first()
         self.assertEqual(ns.organization, default_org)
         self.assertEqual(ns.user, org_user.user)
-
-    def test_create_deleted_notificationsetting(self):
-        self._create_staff_org_admin()
-        ns = ns_queryset.first()
-        ns.deleted = True
-        ns.full_clean()
-        ns.save()
-
-        new_ns = NotificationSetting(
-            organization=ns.organization, user=ns.user, type=ns.type
-        )
-        new_ns.full_clean()
-        new_ns.save()
-        self.assertEqual(ns_queryset.count(), 1)
-        self.assertNotEqual(ns, new_ns)
 
     def test_deleted_notificationsetting_autocreated(self):
         org_user = self._create_staff_org_admin()
