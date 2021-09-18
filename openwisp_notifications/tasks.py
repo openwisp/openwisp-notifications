@@ -163,11 +163,12 @@ def update_org_user_notificationsetting(org_user_id, user_id, org_id, is_org_adm
     """
     notification_settings = []
     user = User.objects.get(pk=user_id)
-    # The following query covers conditions for change in admin status
-    # and organization field of related OrganizationUser objects
-    NotificationSetting.objects.filter(user=user).exclude(
-        organization_id__in=user.organizations_managed
-    ).delete()
+    if not user.is_superuser:
+        # The following query covers conditions for change in admin status
+        # and organization field of related OrganizationUser objects
+        NotificationSetting.objects.filter(user=user).exclude(
+            organization_id__in=user.organizations_managed
+        ).update(deleted=True)
 
     if not is_org_admin:
         return
@@ -180,6 +181,10 @@ def update_org_user_notificationsetting(org_user_id, user_id, org_id, is_org_adm
                 user_id=user_id, organization_id=org_id, type=notification_type,
             )
         )
+
+    NotificationSetting.objects.filter(
+        user=user, organization_id__in=user.organizations_managed
+    ).update(deleted=False)
 
     # NotificationSettings deleeted by user should
     # not be re-created again due to UniqueConstraint

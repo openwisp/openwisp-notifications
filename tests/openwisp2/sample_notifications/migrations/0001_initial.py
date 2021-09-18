@@ -180,6 +180,12 @@ class Migration(migrations.Migration):
                         to=settings.AUTH_USER_MODEL,
                     ),
                 ),
+                (
+                    'deleted',
+                    models.BooleanField(
+                        blank=True, default=False, null=True, verbose_name='Delete'
+                    ),
+                ),
             ],
             options={
                 'verbose_name': 'user notification settings',

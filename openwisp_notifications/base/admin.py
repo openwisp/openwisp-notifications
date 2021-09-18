@@ -15,6 +15,12 @@ class NotificationSettingAdminMixin:
         else:
             return self.readonly_fields
 
+    def get_fields(self, request, obj=None):
+        fields = super().get_fields(request)
+        if not request.user.is_superuser and 'deleted' in fields:
+            fields.remove('deleted')
+        return fields
+
     def has_add_permission(self, request, obj=None):
         return request.user.is_superuser
 

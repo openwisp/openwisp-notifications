@@ -227,6 +227,16 @@ class AbstractNotificationSetting(UUIDModel):
         )
 
     def save(self, *args, **kwargs):
+        qs = self._meta.model.objects.filter(
+            user_id=self.user_id,
+            organization=self.organization_id,
+            type=self.type,
+            deleted=True,
+        )
+        if qs.exists():
+            qs.update(deleted=False)
+            return
+
         if not self.web_notification:
             self.email = self.web_notification
         return super().save(*args, **kwargs)
@@ -248,13 +258,8 @@ class AbstractNotificationSetting(UUIDModel):
                     'Notification Type and User already exists.'
                 ) in error.message_dict['__all__']
                 # If user is adding a notificationsetting that they
-                # marked deleted then, delete the older notification setting
-                self._meta.model.objects.filter(
-                    user_id=self.user_id,
-                    organization=self.organization_id,
-                    type=self.type,
-                    deleted=True,
-                ).delete()
+                # marked deleted then this condition is handled in
+                # save method
             except (AttributeError, KeyError, AssertionError):
                 raise error
 

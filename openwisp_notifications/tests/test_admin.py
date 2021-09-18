@@ -208,10 +208,20 @@ class TestAdmin(TestOrganizationMixin, TestMultitenantAdminMixin, TestCase):
             )
 
     def test_queryset_not_contains_deleted_notification_setting(self):
-        pass
+        ns = self.admin.notificationsetting_set.first()
+        ns.deleted = True
+        ns.save()
+        qs = self.ns_inline.get_queryset(su_request)
+        self.assertEqual(len(qs), 0)
 
     def test_notificationsetting_delete_field(self):
-        pass
+        with self.subTest('Test for operator'):
+            fields = self.ns_inline.get_fields(op_request)
+            self.assertNotIn('deleted', fields)
+
+        with self.subTest('Test for superuser'):
+            fields = self.ns_inline.get_fields(su_request)
+            self.assertIn('deleted', fields)
 
     def test_org_admin_view_same_org_user_notification_setting(self):
         org_owner = self._create_org_user(user=self._get_operator(), is_admin=True,)
@@ -285,6 +295,3 @@ class TestAdmin(TestOrganizationMixin, TestMultitenantAdminMixin, TestCase):
         url = reverse('admin:openwisp_users_organization_add')
         response = self.client.get(url)
         self.assertNotContains(response, 'owIsChangeForm')
-
-    def test_user_deletes_notification_preference(self):
-        pass

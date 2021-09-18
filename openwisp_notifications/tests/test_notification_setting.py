@@ -1,4 +1,5 @@
 from django.core.exceptions import ImproperlyConfigured
+from django.db.models.signals import post_save
 from django.test import TestCase
 
 from openwisp_notifications.handlers import (
@@ -144,7 +145,8 @@ class TestNotificationSetting(TestOrganizationMixin, TestCase):
         org_user.is_admin = False
         org_user.full_clean()
         org_user.save()
-        self.assertEqual(ns_queryset.count(), 0)
+        self.assertEqual(ns_queryset.filter(deleted=False).count(), 0)
+        self.assertEqual(ns_queryset.filter(deleted=True).count(), 1)
 
     def test_org_user_promoted_to_org_admin(self):
         org_user = self._create_org_user(user=self._create_operator(), is_admin=False)
@@ -199,7 +201,8 @@ class TestNotificationSetting(TestOrganizationMixin, TestCase):
         org_user.full_clean()
         org_user.save()
 
-        self.assertEqual(ns_queryset.count(), 1)
+        self.assertEqual(ns_queryset.filter(deleted=True).count(), 1)
+        self.assertEqual(ns_queryset.filter(deleted=False).count(), 1)
         notification_setting = ns_queryset.first()
         self.assertEqual(notification_setting.organization.pk, default_org.pk)
 
@@ -241,5 +244,17 @@ class TestNotificationSetting(TestOrganizationMixin, TestCase):
         self.assertEqual(ns_queryset.count(), 1)
         self.assertNotEqual(ns, new_ns)
 
-    def test_deleted_notificationsetting_not_autocreated(self):
-        pass
+    def test_deleted_notificationsetting_autocreated(self):
+        org_user = self._create_staff_org_admin()
+        self.assertEqual(ns_queryset.count(), 1)
+        ns = ns_queryset.first()
+        ns.deleted = True
+        ns.full_clean()
+        ns.save()
+
+        # Emit post_save for organization user
+        post_save.send(sender=OrganizationUser, instance=org_user, created=False)
+
+        self.assertEqual(ns_queryset.count(), 1)
+        ns.refresh_from_db()
+        self.assertEqual(ns.deleted, False)
