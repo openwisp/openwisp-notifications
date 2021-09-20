@@ -86,6 +86,7 @@ def notify_handler(**kwargs):
             notification_setting = web_notification & Q(
                 notificationsetting__type=notification_type,
                 notificationsetting__organization_id=target_org,
+                notificationsetting__deleted=False,
             )
             where = where & notification_setting
             where_group = where_group & notification_setting

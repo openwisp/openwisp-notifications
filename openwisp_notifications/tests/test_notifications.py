@@ -157,6 +157,26 @@ class TestNotifications(TestOrganizationMixin, TestCase):
         self.assertEqual(Notification.objects.count(), 1)
         self.assertEqual(len(mail.outbox), 0)
 
+    def test_notification_preference_flagged_deleted(self):
+        self.notification_options.update(
+            {'type': 'default', 'target': self._get_org_user()}
+        )
+        NotificationSetting.objects.filter(
+            user_id=self.admin.pk, type='default'
+        ).update(deleted=True)
+        self._create_notification()
+        self.assertEqual(Notification.objects.count(), 0)
+
+    def test_notification_preference_deleted_from_db(self):
+        self.notification_options.update(
+            {'type': 'default', 'target': self._get_org_user()}
+        )
+        NotificationSetting.objects.filter(
+            user_id=self.admin.pk, type='default'
+        ).delete()
+        self._create_notification()
+        self.assertEqual(Notification.objects.count(), 0)
+
     def test_email_not_present(self):
         self.admin.email = ''
         self.admin.save()

@@ -130,6 +130,15 @@ class TestNotificationSetting(TestOrganizationMixin, TestCase):
 
         self.assertEqual(ns_queryset.filter(deleted=True).count(), 1)
 
+    def test_user_promoted_to_superuser(self):
+        user = self._create_operator()
+        self.assertEqual(ns_queryset.count(), 0)
+
+        user.is_superuser = True
+        user.save()
+
+        self.assertEqual(ns_queryset.count(), 1)
+
     def test_superuser_demoted_to_org_admin(self):
         admin = self._get_admin()
         admin.is_superuser = False

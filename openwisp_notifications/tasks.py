@@ -85,7 +85,7 @@ def create_notification_settings(user, organizations, notification_types):
 def update_superuser_notification_settings(instance_id, is_superuser, is_created):
     """
     Adds notification setting for all notification types and organizations.
-    If a superuser gets demoted, it flags it's notification settign as deleted.
+    If a superuser gets demoted, flags it's notification settings as deleted.
     """
     user = User.objects.get(pk=instance_id)
 
