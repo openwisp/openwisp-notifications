@@ -101,9 +101,11 @@ def update_superuser_notification_settings(instance_id, is_superuser, is_created
         return
 
     # Create notification settings for superuser
-    notification_types = NOTIFICATION_TYPES.keys()
-    organizations = Organization.objects.all()
-    create_notification_settings(user, organizations, notification_types)
+    create_notification_settings(
+        user=user,
+        organizations=Organization.objects.all(),
+        notification_types=NOTIFICATION_TYPES.keys(),
+    )
 
 
 @shared_task
@@ -160,8 +162,11 @@ def update_org_user_notificationsetting(org_user_id, user_id, org_id, is_org_adm
 
     # Create new notification settings
     organization = Organization.objects.get(id=org_id)
-    notification_types = NOTIFICATION_TYPES.keys()
-    create_notification_settings(user, [organization], notification_types)
+    create_notification_settings(
+        user=user,
+        organizations=[organization],
+        notification_types=NOTIFICATION_TYPES.keys(),
+    )
 
 
 @shared_task
@@ -181,10 +186,13 @@ def ns_organization_created(instance_id):
     Adds notification setting of all registered types
     for a newly created organization.
     """
-    notification_types = NOTIFICATION_TYPES.keys()
     organization = Organization.objects.get(id=instance_id)
     for user in User.objects.filter(is_superuser=True):
-        create_notification_settings(user, [organization], notification_types)
+        create_notification_settings(
+            user=user,
+            organizations=[organization],
+            notification_types=NOTIFICATION_TYPES.keys(),
+        )
 
 
 @shared_task
