@@ -615,7 +615,7 @@ Deleting Notification Preferences
 
 Deleting the notification preferences is an advanced option. Users should turn off web and email
 notifications instead of deleting notification preferences. Deleted notification preferences
-might get re-created by automation.
+may be re-created automatically if the system needs it.
 
 Silencing notifications for specific objects temporarily or permanently
 -----------------------------------------------------------------------
