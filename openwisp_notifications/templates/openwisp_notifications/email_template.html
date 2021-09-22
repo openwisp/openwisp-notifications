@@ -1,167 +1,109 @@
 {% load i18n %}
 {% load l10n %}
 <html lang="en">
-
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
   {% block styles %}
   <style type="text/css">
     body {
       min-width: 250px;
+      background: #ffe5e5;
+      margin: 0;
+      padding: 0;
     }
 
-    .background {
+    .container{
+      background: #ffe5e5;
       height: 100%;
-      background: linear-gradient(to bottom, #bb442c 50%, #464646 50%);
-      background-repeat: no-repeat;
-      background-attachment: fixed;
-      padding: 50px 0px;
-      min-width: 250px;
+      min-height: 500px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
     }
 
-    .container {
-      padding: 20px;
-      width: 75%;
-      margin: auto;
-      background-color: whitesmoke;
+    .box{
+      width: auto;
+      padding: 60px 40px;
+      background-color: #fcfcfc;
+      box-sizing: border-box;
+      box-shadow: 0 15px 25px rgba(256,256, 256,.5);
       border-radius: 10px;
+      margin: auto;
     }
 
-    .notification-description {
-      padding: 0px 30px;
+    .logo-container{
+      text-align: center;
+      margin-bottom: 25px;
     }
 
     .logo {
-      width: 100px;
+      max-width: 230px;
     }
 
-    table {
-      border-collapse: collapse;
-    }
-
-    td,
-    th {
-      padding: 10px;
-    }
-
-    .m-notification-header th {
-      width: 100%;
+    .call-to-action{
       text-align: center;
+      margin-top: 30px;
     }
 
-    .notification-header,
-    .m-notification-header {
-      background-color: #464646;
-      color: white;
+    .subject{
+      font-size: medium;
+      font-weight: 700;
+      margin: 20px 0;
     }
 
-    .notification-subject {
-      text-align: right;
-      word-break: break-word;
+    .msg{
+      color: #1b1818;
+      margin: 20px 0;
     }
 
-    .notification-subject a {
-      color: white;
+    .btn{
+      appearance: button;
+      text-decoration: none;
+      color: #fff!important;
+      background: #333;
+      border-radius: 4px;
+      border: 0;
+      padding: 10px 15px;
+      font-weight: 500;
+      font-size: 14px;
+      text-transform: uppercase;
     }
 
-    .links {
-      word-break: break-word;
+    .btn:hover, .btn:focus {
+      background: #000;
+      outline: 0 none;
+      background: rgba(51, 51, 51, 0.7);
     }
 
-    @media screen and (max-width: 250px) {
-      body {
-        width: 250px;
-      }
-
-      .background {
-        width: 250px;
-      }
-    }
-
-    @media screen and (max-width: 600px) {
-      .container {
-        padding: 10px;
-      }
-
-      .m-notification-header {
-        display: table-row;
-      }
-
-      .m-notification-header th {
-        width: 100%;
-        text-align: center;
-      }
-
-      .notification-header {
-        display: none;
-      }
-    }
-
-    @media screen and (min-width: 600px) {
-      .notification-header {
-        display: table-row;
-      }
-
-      .m-notification-header {
-        display: none;
-      }
+    a:link:hover {
+      text-decoration: none;
     }
   </style>
   {% endblock styles %}
 </head>
-
 <body>
   {% block body %}
-  <div class="background">
-    <div class="container">
-      <table style="width: 100%;">
-        <thead>
-          {% block notification_header %}
-          {% comment %}
-            Large screen devices' notification header
-          {% endcomment %}
-          <tr class="notification-header">
-            <th><img src="{{ OPENWISP_NOTIFICATIONS_EMAIL_LOGO }}" alt="Logo" id="logo" class="logo"></th>
-            <th class="notification-subject">{{ notification.email_subject }}</th>
-          </tr>
-          {% comment %}
-            Large screen devices' notification header ends
-            Mobile devices' notification header
-          {% endcomment %}
-          <tr class="m-notification-header">
-            <th><img src="{{ OPENWISP_NOTIFICATIONS_EMAIL_LOGO }}" alt="Logo" id="logo" class="logo"></th>
-          </tr>
-          <tr class="m-notification-header">
-            <th class="notification-subject">{{ notification.email_subject }}</th>
-          </tr>
-          {% comment %}
-            Mobile devices' notification header ends
-          {% endcomment %}
-          {% endblock notification_header %}
-        </thead>
-        <tbody>
-          {% block notification_body %}
-          <tr class="notification-body">
-            <td colspan="2">
-              <div class="notification-description">
-                {{ notification.email_message }}
-                {% if target_url %}
-                <p class="links">
-                  {% if notification.target %}
-                    <a href="{{ target_url }}">{% trans 'For further information see' %} "{{ notification.target_content_type.model }}: {{ notification.target }}".</a>
-                  {% else %}
-                    {% trans 'For further information see' %} <a href="{{ target_url }}">{{target_url}}</a>.
-                  {% endif %}
-                </p>
-                {% endif %}
-              </div>
-            </td>
-          </tr>
-          {% endblock notification_body %}
-        </tbody>
-      </table>
+  <div class="container">
+    <div class="box">
+      {% block notification_header %}
+      <div class="logo-container">
+        <img src="{{ OPENWISP_NOTIFICATIONS_EMAIL_LOGO }}" alt="Logo" id="logo" class="logo">
+      </div>
+      <div class="subject">
+        {{ notification.email_subject }}
+      </div>
+      {% endblock notification_header %}
+      {% block notification_body %}
+      <div class="msg">
+        {{ notification.email_message }}
+      </div>
+      {% if target_url %}
+      <div class="call-to-action">
+        <a href="{{ target_url }}" class="btn">{% trans 'Find out more' %}</a>
+      </div>
+      {% endif %}
+      {% endblock notification_body %}
     </div>
   </div>
   {% endblock body %}
