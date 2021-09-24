@@ -269,3 +269,39 @@ class AbstractIgnoreObjectNotification(UUIDModel):
     class Meta:
         abstract = True
         ordering = ['valid_till']
+
+
+class AbstractGeneralSetting(UUIDModel):
+    _DISABLE_HELP = (
+        'Note: If Yes is selected, ' 'User will not recieve any notifications. '
+    )
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    web = models.BooleanField(
+        _('disable web notifications'),
+        null=True,
+        blank=True,
+        help_text=_(_DISABLE_HELP),
+    )
+    email = models.BooleanField(
+        _('disable email notifications'),
+        null=True,
+        blank=True,
+        help_text=_(_DISABLE_HELP),
+    )
+
+    class Meta:
+        abstract = True
+        verbose_name = _('general settings')
+        verbose_name_plural = verbose_name
+        ordering = ['user']
+
+    def __str__(self):
+        return '{user} - general setting'.format(user=self.user.username)
+
+    @property
+    def email_notification(self):
+        return self.email
+
+    @property
+    def web_notification(self):
+        return self.web

@@ -1,6 +1,9 @@
 from django.contrib import admin
 
-from openwisp_notifications.base.admin import NotificationSettingAdminMixin
+from openwisp_notifications.base.admin import (
+    GeneralSettingAdminMixin,
+    NotificationSettingAdminMixin,
+)
 from openwisp_notifications.swapper import load_model
 from openwisp_notifications.widgets import _add_object_notification_widget
 from openwisp_users.admin import UserAdmin
@@ -8,6 +11,7 @@ from openwisp_utils.admin import AlwaysHasChangedMixin
 
 Notification = load_model('Notification')
 NotificationSetting = load_model('NotificationSetting')
+GeneralSetting = load_model('GeneralSetting')
 
 
 class NotificationSettingInline(
@@ -20,6 +24,12 @@ class NotificationSettingInline(
         return request.user.is_superuser or request.user == obj
 
 
-UserAdmin.inlines = [NotificationSettingInline] + UserAdmin.inlines
+class GeneralSettingAdmin(
+    GeneralSettingAdminMixin, AlwaysHasChangedMixin, admin.TabularInline
+):
+    model = GeneralSetting
+
+
+UserAdmin.inlines = [NotificationSettingInline, GeneralSettingAdmin] + UserAdmin.inlines
 
 _add_object_notification_widget()
