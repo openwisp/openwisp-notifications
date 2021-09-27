@@ -2,6 +2,7 @@ from datetime import timedelta
 from unittest.mock import patch
 
 from celery.exceptions import OperationalError
+from django.apps.registry import apps
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.core import mail
@@ -18,7 +19,6 @@ from django.utils.timesince import timesince
 from openwisp_notifications import settings as app_settings
 from openwisp_notifications import tasks
 from openwisp_notifications.handlers import (
-    NotificationsAppConfig,
     notify_handler,
     register_notification_cache_update,
 )
@@ -41,6 +41,8 @@ User = get_user_model()
 
 Notification = load_model('Notification')
 NotificationSetting = load_model('NotificationSetting')
+NotificationAppConfig = apps.get_app_config(Notification._meta.app_label)
+
 
 OrganizationUser = swapper_load_model('openwisp_users', 'OrganizationUser')
 Group = swapper_load_model('openwisp_users', 'Group')
@@ -51,6 +53,8 @@ notification_queryset = Notification.objects.order_by('-timestamp')
 
 
 class TestNotifications(TestOrganizationMixin, TestCase):
+    app_label = 'openwisp_notifications'
+
     def setUp(self):
         self.admin = self._create_admin()
         self.notification_options = dict(
@@ -843,9 +847,27 @@ class TestNotifications(TestOrganizationMixin, TestCase):
     @patch('logging.Logger.warning')
     def test_post_migrate_handler_celery_broker_unreachable(self, mocked_logger, *args):
         post_migrate.send(
-            sender=NotificationsAppConfig, app_config=NotificationsAppConfig
+            sender=NotificationAppConfig, app_config=NotificationAppConfig
         )
         mocked_logger.assert_called_once()
+
+    @patch.object(post_migrate, 'receivers', [])
+    @patch(
+        'openwisp_notifications.tasks.ns_register_unregister_notification_type.delay',
+    )
+    def test_post_migrate_populate_notification_settings(self, mocked_task, *args):
+        with patch.object(app_settings, 'POPULATE_PREFERENCES_ON_MIGRATE', False):
+            NotificationAppConfig.ready()
+            post_migrate.send(
+                sender=NotificationAppConfig, app_config=NotificationAppConfig
+            )
+            mocked_task.assert_not_called()
+        with patch.object(app_settings, 'POPULATE_PREFERENCES_ON_MIGRATE', True):
+            NotificationAppConfig.ready()
+            post_migrate.send(
+                sender=NotificationAppConfig, app_config=NotificationAppConfig
+            )
+            mocked_task.assert_called_once()
 
 
 class TestTransactionNotifications(TestOrganizationMixin, TransactionTestCase):

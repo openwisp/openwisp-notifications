@@ -827,6 +827,18 @@ model, then configure the setting as following:
 
     OPENWISP_NOTIFICATIONS_IGNORE_ENABLED_ADMIN = ['openwisp_users.admin.UserAdmin']
 
+``OPENWISP_NOTIFICATIONS_POPULATE_PREFERENCES_ON_MIGRATE``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
++---------+----------+
+| type    | ``bool`` |
++---------+----------+
+| default | ``True`` |
++---------+----------+
+
+This setting allows to disable creating `notification preferences <#notification-preferences>`_
+on running migrations.
+
 Exceptions
 ----------
 

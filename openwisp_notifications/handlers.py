@@ -1,7 +1,6 @@
 import logging
 
 from celery.exceptions import OperationalError
-from django.apps import apps
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
@@ -10,7 +9,7 @@ from django.core.mail import EmailMultiAlternatives
 from django.db import transaction
 from django.db.models import Q
 from django.db.models.query import QuerySet
-from django.db.models.signals import post_delete, post_migrate, post_save, pre_delete
+from django.db.models.signals import post_delete, post_save, pre_delete
 from django.dispatch import receiver
 from django.template.loader import render_to_string
 from django.utils import timezone
@@ -32,7 +31,6 @@ User = get_user_model()
 Notification = load_model('Notification')
 NotificationSetting = load_model('NotificationSetting')
 IgnoreObjectNotification = load_model('IgnoreObjectNotification')
-NotificationsAppConfig = apps.get_app_config(NotificationSetting._meta.app_label)
 
 Group = swapper_load_model('openwisp_users', 'Group')
 OrganizationUser = swapper_load_model('openwisp_users', 'OrganizationUser')
@@ -249,11 +247,6 @@ def related_object_deleted(sender, instance, **kwargs):
         )
 
 
-@receiver(
-    post_migrate,
-    sender=NotificationsAppConfig,
-    dispatch_uid='register_unregister_notification_types',
-)
 def notification_type_registered_unregistered_handler(sender, **kwargs):
     try:
         tasks.ns_register_unregister_notification_type.delay()
