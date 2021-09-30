@@ -1,3 +1,6 @@
+from unittest.mock import patch
+
+from django.apps.registry import apps
 from django.contrib.contenttypes.models import ContentType
 from django.core.cache import cache
 
@@ -26,6 +29,7 @@ from openwisp_notifications.tests.test_utils import (
 from ..models import TestApp
 
 Notification = load_model('Notification')
+NotificationAppConfig = apps.get_app_config(Notification._meta.app_label)
 
 
 class TestAdmin(BaseTestAdmin):
@@ -34,8 +38,7 @@ class TestAdmin(BaseTestAdmin):
 
 class TestNotifications(BaseTestNotifications):
     # Used only for testing openwisp-notifications
-    def test_test_app_object_created_notification(self):
-
+    def test_app_object_created_notification(self):
         OrganizationUser = swapper_load_model('openwisp_users', 'OrganizationUser')
 
         org = self._get_org()
@@ -51,6 +54,12 @@ class TestNotifications(BaseTestNotifications):
         self.assertEqual(n.target, oum_obj)
         self.assertEqual(n.message, '<p>Test object created.</p>')
         n.delete()
+
+    @patch.object(
+        NotificationAppConfig, 'register_notification_types', return_value=None
+    )
+    def test_post_migrate_populate_notification_settings(self, *args):
+        super().test_post_migrate_populate_notification_settings()
 
 
 class TestTransactionNotifications(BaseTestTransactionNotifications):

@@ -1,7 +1,6 @@
 import logging
 
 from celery.exceptions import OperationalError
-from django.apps import apps
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
@@ -10,13 +9,7 @@ from django.core.mail import EmailMultiAlternatives
 from django.db import transaction
 from django.db.models import Q
 from django.db.models.query import QuerySet
-from django.db.models.signals import (
-    post_delete,
-    post_migrate,
-    post_save,
-    pre_delete,
-    pre_save,
-)
+from django.db.models.signals import post_delete, post_save, pre_delete
 from django.dispatch import receiver
 from django.template.loader import render_to_string
 from django.utils import timezone
@@ -38,7 +31,6 @@ User = get_user_model()
 Notification = load_model('Notification')
 NotificationSetting = load_model('NotificationSetting')
 IgnoreObjectNotification = load_model('IgnoreObjectNotification')
-NotificationsAppConfig = apps.get_app_config(NotificationSetting._meta.app_label)
 
 Group = swapper_load_model('openwisp_users', 'Group')
 OrganizationUser = swapper_load_model('openwisp_users', 'OrganizationUser')
@@ -92,6 +84,7 @@ def notify_handler(**kwargs):
             notification_setting = web_notification & Q(
                 notificationsetting__type=notification_type,
                 notificationsetting__organization_id=target_org,
+                notificationsetting__deleted=False,
             )
             where = where & notification_setting
             where_group = where_group & notification_setting
@@ -254,11 +247,6 @@ def related_object_deleted(sender, instance, **kwargs):
         )
 
 
-@receiver(
-    post_migrate,
-    sender=NotificationsAppConfig,
-    dispatch_uid='register_unregister_notification_types',
-)
 def notification_type_registered_unregistered_handler(sender, **kwargs):
     try:
         tasks.ns_register_unregister_notification_type.delay()
@@ -274,17 +262,17 @@ def notification_type_registered_unregistered_handler(sender, **kwargs):
 
 
 @receiver(
-    pre_save,
+    post_save,
     sender=OrganizationUser,
     dispatch_uid='create_orguser_notification_setting',
 )
-def notification_setting_org_user_created(instance, **kwargs):
-    if instance.is_admin:
-        tasks.ns_organization_user_added_or_updated.delay(
-            instance_id=instance.pk,
-            instance_user_id=instance.user_id,
-            instance_org_id=instance.organization_id,
-        )
+def organization_user_post_save(instance, created, **kwargs):
+    tasks.update_org_user_notificationsetting.delay(
+        org_user_id=instance.pk,
+        user_id=instance.user_id,
+        org_id=instance.organization_id,
+        is_org_admin=instance.is_admin,
+    )
 
 
 @receiver(
@@ -294,13 +282,15 @@ def notification_setting_org_user_created(instance, **kwargs):
 )
 def notification_setting_delete_org_user(instance, **kwargs):
     tasks.ns_organization_user_deleted.delay(
-        instance_user_id=instance.user_id, instance_org_id=instance.organization_id
+        user_id=instance.user_id, org_id=instance.organization_id
     )
 
 
 @receiver(post_save, sender=User, dispatch_uid='user_notification_setting')
-def notification_setting_user_created(instance, created, **kwargs):
-    tasks.ns_user_created.delay(instance.pk, instance.is_superuser, created)
+def update_superuser_notification_settings(instance, created, **kwargs):
+    tasks.update_superuser_notification_settings.delay(
+        instance.pk, instance.is_superuser, created
+    )
 
 
 @receiver(

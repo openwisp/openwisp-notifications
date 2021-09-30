@@ -22,7 +22,12 @@ class NotificationSettingAdminMixin:
         return request.user.is_superuser
 
     def get_queryset(self, request):
-        return super().get_queryset(request).prefetch_related('organization')
+        return (
+            super()
+            .get_queryset(request)
+            .filter(deleted=False)
+            .prefetch_related('organization')
+        )
 
     class Media:
         extends = True

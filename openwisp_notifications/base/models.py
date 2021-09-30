@@ -203,6 +203,7 @@ class AbstractNotificationSetting(UUIDModel):
     email = models.BooleanField(
         _('email notifications'), null=True, blank=True, help_text=_(_RECEIVE_HELP)
     )
+    deleted = models.BooleanField(_('Delete'), null=True, blank=True, default=False)
 
     class Meta:
         abstract = True
