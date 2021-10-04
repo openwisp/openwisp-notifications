@@ -482,7 +482,7 @@ Syntax:
 
 .. code-block:: python
 
-    register_notification_type(type_name, type_config)
+    register_notification_type(type_name, type_config, models)
 
 +---------------+-------------------------------------------------------------+
 | **Parameter** | **Description**                                             |
@@ -491,12 +491,18 @@ Syntax:
 +---------------+-------------------------------------------------------------+
 | type_config   | A ``dict`` defining configuration of the notification type. |
 +---------------+-------------------------------------------------------------+
+| models        | A ``list`` of models that can be associated with the        |
+|               | notification type.                                          |
++---------------+-------------------------------------------------------------+
 
 An example usage has been shown below.
 
 .. code-block:: python
 
     from openwisp_notifications.types import register_notification_type
+    from django.contrib.auth import get_user_model
+
+    User = get_user_model()
 
     # Define configuration of your notification type
     custom_type = {
@@ -510,7 +516,7 @@ An example usage has been shown below.
     }
 
     # Register your custom notification type
-    register_notification_type('custom_type', custom_type)
+    register_notification_type('custom_type', custom_type, models=[User])
 
 **Note**: It will raise ``ImproperlyConfigured`` exception if a notification type is already registered
 with same name(not to be confused with ``verbose_name``).

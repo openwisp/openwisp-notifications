@@ -32,8 +32,8 @@ class MessagingRequest(HttpRequest):
         return [str(m) for m in self.get_messages()]
 
 
-def register_notification_type(type_name, type_config):
-    base_register_notification_type(type_name, type_config)
+def register_notification_type(type_name, type_config, triggers=[]):
+    base_register_notification_type(type_name, type_config, triggers)
     ns_register_unregister_notification_type.delay(
         notification_type=type_name, delete_unregistered=False
     )
