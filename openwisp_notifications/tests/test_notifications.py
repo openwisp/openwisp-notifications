@@ -8,7 +8,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.core import mail
 from django.core.cache import cache
 from django.core.exceptions import ImproperlyConfigured
-from django.db.models.signals import post_migrate, post_save, pre_delete
+from django.db.models.signals import post_migrate, post_save
 from django.template import TemplateDoesNotExist
 from django.test import TestCase, TransactionTestCase
 from django.urls import reverse
@@ -507,34 +507,36 @@ class TestNotifications(TestOrganizationMixin, TestCase):
                 ' {notification.actor} with {notification.action_object} for {notification.target}'
             ),
         }
-        register_notification_type('test_type', test_type)
+        register_notification_type('test_type', test_type, models=[User])
         self.notification_options.pop('email_subject')
         self.notification_options.update({'type': 'test_type'})
-        operator = self._get_operator()
 
         with self.subTest("Missing target object after creation"):
+            operator = self._get_operator()
             self.notification_options.update({'target': operator})
             self._create_notification()
-            pre_delete.send(sender=self, instance=operator)
+            operator.delete()
 
             n_count = notification_queryset.count()
             self.assertEqual(n_count, 0)
 
         with self.subTest("Missing action object after creation"):
+            operator = self._get_operator()
             self.notification_options.pop('target')
             self.notification_options.update({'action_object': operator})
             self._create_notification()
-            pre_delete.send(sender=self, instance=operator)
+            operator.delete()
 
             n_count = notification_queryset.count()
             self.assertEqual(n_count, 0)
 
         with self.subTest("Missing actor object after creation"):
+            operator = self._get_operator()
             self.notification_options.pop('action_object')
             self.notification_options.pop('url')
             self.notification_options.update({'sender': operator})
             self._create_notification()
-            pre_delete.send(sender=self, instance=operator)
+            operator.delete()
 
             n_count = notification_queryset.count()
             self.assertEqual(n_count, 0)
@@ -857,6 +859,13 @@ class TestNotifications(TestOrganizationMixin, TestCase):
                 sender=NotificationAppConfig, app_config=NotificationAppConfig
             )
             mocked_task.assert_called_once()
+
+    @patch('openwisp_notifications.types.NOTIFICATION_ASSOCIATED_MODELS', set())
+    @patch('openwisp_notifications.tasks.delete_obsolete_objects.delay')
+    def test_delete_obsolete_tasks(self, mocked_task, *args):
+        user = self._create_user()
+        user.delete()
+        mocked_task.assert_not_called()
 
 
 class TestTransactionNotifications(TestOrganizationMixin, TransactionTestCase):

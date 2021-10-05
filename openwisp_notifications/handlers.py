@@ -9,7 +9,7 @@ from django.core.mail import EmailMultiAlternatives
 from django.db import transaction
 from django.db.models import Q
 from django.db.models.query import QuerySet
-from django.db.models.signals import post_delete, post_save, pre_delete
+from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 from django.template.loader import render_to_string
 from django.utils import timezone
@@ -19,7 +19,10 @@ from openwisp_notifications import settings as app_settings
 from openwisp_notifications import tasks
 from openwisp_notifications.exceptions import NotificationRenderException
 from openwisp_notifications.swapper import load_model, swapper_load_model
-from openwisp_notifications.types import get_notification_configuration
+from openwisp_notifications.types import (
+    NOTIFICATION_ASSOCIATED_MODELS,
+    get_notification_configuration,
+)
 from openwisp_notifications.websockets import handlers as ws_handlers
 
 logger = logging.getLogger(__name__)
@@ -232,12 +235,14 @@ def clear_notification_cache(sender, instance, **kwargs):
     )
 
 
-@receiver(pre_delete, dispatch_uid='delete_obsolete_objects')
+@receiver(post_delete, dispatch_uid='delete_obsolete_objects')
 def related_object_deleted(sender, instance, **kwargs):
     """
     Delete Notification and IgnoreObjectNotification objects having
     "instance" as related object.
     """
+    if sender not in NOTIFICATION_ASSOCIATED_MODELS:
+        return
     instance_id = getattr(instance, 'pk', None)
     if instance_id:
         instance_model = instance._meta.model_name
