@@ -491,8 +491,8 @@ Syntax:
 +---------------+-------------------------------------------------------------+
 | type_config   | A ``dict`` defining configuration of the notification type. |
 +---------------+-------------------------------------------------------------+
-| models        | A ``list`` of models that can be associated with the        |
-|               | notification type.                                          |
+| models        | An optional ``list`` of models that can be associated with  |
+|               | the notification type.                                      |
 +---------------+-------------------------------------------------------------+
 
 An example usage has been shown below.

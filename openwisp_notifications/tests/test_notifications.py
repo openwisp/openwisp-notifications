@@ -507,7 +507,7 @@ class TestNotifications(TestOrganizationMixin, TestCase):
                 ' {notification.actor} with {notification.action_object} for {notification.target}'
             ),
         }
-        register_notification_type('test_type', test_type, triggers=[User])
+        register_notification_type('test_type', test_type, models=[User])
         self.notification_options.pop('email_subject')
         self.notification_options.update({'type': 'test_type'})
 

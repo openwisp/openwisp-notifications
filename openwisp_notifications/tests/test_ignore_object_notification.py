@@ -1,11 +1,16 @@
 from unittest.mock import patch
 
+from django.db.utils import OperationalError
 from django.test import TestCase
 from django.utils import timezone
 
+from openwisp_notifications import tasks
 from openwisp_notifications.signals import notify
 from openwisp_notifications.swapper import load_model
 from openwisp_users.tests.utils import TestOrganizationMixin
+
+from ..types import NOTIFICATION_TYPES
+from .test_helpers import register_notification_type
 
 IgnoreObjectNotification = load_model('IgnoreObjectNotification')
 Notification = load_model('Notification')
@@ -42,11 +47,24 @@ class TestIgnoreObjectNotification(TestOrganizationMixin, TestCase):
         self.assertEqual(Notification.objects.count(), 0)
 
     @patch('openwisp_notifications.tasks.delete_ignore_object_notification.apply_async')
-    def test_related_object_deleted(self, mocked_task):
-        IgnoreObjectNotification.objects.create(
-            object=self.obj,
-            user=self.admin,
-            valid_till=(timezone.now() + timezone.timedelta(days=1)),
+    def test_related_object_deleted(self, *args):
+        type_config = NOTIFICATION_TYPES['default']
+        with patch('openwisp_notifications.types.NOTIFICATION_TYPES', {}):
+            register_notification_type(
+                'test', type_config, models=[self.obj._meta.model]
+            )
+            IgnoreObjectNotification.objects.create(
+                object=self.obj,
+                user=self.admin,
+                valid_till=(timezone.now() + timezone.timedelta(days=1)),
+            )
+            self.obj.delete()
+            self.assertEqual(on_queryset.count(), 0)
+
+    @patch.object(
+        IgnoreObjectNotification.objects, 'filter', side_effect=OperationalError
+    )
+    def test_related_object_deleted_task(self, *args):
+        tasks.delete_obsolete_objects.delay(
+            self.obj._meta.app_label, self.obj._meta.model_name, self.obj.id
         )
-        self.obj.delete()
-        self.assertEqual(on_queryset.count(), 0)
