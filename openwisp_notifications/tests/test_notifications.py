@@ -10,7 +10,7 @@ from django.core.cache import cache
 from django.core.exceptions import ImproperlyConfigured
 from django.db.models.signals import post_migrate, post_save
 from django.template import TemplateDoesNotExist
-from django.test import TestCase, TransactionTestCase
+from django.test import TransactionTestCase
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.html import strip_tags
@@ -52,7 +52,7 @@ ten_minutes_ago = start_time - timedelta(minutes=10)
 notification_queryset = Notification.objects.order_by('-timestamp')
 
 
-class TestNotifications(TestOrganizationMixin, TestCase):
+class TestNotifications(TestOrganizationMixin, TransactionTestCase):
     app_label = 'openwisp_notifications'
 
     def setUp(self):
@@ -194,7 +194,7 @@ class TestNotifications(TestOrganizationMixin, TestCase):
         user = self._create_user(
             username='user', email='user@user.com', first_name='User', last_name='user'
         )
-        op_group = Group.objects.get(name='Operator')
+        op_group = Group.objects.create(name='Operator')
         op_group.user_set.add(operator)
         op_group.user_set.add(user)
         op_group.save()

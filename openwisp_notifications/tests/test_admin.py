@@ -193,9 +193,8 @@ class TestAdmin(TestOrganizationMixin, TestMultitenantAdminMixin, TestCase):
         response = self.client.get(
             reverse('admin:openwisp_users_user_change', args=(self.admin.pk,))
         )
-        self.assertContains(
-            response, '<option value="default" selected>Default Type</option>'
-        )
+        self.assertContains(response, '<option value="default">Default Type</option>')
+        self.assertContains(response, '<option value="" selected>---------</option>')
 
     def test_notification_setting_inline_admin_has_change_permission(self):
         with self.subTest('Test for superuser'):

@@ -1,6 +1,6 @@
 from django.core.exceptions import ImproperlyConfigured
 from django.db.models.signals import post_save
-from django.test import TestCase
+from django.test import TransactionTestCase
 
 from openwisp_notifications.handlers import (
     notification_type_registered_unregistered_handler,
@@ -30,7 +30,11 @@ OrganizationUser = swapper_load_model('openwisp_users', 'OrganizationUser')
 ns_queryset = NotificationSetting.objects.filter(type='default')
 
 
-class TestNotificationSetting(TestOrganizationMixin, TestCase):
+class TestNotificationSetting(TestOrganizationMixin, TransactionTestCase):
+    def setUp(self):
+        if not Organization.objects.first():
+            self._create_org(name='default', slug='default')
+
     def tearDown(self):
         super().tearDown()
         try:
@@ -61,6 +65,9 @@ class TestNotificationSetting(TestOrganizationMixin, TestCase):
 
         self._get_admin()
         self.assertEqual(queryset.count(), 1)
+        self.assertEquals(
+            queryset.first().__str__(), 'Test Notification Type - default'
+        )
 
     def test_organization_created_no_initial_user(self):
         org = self._get_org()

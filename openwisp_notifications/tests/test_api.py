@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 from django.contrib.contenttypes.models import ContentType
 from django.core.cache import cache
-from django.test import TestCase
+from django.test import TransactionTestCase
 from django.urls import reverse
 from django.utils import timezone
 from rest_framework.exceptions import ErrorDetail
@@ -30,11 +30,15 @@ OrganizationUser = swapper_load_model('openwisp_users', 'OrganizationUser')
 NOT_FOUND_ERROR = ErrorDetail(string='Not found.', code='not_found')
 
 
-class TestNotificationApi(TestCase, TestOrganizationMixin, AuthenticationMixin):
+class TestNotificationApi(
+    TransactionTestCase, TestOrganizationMixin, AuthenticationMixin
+):
     url_namespace = 'notifications'
 
     def setUp(self):
         self.admin = self._get_admin(self)
+        if not Organization.objects.first():
+            self._create_org(name='default', slug='default')
         self.client.force_login(self.admin)
 
     def _get_path(self, url_name, *args, **kwargs):
@@ -788,14 +792,19 @@ class TestNotificationApi(TestCase, TestOrganizationMixin, AuthenticationMixin):
         number_of_obj_notifications = 21
         url = reverse(f'{self.url_namespace}:ignore_object_notification_list')
         ignore_obj_notifications = []
+        content_type = ContentType.objects.filter(
+            app_label='openwisp_users', model='user'
+        ).first()
         for _ in range(number_of_obj_notifications):
             ignore_obj_notifications.append(
                 IgnoreObjectNotification(
-                    user=self.admin, object_id=uuid.uuid4(), object_content_type_id=12
+                    user=self.admin,
+                    object_id=uuid.uuid4(),
+                    object_content_type_id=content_type.id,
                 )
             )
         IgnoreObjectNotification.objects.bulk_create(
-            ignore_obj_notifications, ignore_conflicts=True
+            ignore_obj_notifications, ignore_conflicts=False
         )
         self.assertEqual(
             IgnoreObjectNotification.objects.count(), number_of_obj_notifications
