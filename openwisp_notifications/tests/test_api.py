@@ -871,3 +871,18 @@ class TestNotificationApi(
             self.assertIn('object_id', ignore_obj_notification)
             self.assertIn('object_content_type', ignore_obj_notification)
             self.assertIsNone(ignore_obj_notification['valid_till'])
+
+    @patch('openwisp_notifications.tasks.delete_notification.delay')
+    def test_deleted_notification_type(self, *args):
+        notify.send(sender=self.admin, type='default', target=self.admin)
+        with patch('openwisp_notifications.types.NOTIFICATION_TYPES', {}):
+            url = self._get_path('notifications_list')
+            response = self.client.get(url)
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(len(response.data['results']), 0)
+            self.assertEqual(Notification.objects.count(), 1)
+
+            notification = Notification.objects.first()
+            url = self._get_path('notification_detail', notification.pk)
+            response = self.client.get(url)
+            self.assertEqual(response.status_code, 404)

@@ -5,6 +5,7 @@ from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.sites.models import Site
 from django.core.cache import cache
+from django.core.exceptions import ImproperlyConfigured
 from django.db import models
 from django.db.models.constraints import UniqueConstraint
 from django.template.loader import render_to_string
@@ -100,9 +101,8 @@ class AbstractNotification(UUIDModel, BaseNotification):
             self.target_link = (
                 self.target_url if not email_message else self.redirect_view_url
             )
-
-            config = get_notification_configuration(self.type)
             try:
+                config = get_notification_configuration(self.type)
                 data = self.data or {}
                 if 'message' in config:
                     md_text = config['message'].format(notification=self, **data)
@@ -110,7 +110,7 @@ class AbstractNotification(UUIDModel, BaseNotification):
                     md_text = render_to_string(
                         config['message_template'], context=dict(notification=self)
                     ).strip()
-            except (AttributeError, KeyError) as e:
+            except (AttributeError, KeyError, ImproperlyConfigured) as e:
                 from openwisp_notifications.tasks import delete_notification
 
                 logger.error(e)
