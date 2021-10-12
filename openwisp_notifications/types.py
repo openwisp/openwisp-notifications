@@ -1,6 +1,8 @@
 from django.core.exceptions import ImproperlyConfigured
 from django.template.loader import get_template
 
+from .exceptions import NotificationRenderException
+
 NOTIFICATION_TYPES = {
     'default': {
         'level': 'info',
@@ -27,7 +29,9 @@ def get_notification_configuration(notification_type):
     try:
         return NOTIFICATION_TYPES[notification_type]
     except KeyError:
-        raise ImproperlyConfigured(f'No such Notification Type, {notification_type}')
+        raise NotificationRenderException(
+            f'No such Notification Type, {notification_type}'
+        )
 
 
 def _validate_notification_type(type_config):
