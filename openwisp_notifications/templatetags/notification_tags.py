@@ -44,6 +44,11 @@ def notification_widget():
                 <span class="toggle-btn" id="ow-show-unread" tabindex="0" role="button">
                 Show unread only</span>
             </div>
+            <div id="ow-notification-dropdown-error-container">
+                <p id="ow-notification-dropdown-error">
+                    Failed to mark notifications as unread. Try again later.
+                </p>
+            </div>
             <div class="ow-notification-wrapper ow-round-bottom-border">
                 <div id="ow-notifications-loader" class="ow-hide"><div class="loader"></div></div>
             </div>

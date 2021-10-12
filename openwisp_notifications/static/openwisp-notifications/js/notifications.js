@@ -151,6 +151,9 @@ function notificationWidget($) {
             },
             error: function (error) {
                 busy = false;
+                showNotificationDropdownError(
+                    'Failed to fetch notifications. Try again later.'
+                );
                 throw error;
             },
         });
@@ -234,11 +237,28 @@ function notificationWidget($) {
         onUpdate();
     }
 
+    function showNotificationDropdownError(message) {
+        $('#ow-notification-dropdown-error').html(message);
+        $('#ow-notification-dropdown-error-container').slideDown(1000);
+        setTimeout(closeNotificationDropdownError, 10000);
+    }
+
+    function closeNotificationDropdownError() {
+        $('#ow-notification-dropdown-error-container').slideUp(1000, function () {
+            $('#ow-notification-dropdown-error').html('');
+        });
+    }
+
+    $('#ow-notification-dropdown-error-container').on(
+        'click mouseleave focusout',
+        closeNotificationDropdownError
+    );
+
     $('.ow-notifications').on('click', initNotificationWidget);
 
     // Handler for filtering unread notifications
     $('#ow-show-unread').click(function () {
-        if ($(this).html() === 'Show unread only') {
+        if ($(this).html().includes('Show unread only')) {
             refreshNotificationWidget(null, '/api/v1/notification/?unread=true');
             $(this).html('Show all');
         } else {
@@ -249,6 +269,9 @@ function notificationWidget($) {
 
     // Handler for marking all notifications read
     $('#ow-mark-all-read').click(function () {
+        var unreads = $('.ow-notification-elem.unread');
+        unreads.removeClass('unread');
+        $('#ow-notification-count').hide();
         $.ajax({
             type: 'POST',
             url: getAbsoluteUrl('/api/v1/notification/read/'),
@@ -260,10 +283,15 @@ function notificationWidget($) {
             },
             crossDomain: true,
             success: function () {
-                refreshNotificationWidget();
                 $('#ow-show-unread').html('Show unread only');
+                $('#ow-notification-count').remove();
             },
             error: function (error) {
+                unreads.addClass('unread');
+                $('#ow-notification-count').show();
+                showNotificationDropdownError(
+                    'Failed to mark notifications as unread. Try again later.'
+                );
                 throw error;
             },
         });

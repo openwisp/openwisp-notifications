@@ -226,6 +226,18 @@
 .ow-notification-dropdown .toggle-btn:focus {
   outline: 0.5px dotted rgba(0, 0, 0, 0.25);
 }
+#ow-notification-dropdown-error-container{
+  color: #c51b25;
+  background-color: #FFD2D2;
+  display: none;
+}
+#ow-notification-dropdown-error{
+  margin: auto;
+  width: 90%;
+  text-align: center;
+  padding: 6px;
+  font-weight: bold;
+}
 
 /* Loader */
 #ow-notifications-loader {
