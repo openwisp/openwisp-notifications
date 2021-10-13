@@ -152,7 +152,7 @@ function notificationWidget($) {
             error: function (error) {
                 busy = false;
                 showNotificationDropdownError(
-                    'Failed to fetch notifications. Try again later.'
+                    gettext('Failed to fetch notifications. Try again later.')
                 );
                 throw error;
             },
@@ -290,7 +290,7 @@ function notificationWidget($) {
                 unreads.addClass('unread');
                 $('#ow-notification-count').show();
                 showNotificationDropdownError(
-                    'Failed to mark notifications as unread. Try again later.'
+                    gettext('Failed to mark notifications as unread. Try again later.')
                 );
                 throw error;
             },
