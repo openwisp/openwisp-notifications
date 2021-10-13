@@ -419,9 +419,12 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
                 get_notification_configuration('test_type')
 
         with self.subTest('Using non existing notification type for new notification'):
-            with self.assertRaises(ImproperlyConfigured):
+            with patch('logging.Logger.error') as mocked_logger:
                 self._create_notification()
-                n = notification_queryset.first()
+                mocked_logger.assert_called_once_with(
+                    'Error encountered while creating notification: '
+                    'No such Notification Type, test_type'
+                )
 
         with self.subTest('Check unregistration in NOTIFICATION_CHOICES'):
             with self.assertRaises(ImproperlyConfigured):

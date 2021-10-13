@@ -133,7 +133,7 @@ class AbstractNotification(UUIDModel, BaseNotification):
                 return config['email_subject'].format(
                     site=Site.objects.get_current(), notification=self, **data
                 )
-            except (AttributeError, KeyError) as e:
+            except (AttributeError, KeyError, ImproperlyConfigured) as e:
                 from openwisp_notifications.tasks import delete_notification
 
                 logger.error(e)
