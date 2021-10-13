@@ -1367,7 +1367,7 @@ Add the following in your settings.py to import celery tasks from ``openwisp_not
 15. Register Template Tags
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-If you need to use template tags of *openwisp_notifications*, you will need to register as the, shown in
+If you need to use template tags of *openwisp_notifications*, you will need to register as shown in
 `"templatetags/notification_tags.py" of sample_notifications
 <https://github.com/openwisp/openwisp-notifications/blob/master/tests/openwisp2/sample_notifications/templatetags/notification_tags.py>`_.
 

@@ -78,7 +78,7 @@ class TestAdmin(TestOrganizationMixin, TestMultitenantAdminMixin, TestCase):
     def _expected_output(self, count=None):
         if count:
             return '<span id="ow-notification-count">{0}</span>'.format(count)
-        return f'id="{self.app_label}">'
+        return 'id="openwisp_notifications">'
 
     def test_zero_notifications(self):
         r = self.client.get(self._url)
