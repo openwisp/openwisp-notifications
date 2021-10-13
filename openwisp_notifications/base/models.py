@@ -5,6 +5,7 @@ from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.sites.models import Site
 from django.core.cache import cache
+from django.core.exceptions import ImproperlyConfigured
 from django.db import models
 from django.db.models.constraints import UniqueConstraint
 from django.template.loader import render_to_string
@@ -109,7 +110,7 @@ class AbstractNotification(UUIDModel, BaseNotification):
                     md_text = render_to_string(
                         config['message_template'], context=dict(notification=self)
                     ).strip()
-            except (AttributeError, KeyError) as e:
+            except (AttributeError, KeyError, ImproperlyConfigured) as e:
                 from openwisp_notifications.tasks import delete_notification
 
                 logger.error(e)
