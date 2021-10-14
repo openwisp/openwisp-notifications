@@ -222,12 +222,9 @@ def send_email_notification(sender, instance, created, **kwargs):
     post_delete, sender=Notification, dispatch_uid='clear_notification_cache_deleted'
 )
 def clear_notification_cache(sender, instance, **kwargs):
-    try:
-        Notification.invalidate_unread_cache(instance.recipient)
-    except AttributeError:
-        return
-    # Reload notification only if notification is created or deleted
-    # Display when a new notification is created
+    Notification.invalidate_unread_cache(instance.recipient)
+    # Reload notification widget only if notification is created or deleted
+    # Display notification toast when a new notification is created
     ws_handlers.notification_update_handler(
         recipient=instance.recipient,
         reload_widget=kwargs.get('created', True),
