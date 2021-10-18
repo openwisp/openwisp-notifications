@@ -5,7 +5,6 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.core.cache import cache
-from django.core.exceptions import ImproperlyConfigured
 from django.core.mail import EmailMultiAlternatives
 from django.db import transaction
 from django.db.models import Q
@@ -57,7 +56,7 @@ def notify_handler(**kwargs):
     target_org = getattr(target, 'organization_id', None)
     try:
         notification_template = get_notification_configuration(notification_type)
-    except ImproperlyConfigured as error:
+    except NotificationRenderException as error:
         logger.error(f'Error encountered while creating notification: {error}')
         return
     level = notification_template.get(

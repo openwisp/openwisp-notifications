@@ -18,6 +18,7 @@ from django.utils.timesince import timesince
 
 from openwisp_notifications import settings as app_settings
 from openwisp_notifications import tasks
+from openwisp_notifications.exceptions import NotificationRenderException
 from openwisp_notifications.handlers import (
     notify_handler,
     register_notification_cache_update,
@@ -415,7 +416,7 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
 
         with self.subTest('Unregistering "test_type"'):
             unregister_notification_type('test_type')
-            with self.assertRaises(ImproperlyConfigured):
+            with self.assertRaises(NotificationRenderException):
                 get_notification_configuration('test_type')
 
         with self.subTest('Using non existing notification type for new notification'):

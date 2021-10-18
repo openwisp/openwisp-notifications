@@ -5,7 +5,6 @@ from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.sites.models import Site
 from django.core.cache import cache
-from django.core.exceptions import ImproperlyConfigured
 from django.db import models
 from django.db.models.constraints import UniqueConstraint
 from django.template.loader import render_to_string
@@ -110,11 +109,13 @@ class AbstractNotification(UUIDModel, BaseNotification):
                     md_text = render_to_string(
                         config['message_template'], context=dict(notification=self)
                     ).strip()
-            except (AttributeError, KeyError, ImproperlyConfigured) as e:
+            except (AttributeError, KeyError, NotificationRenderException) as e:
                 from openwisp_notifications.tasks import delete_notification
 
                 logger.error(e)
                 delete_notification.delay(notification_id=self.pk)
+                if isinstance(e, NotificationRenderException):
+                    raise e
                 raise NotificationRenderException(
                     'Error in rendering notification message.'
                 )
@@ -133,11 +134,13 @@ class AbstractNotification(UUIDModel, BaseNotification):
                 return config['email_subject'].format(
                     site=Site.objects.get_current(), notification=self, **data
                 )
-            except (AttributeError, KeyError, ImproperlyConfigured) as e:
+            except (AttributeError, KeyError, NotificationRenderException) as e:
                 from openwisp_notifications.tasks import delete_notification
 
                 logger.error(e)
                 delete_notification.delay(notification_id=self.pk)
+                if isinstance(e, NotificationRenderException):
+                    raise e
                 raise NotificationRenderException(
                     'Error while generating notification email'
                 )
