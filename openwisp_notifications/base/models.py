@@ -109,15 +109,9 @@ class AbstractNotification(UUIDModel, BaseNotification):
                     md_text = render_to_string(
                         config['message_template'], context=dict(notification=self)
                     ).strip()
-            except (AttributeError, KeyError, NotificationRenderException) as e:
-                from openwisp_notifications.tasks import delete_notification
-
-                logger.error(e)
-                delete_notification.delay(notification_id=self.pk)
-                if isinstance(e, NotificationRenderException):
-                    raise e
-                raise NotificationRenderException(
-                    'Error in rendering notification message.'
+            except (AttributeError, KeyError, NotificationRenderException) as exception:
+                self._invalid_notification(
+                    self.pk, exception, 'Error while rendering notification message.'
                 )
             # clean up
             self.actor_link = self.action_link = self.target_link = None
@@ -134,15 +128,9 @@ class AbstractNotification(UUIDModel, BaseNotification):
                 return config['email_subject'].format(
                     site=Site.objects.get_current(), notification=self, **data
                 )
-            except (AttributeError, KeyError, NotificationRenderException) as e:
-                from openwisp_notifications.tasks import delete_notification
-
-                logger.error(e)
-                delete_notification.delay(notification_id=self.pk)
-                if isinstance(e, NotificationRenderException):
-                    raise e
-                raise NotificationRenderException(
-                    'Error while generating notification email'
+            except (AttributeError, KeyError, NotificationRenderException) as exception:
+                self._invalid_notification(
+                    self.pk, exception, 'Error while rendering notification message.'
                 )
         elif self.data.get('email_subject', None):
             return self.data.get('email_subject')
@@ -164,6 +152,15 @@ class AbstractNotification(UUIDModel, BaseNotification):
                 timeout=app_settings.OPENWISP_NOTIFICATIONS_CACHE_TIMEOUT,
             )
         return obj
+
+    def _invalid_notification(self, pk, exception, error_message):
+        from openwisp_notifications.tasks import delete_notification
+
+        logger.error(exception)
+        delete_notification.delay(notification_id=pk)
+        if isinstance(exception, NotificationRenderException):
+            raise exception
+        raise NotificationRenderException(error_message)
 
     @cached_property
     def actor(self):
