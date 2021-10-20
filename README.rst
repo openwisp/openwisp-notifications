@@ -1367,7 +1367,7 @@ Add the following in your settings.py to import celery tasks from ``openwisp_not
 15. Register Template Tags
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-If you need to use template tags of *openwisp_notifications*, you will need to register as the, shown in
+If you need to use template tags of *openwisp_notifications*, you will need to register as shown in
 `"templatetags/notification_tags.py" of sample_notifications
 <https://github.com/openwisp/openwisp-notifications/blob/master/tests/openwisp2/sample_notifications/templatetags/notification_tags.py>`_.
 
@@ -1386,17 +1386,7 @@ when an object of ``TestApp`` model is created. You can use
 `sample_notifications/models.py <https://github.com/openwisp/openwisp-notifications/blob/master/tests/openwisp2/sample_notifications/models.py>`_
 as reference for your implementation.
 
-17. Add Base Template for Admin
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Please refer to the `"templates/admin/base.html" in sample_notifications
-<https://github.com/openwisp/openwisp-notifications/blob/master/tests/openwisp2/sample_notifications/templates/admin/base.html>`_.
-
-For more information about customizing admin templates in django, please refer to the
-`"Overriding admin templates" section in the django documentation
-<https://docs.djangoproject.com/en/3.0/ref/contrib/admin/#overriding-admin-templates>`_.
-
-18. Import the automated tests
+17. Import the automated tests
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 When developing a custom application based on this module, it's a good idea to import and run the base tests

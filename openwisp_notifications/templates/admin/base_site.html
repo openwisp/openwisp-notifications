@@ -22,10 +22,21 @@
     {% unread_notifications %}
   </button>
   {% csrf_token %}
-  {% notification_toast %}
-  {% notification_widget %}
+  <div class="ow-notification-toast-wrapper"></div>
+  <div class="ow-notification-dropdown ow-hide">
+    <div class="filters">
+      <span class="toggle-btn" id="ow-mark-all-read" tabindex="0" role="button">{% trans 'Mark all as read' %}</span>
+      <span class="toggle-btn" id="ow-show-unread" tabindex="0" role="button">{% trans 'Show unread only' %}</span>
+    </div>
+    <div class="ow-notification-wrapper ow-round-bottom-border">
+      <div id="ow-notifications-loader" class="ow-hide"><div class="loader"></div></div>
+    </div>
+    <div class="ow-no-notifications ow-round-bottom-border ow-hide">
+        <p>{% trans 'No new notification.' %}</p>
+    </div>
+  </div>
 {% endblock  %}
-  
+
 {% block footer %}
   {{ block.super }}
   {% if request.user.is_authenticated %}
