@@ -111,7 +111,9 @@ class AbstractNotification(UUIDModel, BaseNotification):
                     ).strip()
             except (AttributeError, KeyError, NotificationRenderException) as exception:
                 self._invalid_notification(
-                    self.pk, exception, 'Error while rendering notification message.'
+                    self.pk,
+                    exception,
+                    'Error encountered in rendering notification message',
                 )
             # clean up
             self.actor_link = self.action_link = self.target_link = None
@@ -130,7 +132,9 @@ class AbstractNotification(UUIDModel, BaseNotification):
                 )
             except (AttributeError, KeyError, NotificationRenderException) as exception:
                 self._invalid_notification(
-                    self.pk, exception, 'Error while rendering notification message.'
+                    self.pk,
+                    exception,
+                    'Error encountered in generating notification email',
                 )
         elif self.data.get('email_subject', None):
             return self.data.get('email_subject')

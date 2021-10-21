@@ -548,7 +548,8 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
         unregister_notification_type('test_type')
 
     @capture_any_output()
-    def test_notification_invalid_message_attribute(self):
+    @patch('openwisp_notifications.tasks.delete_notification.delay')
+    def test_notification_invalid_message_attribute(self, mocked_task):
         self.notification_options.update({'type': 'test_type'})
         test_type = {
             'verbose_name': 'Test Notification Type',
@@ -559,7 +560,20 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
         }
         register_notification_type('test_type', test_type)
         self._create_notification()
-        self.assertIsNone(notification_queryset.first())
+        notification = notification_queryset.first()
+        with self.assertRaises(NotificationRenderException) as context_manager:
+            notification.message
+        self.assertEqual(
+            str(context_manager.exception),
+            'Error encountered in rendering notification message',
+        )
+        with self.assertRaises(NotificationRenderException) as context_manager:
+            notification.email_subject
+        self.assertEqual(
+            str(context_manager.exception),
+            'Error encountered in generating notification email',
+        )
+        mocked_task.assert_called_with(notification_id=notification.id)
         unregister_notification_type('test_type')
 
     @patch.object(app_settings, 'OPENWISP_NOTIFICATIONS_HTML_EMAIL', False)
