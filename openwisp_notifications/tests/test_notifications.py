@@ -18,6 +18,7 @@ from django.utils.timesince import timesince
 
 from openwisp_notifications import settings as app_settings
 from openwisp_notifications import tasks
+from openwisp_notifications.exceptions import NotificationRenderException
 from openwisp_notifications.handlers import (
     notify_handler,
     register_notification_cache_update,
@@ -415,13 +416,16 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
 
         with self.subTest('Unregistering "test_type"'):
             unregister_notification_type('test_type')
-            with self.assertRaises(ImproperlyConfigured):
+            with self.assertRaises(NotificationRenderException):
                 get_notification_configuration('test_type')
 
         with self.subTest('Using non existing notification type for new notification'):
-            with self.assertRaises(ImproperlyConfigured):
+            with patch('logging.Logger.error') as mocked_logger:
                 self._create_notification()
-                n = notification_queryset.first()
+                mocked_logger.assert_called_once_with(
+                    'Error encountered while creating notification: '
+                    'No such Notification Type, test_type'
+                )
 
         with self.subTest('Check unregistration in NOTIFICATION_CHOICES'):
             with self.assertRaises(ImproperlyConfigured):
@@ -544,7 +548,8 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
         unregister_notification_type('test_type')
 
     @capture_any_output()
-    def test_notification_invalid_message_attribute(self):
+    @patch('openwisp_notifications.tasks.delete_notification.delay')
+    def test_notification_invalid_message_attribute(self, mocked_task):
         self.notification_options.update({'type': 'test_type'})
         test_type = {
             'verbose_name': 'Test Notification Type',
@@ -555,7 +560,20 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
         }
         register_notification_type('test_type', test_type)
         self._create_notification()
-        self.assertIsNone(notification_queryset.first())
+        notification = notification_queryset.first()
+        with self.assertRaises(NotificationRenderException) as context_manager:
+            notification.message
+        self.assertEqual(
+            str(context_manager.exception),
+            'Error encountered in rendering notification message',
+        )
+        with self.assertRaises(NotificationRenderException) as context_manager:
+            notification.email_subject
+        self.assertEqual(
+            str(context_manager.exception),
+            'Error encountered in generating notification email',
+        )
+        mocked_task.assert_called_with(notification_id=notification.id)
         unregister_notification_type('test_type')
 
     @patch.object(app_settings, 'OPENWISP_NOTIFICATIONS_HTML_EMAIL', False)
