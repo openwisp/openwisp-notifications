@@ -36,6 +36,7 @@ from openwisp_notifications.types import (
 )
 from openwisp_notifications.utils import _get_absolute_url
 from openwisp_users.tests.utils import TestOrganizationMixin
+from openwisp_utils.admin_theme import settings as utils_settings
 from openwisp_utils.tests import capture_any_output
 
 User = get_user_model()
@@ -452,7 +453,8 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
             self.assertEqual(content_type, 'text/html')
             self.assertIn(n.message, html_message)
             self.assertIn(
-                f'<a href="{url}" class="btn">Find out more</a>', html_message,
+                f'<a href="{url}" class="btn">\n           Find out more </a>',
+                html_message,
             )
 
         with self.subTest('Test email without URL option and target object'):
@@ -485,13 +487,13 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
             )
             self.assertEqual(content_type, 'text/html')
             self.assertIn(
-                f'<img src="{app_settings.OPENWISP_NOTIFICATIONS_EMAIL_LOGO}"'
+                f'<img src="{utils_settings.OPENWISP_EMAIL_LOGO}"'
                 ' alt="Logo" id="logo" class="logo">',
                 html_message,
             )
             self.assertIn(n.message, html_message)
             self.assertIn(
-                f'<a href="{n.redirect_view_url}" class="btn">Find out more</a>',
+                f'<a href="{n.redirect_view_url}" class="btn">\n           Find out more </a>',
                 html_message,
             )
 
@@ -576,7 +578,7 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
         mocked_task.assert_called_with(notification_id=notification.id)
         unregister_notification_type('test_type')
 
-    @patch.object(app_settings, 'OPENWISP_NOTIFICATIONS_HTML_EMAIL', False)
+    @patch.object(utils_settings, 'OPENWISP_HTML_EMAIL', False)
     def test_no_html_email(self, *args):
         operator = self._create_operator()
         self.notification_options.update(

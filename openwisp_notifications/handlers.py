@@ -197,7 +197,12 @@ def send_email_notification(sender, instance, created, **kwargs):
     if target_url:
         description += '\n\nFor more information see {0}.'.format(target_url)
 
-    send_email(subject, description, recipients=[instance.recipient.email])
+    send_email(
+        subject,
+        description,
+        recipients=[instance.recipient.email],
+        extra_context={'call_to_action_url': target_url},
+    )
 
     # flag as emailed
     instance.emailed = True
