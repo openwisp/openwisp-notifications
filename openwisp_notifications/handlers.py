@@ -10,6 +10,7 @@ from django.db.models.query import QuerySet
 from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 from django.utils import timezone
+from django.utils.translation import gettext as _
 
 from openwisp_notifications import settings as app_settings
 from openwisp_notifications import tasks
@@ -195,13 +196,16 @@ def send_email_notification(sender, instance, created, **kwargs):
     else:
         target_url = None
     if target_url:
-        description += '\n\nFor more information see {0}.'.format(target_url)
+        description += _('\n\nFor more information see {0}.'.format(target_url))
 
     send_email(
         subject,
         description,
         recipients=[instance.recipient.email],
-        extra_context={'call_to_action_url': target_url},
+        extra_context={
+            'call_to_action_url': target_url,
+            'call_to_action_text': _('Find out more'),
+        },
     )
 
     # flag as emailed
