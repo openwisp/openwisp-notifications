@@ -196,7 +196,9 @@ def send_email_notification(sender, instance, created, **kwargs):
     else:
         target_url = None
     if target_url:
-        description += _('\n\nFor more information see {0}.'.format(target_url))
+        description += _('\n\nFor more information see %(target_url)s.') % {
+            'target_url': target_url
+        }
 
     send_email(
         subject,
