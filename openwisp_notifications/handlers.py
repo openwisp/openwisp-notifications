@@ -203,6 +203,7 @@ def send_email_notification(sender, instance, created, **kwargs):
     send_email(
         subject,
         description,
+        instance.message,
         recipients=[instance.recipient.email],
         extra_context={
             'call_to_action_url': target_url,
