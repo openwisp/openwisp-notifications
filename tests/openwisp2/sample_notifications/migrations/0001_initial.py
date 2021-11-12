@@ -109,7 +109,9 @@ class Migration(migrations.Migration):
                 (
                     'type',
                     models.CharField(
-                        choices=NOTIFICATION_CHOICES, max_length=30, null=True,
+                        choices=NOTIFICATION_CHOICES,
+                        max_length=30,
+                        null=True,
                     ),
                 ),
                 ('details', models.CharField(blank=True, max_length=64, null=True)),

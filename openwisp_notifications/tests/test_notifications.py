@@ -391,7 +391,8 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
             self.assertEqual(n.level, 'test')
             self.assertEqual(n.verb, 'testing')
             self.assertEqual(
-                n.message, '<p>testing initiated by admin since 0\xa0minutes</p>',
+                n.message,
+                '<p>testing initiated by admin since 0\xa0minutes</p>',
             )
             self.assertEqual(n.email_subject, '[example.com] testing reported by admin')
 
@@ -607,7 +608,8 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
 
         with self.subTest('Test user email preference is "False"'):
             NotificationSetting.objects.filter(
-                user=self.admin, type='test_type',
+                user=self.admin,
+                type='test_type',
             ).update(email=False)
             self._create_notification()
             self.assertEqual(len(mail.outbox), 0)
@@ -634,7 +636,8 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
 
         with self.subTest('Test user email preference is "True"'):
             NotificationSetting.objects.filter(
-                user=self.admin, type='test_type',
+                user=self.admin,
+                type='test_type',
             ).update(email=True)
             self._create_notification()
             self.assertEqual(len(mail.outbox), 1)
