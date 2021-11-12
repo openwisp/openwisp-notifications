@@ -1,19 +1,16 @@
 import logging
 
 from celery.exceptions import OperationalError
-from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.core.cache import cache
-from django.core.mail import EmailMultiAlternatives
 from django.db import transaction
 from django.db.models import Q
 from django.db.models.query import QuerySet
 from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
-from django.template.loader import render_to_string
 from django.utils import timezone
-from django.utils.html import strip_tags
+from django.utils.translation import gettext as _
 
 from openwisp_notifications import settings as app_settings
 from openwisp_notifications import tasks
@@ -24,6 +21,7 @@ from openwisp_notifications.types import (
     get_notification_configuration,
 )
 from openwisp_notifications.websockets import handlers as ws_handlers
+from openwisp_utils.admin_theme.email import send_email
 
 logger = logging.getLogger(__name__)
 
@@ -198,24 +196,21 @@ def send_email_notification(sender, instance, created, **kwargs):
     else:
         target_url = None
     if target_url:
-        description += '\n\nFor more information see {0}.'.format(target_url)
-    mail = EmailMultiAlternatives(
-        subject=subject,
-        body=strip_tags(description),
-        from_email=settings.DEFAULT_FROM_EMAIL,
-        to=[instance.recipient.email],
+        description += _('\n\nFor more information see %(target_url)s.') % {
+            'target_url': target_url
+        }
+
+    send_email(
+        subject,
+        description,
+        instance.message,
+        recipients=[instance.recipient.email],
+        extra_context={
+            'call_to_action_url': target_url,
+            'call_to_action_text': _('Find out more'),
+        },
     )
-    if app_settings.OPENWISP_NOTIFICATIONS_HTML_EMAIL:
-        html_message = render_to_string(
-            app_settings.OPENWISP_NOTIFICATIONS_EMAIL_TEMPLATE,
-            context=dict(
-                OPENWISP_NOTIFICATIONS_EMAIL_LOGO=app_settings.OPENWISP_NOTIFICATIONS_EMAIL_LOGO,
-                notification=instance,
-                target_url=target_url,
-            ),
-        )
-        mail.attach_alternative(html_message, 'text/html')
-    mail.send()
+
     # flag as emailed
     instance.emailed = True
     instance.save()
@@ -325,7 +320,9 @@ def schedule_object_notification_deletion(instance, created, **kwargs):
 
 def register_notification_cache_update(model, signal, dispatch_uid=None):
     signal.connect(
-        update_notification_cache, sender=model, dispatch_uid=dispatch_uid,
+        update_notification_cache,
+        sender=model,
+        dispatch_uid=dispatch_uid,
     )
 
 

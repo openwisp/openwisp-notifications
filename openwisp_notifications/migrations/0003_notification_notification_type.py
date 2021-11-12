@@ -14,7 +14,9 @@ class Migration(migrations.Migration):
             model_name='notification',
             name='type',
             field=models.CharField(
-                choices=NOTIFICATION_CHOICES, max_length=30, null=True,
+                choices=NOTIFICATION_CHOICES,
+                max_length=30,
+                null=True,
             ),
         ),
     ]

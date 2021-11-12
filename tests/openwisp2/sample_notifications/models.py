@@ -47,7 +47,8 @@ class IgnoreObjectNotification(DetailsModel, AbstractIgnoreObjectNotification):
 class TestApp(UUIDModel):
     name = models.CharField(max_length=50)
     organization = models.ForeignKey(
-        get_model_name('openwisp_users', 'Organization'), on_delete=models.CASCADE,
+        get_model_name('openwisp_users', 'Organization'),
+        on_delete=models.CASCADE,
     )
 
     class Meta:

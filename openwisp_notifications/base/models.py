@@ -47,7 +47,9 @@ class AbstractNotification(UUIDModel, BaseNotification):
             if obj is not None:
                 setattr(self, f'{opt}_object_id', obj.pk)
                 setattr(
-                    self, f'{opt}_content_type', ContentType.objects.get_for_model(obj),
+                    self,
+                    f'{opt}_content_type',
+                    ContentType.objects.get_for_model(obj),
                 )
 
     def __str__(self):
@@ -77,7 +79,10 @@ class AbstractNotification(UUIDModel, BaseNotification):
     @property
     def action_url(self):
         return _get_object_link(
-            self, field='action_object', url_only=True, absolute_url=True,
+            self,
+            field='action_object',
+            url_only=True,
+            absolute_url=True,
         )
 
     @property
@@ -199,7 +204,8 @@ class AbstractNotificationSetting(UUIDModel):
         verbose_name='Notification Type',
     )
     organization = models.ForeignKey(
-        get_model_name('openwisp_users', 'Organization'), on_delete=models.CASCADE,
+        get_model_name('openwisp_users', 'Organization'),
+        on_delete=models.CASCADE,
     )
     web = models.BooleanField(
         _('web notifications'), null=True, blank=True, help_text=_(_RECEIVE_HELP)
@@ -226,7 +232,8 @@ class AbstractNotificationSetting(UUIDModel):
 
     def __str__(self):
         return '{type} - {organization}'.format(
-            type=self.type_config['verbose_name'], organization=self.organization,
+            type=self.type_config['verbose_name'],
+            organization=self.organization,
         )
 
     def save(self, *args, **kwargs):

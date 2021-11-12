@@ -13,7 +13,6 @@ from django.template import TemplateDoesNotExist
 from django.test import TransactionTestCase
 from django.urls import reverse
 from django.utils import timezone
-from django.utils.html import strip_tags
 from django.utils.timesince import timesince
 
 from openwisp_notifications import settings as app_settings
@@ -392,7 +391,8 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
             self.assertEqual(n.level, 'test')
             self.assertEqual(n.verb, 'testing')
             self.assertEqual(
-                n.message, '<p>testing initiated by admin since 0\xa0minutes</p>',
+                n.message,
+                '<p>testing initiated by admin since 0\xa0minutes</p>',
             )
             self.assertEqual(n.email_subject, '[example.com] testing reported by admin')
 
@@ -431,69 +431,11 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
             with self.assertRaises(ImproperlyConfigured):
                 _unregister_notification_choice('test_type')
 
-    def test_notification_type_email(self):
-        operator = self._create_operator()
-        email_body = '{message}\n\nFor more information see {target_url}.'
+    def test_notification_email(self):
+        self._create_operator()
         self.notification_options.update({'type': 'default'})
-
-        with self.subTest('Test email with URL option'):
-            url = self.notification_options['url']
-            self._create_notification()
-            email = mail.outbox.pop()
-            n = notification_queryset.first()
-            self.assertEqual(
-                email.body,
-                email_body.format(
-                    message=strip_tags(n.message),
-                    target_url=self.notification_options['url'],
-                ),
-            )
-            html_message, content_type = email.alternatives.pop()
-            self.assertEqual(content_type, 'text/html')
-            self.assertIn(n.message, html_message)
-            self.assertIn(
-                f'<a href="{url}" class="btn">Find out more</a>', html_message,
-            )
-
-        with self.subTest('Test email without URL option and target object'):
-            self.notification_options.pop('url')
-            self._create_notification()
-            email = mail.outbox.pop()
-            n = notification_queryset.first()
-            self.assertEqual(email.body, strip_tags(n.message))
-            html_message, content_type = email.alternatives.pop()
-            self.assertEqual(content_type, 'text/html')
-            self.assertIn(n.message, html_message)
-            self.assertNotIn(
-                f'<a href="{n.redirect_view_url}">', html_message,
-            )
-
-        with self.subTest('Test email with target object'):
-            self.notification_options.update({'target': operator})
-            self._create_notification()
-            email = mail.outbox.pop()
-            n = notification_queryset.first()
-            html_message, content_type = email.alternatives.pop()
-            self.assertEqual(
-                email.body,
-                email_body.format(
-                    message=strip_tags(n.message), target_url=n.redirect_view_url
-                ),
-            )
-            self.assertEqual(
-                email.subject, '[example.com] Default Notification Subject'
-            )
-            self.assertEqual(content_type, 'text/html')
-            self.assertIn(
-                f'<img src="{app_settings.OPENWISP_NOTIFICATIONS_EMAIL_LOGO}"'
-                ' alt="Logo" id="logo" class="logo">',
-                html_message,
-            )
-            self.assertIn(n.message, html_message)
-            self.assertIn(
-                f'<a href="{n.redirect_view_url}" class="btn">Find out more</a>',
-                html_message,
-            )
+        self._create_notification()
+        self.assertEqual(len(mail.outbox), 1)
 
     def test_missing_relation_object(self):
         test_type = {
@@ -575,22 +517,6 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
         )
         mocked_task.assert_called_with(notification_id=notification.id)
         unregister_notification_type('test_type')
-
-    @patch.object(app_settings, 'OPENWISP_NOTIFICATIONS_HTML_EMAIL', False)
-    def test_no_html_email(self, *args):
-        operator = self._create_operator()
-        self.notification_options.update(
-            {'type': 'default', 'target': operator, 'url': None}
-        )
-        self._create_notification()
-        email = mail.outbox.pop()
-        n = notification_queryset.first()
-        self.assertEqual(
-            email.body,
-            f'{strip_tags(n.message)}\n\nFor more information see {n.redirect_view_url}.',
-        )
-        self.assertEqual(email.subject, '[example.com] Default Notification Subject')
-        self.assertFalse(email.alternatives)
 
     def test_related_objects_database_query(self):
         operator = self._get_operator()
@@ -682,7 +608,8 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
 
         with self.subTest('Test user email preference is "False"'):
             NotificationSetting.objects.filter(
-                user=self.admin, type='test_type',
+                user=self.admin,
+                type='test_type',
             ).update(email=False)
             self._create_notification()
             self.assertEqual(len(mail.outbox), 0)
@@ -709,7 +636,8 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
 
         with self.subTest('Test user email preference is "True"'):
             NotificationSetting.objects.filter(
-                user=self.admin, type='test_type',
+                user=self.admin,
+                type='test_type',
             ).update(email=True)
             self._create_notification()
             self.assertEqual(len(mail.outbox), 1)

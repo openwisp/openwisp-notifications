@@ -59,7 +59,12 @@ class TestNotificationSockets:
         communicator = WebsocketCommunicator(
             self.application,
             path='ws/notification/',
-            headers=[(b'cookie', f'sessionid={session_id}'.encode('ascii'),)],
+            headers=[
+                (
+                    b'cookie',
+                    f'sessionid={session_id}'.encode('ascii'),
+                )
+            ],
         )
         connected, subprotocol = await communicator.connect()
         assert connected is True
