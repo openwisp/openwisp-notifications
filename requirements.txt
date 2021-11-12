@@ -3,7 +3,7 @@ channels~=2.4.0
 # TODO set the next point release of openwisp-users when ready
 openwisp-users @ https://github.com/openwisp/openwisp-users/tarball/master
 # TODO set the next point release of openwisp-utils when ready
-openwisp-utils[rest] @ https://github.com/openwisp/openwisp-utils/tarball/issues/259-email-template
+openwisp-utils[rest] @ https://github.com/openwisp/openwisp-utils/tarball/master
 swapper~=1.1.0
 markdown~=3.2.0
 celery~=4.4.0
