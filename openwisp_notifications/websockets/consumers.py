@@ -3,6 +3,7 @@ import json
 from asgiref.sync import async_to_sync
 from channels.generic.websocket import WebsocketConsumer
 from django.contrib.contenttypes.models import ContentType
+from django.utils.timezone import now, timedelta
 
 from openwisp_notifications.api.serializers import IgnoreObjectNotificationSerializer
 from openwisp_notifications.swapper import load_model
@@ -13,6 +14,10 @@ IgnoreObjectNotification = load_model('IgnoreObjectNotification')
 
 
 class NotificationConsumer(WebsocketConsumer):
+    _initial_backoff = 1
+    _backoff_increment = 1
+    _max_backoff_time = 15
+
     def _is_user_authenticated(self):
         try:
             assert self.scope['user'].is_authenticated is True
@@ -28,6 +33,8 @@ class NotificationConsumer(WebsocketConsumer):
                 'ow_notification', self.channel_name
             )
             self.accept()
+            self.scope['last_update_datetime'] = now()
+            self.scope['backoff'] = self._initial_backoff
 
     def disconnect(self, close_code):
         async_to_sync(self.channel_layer.group_discard)(
@@ -37,20 +44,41 @@ class NotificationConsumer(WebsocketConsumer):
     def send_updates(self, event):
         user = self.scope['user']
         # Send message only if notification belongs to current user
-        if event['recipient'] == str(user.pk):
-            unread_notifications = normalize_unread_count(
-                user.notifications.unread().count()
-            )
-            self.send(
-                json.dumps(
-                    {
-                        'type': 'notification',
-                        'notification_count': unread_notifications,
-                        'reload_widget': event['reload_widget'],
-                        'notification': event['notification'],
-                    }
+        if event['recipient'] != str(user.pk):
+            return
+        if event['is_notification_storm']:
+            datetime_now = now()
+            # If delay exceeds max_backoff_time, reset and send
+            # update
+            if (
+                self.scope['last_update_datetime'] - datetime_now
+            ).seconds == self._max_backoff_time:
+                self.scope['last_update_datetime'] = datetime_now
+                self.scope['backoff'] = self._initial_backoff
+            elif self.scope['last_update_datetime'] > datetime_now - timedelta(
+                seconds=self._initial_backoff
+            ):
+                self.scope['backoff'] = self.scope['backoff'] + 1
+                self.scope['last_update_datetime'] = datetime_now + timedelta(
+                    seconds=self.scope['backoff']
                 )
+                return
+            else:
+                self.scope['last_update_datetime'] = datetime_now
+                self.scope['backoff'] = self._initial_backoff
+        unread_notifications = normalize_unread_count(
+            user.notifications.unread().count()
+        )
+        self.send(
+            json.dumps(
+                {
+                    'type': 'notification',
+                    'notification_count': unread_notifications,
+                    'reload_widget': event['reload_widget'],
+                    'notification': event['notification'],
+                }
             )
+        )
 
     def receive(self, text_data):
         if self._is_user_authenticated():
