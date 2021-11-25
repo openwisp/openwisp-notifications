@@ -46,15 +46,19 @@ class NotificationConsumer(WebsocketConsumer):
         # Send message only if notification belongs to current user
         if event['recipient'] != str(user.pk):
             return
-        if event['is_notification_storm']:
+        if event['in_notification_storm'] and event['reload_widget']:
             datetime_now = now()
             # If delay exceeds max_backoff_time, reset and send
-            # update
+            # update. This is required to trigger reloading of
+            # notification widget.
             if (
                 self.scope['last_update_datetime'] - datetime_now
             ).seconds == self._max_backoff_time:
                 self.scope['last_update_datetime'] = datetime_now
                 self.scope['backoff'] = self._initial_backoff
+                # Removing notification is required to prevent frontend
+                # from showing toasts.
+                event['notification'] = None
             elif self.scope['last_update_datetime'] > datetime_now - timedelta(
                 seconds=self._initial_backoff
             ):
