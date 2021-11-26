@@ -21,8 +21,6 @@ def user_in_notification_storm(user):
         in_notification_storm = True
     if in_notification_storm:
         cache.set(f'ow-noti-storm-{user.pk}', True, 60)
-    else:
-        cache.delete(f'ow-noti-storm-{user.pk}')
     return in_notification_storm
 
 

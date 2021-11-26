@@ -213,7 +213,8 @@ def send_email_notification(sender, instance, created, **kwargs):
 
     # flag as emailed
     instance.emailed = True
-    instance.save()
+    # bulk_update is used to prevent emitting post_save signal
+    Notification.objects.bulk_update([instance], ['emailed'])
 
 
 @receiver(post_save, sender=Notification, dispatch_uid='clear_notification_cache_saved')
