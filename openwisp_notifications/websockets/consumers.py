@@ -9,14 +9,18 @@ from openwisp_notifications.api.serializers import IgnoreObjectNotificationSeria
 from openwisp_notifications.swapper import load_model
 from openwisp_notifications.utils import normalize_unread_count
 
+from .. import settings as app_settings
+
 Notification = load_model('Notification')
 IgnoreObjectNotification = load_model('IgnoreObjectNotification')
 
 
 class NotificationConsumer(WebsocketConsumer):
-    _initial_backoff = 1
-    _backoff_increment = 1
-    _max_backoff_time = 15
+    _initial_backoff = app_settings.NOTIFICATION_STORM_PREVENTION['initial_backoff']
+    _backoff_increment = app_settings.NOTIFICATION_STORM_PREVENTION['backoff_increment']
+    _max_allowed_backoff = app_settings.NOTIFICATION_STORM_PREVENTION[
+        'max_allowed_backoff'
+    ]
 
     def _is_user_authenticated(self):
         try:
@@ -47,19 +51,20 @@ class NotificationConsumer(WebsocketConsumer):
         if event['recipient'] != str(user.pk):
             return
         if event['in_notification_storm']:
+            # Removing notification is required to prevent frontend
+            # from showing toasts.
+            event['notification'] = None
             datetime_now = now()
-            # If delay exceeds max_backoff_time, reset and send
+            # If delay exceeds max_allowed_backoff, reset and send
             # update. This is required to trigger reloading of
             # notification widget.
             if (
                 self.scope['last_update_datetime'] > datetime_now
                 and (self.scope['last_update_datetime'] - datetime_now).seconds
-                >= self._max_backoff_time
+                >= self._max_allowed_backoff
             ):
                 self.scope['last_update_datetime'] = datetime_now
                 self.scope['backoff'] = self._initial_backoff
-                # Removing notification is required to prevent frontend
-                # from showing toasts.
                 event['notification'] = None
             elif self.scope['last_update_datetime'] > datetime_now - timedelta(
                 seconds=self._initial_backoff
@@ -68,7 +73,6 @@ class NotificationConsumer(WebsocketConsumer):
                     seconds=self.scope['backoff']
                 )
                 self.scope['backoff'] = self.scope['backoff'] + self._backoff_increment
-                event['notification'] = None
                 event['reload_widget'] = False
             else:
                 self.scope['last_update_datetime'] = datetime_now

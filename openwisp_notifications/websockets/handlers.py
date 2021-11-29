@@ -5,19 +5,47 @@ from django.utils.timezone import now, timedelta
 
 from openwisp_notifications.api.serializers import NotFound, NotificationListSerializer
 
+from .. import settings as app_settings
 from ..swapper import load_model
 
 Notification = load_model('Notification')
 
 
 def user_in_notification_storm(user):
+    """
+    A user is affected by notifications storm if it receives
+     - more than 6 notifications in 10 seconds
+     - more than 30 notifications in 60 seconds
+    If the user is found to be affected by a notification storm,
+    the value of this function is cached for 60 seconds.
+    """
     in_notification_storm = cache.get(f'ow-noti-storm-{user.pk}', False)
     if in_notification_storm:
         return True
     qs = Notification.objects.filter(recipient=user)
-    if qs.filter(timestamp__gte=now() - timedelta(seconds=10)).count() >= 6:
+    if (
+        qs.filter(
+            timestamp__gte=now()
+            - timedelta(
+                seconds=app_settings.NOTIFICATION_STORM_PREVENTION[
+                    'short_term_time_period'
+                ]
+            )
+        ).count()
+        > app_settings.NOTIFICATION_STORM_PREVENTION['short_term_notification_count']
+    ):
         in_notification_storm = True
-    elif qs.filter(timestamp__gte=now() - timedelta(seconds=60)).count() >= 30:
+    elif (
+        qs.filter(
+            timestamp__gte=now()
+            - timedelta(
+                seconds=app_settings.NOTIFICATION_STORM_PREVENTION[
+                    'long_term_time_period'
+                ]
+            )
+        ).count()
+        > app_settings.NOTIFICATION_STORM_PREVENTION['long_term_notification_count']
+    ):
         in_notification_storm = True
     if in_notification_storm:
         cache.set(f'ow-noti-storm-{user.pk}', True, 60)

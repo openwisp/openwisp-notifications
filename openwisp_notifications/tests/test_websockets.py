@@ -195,13 +195,13 @@ class TestNotificationSockets:
         self, admin_user, admin_client
     ):
         communicator = await self._get_communicator(admin_client)
-        for _ in range(5):
+        for _ in range(6):
             await create_notification(admin_user)
             response = await communicator.receive_json_from()
             assert response['notification'] is not None
             assert response['reload_widget'] is True
         # After notification storms prevention starts
-        for _ in range(5):
+        for _ in range(4):
             await create_notification(admin_user)
             response = await communicator.receive_json_from()
             assert response['notification'] is None
@@ -211,13 +211,13 @@ class TestNotificationSockets:
         await communicator.disconnect()
 
     @patch.object(NotificationConsumer, '_backoff_increment', 60)
-    @patch.object(NotificationConsumer, '_max_backoff_time', 5)
+    @patch.object(NotificationConsumer, '_max_allowed_backoff', 5)
     async def test_long_term_notification_storm_prevention(
         self, admin_user, admin_client
     ):
         if sys.version_info[:2] == (3, 7):
             NotificationConsumer._backoff_increment = 60
-            NotificationConsumer._max_backoff_time = 5
+            NotificationConsumer._max_allowed_backoff = 5
 
         datetime_now = now()
         freezer = freeze_time(datetime_now).start()
@@ -265,4 +265,4 @@ class TestNotificationSockets:
 
         if sys.version_info[:1] == (3, 7):
             NotificationConsumer._backoff_increment = 1
-            NotificationConsumer._max_backoff_time = 15
+            NotificationConsumer._max_allowed_backoff = 15
