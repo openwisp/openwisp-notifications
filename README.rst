@@ -790,7 +790,7 @@ The default configuration is as follows:
         # Number of notifications considered as a notification burst
         'short_term_notification_count': 6,
         # Time period for tracking notifications in long time interval (in seconds)
-        'long_term_time_period': 60,
+        'long_term_time_period': 180,
         # Number of notifications in long time interval to be considered as a notification storm
         'long_term_notification_count': 30,
         # Initial time for which notification updates should be skipped (in seconds)

@@ -26,7 +26,7 @@ NOTIFICATION_STORM_PREVENTION = getattr(
     {
         'short_term_time_period': 10,
         'short_term_notification_count': 6,
-        'long_term_time_period': 60,
+        'long_term_time_period': 180,
         'long_term_notification_count': 30,
         'initial_backoff': 1,
         'backoff_increment': 1,
