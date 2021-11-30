@@ -253,9 +253,10 @@ class TestNotificationSockets:
         assert response['notification'] is None
         assert response['reload_widget'] is True
 
-        # user_in_notification_storm cache expires
+        # user_in_notification_storm cache expires and
+        # notification storm ends.
         cache.delete(f'ow-noti-storm-{admin_user.pk}')
-        freezer.move_to(datetime_now + timedelta(seconds=100))
+        freezer.move_to(datetime_now + timedelta(seconds=200))
         await create_notification(admin_user)
         response = await communicator.receive_json_from()
         assert response['notification'] is not None

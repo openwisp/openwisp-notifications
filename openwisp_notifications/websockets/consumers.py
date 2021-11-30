@@ -7,7 +7,6 @@ from django.utils.timezone import now, timedelta
 
 from openwisp_notifications.api.serializers import IgnoreObjectNotificationSerializer
 from openwisp_notifications.swapper import load_model
-from openwisp_notifications.utils import normalize_unread_count
 
 from .. import settings as app_settings
 
@@ -77,14 +76,11 @@ class NotificationConsumer(WebsocketConsumer):
             else:
                 self.scope['last_update_datetime'] = datetime_now
                 self.scope['backoff'] = self._initial_backoff
-        unread_notifications = normalize_unread_count(
-            user.notifications.unread().count()
-        )
         self.send(
             json.dumps(
                 {
                     'type': 'notification',
-                    'notification_count': unread_notifications,
+                    'notification_count': event['notification_count'],
                     'reload_widget': event['reload_widget'],
                     'notification': event['notification'],
                 }

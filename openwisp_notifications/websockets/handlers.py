@@ -4,6 +4,7 @@ from django.core.cache import cache
 from django.utils.timezone import now, timedelta
 
 from openwisp_notifications.api.serializers import NotFound, NotificationListSerializer
+from openwisp_notifications.utils import normalize_unread_count
 
 from .. import settings as app_settings
 from ..swapper import load_model
@@ -22,9 +23,8 @@ def user_in_notification_storm(user):
     in_notification_storm = cache.get(f'ow-noti-storm-{user.pk}', False)
     if in_notification_storm:
         return True
-    qs = Notification.objects.filter(recipient=user)
     if (
-        qs.filter(
+        user.notifications.filter(
             timestamp__gte=now()
             - timedelta(
                 seconds=app_settings.NOTIFICATION_STORM_PREVENTION[
@@ -36,7 +36,7 @@ def user_in_notification_storm(user):
     ):
         in_notification_storm = True
     elif (
-        qs.filter(
+        user.notifications.filter(
             timestamp__gte=now()
             - timedelta(
                 seconds=app_settings.NOTIFICATION_STORM_PREVENTION[
@@ -67,5 +67,8 @@ def notification_update_handler(reload_widget=False, notification=None, recipien
             'notification': notification,
             'recipient': str(recipient.pk),
             'in_notification_storm': user_in_notification_storm(recipient),
+            'notification_count': normalize_unread_count(
+                recipient.notifications.unread().count()
+            ),
         },
     )
