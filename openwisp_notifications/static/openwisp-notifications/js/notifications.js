@@ -323,18 +323,18 @@ function notificationWidget($) {
 
 function markNotificationRead(elem) {
     let elemId = elem.id.replace('ow-', '');
+    try {
+        document.querySelector(`#${elem.id}.ow-notification-elem`).classList.remove('unread');
+    } catch (error) {
+        // no op
+    }
+    notificationReadStatus.set(elemId, 'read');
     notificationSocket.send(
         JSON.stringify({
             type: 'notification',
             notification_id: elemId
         })
     );
-    try {
-        document.querySelector(`#${elem.id}.ow-notification-elem`).classList.remove('unread');
-    } catch (error) {
-        throw error;
-    }
-    notificationReadStatus.set(elemId, 'read');
 }
 
 function initWebSockets($) {
