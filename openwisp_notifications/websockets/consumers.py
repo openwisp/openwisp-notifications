@@ -44,38 +44,43 @@ class NotificationConsumer(WebsocketConsumer):
             'ow_notification', self.channel_name
         )
 
+    def process_event_for_notification_storm(self, event):
+        if not event['in_notification_storm']:
+            return event
+        # Removing notification is required to prevent frontend
+        # from showing toasts.
+        event['notification'] = None
+        datetime_now = now()
+        # If delay exceeds max_allowed_backoff, reset and send
+        # update. This is required to trigger reloading of
+        # notification widget.
+        if (
+            self.scope['last_update_datetime'] > datetime_now
+            and (self.scope['last_update_datetime'] - datetime_now).seconds
+            >= self._max_allowed_backoff
+        ):
+            self.scope['last_update_datetime'] = datetime_now
+            self.scope['backoff'] = self._initial_backoff
+            event['notification'] = None
+        elif self.scope['last_update_datetime'] > datetime_now - timedelta(
+            seconds=self._initial_backoff
+        ):
+            self.scope['last_update_datetime'] = datetime_now + timedelta(
+                seconds=self.scope['backoff']
+            )
+            self.scope['backoff'] = self.scope['backoff'] + self._backoff_increment
+            event['reload_widget'] = False
+        else:
+            self.scope['last_update_datetime'] = datetime_now
+            self.scope['backoff'] = self._initial_backoff
+        return event
+
     def send_updates(self, event):
         user = self.scope['user']
         # Send message only if notification belongs to current user
         if event['recipient'] != str(user.pk):
             return
-        if event['in_notification_storm']:
-            # Removing notification is required to prevent frontend
-            # from showing toasts.
-            event['notification'] = None
-            datetime_now = now()
-            # If delay exceeds max_allowed_backoff, reset and send
-            # update. This is required to trigger reloading of
-            # notification widget.
-            if (
-                self.scope['last_update_datetime'] > datetime_now
-                and (self.scope['last_update_datetime'] - datetime_now).seconds
-                >= self._max_allowed_backoff
-            ):
-                self.scope['last_update_datetime'] = datetime_now
-                self.scope['backoff'] = self._initial_backoff
-                event['notification'] = None
-            elif self.scope['last_update_datetime'] > datetime_now - timedelta(
-                seconds=self._initial_backoff
-            ):
-                self.scope['last_update_datetime'] = datetime_now + timedelta(
-                    seconds=self.scope['backoff']
-                )
-                self.scope['backoff'] = self.scope['backoff'] + self._backoff_increment
-                event['reload_widget'] = False
-            else:
-                self.scope['last_update_datetime'] = datetime_now
-                self.scope['backoff'] = self._initial_backoff
+        event = self.process_event_for_notification_storm(event)
         self.send(
             json.dumps(
                 {

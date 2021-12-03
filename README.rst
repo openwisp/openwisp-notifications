@@ -779,7 +779,11 @@ on running migrations.
 ``OPENWISP_NOTIFICATIONS_NOTIFICATION_STORM_PREVENTION``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-A ``dict`` containing configuration for notification storm prevention mechanism.
+When the system starts creating a lot of notifications because of a
+general network outage (e.g. : a power outage), the notification storm prevention
+mechanism avoids constantly displaying notifications.
+This setting allows tweaking the working of the mechanism.
+
 The default configuration is as follows:
 
 .. code-block:: python

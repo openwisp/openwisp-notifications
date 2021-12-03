@@ -14,9 +14,9 @@ Notification = load_model('Notification')
 
 def user_in_notification_storm(user):
     """
-    A user is affected by notifications storm if it receives
-     - more than 6 notifications in 10 seconds
-     - more than 30 notifications in 60 seconds
+    A user is affected by notifications storm if any of short term
+    or long term check passes. The checks are configured by
+    "OPENWISP_NOTIFICATIONS_NOTIFICATION_STORM_PREVENTION" setting.
     If the user is found to be affected by a notification storm,
     the value of this function is cached for 60 seconds.
     """
