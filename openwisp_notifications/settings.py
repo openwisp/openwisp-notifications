@@ -20,6 +20,19 @@ IGNORE_ENABLED_ADMIN = getattr(
 POPULATE_PREFERENCES_ON_MIGRATE = getattr(
     settings, 'OPENWISP_NOTIFICATIONS_POPULATE_PREFERENCES_ON_MIGRATE', True
 )
+NOTIFICATION_STORM_PREVENTION = getattr(
+    settings,
+    'OPENWISP_NOTIFICATIONS_NOTIFICATION_STORM_PREVENTION',
+    {
+        'short_term_time_period': 10,
+        'short_term_notification_count': 6,
+        'long_term_time_period': 180,
+        'long_term_notification_count': 30,
+        'initial_backoff': 1,
+        'backoff_increment': 1,
+        'max_allowed_backoff': 15,
+    },
+)
 
 
 def get_config():

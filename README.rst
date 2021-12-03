@@ -776,6 +776,40 @@ model, then configure the setting as following:
 This setting allows to disable creating `notification preferences <#notification-preferences>`_
 on running migrations.
 
+``OPENWISP_NOTIFICATIONS_NOTIFICATION_STORM_PREVENTION``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+When the system starts creating a lot of notifications because of a
+general network outage (e.g.: a power outage, a global misconfiguration),
+the notification storm prevention mechanism avoids the constant displaying
+of new notification alerts as well as their sound, only the notification
+counter will continue updating periodically, although it won't emit any
+sound or create any other visual element until the
+notification storm is over.
+
+This setting allows tweaking how this mechanism works.
+
+The default configuration is as follows:
+
+.. code-block:: python
+
+    OPENWISP_NOTIFICATIONS_NOTIFICATION_STORM_PREVENTION = {
+        # Time period for tracking burst of notifications (in seconds)
+        'short_term_time_period': 10,
+        # Number of notifications considered as a notification burst
+        'short_term_notification_count': 6,
+        # Time period for tracking notifications in long time interval (in seconds)
+        'long_term_time_period': 180,
+        # Number of notifications in long time interval to be considered as a notification storm
+        'long_term_notification_count': 30,
+        # Initial time for which notification updates should be skipped (in seconds)
+        'initial_backoff': 1,
+        # Time by which skipping of notification updates should be increased (in seconds)
+        'backoff_increment': 1,
+        # Maximum interval after which the notification widget should get updated (in seconds)
+        'max_allowed_backoff': 15,
+    }
+
 Exceptions
 ----------
 
