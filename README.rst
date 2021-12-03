@@ -780,9 +780,14 @@ on running migrations.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 When the system starts creating a lot of notifications because of a
-general network outage (e.g. : a power outage), the notification storm prevention
-mechanism avoids constantly displaying notifications.
-This setting allows tweaking the working of the mechanism.
+general network outage (e.g.: a power outage, a global misconfiguration),
+the notification storm prevention mechanism avoids the constant displaying
+of new notification alerts as well as their sound, only the notification
+counter will continue updating periodically, although it won't emit any
+sound or create any other visual element until the
+notification storm is over.
+
+This setting allows tweaking how this mechanism works.
 
 The default configuration is as follows:
 
