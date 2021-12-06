@@ -60,7 +60,7 @@ def notification_update_handler(reload_widget=False, notification=None, recipien
     except (NotFound, AssertionError):
         pass
     async_to_sync(channel_layer.group_send)(
-        'ow_notification',
+        f'ow-notification-{recipient.pk}',
         {
             'type': 'send.updates',
             'reload_widget': reload_widget,

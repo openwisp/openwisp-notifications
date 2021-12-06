@@ -125,7 +125,12 @@ else:
     CHANNEL_LAYERS = {
         'default': {
             'BACKEND': 'channels_redis.core.RedisChannelLayer',
-            'CONFIG': {'hosts': ['redis://localhost/7']},
+            'CONFIG': {
+                'hosts': ['redis://localhost/7'],
+                'group_expiry': 3600,
+                'capacity': 1000,
+                'expiry': 30,
+            },
         },
     }
 
