@@ -33,7 +33,7 @@ class NotificationConsumer(WebsocketConsumer):
     def connect(self):
         if self._is_user_authenticated():
             async_to_sync(self.channel_layer.group_add)(
-                'ow_notification', self.channel_name
+                'ow-notification-{0}'.format(self.scope['user'].pk), self.channel_name
             )
             self.accept()
             self.scope['last_update_datetime'] = now()
@@ -41,7 +41,7 @@ class NotificationConsumer(WebsocketConsumer):
 
     def disconnect(self, close_code):
         async_to_sync(self.channel_layer.group_discard)(
-            'ow_notification', self.channel_name
+            'ow-notification-{0}'.format(self.scope['user'].pk), self.channel_name
         )
 
     def process_event_for_notification_storm(self, event):
@@ -76,10 +76,6 @@ class NotificationConsumer(WebsocketConsumer):
         return event
 
     def send_updates(self, event):
-        user = self.scope['user']
-        # Send message only if notification belongs to current user
-        if event['recipient'] != str(user.pk):
-            return
         event = self.process_event_for_notification_storm(event)
         self.send(
             json.dumps(
