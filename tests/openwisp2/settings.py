@@ -115,7 +115,7 @@ CACHES = {
     }
 }
 
-ASGI_APPLICATION = 'openwisp2.routing.application'
+ASGI_APPLICATION = 'openwisp2.asgi.application'
 
 if TESTING:
     CHANNEL_LAYERS = {
