@@ -1,31 +1,27 @@
 import logging
 
 from celery.exceptions import OperationalError
-from django.apps import apps
-from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
-from django.core.mail import EmailMultiAlternatives
+from django.core.cache import cache
+from django.db import transaction
 from django.db.models import Q
 from django.db.models.query import QuerySet
-from django.db.models.signals import (
-    post_delete,
-    post_migrate,
-    post_save,
-    pre_delete,
-    pre_save,
-)
+from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
-from django.template.loader import render_to_string
 from django.utils import timezone
-from django.utils.html import strip_tags
+from django.utils.translation import gettext as _
 
 from openwisp_notifications import settings as app_settings
 from openwisp_notifications import tasks
 from openwisp_notifications.exceptions import NotificationRenderException
 from openwisp_notifications.swapper import load_model, swapper_load_model
-from openwisp_notifications.types import get_notification_configuration
+from openwisp_notifications.types import (
+    NOTIFICATION_ASSOCIATED_MODELS,
+    get_notification_configuration,
+)
 from openwisp_notifications.websockets import handlers as ws_handlers
+from openwisp_utils.admin_theme.email import send_email
 
 logger = logging.getLogger(__name__)
 
@@ -36,7 +32,6 @@ User = get_user_model()
 Notification = load_model('Notification')
 NotificationSetting = load_model('NotificationSetting')
 IgnoreObjectNotification = load_model('IgnoreObjectNotification')
-NotificationsAppConfig = apps.get_app_config(NotificationSetting._meta.app_label)
 
 Group = swapper_load_model('openwisp_users', 'Group')
 OrganizationUser = swapper_load_model('openwisp_users', 'OrganizationUser')
@@ -55,21 +50,28 @@ def notify_handler(**kwargs):
     timestamp = kwargs.pop('timestamp', timezone.now())
     recipient = kwargs.pop('recipient', None)
     notification_type = kwargs.pop('type', None)
-    notification_template = get_notification_configuration(notification_type)
     target = kwargs.get('target', None)
+    target_org = getattr(target, 'organization_id', None)
+    try:
+        notification_template = get_notification_configuration(notification_type)
+    except NotificationRenderException as error:
+        logger.error(f'Error encountered while creating notification: {error}')
+        return
     level = notification_template.get(
         'level', kwargs.pop('level', Notification.LEVELS.info)
     )
     verb = notification_template.get('verb', kwargs.pop('verb', None))
-    target_org = getattr(target, 'organization_id', None)
+    user_app_name = User._meta.app_label
 
     where = Q(is_superuser=True)
     not_where = Q()
     where_group = Q()
     if target_org:
         org_admin_query = Q(
-            openwisp_users_organizationuser__organization=target_org,
-            openwisp_users_organizationuser__is_admin=True,
+            **{
+                f'{user_app_name}_organizationuser__organization': target_org,
+                f'{user_app_name}_organizationuser__is_admin': True,
+            }
         )
         where = where | (Q(is_staff=True) & org_admin_query)
         where_group = org_admin_query
@@ -87,6 +89,7 @@ def notify_handler(**kwargs):
             notification_setting = web_notification & Q(
                 notificationsetting__type=notification_type,
                 notificationsetting__organization_id=target_org,
+                notificationsetting__deleted=False,
             )
             where = where & notification_setting
             where_group = where_group & notification_setting
@@ -193,27 +196,25 @@ def send_email_notification(sender, instance, created, **kwargs):
     else:
         target_url = None
     if target_url:
-        description += '\n\nFor more information see {0}.'.format(target_url)
-    mail = EmailMultiAlternatives(
-        subject=subject,
-        body=strip_tags(description),
-        from_email=settings.DEFAULT_FROM_EMAIL,
-        to=[instance.recipient.email],
+        description += _('\n\nFor more information see %(target_url)s.') % {
+            'target_url': target_url
+        }
+
+    send_email(
+        subject,
+        description,
+        instance.message,
+        recipients=[instance.recipient.email],
+        extra_context={
+            'call_to_action_url': target_url,
+            'call_to_action_text': _('Find out more'),
+        },
     )
-    if app_settings.OPENWISP_NOTIFICATIONS_HTML_EMAIL:
-        html_message = render_to_string(
-            app_settings.OPENWISP_NOTIFICATIONS_EMAIL_TEMPLATE,
-            context=dict(
-                OPENWISP_NOTIFICATIONS_EMAIL_LOGO=app_settings.OPENWISP_NOTIFICATIONS_EMAIL_LOGO,
-                notification=instance,
-                target_url=target_url,
-            ),
-        )
-        mail.attach_alternative(html_message, 'text/html')
-    mail.send()
+
     # flag as emailed
     instance.emailed = True
-    instance.save()
+    # bulk_update is used to prevent emitting post_save signal
+    Notification.objects.bulk_update([instance], ['emailed'])
 
 
 @receiver(post_save, sender=Notification, dispatch_uid='clear_notification_cache_saved')
@@ -221,12 +222,9 @@ def send_email_notification(sender, instance, created, **kwargs):
     post_delete, sender=Notification, dispatch_uid='clear_notification_cache_deleted'
 )
 def clear_notification_cache(sender, instance, **kwargs):
-    try:
-        Notification.invalidate_unread_cache(instance.recipient)
-    except AttributeError:
-        return
-    # Reload notification only if notification is created or deleted
-    # Display when a new notification is created
+    Notification.invalidate_unread_cache(instance.recipient)
+    # Reload notification widget only if notification is created or deleted
+    # Display notification toast when a new notification is created
     ws_handlers.notification_update_handler(
         recipient=instance.recipient,
         reload_widget=kwargs.get('created', True),
@@ -234,12 +232,14 @@ def clear_notification_cache(sender, instance, **kwargs):
     )
 
 
-@receiver(pre_delete, dispatch_uid='delete_obsolete_objects')
+@receiver(post_delete, dispatch_uid='delete_obsolete_objects')
 def related_object_deleted(sender, instance, **kwargs):
     """
     Delete Notification and IgnoreObjectNotification objects having
     "instance" as related object.
     """
+    if sender not in NOTIFICATION_ASSOCIATED_MODELS:
+        return
     instance_id = getattr(instance, 'pk', None)
     if instance_id:
         instance_model = instance._meta.model_name
@@ -249,11 +249,6 @@ def related_object_deleted(sender, instance, **kwargs):
         )
 
 
-@receiver(
-    post_migrate,
-    sender=NotificationsAppConfig,
-    dispatch_uid='register_unregister_notification_types',
-)
 def notification_type_registered_unregistered_handler(sender, **kwargs):
     try:
         tasks.ns_register_unregister_notification_type.delay()
@@ -269,17 +264,19 @@ def notification_type_registered_unregistered_handler(sender, **kwargs):
 
 
 @receiver(
-    pre_save,
+    post_save,
     sender=OrganizationUser,
     dispatch_uid='create_orguser_notification_setting',
 )
-def notification_setting_org_user_created(instance, **kwargs):
-    if instance.is_admin:
-        tasks.ns_organization_user_added_or_updated.delay(
-            instance_id=instance.pk,
-            instance_user_id=instance.user_id,
-            instance_org_id=instance.organization_id,
+def organization_user_post_save(instance, created, **kwargs):
+    transaction.on_commit(
+        lambda: tasks.update_org_user_notificationsetting.delay(
+            org_user_id=instance.pk,
+            user_id=instance.user_id,
+            org_id=instance.organization_id,
+            is_org_admin=instance.is_admin,
         )
+    )
 
 
 @receiver(
@@ -289,13 +286,17 @@ def notification_setting_org_user_created(instance, **kwargs):
 )
 def notification_setting_delete_org_user(instance, **kwargs):
     tasks.ns_organization_user_deleted.delay(
-        instance_user_id=instance.user_id, instance_org_id=instance.organization_id
+        user_id=instance.user_id, org_id=instance.organization_id
     )
 
 
 @receiver(post_save, sender=User, dispatch_uid='user_notification_setting')
-def notification_setting_user_created(instance, created, **kwargs):
-    tasks.ns_user_created.delay(instance.pk, instance.is_superuser, created)
+def update_superuser_notification_settings(instance, created, **kwargs):
+    transaction.on_commit(
+        lambda: tasks.update_superuser_notification_settings.delay(
+            instance.pk, instance.is_superuser, created
+        )
+    )
 
 
 @receiver(
@@ -316,3 +317,21 @@ def schedule_object_notification_deletion(instance, created, **kwargs):
         tasks.delete_ignore_object_notification.apply_async(
             (instance.pk,), eta=instance.valid_till
         )
+
+
+def register_notification_cache_update(model, signal, dispatch_uid=None):
+    signal.connect(
+        update_notification_cache,
+        sender=model,
+        dispatch_uid=dispatch_uid,
+    )
+
+
+def update_notification_cache(sender, instance, **kwargs):
+    def invalidate_cache():
+        content_type = ContentType.objects.get_for_model(instance)
+        cache_key = Notification._cache_key(content_type.id, instance.id)
+        cache.delete(cache_key)
+
+    # execute cache invalidation only after changes have been committed to the DB
+    transaction.on_commit(invalidate_cache)

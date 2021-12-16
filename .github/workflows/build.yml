@@ -26,11 +26,12 @@ jobs:
       fail-fast: false
       matrix:
         python-version:
-          - 3.6
           - 3.7
+          - 3.8
+          - 3.9
         django-version:
-          - django~=3.0
-          - django~=3.1
+          - django~=3.0.0
+          - django~=3.1.0
 
     steps:
     - uses: actions/checkout@v2
@@ -47,17 +48,20 @@ jobs:
         sudo apt update
         sudo apt-get -qq -y install sqlite3 gdal-bin
 
-    - name: Install python dependencies
+    - name: Upgrade python system packages
+      run: pip install -U "pip==20.2.4" wheel
+
+    - name: Install openwisp-notifications
       run: |
-        pip install -U pip wheel
+        pip install -e .
+      
+    - name: Install test dependencies
+      run: |
         pip install ${{ matrix.django-version }}
         pip install -U -r requirements-test.txt
 
     - name: Install npm dependencies
       run: sudo npm install -g jshint stylelint
-
-    - name: Install openwisp-notifications
-      run: python setup.py -q develop
 
     - name: QA checks
       run: |

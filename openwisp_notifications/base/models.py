@@ -47,7 +47,9 @@ class AbstractNotification(UUIDModel, BaseNotification):
             if obj is not None:
                 setattr(self, f'{opt}_object_id', obj.pk)
                 setattr(
-                    self, f'{opt}_content_type', ContentType.objects.get_for_model(obj),
+                    self,
+                    f'{opt}_content_type',
+                    ContentType.objects.get_for_model(obj),
                 )
 
     def __str__(self):
@@ -77,7 +79,10 @@ class AbstractNotification(UUIDModel, BaseNotification):
     @property
     def action_url(self):
         return _get_object_link(
-            self, field='action_object', url_only=True, absolute_url=True,
+            self,
+            field='action_object',
+            url_only=True,
+            absolute_url=True,
         )
 
     @property
@@ -100,9 +105,8 @@ class AbstractNotification(UUIDModel, BaseNotification):
             self.target_link = (
                 self.target_url if not email_message else self.redirect_view_url
             )
-
-            config = get_notification_configuration(self.type)
             try:
+                config = get_notification_configuration(self.type)
                 data = self.data or {}
                 if 'message' in config:
                     md_text = config['message'].format(notification=self, **data)
@@ -110,13 +114,11 @@ class AbstractNotification(UUIDModel, BaseNotification):
                     md_text = render_to_string(
                         config['message_template'], context=dict(notification=self)
                     ).strip()
-            except (AttributeError, KeyError) as e:
-                from openwisp_notifications.tasks import delete_notification
-
-                logger.error(e)
-                delete_notification.delay(notification_id=self.pk)
-                raise NotificationRenderException(
-                    'Error in rendering notification message.'
+            except (AttributeError, KeyError, NotificationRenderException) as exception:
+                self._invalid_notification(
+                    self.pk,
+                    exception,
+                    'Error encountered in rendering notification message',
                 )
             # clean up
             self.actor_link = self.action_link = self.target_link = None
@@ -133,13 +135,11 @@ class AbstractNotification(UUIDModel, BaseNotification):
                 return config['email_subject'].format(
                     site=Site.objects.get_current(), notification=self, **data
                 )
-            except (AttributeError, KeyError) as e:
-                from openwisp_notifications.tasks import delete_notification
-
-                logger.error(e)
-                delete_notification.delay(notification_id=self.pk)
-                raise NotificationRenderException(
-                    'Error while generating notification email'
+            except (AttributeError, KeyError, NotificationRenderException) as exception:
+                self._invalid_notification(
+                    self.pk,
+                    exception,
+                    'Error encountered in generating notification email',
                 )
         elif self.data.get('email_subject', None):
             return self.data.get('email_subject')
@@ -161,6 +161,15 @@ class AbstractNotification(UUIDModel, BaseNotification):
                 timeout=app_settings.OPENWISP_NOTIFICATIONS_CACHE_TIMEOUT,
             )
         return obj
+
+    def _invalid_notification(self, pk, exception, error_message):
+        from openwisp_notifications.tasks import delete_notification
+
+        logger.error(exception)
+        delete_notification.delay(notification_id=pk)
+        if isinstance(exception, NotificationRenderException):
+            raise exception
+        raise NotificationRenderException(error_message)
 
     @cached_property
     def actor(self):
@@ -195,7 +204,8 @@ class AbstractNotificationSetting(UUIDModel):
         verbose_name='Notification Type',
     )
     organization = models.ForeignKey(
-        get_model_name('openwisp_users', 'Organization'), on_delete=models.CASCADE,
+        get_model_name('openwisp_users', 'Organization'),
+        on_delete=models.CASCADE,
     )
     web = models.BooleanField(
         _('web notifications'), null=True, blank=True, help_text=_(_RECEIVE_HELP)
@@ -203,6 +213,7 @@ class AbstractNotificationSetting(UUIDModel):
     email = models.BooleanField(
         _('email notifications'), null=True, blank=True, help_text=_(_RECEIVE_HELP)
     )
+    deleted = models.BooleanField(_('Delete'), null=True, blank=True, default=False)
 
     class Meta:
         abstract = True
@@ -221,7 +232,8 @@ class AbstractNotificationSetting(UUIDModel):
 
     def __str__(self):
         return '{type} - {organization}'.format(
-            type=self.type_config['verbose_name'], organization=self.organization,
+            type=self.type_config['verbose_name'],
+            organization=self.organization,
         )
 
     def save(self, *args, **kwargs):

@@ -78,7 +78,7 @@ class TestAdmin(TestOrganizationMixin, TestMultitenantAdminMixin, TestCase):
     def _expected_output(self, count=None):
         if count:
             return '<span id="ow-notification-count">{0}</span>'.format(count)
-        return f'id="{self.app_label}">'
+        return 'id="openwisp_notifications">'
 
     def test_zero_notifications(self):
         r = self.client.get(self._url)
@@ -119,7 +119,9 @@ class TestAdmin(TestOrganizationMixin, TestMultitenantAdminMixin, TestCase):
         self.assertContains(res, 'window.location')
 
     @patch.object(
-        app_settings, 'OPENWISP_NOTIFICATIONS_SOUND', '/static/notification.mp3',
+        app_settings,
+        'OPENWISP_NOTIFICATIONS_SOUND',
+        '/static/notification.mp3',
     )
     def test_notification_sound_setting(self):
         res = self.client.get(self._url)
@@ -129,7 +131,9 @@ class TestAdmin(TestOrganizationMixin, TestMultitenantAdminMixin, TestCase):
         )
 
     @patch.object(
-        app_settings, 'OPENWISP_NOTIFICATIONS_HOST', 'https://example.com',
+        app_settings,
+        'OPENWISP_NOTIFICATIONS_HOST',
+        'https://example.com',
     )
     def test_notification_host_setting(self):
         res = self.client.get(self._url)
@@ -139,22 +143,26 @@ class TestAdmin(TestOrganizationMixin, TestMultitenantAdminMixin, TestCase):
     def test_jquery_import(self):
         response = self.client.get(self._url)
         self.assertInHTML(
-            '<script type="text/javascript" src="/static/admin/js/jquery.init.js">',
+            '<script src="/static/admin/js/jquery.init.js">',
             str(response.content),
             1,
         )
         self.assertInHTML(
-            '<script type="text/javascript" src="/static/admin/js/vendor/jquery/jquery.min.js">',
+            '<script src="/static/admin/js/vendor/jquery/jquery.min.js">',
             str(response.content),
             1,
         )
 
         response = self.client.get(reverse('admin:sites_site_changelist'))
         self.assertIn(
-            '/static/admin/js/jquery.init.js', str(response.content), 1,
+            '/static/admin/js/jquery.init.js',
+            str(response.content),
+            1,
         )
         self.assertIn(
-            '/static/admin/js/vendor/jquery/jquery.min.js', str(response.content), 1,
+            '/static/admin/js/vendor/jquery/jquery.min.js',
+            str(response.content),
+            1,
         )
 
     def test_login_load_javascript(self):
@@ -182,7 +190,9 @@ class TestAdmin(TestOrganizationMixin, TestMultitenantAdminMixin, TestCase):
             self.assertTrue(self.ns_inline.has_add_permission(su_request))
 
         with self.subTest('Test for non-superuser'):
-            self.assertFalse(self.ns_inline.has_add_permission(op_request),)
+            self.assertFalse(
+                self.ns_inline.has_add_permission(op_request),
+            )
 
     def test_notification_setting_inline_delete_permission(self):
         with self.subTest('Test for superuser'):
@@ -195,22 +205,27 @@ class TestAdmin(TestOrganizationMixin, TestMultitenantAdminMixin, TestCase):
         response = self.client.get(
             reverse('admin:openwisp_users_user_change', args=(self.admin.pk,))
         )
-        self.assertContains(
-            response, '<option value="default" selected>Default Type</option>'
-        )
+        self.assertContains(response, '<option value="default">Default Type</option>')
 
     def test_notification_setting_inline_admin_has_change_permission(self):
         with self.subTest('Test for superuser'):
-            self.assertTrue(self.ns_inline.has_change_permission(su_request),)
+            self.assertTrue(
+                self.ns_inline.has_change_permission(su_request),
+            )
 
         with self.subTest('Test for non-superuser'):
-            self.assertFalse(self.ns_inline.has_change_permission(op_request),)
+            self.assertFalse(
+                self.ns_inline.has_change_permission(op_request),
+            )
             self.assertTrue(
                 self.ns_inline.has_change_permission(op_request, obj=op_request.user),
             )
 
     def test_org_admin_view_same_org_user_notification_setting(self):
-        org_owner = self._create_org_user(user=self._get_operator(), is_admin=True,)
+        org_owner = self._create_org_user(
+            user=self._get_operator(),
+            is_admin=True,
+        )
         org_admin = self._create_org_user(
             user=self._create_user(
                 username='user', email='user@user.com', is_staff=True

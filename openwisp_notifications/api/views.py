@@ -21,7 +21,6 @@ from openwisp_notifications.api.serializers import (
     NotificationSerializer,
     NotificationSettingSerializer,
 )
-from openwisp_notifications.handlers import clear_notification_cache
 from openwisp_notifications.swapper import load_model
 from openwisp_users.api.authentication import BearerAuthentication
 
@@ -71,7 +70,9 @@ class NotificationDetailView(BaseNotificationView, RetrieveDestroyAPIView):
     def _mark_notification_read(self):
         notification = self.get_object()
         notification.mark_as_read()
-        return Response(status=status.HTTP_200_OK,)
+        return Response(
+            status=status.HTTP_200_OK,
+        )
 
 
 class NotificationReadRedirect(BaseNotificationView):
@@ -98,7 +99,7 @@ class NotificationReadAllView(BaseNotificationView):
         queryset = self.get_queryset()
         queryset.update(unread=False)
         # update() does not create post_save signal
-        clear_notification_cache(sender=self, instance=queryset.first())
+        Notification.invalidate_unread_cache(request.user)
         return Response(status=status.HTTP_200_OK)
 
 

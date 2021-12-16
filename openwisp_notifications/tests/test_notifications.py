@@ -2,22 +2,26 @@ from datetime import timedelta
 from unittest.mock import patch
 
 from celery.exceptions import OperationalError
+from django.apps.registry import apps
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.core import mail
 from django.core.cache import cache
 from django.core.exceptions import ImproperlyConfigured
-from django.db.models.signals import post_migrate, pre_delete
+from django.db.models.signals import post_migrate, post_save
 from django.template import TemplateDoesNotExist
-from django.test import TestCase
+from django.test import TransactionTestCase
 from django.urls import reverse
 from django.utils import timezone
-from django.utils.html import strip_tags
 from django.utils.timesince import timesince
 
 from openwisp_notifications import settings as app_settings
 from openwisp_notifications import tasks
-from openwisp_notifications.handlers import NotificationsAppConfig, notify_handler
+from openwisp_notifications.exceptions import NotificationRenderException
+from openwisp_notifications.handlers import (
+    notify_handler,
+    register_notification_cache_update,
+)
 from openwisp_notifications.signals import notify
 from openwisp_notifications.swapper import load_model, swapper_load_model
 from openwisp_notifications.tests.test_helpers import (
@@ -37,6 +41,8 @@ User = get_user_model()
 
 Notification = load_model('Notification')
 NotificationSetting = load_model('NotificationSetting')
+NotificationAppConfig = apps.get_app_config(Notification._meta.app_label)
+
 
 OrganizationUser = swapper_load_model('openwisp_users', 'OrganizationUser')
 Group = swapper_load_model('openwisp_users', 'Group')
@@ -46,7 +52,9 @@ ten_minutes_ago = start_time - timedelta(minutes=10)
 notification_queryset = Notification.objects.order_by('-timestamp')
 
 
-class TestNotifications(TestOrganizationMixin, TestCase):
+class TestNotifications(TestOrganizationMixin, TransactionTestCase):
+    app_label = 'openwisp_notifications'
+
     def setUp(self):
         self.admin = self._create_admin()
         self.notification_options = dict(
@@ -153,6 +161,26 @@ class TestNotifications(TestOrganizationMixin, TestCase):
         self.assertEqual(Notification.objects.count(), 1)
         self.assertEqual(len(mail.outbox), 0)
 
+    def test_notification_preference_flagged_deleted(self):
+        self.notification_options.update(
+            {'type': 'default', 'target': self._get_org_user()}
+        )
+        NotificationSetting.objects.filter(
+            user_id=self.admin.pk, type='default'
+        ).update(deleted=True)
+        self._create_notification()
+        self.assertEqual(Notification.objects.count(), 0)
+
+    def test_notification_preference_deleted_from_db(self):
+        self.notification_options.update(
+            {'type': 'default', 'target': self._get_org_user()}
+        )
+        NotificationSetting.objects.filter(
+            user_id=self.admin.pk, type='default'
+        ).delete()
+        self._create_notification()
+        self.assertEqual(Notification.objects.count(), 0)
+
     def test_email_not_present(self):
         self.admin.email = ''
         self.admin.save()
@@ -166,7 +194,7 @@ class TestNotifications(TestOrganizationMixin, TestCase):
         user = self._create_user(
             username='user', email='user@user.com', first_name='User', last_name='user'
         )
-        op_group = Group.objects.get(name='Operator')
+        op_group = Group.objects.create(name='Operator')
         op_group.user_set.add(operator)
         op_group.user_set.add(user)
         op_group.save()
@@ -363,7 +391,8 @@ class TestNotifications(TestOrganizationMixin, TestCase):
             self.assertEqual(n.level, 'test')
             self.assertEqual(n.verb, 'testing')
             self.assertEqual(
-                n.message, '<p>testing initiated by admin since 0\xa0minutes</p>',
+                n.message,
+                '<p>testing initiated by admin since 0\xa0minutes</p>',
             )
             self.assertEqual(n.email_subject, '[example.com] testing reported by admin')
 
@@ -387,92 +416,26 @@ class TestNotifications(TestOrganizationMixin, TestCase):
 
         with self.subTest('Unregistering "test_type"'):
             unregister_notification_type('test_type')
-            with self.assertRaises(ImproperlyConfigured):
+            with self.assertRaises(NotificationRenderException):
                 get_notification_configuration('test_type')
 
         with self.subTest('Using non existing notification type for new notification'):
-            with self.assertRaises(ImproperlyConfigured):
+            with patch('logging.Logger.error') as mocked_logger:
                 self._create_notification()
-                n = notification_queryset.first()
+                mocked_logger.assert_called_once_with(
+                    'Error encountered while creating notification: '
+                    'No such Notification Type, test_type'
+                )
 
         with self.subTest('Check unregistration in NOTIFICATION_CHOICES'):
             with self.assertRaises(ImproperlyConfigured):
                 _unregister_notification_choice('test_type')
 
-    def test_notification_type_email(self):
-        operator = self._create_operator()
-        email_body = '{message}\n\nFor more information see {target_url}.'
-        self.notification_options.update({'type': 'default'})
-
-        with self.subTest('Test email with URL option'):
-            url = self.notification_options['url']
-            self._create_notification()
-            email = mail.outbox.pop()
-            n = notification_queryset.first()
-            self.assertEqual(
-                email.body,
-                email_body.format(
-                    message=strip_tags(n.message),
-                    target_url=self.notification_options['url'],
-                ),
-            )
-            html_message, content_type = email.alternatives.pop()
-            self.assertEqual(content_type, 'text/html')
-            self.assertIn(n.message, html_message)
-            self.assertIn(
-                f'For further information see <a href="{url}">{url}</a>.', html_message,
-            )
-
-        with self.subTest('Test email without URL option and target object'):
-            self.notification_options.pop('url')
-            self._create_notification()
-            email = mail.outbox.pop()
-            n = notification_queryset.first()
-            self.assertEqual(email.body, strip_tags(n.message))
-            html_message, content_type = email.alternatives.pop()
-            self.assertEqual(content_type, 'text/html')
-            self.assertIn(n.message, html_message)
-            self.assertNotIn(
-                f'<a href="{n.redirect_view_url}">', html_message,
-            )
-
-        with self.subTest('Test email with target object'):
-            self.notification_options.update({'target': operator})
-            self._create_notification()
-            email = mail.outbox.pop()
-            n = notification_queryset.first()
-            html_message, content_type = email.alternatives.pop()
-            self.assertEqual(
-                email.body,
-                email_body.format(
-                    message=strip_tags(n.message), target_url=n.redirect_view_url
-                ),
-            )
-            self.assertEqual(
-                email.subject, '[example.com] Default Notification Subject'
-            )
-            self.assertEqual(content_type, 'text/html')
-            self.assertIn(
-                f'<img src="{app_settings.OPENWISP_NOTIFICATIONS_EMAIL_LOGO}"'
-                ' alt="Logo" id="logo" class="logo">',
-                html_message,
-            )
-            self.assertIn(n.message, html_message)
-            self.assertIn(
-                f'<a href="{n.redirect_view_url}">For further information see'
-                f' "{n.target_content_type.model}: {n.target}".</a>',
-                html_message,
-            )
-
-    def test_responsive_html_email(self):
+    def test_notification_email(self):
+        self._create_operator()
         self.notification_options.update({'type': 'default'})
         self._create_notification()
-        email = mail.outbox.pop()
-        html_message, content_type = email.alternatives.pop()
-        self.assertIn('@media screen and (max-width: 250px)', html_message)
-        self.assertIn('@media screen and (max-width: 600px)', html_message)
-        self.assertIn('@media screen and (min-width: 600px)', html_message)
-        self.assertIn('<tr class="m-notification-header">', html_message)
+        self.assertEqual(len(mail.outbox), 1)
 
     def test_missing_relation_object(self):
         test_type = {
@@ -490,34 +453,36 @@ class TestNotifications(TestOrganizationMixin, TestCase):
                 ' {notification.actor} with {notification.action_object} for {notification.target}'
             ),
         }
-        register_notification_type('test_type', test_type)
+        register_notification_type('test_type', test_type, models=[User])
         self.notification_options.pop('email_subject')
         self.notification_options.update({'type': 'test_type'})
-        operator = self._get_operator()
 
         with self.subTest("Missing target object after creation"):
+            operator = self._get_operator()
             self.notification_options.update({'target': operator})
             self._create_notification()
-            pre_delete.send(sender=self, instance=operator)
+            operator.delete()
 
             n_count = notification_queryset.count()
             self.assertEqual(n_count, 0)
 
         with self.subTest("Missing action object after creation"):
+            operator = self._get_operator()
             self.notification_options.pop('target')
             self.notification_options.update({'action_object': operator})
             self._create_notification()
-            pre_delete.send(sender=self, instance=operator)
+            operator.delete()
 
             n_count = notification_queryset.count()
             self.assertEqual(n_count, 0)
 
         with self.subTest("Missing actor object after creation"):
+            operator = self._get_operator()
             self.notification_options.pop('action_object')
             self.notification_options.pop('url')
             self.notification_options.update({'sender': operator})
             self._create_notification()
-            pre_delete.send(sender=self, instance=operator)
+            operator.delete()
 
             n_count = notification_queryset.count()
             self.assertEqual(n_count, 0)
@@ -525,7 +490,8 @@ class TestNotifications(TestOrganizationMixin, TestCase):
         unregister_notification_type('test_type')
 
     @capture_any_output()
-    def test_notification_invalid_message_attribute(self):
+    @patch('openwisp_notifications.tasks.delete_notification.delay')
+    def test_notification_invalid_message_attribute(self, mocked_task):
         self.notification_options.update({'type': 'test_type'})
         test_type = {
             'verbose_name': 'Test Notification Type',
@@ -536,24 +502,21 @@ class TestNotifications(TestOrganizationMixin, TestCase):
         }
         register_notification_type('test_type', test_type)
         self._create_notification()
-        self.assertIsNone(notification_queryset.first())
-        unregister_notification_type('test_type')
-
-    @patch.object(app_settings, 'OPENWISP_NOTIFICATIONS_HTML_EMAIL', False)
-    def test_no_html_email(self, *args):
-        operator = self._create_operator()
-        self.notification_options.update(
-            {'type': 'default', 'target': operator, 'url': None}
-        )
-        self._create_notification()
-        email = mail.outbox.pop()
-        n = notification_queryset.first()
+        notification = notification_queryset.first()
+        with self.assertRaises(NotificationRenderException) as context_manager:
+            notification.message
         self.assertEqual(
-            email.body,
-            f'{strip_tags(n.message)}\n\nFor more information see {n.redirect_view_url}.',
+            str(context_manager.exception),
+            'Error encountered in rendering notification message',
         )
-        self.assertEqual(email.subject, '[example.com] Default Notification Subject')
-        self.assertFalse(email.alternatives)
+        with self.assertRaises(NotificationRenderException) as context_manager:
+            notification.email_subject
+        self.assertEqual(
+            str(context_manager.exception),
+            'Error encountered in generating notification email',
+        )
+        mocked_task.assert_called_with(notification_id=notification.id)
+        unregister_notification_type('test_type')
 
     def test_related_objects_database_query(self):
         operator = self._get_operator()
@@ -645,7 +608,8 @@ class TestNotifications(TestOrganizationMixin, TestCase):
 
         with self.subTest('Test user email preference is "False"'):
             NotificationSetting.objects.filter(
-                user=self.admin, type='test_type',
+                user=self.admin,
+                type='test_type',
             ).update(email=False)
             self._create_notification()
             self.assertEqual(len(mail.outbox), 0)
@@ -672,7 +636,8 @@ class TestNotifications(TestOrganizationMixin, TestCase):
 
         with self.subTest('Test user email preference is "True"'):
             NotificationSetting.objects.filter(
-                user=self.admin, type='test_type',
+                user=self.admin,
+                type='test_type',
             ).update(email=True)
             self._create_notification()
             self.assertEqual(len(mail.outbox), 1)
@@ -819,6 +784,70 @@ class TestNotifications(TestOrganizationMixin, TestCase):
     @patch('logging.Logger.warning')
     def test_post_migrate_handler_celery_broker_unreachable(self, mocked_logger, *args):
         post_migrate.send(
-            sender=NotificationsAppConfig, app_config=NotificationsAppConfig
+            sender=NotificationAppConfig, app_config=NotificationAppConfig
         )
         mocked_logger.assert_called_once()
+
+    @patch.object(post_migrate, 'receivers', [])
+    @patch(
+        'openwisp_notifications.tasks.ns_register_unregister_notification_type.delay',
+    )
+    def test_post_migrate_populate_notification_settings(self, mocked_task, *args):
+        with patch.object(app_settings, 'POPULATE_PREFERENCES_ON_MIGRATE', False):
+            NotificationAppConfig.ready()
+            post_migrate.send(
+                sender=NotificationAppConfig, app_config=NotificationAppConfig
+            )
+            mocked_task.assert_not_called()
+        with patch.object(app_settings, 'POPULATE_PREFERENCES_ON_MIGRATE', True):
+            NotificationAppConfig.ready()
+            post_migrate.send(
+                sender=NotificationAppConfig, app_config=NotificationAppConfig
+            )
+            mocked_task.assert_called_once()
+
+    @patch('openwisp_notifications.types.NOTIFICATION_ASSOCIATED_MODELS', set())
+    @patch('openwisp_notifications.tasks.delete_obsolete_objects.delay')
+    def test_delete_obsolete_tasks(self, mocked_task, *args):
+        user = self._create_user()
+        user.delete()
+        mocked_task.assert_not_called()
+
+
+class TestTransactionNotifications(TestOrganizationMixin, TransactionTestCase):
+    def setUp(self):
+        self.admin = self._create_admin()
+        self.notification_options = dict(
+            sender=self.admin,
+            description='Test Notification',
+            level='info',
+            verb='Test Notification',
+            email_subject='Test Email subject',
+            url='https://localhost:8000/admin',
+        )
+
+    def _create_notification(self):
+        return notify.send(**self.notification_options)
+
+    def test_notification_cache_update(self):
+        operator = self._get_operator()
+        register_notification_cache_update(
+            User, post_save, 'operator_name_changed_invalidation'
+        )
+        self.notification_options.update(
+            {'action_object': operator, 'target': operator, 'type': 'default'}
+        )
+        self._create_notification()
+        content_type = ContentType.objects.get_for_model(operator._meta.model)
+        cache_key = Notification._cache_key(content_type.id, operator.id)
+        operator_cache = cache.get(cache_key, None)
+        self.assertEqual(operator_cache.username, operator.username)
+        operator.username = 'new operator name'
+        operator.save()
+        notification = Notification.objects.get(target_content_type=content_type)
+        cache_key = Notification._cache_key(content_type.id, operator.id)
+        self._create_notification()
+        operator_cache = cache.get(cache_key, None)
+        self.assertEqual(notification.target.username, 'new operator name')
+        # Done for populating cache
+        self.assertEqual(operator_cache.username, 'new operator name')

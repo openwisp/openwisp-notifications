@@ -34,29 +34,4 @@ def unread_notifications(context):
     return output
 
 
-def notification_widget():
-    return format_html(
-        '''
-        <div class="ow-notification-dropdown ow-hide">
-            <div class="filters">
-                <span class="btn" id="ow-mark-all-read" tabindex="0" role="button">Mark all as read</span>
-                <span class="btn" id="ow-show-unread" tabindex="0" role="button">Show unread only</span>
-            </div>
-            <div class="ow-notification-wrapper ow-round-bottom-border">
-                <div id="ow-notifications-loader" class="ow-hide"><div class="loader"></div></div>
-            </div>
-            <div class="ow-no-notifications ow-round-bottom-border ow-hide">
-                <p>No new notification.</p>
-            </div>
-        </div>
-        '''
-    )
-
-
-def notification_toast():
-    return format_html('<div class="ow-notification-toast-wrapper"></div>')
-
-
 register.simple_tag(takes_context=True)(unread_notifications)
-register.simple_tag(takes_context=False)(notification_widget)
-register.simple_tag(takes_context=False)(notification_toast)

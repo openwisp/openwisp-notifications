@@ -9,23 +9,33 @@
 
 {% block extrahead %}
   {{ block.super }}
-  {% if not media.js %}
-    <script type="text/javascript" src="{% static 'admin/js/vendor/jquery/jquery.min.js' %}"></script>
-    <script type="text/javascript" src="{% static 'admin/js/jquery.init.js' %}"></script>
+  {% if not media.js and 'jquery' not in block.super %}
+    <script src="{% static 'admin/js/vendor/jquery/jquery.min.js' %}"></script>
+    <script src="{% static 'admin/js/jquery.init.js' %}"></script>
   {% endif %}
 {% endblock %}
 
-{% block userlinks %}
-  <div class="ow-notifications" id="openwisp_notifications">
-    <button id="ow-notification-btn">
-      <img class="bell-icon" src="{% static 'openwisp-notifications/images/icons/icon-bell.svg' %}" />
-    </button>
+{% block user-tools %}
+  {{ block.super }}
+  <button class="ow-notifications toggle-btn" id="openwisp_notifications">
+    <span id="ow-notification-btn"></span>
     {% unread_notifications %}
-  </div>
+  </button>
   {% csrf_token %}
-  {% notification_toast %}
-  {% notification_widget %}
-{% endblock %}
+  <div class="ow-notification-toast-wrapper"></div>
+  <div class="ow-notification-dropdown ow-hide">
+    <div class="filters">
+      <span class="toggle-btn" id="ow-mark-all-read" tabindex="0" role="button">{% trans 'Mark all as read' %}</span>
+      <span class="toggle-btn" id="ow-show-unread" tabindex="0" role="button">{% trans 'Show unread only' %}</span>
+    </div>
+    <div class="ow-notification-wrapper ow-round-bottom-border">
+      <div id="ow-notifications-loader" class="ow-hide"><div class="loader"></div></div>
+    </div>
+    <div class="ow-no-notifications ow-round-bottom-border ow-hide">
+        <p>{% trans 'No new notification.' %}</p>
+    </div>
+  </div>
+{% endblock  %}
 
 {% block footer %}
   {{ block.super }}

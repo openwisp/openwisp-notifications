@@ -50,15 +50,17 @@ const owNotificationWindow = {
 };
 
 function initNotificationDropDown($) {
-    $('.ow-notifications').click(function (e) {
-        e.stopPropagation();
+    $('.ow-notifications').click(function () {
         $('.ow-notification-dropdown').toggleClass('ow-hide');
     });
 
     $(document).click(function (e) {
         e.stopPropagation();
-        // Check if the clicked area is dropDown or not
-        if ($('.ow-notification-dropdown').has(e.target).length === 0) {
+        // Check if the clicked area is dropDown / notification-btn or not
+        if (
+            $('.ow-notification-dropdown').has(e.target).length === 0 &&
+            !$(e.target).is($('.ow-notifications'))
+        ) {
             $('.ow-notification-dropdown').addClass('ow-hide');
         }
     });
@@ -69,7 +71,7 @@ function initNotificationDropDown($) {
         e.stopPropagation();
         if ($('.ow-notification-dropdown').has(e.target).length === 0){
             // Don't hide if focus changes to notification bell icon
-            if (e.target != $('#ow-notification-btn').get(0)) {
+            if (e.target != $('#openwisp_notifications').get(0)) {
                 $('.ow-notification-dropdown').addClass('ow-hide');
             }
         }
@@ -80,7 +82,7 @@ function initNotificationDropDown($) {
         // Hide notification widget on "Escape" key
         if (e.keyCode == 27){
             $('.ow-notification-dropdown').addClass('ow-hide');
-            $('#ow-notification-btn').focus();
+            $('#openwisp_notifications').focus();
         }
     });
 }
@@ -144,11 +146,14 @@ function notificationWidget($) {
                     fetchedPages.push(res.results);
                     appendPage();
                     // Enable filters
-                    $('.btn').removeClass('disabled');
+                    $('.toggle-btn').removeClass('disabled');
                 }
             },
             error: function (error) {
                 busy = false;
+                showNotificationDropdownError(
+                    gettext('Failed to fetch notifications. Try again later.')
+                );
                 throw error;
             },
         });
@@ -204,14 +209,16 @@ function notificationWidget($) {
 
         return `<div class="ow-notification-elem ${klass}" id=ow-${elem.id}
                         data-location="${elem.target_url}" role="link" tabindex="0">
-                    <div class="ow-notification-meta">
+                    <div class="ow-notification-inner">
+                        <div class="ow-notification-meta">
                         <div class="ow-notification-level-wrapper">
                             <div class="ow-notify-${elem.level} icon"></div>
                             <div class="ow-notification-level-text">${elem.level}</div>
                         </div>
                         <div class="ow-notification-date">${datetime}</div>
-                    </div>
+                        </div>
                     ${elem.message}
+                    </div>
                 </div>`;
     }
 
@@ -230,11 +237,28 @@ function notificationWidget($) {
         onUpdate();
     }
 
+    function showNotificationDropdownError(message) {
+        $('#ow-notification-dropdown-error').html(message);
+        $('#ow-notification-dropdown-error-container').slideDown(1000);
+        setTimeout(closeNotificationDropdownError, 10000);
+    }
+
+    function closeNotificationDropdownError() {
+        $('#ow-notification-dropdown-error-container').slideUp(1000, function () {
+            $('#ow-notification-dropdown-error').html('');
+        });
+    }
+
+    $('#ow-notification-dropdown-error-container').on(
+        'click mouseleave focusout',
+        closeNotificationDropdownError
+    );
+
     $('.ow-notifications').on('click', initNotificationWidget);
 
     // Handler for filtering unread notifications
     $('#ow-show-unread').click(function () {
-        if ($(this).html() === 'Show unread only') {
+        if ($(this).html().includes('Show unread only')) {
             refreshNotificationWidget(null, '/api/v1/notification/?unread=true');
             $(this).html('Show all');
         } else {
@@ -245,6 +269,9 @@ function notificationWidget($) {
 
     // Handler for marking all notifications read
     $('#ow-mark-all-read').click(function () {
+        var unreads = $('.ow-notification-elem.unread');
+        unreads.removeClass('unread');
+        $('#ow-notification-count').hide();
         $.ajax({
             type: 'POST',
             url: getAbsoluteUrl('/api/v1/notification/read/'),
@@ -256,10 +283,15 @@ function notificationWidget($) {
             },
             crossDomain: true,
             success: function () {
-                refreshNotificationWidget();
                 $('#ow-show-unread').html('Show unread only');
+                $('#ow-notification-count').remove();
             },
             error: function (error) {
+                unreads.addClass('unread');
+                $('#ow-notification-count').show();
+                showNotificationDropdownError(
+                    gettext('Failed to mark notifications as unread. Try again later.')
+                );
                 throw error;
             },
         });
@@ -291,18 +323,18 @@ function notificationWidget($) {
 
 function markNotificationRead(elem) {
     let elemId = elem.id.replace('ow-', '');
+    try {
+        document.querySelector(`#${elem.id}.ow-notification-elem`).classList.remove('unread');
+    } catch (error) {
+        // no op
+    }
+    notificationReadStatus.set(elemId, 'read');
     notificationSocket.send(
         JSON.stringify({
             type: 'notification',
             notification_id: elemId
         })
     );
-    try {
-        document.querySelector(`#${elem.id}.ow-notification-elem`).classList.remove('unread');
-    } catch (error) {
-        throw error;
-    }
-    notificationReadStatus.set(elemId, 'read');
 }
 
 function initWebSockets($) {

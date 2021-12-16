@@ -97,7 +97,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                'openwisp_utils.admin_theme.context_processor.menu_items',
+                'openwisp_utils.admin_theme.context_processor.menu_groups',
                 'openwisp_utils.admin_theme.context_processor.admin_theme_settings',
                 'openwisp_notifications.context_processors.notification_api_settings',
             ],
@@ -109,7 +109,9 @@ CACHES = {
     'default': {
         'BACKEND': 'django_redis.cache.RedisCache',
         'LOCATION': 'redis://localhost/5',
-        'OPTIONS': {'CLIENT_CLASS': 'django_redis.client.DefaultClient',},
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+        },
     }
 }
 
@@ -123,7 +125,12 @@ else:
     CHANNEL_LAYERS = {
         'default': {
             'BACKEND': 'channels_redis.core.RedisChannelLayer',
-            'CONFIG': {'hosts': ['redis://localhost/7']},
+            'CONFIG': {
+                'hosts': ['redis://localhost/7'],
+                'group_expiry': 3600,
+                'capacity': 1000,
+                'expiry': 30,
+            },
         },
     }
 

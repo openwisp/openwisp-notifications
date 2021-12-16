@@ -1,5 +1,6 @@
 # isort:skip_file
 from django.db import models
+from django.core.exceptions import ObjectDoesNotExist
 from openwisp_notifications.base.models import (
     AbstractNotification,
     AbstractNotificationSetting,
@@ -16,6 +17,8 @@ from swapper import get_model_name
 from openwisp_notifications.signals import notify
 
 from openwisp_utils.base import UUIDModel
+
+from .signals import test_app_name_changed
 
 
 class DetailsModel(models.Model):
@@ -44,7 +47,8 @@ class IgnoreObjectNotification(DetailsModel, AbstractIgnoreObjectNotification):
 class TestApp(UUIDModel):
     name = models.CharField(max_length=50)
     organization = models.ForeignKey(
-        get_model_name('openwisp_users', 'Organization'), on_delete=models.CASCADE,
+        get_model_name('openwisp_users', 'Organization'),
+        on_delete=models.CASCADE,
     )
 
     class Meta:
@@ -53,6 +57,19 @@ class TestApp(UUIDModel):
 
     def __str__(self):
         return self.name
+
+    def save(self, *args, **kwargs):
+        self._check_name_changed()
+        super().save(*args, **kwargs)
+
+    def _check_name_changed(self):
+        try:
+            obj = self._meta.model.objects.get(id=self.id)
+        except ObjectDoesNotExist:
+            return
+        else:
+            if obj.name != self.name:
+                test_app_name_changed.send(sender=self.__class__, instance=self)
 
 
 @receiver(post_save, sender=TestApp, dispatch_uid='test_app_object_created')

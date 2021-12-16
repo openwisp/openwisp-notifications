@@ -1,5 +1,6 @@
 from django.core.exceptions import ImproperlyConfigured
-from django.test import TestCase
+from django.db.models.signals import post_save
+from django.test import TransactionTestCase
 
 from openwisp_notifications.handlers import (
     notification_type_registered_unregistered_handler,
@@ -29,7 +30,11 @@ OrganizationUser = swapper_load_model('openwisp_users', 'OrganizationUser')
 ns_queryset = NotificationSetting.objects.filter(type='default')
 
 
-class TestNotificationSetting(TestOrganizationMixin, TestCase):
+class TestNotificationSetting(TestOrganizationMixin, TransactionTestCase):
+    def setUp(self):
+        if not Organization.objects.first():
+            self._create_org(name='default', slug='default')
+
     def tearDown(self):
         super().tearDown()
         try:
@@ -60,6 +65,9 @@ class TestNotificationSetting(TestOrganizationMixin, TestCase):
 
         self._get_admin()
         self.assertEqual(queryset.count(), 1)
+        self.assertEquals(
+            queryset.first().__str__(), 'Test Notification Type - default'
+        )
 
     def test_organization_created_no_initial_user(self):
         org = self._get_org()
@@ -84,7 +92,8 @@ class TestNotificationSetting(TestOrganizationMixin, TestCase):
         self.assertEqual(ns_queryset.count(), 2)
         org_user.delete()
         # OrganizationOwner can not be deleted before transferring ownership
-        self.assertEqual(ns_queryset.count(), 1)
+        self.assertEqual(ns_queryset.filter(deleted=False).count(), 1)
+        self.assertEqual(ns_queryset.filter(deleted=True).count(), 1)
 
     def test_register_notification_org_user(self):
         self._create_staff_org_admin()
@@ -106,10 +115,10 @@ class TestNotificationSetting(TestOrganizationMixin, TestCase):
         notification_type_registered_unregistered_handler(sender=self)
 
         # Notification Setting for "default" type are deleted
-        self.assertEqual(ns_queryset.count(), 0)
+        self.assertEqual(ns_queryset.filter(type='default', deleted=True).count(), 3)
 
         # Notification Settings for "test" type are created
-        queryset = NotificationSetting.objects
+        queryset = NotificationSetting.objects.filter(deleted=False)
         if NotificationSetting._meta.app_label == 'sample_notifications':
             self.assertEqual(queryset.count(), 6)
             self.assertEqual(queryset.filter(user=admin).count(), 4)
@@ -126,15 +135,42 @@ class TestNotificationSetting(TestOrganizationMixin, TestCase):
         admin.is_superuser = False
         admin.save()
 
+        self.assertEqual(ns_queryset.filter(deleted=True).count(), 1)
+
+    def test_user_promoted_to_superuser(self):
+        user = self._create_operator()
         self.assertEqual(ns_queryset.count(), 0)
 
-    def test_superuser_demoted_to_org_user(self):
+        user.is_superuser = True
+        user.save()
+
+        self.assertEqual(ns_queryset.count(), 1)
+
+    def test_superuser_demoted_to_org_admin(self):
         admin = self._get_admin()
         admin.is_superuser = False
         admin.save()
         org = Organization.objects.get(name='default')
         OrganizationUser.objects.create(user=admin, organization=org, is_admin=True)
 
+        self.assertEqual(ns_queryset.count(), 1)
+
+    def test_org_admin_demoted_to_org_user(self):
+        org_user = self._create_staff_org_admin()
+        self.assertEqual(ns_queryset.count(), 1)
+        org_user.organizationowner.delete()
+        org_user.is_admin = False
+        org_user.full_clean()
+        org_user.save()
+        self.assertEqual(ns_queryset.filter(deleted=False).count(), 0)
+        self.assertEqual(ns_queryset.filter(deleted=True).count(), 1)
+
+    def test_org_user_promoted_to_org_admin(self):
+        org_user = self._create_org_user(user=self._create_operator(), is_admin=False)
+        self.assertEqual(ns_queryset.count(), 0)
+        org_user.is_admin = True
+        org_user.full_clean()
+        org_user.save()
         self.assertEqual(ns_queryset.count(), 1)
 
     def test_multiple_org_membership(self):
@@ -179,8 +215,48 @@ class TestNotificationSetting(TestOrganizationMixin, TestCase):
         self.assertNotEqual(org_user.organization_id, default_org.pk)
         self.assertEqual(ns_queryset.count(), 1)
         org_user.organization_id = default_org.pk
+        org_user.full_clean()
         org_user.save()
 
-        self.assertEqual(ns_queryset.count(), 1)
+        self.assertEqual(ns_queryset.filter(deleted=True).count(), 1)
+        self.assertEqual(ns_queryset.filter(deleted=False).count(), 1)
         notification_setting = ns_queryset.first()
         self.assertEqual(notification_setting.organization.pk, default_org.pk)
+
+    def test_organization_user_no_change_save(self):
+        org_user = self._create_staff_org_admin()
+        ns = ns_queryset.first()
+        self.assertEqual(ns_queryset.count(), 1)
+        org_user.full_clean()
+        org_user.save()
+        self.assertEqual(ns_queryset.count(), 1)
+        update_ns = ns_queryset.first()
+        self.assertEqual(ns.id, update_ns.id)
+
+    def test_org_user_promoted_to_org_admin_with_org_change(self):
+        default_org = Organization.objects.get(slug='default')
+        org_user = self._create_org_user(user=self._create_operator(), is_admin=False)
+        self.assertEqual(ns_queryset.count(), 0)
+        org_user.is_admin = True
+        org_user.organization = default_org
+        org_user.full_clean()
+        org_user.save()
+        self.assertEqual(ns_queryset.count(), 1)
+        ns = ns_queryset.first()
+        self.assertEqual(ns.organization, default_org)
+        self.assertEqual(ns.user, org_user.user)
+
+    def test_deleted_notificationsetting_autocreated(self):
+        org_user = self._create_staff_org_admin()
+        self.assertEqual(ns_queryset.count(), 1)
+        ns = ns_queryset.first()
+        ns.deleted = True
+        ns.full_clean()
+        ns.save()
+
+        # Emit post_save for organization user
+        post_save.send(sender=OrganizationUser, instance=org_user, created=False)
+
+        self.assertEqual(ns_queryset.count(), 1)
+        ns.refresh_from_db()
+        self.assertEqual(ns.deleted, False)

@@ -54,7 +54,6 @@ Available features
 - `Sending notifications <#sending-notifications>`_
 - `Web notifications <#web-notifications>`_
 - `Email notifications <#email-notifications>`_
-- `Configurable email theme <#openwisp_notifications_email_template>`_
 - `Notification types <#notification-types>`_
 - `Registering new notification types <#registering--unregistering-notification-types>`_
 - `User notification preferences <#notification-preferences>`_
@@ -369,7 +368,7 @@ displayed through notification toast.
 Email Notifications
 -------------------
 
-.. figure:: https://github.com/openwisp/openwisp-notifications/raw/master/docs/images/email-template.png
+.. figure:: https://github.com/openwisp/openwisp-notifications/raw/docs/docs/images/email-template.png
 
 Along with web notifications *OpenWISP Notification* also sends notifications
 through emails.
@@ -385,6 +384,34 @@ for a number of notifications. To optimize database queries, these objects are c
 The cached values are updated automatically to reflect actual data from database. You can control
 the duration of caching these objects using
 `OPENWISP_NOTIFICATIONS_CACHE_TIMEOUT setting <#OPENWISP_NOTIFICATIONS_CACHE_TIMEOUT>`_.
+
+Cache invalidation
+~~~~~~~~~~~~~~~~~~
+
+The function ``register_notification_cache_update`` can be used to register a signal of a model which is being used as an
+``actor``, ``action_object`` and ``target`` objects. As these values are cached for the optimization purpose so their cached
+values are need to be changed when they are changed. You can register any signal you want which will delete the cached value.
+To register a signal you need to include following code in your ``apps.py``.
+
+.. code-block:: python
+
+    from django.db.models.signals import post_save
+    from swapper import load_model
+
+    def ready(self):
+        super().ready()
+
+        # Include lines after this inside
+        # ready function of you app config class
+        from openwisp_notifications.handlers import register_notification_cache_update
+
+        model = load_model('app_name', 'model_name')
+        register_notification_cache_update(model, post_save, dispatch_uid="myapp_mymodel_notification_cache_invalidation")
+
+**Note**: You need to import ``register_notification_cache_update`` inside the ``ready`` function or
+you can define another funtion to register signals which will be called in ``ready`` and then it will be
+imported in this function. Also ``dispatch_uid`` is unique identifier of a signal. You can pass any
+value you want but it needs to be unique. For more details read `preventing duplicate signals section of Django documentation <https://docs.djangoproject.com/en/dev/topics/signals/#preventing-duplicate-signals>`_
 
 Notification Types
 ------------------
@@ -455,7 +482,7 @@ Syntax:
 
 .. code-block:: python
 
-    register_notification_type(type_name, type_config)
+    register_notification_type(type_name, type_config, models)
 
 +---------------+-------------------------------------------------------------+
 | **Parameter** | **Description**                                             |
@@ -464,12 +491,18 @@ Syntax:
 +---------------+-------------------------------------------------------------+
 | type_config   | A ``dict`` defining configuration of the notification type. |
 +---------------+-------------------------------------------------------------+
+| models        | An optional ``list`` of models that can be associated with  |
+|               | the notification type.                                      |
++---------------+-------------------------------------------------------------+
 
 An example usage has been shown below.
 
 .. code-block:: python
 
     from openwisp_notifications.types import register_notification_type
+    from django.contrib.auth import get_user_model
+
+    User = get_user_model()
 
     # Define configuration of your notification type
     custom_type = {
@@ -483,7 +516,7 @@ An example usage has been shown below.
     }
 
     # Register your custom notification type
-    register_notification_type('custom_type', custom_type)
+    register_notification_type('custom_type', custom_type, models=[User])
 
 **Note**: It will raise ``ImproperlyConfigured`` exception if a notification type is already registered
 with same name(not to be confused with ``verbose_name``).
@@ -566,7 +599,7 @@ unregistered in ``ready`` method of your Django application's ``AppConfig``.
 Notification Preferences
 ------------------------
 
-.. image:: https://github.com/openwisp/openwisp-notifications/raw/master/docs/images/notification-settings.png
+.. image:: https://github.com/openwisp/openwisp-notifications/raw/docs/docs/images/notification-settings.png
 
 *openwisp-notifications* allows users to select their preferred way of receiving notifications.
 Users can choose from web or email notifications. These settings have been categorized
@@ -583,10 +616,17 @@ by disabling both web and email option for a notification setting.
 then ``email_notification`` or ``web_notification`` option of concerned notification type will be used
 respectively.
 
+Deleting Notification Preferences
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Deleting the notification preferences is an advanced option. Users should turn off web and email
+notifications instead of deleting notification preferences. Deleted notification preferences
+may be re-created automatically if the system needs it.
+
 Silencing notifications for specific objects temporarily or permanently
 -----------------------------------------------------------------------
 
-.. image:: https://github.com/openwisp/openwisp-notifications/raw/master/docs/images/silence-notifications.png
+.. image:: https://github.com/openwisp/openwisp-notifications/raw/docs/docs/images/silence-notifications.png
    :align: center
 
 *OpenWISP Notifications* allows users to silence all notifications generated by
@@ -629,74 +669,6 @@ to learn more.
 
 Settings
 --------
-
-``OPENWISP_NOTIFICATIONS_HTML_EMAIL``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-+---------+----------+
-| type    | ``bool`` |
-+---------+----------+
-| default | ``True`` |
-+---------+----------+
-
-If ``True``, attaches markdown rendered HTML of notification message in email notification.
-If ``False``, HTML rendering of notification message will be disabled and a plain
-text email is sent.
-
-``OPENWISP_NOTIFICATIONS_EMAIL_TEMPLATE``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-+---------+------------------------------------------------+
-| type    | ``str``                                        |
-+---------+------------------------------------------------+
-| default | ``openwisp_notifications/email_template.html`` |
-+---------+------------------------------------------------+
-
-This setting takes the path to the template for email notifications. Thus, making it possible to
-customize email notification. You can either extend the default email template or write your own
-email template from scratch. An example of extending default email template to customize styling is
-shown below.
-
-.. code-block:: django
-
-    {% extends 'openwisp_notifications/email_template.html' %}
-    {% block styles %}
-    {{ block.super }}
-    <style>
-      .background {
-        height: 100%;
-        background: linear-gradient(to bottom, #8ccbbe 50%, #3797a4 50%);
-        background-repeat: no-repeat;
-        background-attachment: fixed;
-        padding: 50px;
-      }
-
-      .mail-header {
-        background-color: #3797a4;
-        color: white;
-      }
-    </style>
-    {% endblock styles %}
-
-Similarly, you can customize the HTML of the template by overriding the ``body`` block.
-See `openwisp_notifications/email_template.html <https://github.com/pandafy/openwisp-notifications/blob/
-master/openwisp_notifications/templates/openwisp_notifications/email_template.html>`_
-for reference implementation.
-
-``OPENWISP_NOTIFICATIONS_EMAIL_LOGO``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-+---------+---------------------------------------------------------------------------------------------+
-| type    | ``str``                                                                                     |
-+---------+---------------------------------------------------------------------------------------------+
-| default | `OpenWISP logo <https://raw.githubusercontent.com/openwisp/openwisp-notifications/master/ \ |
-|         | openwisp_notifications/static/openwisp-notifications/images/openwisp-logo.png>`_            |
-+---------+---------------------------------------------------------------------------------------------+
-
-This setting takes the URL of the logo to be displayed on email notification.
-
-**Note**: Provide a URL which points to the logo on your own web server. Ensure that the URL provided is
-publicly accessible from the internet. Otherwise, the logo may not be displayed in the email.
 
 ``OPENWISP_NOTIFICATIONS_HOST``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -793,6 +765,52 @@ model, then configure the setting as following:
 
     OPENWISP_NOTIFICATIONS_IGNORE_ENABLED_ADMIN = ['openwisp_users.admin.UserAdmin']
 
+``OPENWISP_NOTIFICATIONS_POPULATE_PREFERENCES_ON_MIGRATE``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
++---------+----------+
+| type    | ``bool`` |
++---------+----------+
+| default | ``True`` |
++---------+----------+
+
+This setting allows to disable creating `notification preferences <#notification-preferences>`_
+on running migrations.
+
+``OPENWISP_NOTIFICATIONS_NOTIFICATION_STORM_PREVENTION``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+When the system starts creating a lot of notifications because of a
+general network outage (e.g.: a power outage, a global misconfiguration),
+the notification storm prevention mechanism avoids the constant displaying
+of new notification alerts as well as their sound, only the notification
+counter will continue updating periodically, although it won't emit any
+sound or create any other visual element until the
+notification storm is over.
+
+This setting allows tweaking how this mechanism works.
+
+The default configuration is as follows:
+
+.. code-block:: python
+
+    OPENWISP_NOTIFICATIONS_NOTIFICATION_STORM_PREVENTION = {
+        # Time period for tracking burst of notifications (in seconds)
+        'short_term_time_period': 10,
+        # Number of notifications considered as a notification burst
+        'short_term_notification_count': 6,
+        # Time period for tracking notifications in long time interval (in seconds)
+        'long_term_time_period': 180,
+        # Number of notifications in long time interval to be considered as a notification storm
+        'long_term_notification_count': 30,
+        # Initial time for which notification updates should be skipped (in seconds)
+        'initial_backoff': 1,
+        # Time by which skipping of notification updates should be increased (in seconds)
+        'backoff_increment': 1,
+        # Maximum interval after which the notification widget should get updated (in seconds)
+        'max_allowed_backoff': 15,
+    }
+
 Exceptions
 ----------
 
@@ -815,14 +833,14 @@ REST API
 Live documentation
 ~~~~~~~~~~~~~~~~~~
 
-.. image:: https://github.com/openwisp/openwisp-notifications/raw/master/docs/images/api-docs.png
+.. image:: https://github.com/openwisp/openwisp-notifications/raw/docs/docs/images/api-docs.png
 
 A general live API documentation (following the OpenAPI specification) is available at ``/api/v1/docs/``.
 
 Browsable web interface
 ~~~~~~~~~~~~~~~~~~~~~~~
 
-.. image:: https://github.com/openwisp/openwisp-notifications/raw/master/docs/images/api-ui.png
+.. image:: https://github.com/openwisp/openwisp-notifications/raw/docs/docs/images/api-ui.png
 
 Additionally, opening any of the endpoints `listed below <#list-of-endpoints>`_
 directly in the browser will show the `browsable API interface of Django-REST-Framework
@@ -994,19 +1012,38 @@ Install SQLite:
 
     sudo apt install sqlite3 libsqlite3-dev openssl libssl-dev
 
-Install your forked repo:
+Fork and clone the forked repository:
 
 .. code-block:: shell
 
     git clone git://github.com/<your_fork>/openwisp-notifications
-    cd openwisp-notifications/
-    python setup.py develop
 
-Install test requirements:
+Navigate into the cloned repository:
 
 .. code-block:: shell
 
+    cd openwisp-notifications/
+
+Setup and activate a virtual-environment. (we'll be using  `virtualenv <https://pypi.org/project/virtualenv/>`_)
+
+.. code-block:: shell
+
+    python -m virtualenv env
+    source env/bin/activate
+
+Make sure that you are using pip version 20.2.4 before moving to the next step:
+
+.. code-block:: shell
+
+    pip install -U "pip==20.2.4" wheel
+
+Install development dependencies:
+
+.. code-block:: shell
+
+    pip install -e .
     pip install -r requirements-test.txt
+    npm install -g jslint stylelint
 
 Start Redis using docker-compose:
 
@@ -1296,7 +1333,7 @@ Add the following in your settings.py to import celery tasks from ``openwisp_not
 15. Register Template Tags
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-If you need to use template tags of *openwisp_notifications*, you will need to register as the, shown in
+If you need to use template tags of *openwisp_notifications*, you will need to register as shown in
 `"templatetags/notification_tags.py" of sample_notifications
 <https://github.com/openwisp/openwisp-notifications/blob/master/tests/openwisp2/sample_notifications/templatetags/notification_tags.py>`_.
 
@@ -1315,17 +1352,7 @@ when an object of ``TestApp`` model is created. You can use
 `sample_notifications/models.py <https://github.com/openwisp/openwisp-notifications/blob/master/tests/openwisp2/sample_notifications/models.py>`_
 as reference for your implementation.
 
-17. Add Base Template for Admin
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Please refer to the `"templates/admin/base.html" in sample_notifications
-<https://github.com/openwisp/openwisp-notifications/blob/master/tests/openwisp2/sample_notifications/templates/admin/base.html>`_.
-
-For more information about customizing admin templates in django, please refer to the
-`"Overriding admin templates" section in the django documentation
-<https://docs.djangoproject.com/en/3.0/ref/contrib/admin/#overriding-admin-templates>`_.
-
-18. Import the automated tests
+17. Import the automated tests
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 When developing a custom application based on this module, it's a good idea to import and run the base tests

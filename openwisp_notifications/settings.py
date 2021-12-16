@@ -3,23 +3,6 @@ from notifications.settings import CONFIG_DEFAULTS
 
 CONFIG_DEFAULTS.update({'USE_JSONFIELD': True})
 
-OPENWISP_NOTIFICATIONS_EMAIL_TEMPLATE = getattr(
-    settings,
-    'OPENWISP_NOTIFICATIONS_EMAIL_TEMPLATE',
-    'openwisp_notifications/email_template.html',
-)
-
-OPENWISP_NOTIFICATIONS_EMAIL_LOGO = getattr(
-    settings,
-    'OPENWISP_NOTIFICATIONS_EMAIL_LOGO',
-    'https://raw.githubusercontent.com/openwisp/openwisp-notifications/master/openwisp_notifications/'
-    'static/openwisp-notifications/images/openwisp-logo.png',
-)
-
-OPENWISP_NOTIFICATIONS_HTML_EMAIL = getattr(
-    settings, 'OPENWISP_NOTIFICATIONS_HTML_EMAIL', True
-)
-
 OPENWISP_NOTIFICATIONS_HOST = getattr(settings, 'OPENWISP_NOTIFICATIONS_HOST', None)
 OPENWISP_NOTIFICATIONS_SOUND = getattr(
     settings,
@@ -33,6 +16,22 @@ OPENWISP_NOTIFICATIONS_CACHE_TIMEOUT = getattr(
 
 IGNORE_ENABLED_ADMIN = getattr(
     settings, 'OPENWISP_NOTIFICATIONS_IGNORE_ENABLED_ADMIN', []
+)
+POPULATE_PREFERENCES_ON_MIGRATE = getattr(
+    settings, 'OPENWISP_NOTIFICATIONS_POPULATE_PREFERENCES_ON_MIGRATE', True
+)
+NOTIFICATION_STORM_PREVENTION = getattr(
+    settings,
+    'OPENWISP_NOTIFICATIONS_NOTIFICATION_STORM_PREVENTION',
+    {
+        'short_term_time_period': 10,
+        'short_term_notification_count': 6,
+        'long_term_time_period': 180,
+        'long_term_notification_count': 30,
+        'initial_backoff': 1,
+        'backoff_increment': 1,
+        'max_allowed_backoff': 15,
+    },
 )
 
 

@@ -1,6 +1,8 @@
 from django.core.exceptions import ImproperlyConfigured
 from django.template.loader import get_template
 
+from .exceptions import NotificationRenderException
+
 NOTIFICATION_TYPES = {
     'default': {
         'level': 'info',
@@ -18,6 +20,7 @@ NOTIFICATION_TYPES = {
 }
 
 NOTIFICATION_CHOICES = [('default', 'Default Type')]
+NOTIFICATION_ASSOCIATED_MODELS = set()
 
 
 def get_notification_configuration(notification_type):
@@ -26,7 +29,9 @@ def get_notification_configuration(notification_type):
     try:
         return NOTIFICATION_TYPES[notification_type]
     except KeyError:
-        raise ImproperlyConfigured(f'No such Notification Type, {notification_type}')
+        raise NotificationRenderException(
+            f'No such Notification Type, {notification_type}'
+        )
 
 
 def _validate_notification_type(type_config):
@@ -48,10 +53,9 @@ def _validate_notification_type(type_config):
     return type_config
 
 
-def register_notification_type(type_name, type_config):
+def register_notification_type(type_name, type_config, models=[]):
     """
     Registers a new notification type.
-    register_notification_type(str,dict)
     """
     if not isinstance(type_name, str):
         raise ImproperlyConfigured('Notification Type name should be type `str`.')
@@ -67,6 +71,7 @@ def register_notification_type(type_name, type_config):
     validated_type_config = _validate_notification_type(type_config)
     NOTIFICATION_TYPES.update({type_name: validated_type_config})
     _register_notification_choice(type_name, validated_type_config)
+    NOTIFICATION_ASSOCIATED_MODELS.update(models)
 
 
 def unregister_notification_type(type_name):
