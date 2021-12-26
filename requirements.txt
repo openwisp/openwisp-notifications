@@ -1,4 +1,4 @@
-django-notifications-hq @ https://github.com/django-notifications/django-notifications
+django-notifications-hq @ https://github.com/django-notifications/django-notifications/tarball/master
 channels~=3.0.2
 # TODO set the next point release of openwisp-users when ready
 openwisp-users @ https://github.com/openwisp/openwisp-users/tarball/master
