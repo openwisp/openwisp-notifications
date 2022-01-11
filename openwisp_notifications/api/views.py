@@ -2,7 +2,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.http import Http404, HttpResponseRedirect
 from django.urls import reverse
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import status
+from rest_framework import serializers, status
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.generics import (
     GenericAPIView,
@@ -45,6 +45,8 @@ class BaseNotificationView(GenericAPIView):
     authentication_classes = [BearerAuthentication, SessionAuthentication]
     permission_classes = [IsAuthenticated]
     queryset = Notification.objects.all()
+    # NOTE: Required for Browsable API view. Don't remove.
+    serializer_class = serializers.Serializer
 
     def get_queryset(self):
         return self.queryset.filter(recipient=self.request.user)
