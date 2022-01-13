@@ -99,8 +99,9 @@ class NotificationReadRedirect(BaseNotificationView):
 class NotificationReadAllView(BaseNotificationView):
     def post(self, request, *args, **kwargs):
         queryset = self.get_queryset()
-        queryset.update(unread=False)
-        # update() does not create post_save signal
+        queryset.filter(unread=True).update(unread=False)
+        # update() does not create post_save signal, therefore
+        # manual invalidation of cache is required
         Notification.invalidate_unread_cache(request.user)
         return Response(status=status.HTTP_200_OK)
 
