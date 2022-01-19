@@ -72,9 +72,7 @@ class NotificationDetailView(BaseNotificationView, RetrieveDestroyAPIView):
     def _mark_notification_read(self):
         notification = self.get_object()
         notification.mark_as_read()
-        return Response(
-            status=status.HTTP_200_OK,
-        )
+        return Response(status=status.HTTP_200_OK,)
 
 
 class NotificationReadRedirect(BaseNotificationView):

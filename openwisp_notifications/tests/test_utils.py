@@ -36,9 +36,7 @@ class TestManagementCommands(TestCase, TestOrganizationMixin):
 
 class TestChecks(TestCase, TestOrganizationMixin):
     @patch.object(
-        app_settings,
-        'OPENWISP_NOTIFICATIONS_HOST',
-        'https://example.com',
+        app_settings, 'OPENWISP_NOTIFICATIONS_HOST', 'https://example.com',
     )
     def test_cors_not_configured(self):
         # If INSTALLED_APPS not configured

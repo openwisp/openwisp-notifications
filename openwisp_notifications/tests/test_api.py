@@ -80,8 +80,7 @@ class TestNotificationApi(
             self.assertEqual(response.status_code, 200)
             self.assertEqual(response.data['count'], number_of_notifications)
             self.assertIn(
-                self._get_path('notifications_list', page=2),
-                response.data['next'],
+                self._get_path('notifications_list', page=2), response.data['next'],
             )
             self.assertEqual(response.data['previous'], None)
             self.assertEqual(len(response.data['results']), 20)
@@ -90,12 +89,10 @@ class TestNotificationApi(
             self.assertEqual(next_response.status_code, 200)
             self.assertEqual(next_response.data['count'], number_of_notifications)
             self.assertEqual(
-                next_response.data['next'],
-                None,
+                next_response.data['next'], None,
             )
             self.assertIn(
-                self._get_path('notifications_list'),
-                next_response.data['previous'],
+                self._get_path('notifications_list'), next_response.data['previous'],
             )
             self.assertEqual(len(next_response.data['results']), 1)
 
@@ -190,8 +187,7 @@ class TestNotificationApi(
             response = self.client.get(url)
             self.assertEqual(response.status_code, 404)
             self.assertDictEqual(
-                response.data,
-                {'detail': NOT_FOUND_ERROR},
+                response.data, {'detail': NOT_FOUND_ERROR},
             )
 
         with self.subTest('Test retrieving details for existing notification'):
@@ -213,8 +209,7 @@ class TestNotificationApi(
             response = self.client.patch(url)
             self.assertEqual(response.status_code, 404)
             self.assertDictEqual(
-                response.data,
-                {'detail': NOT_FOUND_ERROR},
+                response.data, {'detail': NOT_FOUND_ERROR},
             )
 
         with self.subTest('Test for existing notification'):
@@ -235,8 +230,7 @@ class TestNotificationApi(
             response = self.client.delete(url)
             self.assertEqual(response.status_code, 404)
             self.assertDictEqual(
-                response.data,
-                {'detail': NOT_FOUND_ERROR},
+                response.data, {'detail': NOT_FOUND_ERROR},
             )
 
         with self.subTest('Test for valid notification'):
@@ -360,10 +354,7 @@ class TestNotificationApi(
             url = self._get_path(
                 'ignore_object_notification', obj_app_label, obj_model_name, obj_id
             )
-            response = self.client.put(
-                url,
-                HTTP_AUTHORIZATION=f'Bearer {token}',
-            )
+            response = self.client.put(url, HTTP_AUTHORIZATION=f'Bearer {token}',)
             self.assertEqual(response.status_code, 200)
             self.assertIn('id', response.data)
 
@@ -454,8 +445,7 @@ class TestNotificationApi(
             self.assertEqual(response.status_code, 200)
             self.assertEqual(response.data['count'], 1)
             self.assertEqual(
-                response.data['next'],
-                None,
+                response.data['next'], None,
             )
             self.assertEqual(response.data['previous'], None)
             self.assertEqual(len(response.data['results']), 1)
@@ -528,8 +518,7 @@ class TestNotificationApi(
             self.assertEqual(response.status_code, 200)
             self.assertEqual(response.data['count'], number_of_settings)
             self.assertEqual(
-                response.data['next'],
-                None,
+                response.data['next'], None,
             )
             self.assertEqual(response.data['previous'], None)
             self.assertEqual(len(response.data['results']), number_of_settings)
@@ -611,15 +600,11 @@ class TestNotificationApi(
             response = self.client.get(url)
             self.assertEqual(response.status_code, 404)
             self.assertDictEqual(
-                response.data,
-                {'detail': NOT_FOUND_ERROR},
+                response.data, {'detail': NOT_FOUND_ERROR},
             )
 
         with self.subTest('Test retrieving details for existing notification setting'):
-            url = self._get_path(
-                'notification_setting',
-                notification_setting.pk,
-            )
+            url = self._get_path('notification_setting', notification_setting.pk,)
             response = self.client.get(url)
             self.assertEqual(response.status_code, 200)
             data = response.data
@@ -637,15 +622,11 @@ class TestNotificationApi(
             response = self.client.put(url, data=update_data)
             self.assertEqual(response.status_code, 404)
             self.assertDictEqual(
-                response.data,
-                {'detail': NOT_FOUND_ERROR},
+                response.data, {'detail': NOT_FOUND_ERROR},
             )
 
         with self.subTest('Test retrieving details for existing notification setting'):
-            url = self._get_path(
-                'notification_setting',
-                notification_setting.pk,
-            )
+            url = self._get_path('notification_setting', notification_setting.pk,)
             response = self.client.put(
                 url, update_data, content_type='application/json'
             )
@@ -760,8 +741,7 @@ class TestNotificationApi(
             response = self.client.delete(url)
             self.assertEqual(response.status_code, 404)
             self.assertDictEqual(
-                response.data,
-                {'detail': NOT_FOUND_ERROR},
+                response.data, {'detail': NOT_FOUND_ERROR},
             )
 
         with self.subTest('Test for existing object notification'):
@@ -792,8 +772,7 @@ class TestNotificationApi(
             response = self.client.delete(url)
             self.assertEqual(response.status_code, 404)
             self.assertDictEqual(
-                response.data,
-                {'detail': NOT_FOUND_ERROR},
+                response.data, {'detail': NOT_FOUND_ERROR},
             )
 
         with self.subTest('Test for existing object notification'):
@@ -846,8 +825,7 @@ class TestNotificationApi(
             self.assertEqual(next_response.status_code, 200)
             self.assertEqual(next_response.data['count'], number_of_obj_notifications)
             self.assertEqual(
-                next_response.data['next'],
-                None,
+                next_response.data['next'], None,
             )
             self.assertIn(
                 self._get_path('ignore_object_notification_list'),

@@ -124,8 +124,7 @@ class NotificationConsumer(WebsocketConsumer):
                 user=self.scope['user'],
                 object_id=object_id,
                 object_content_type_id=ContentType.objects.get_by_natural_key(
-                    app_label=app_label,
-                    model=model_name,
+                    app_label=app_label, model=model_name,
                 ).pk,
             )
             serialized_data = IgnoreObjectNotificationSerializer(object_notification)

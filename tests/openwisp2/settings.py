@@ -109,9 +109,7 @@ CACHES = {
     'default': {
         'BACKEND': 'django_redis.cache.RedisCache',
         'LOCATION': 'redis://localhost/5',
-        'OPTIONS': {
-            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
-        },
+        'OPTIONS': {'CLIENT_CLASS': 'django_redis.client.DefaultClient',},
     }
 }
 
