@@ -12,6 +12,7 @@ Organization = swapper_load_model('openwisp_users', 'Organization')
 class BaseCreateNotificationCommand(BaseCommand):
     def handle(self, *args, **kwargs):
         default_org = Organization.objects.first()
+        default_org.organization_id = default_org.id
         notify.send(sender=default_org, type='default', target=default_org)
 
 
