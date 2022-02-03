@@ -21,6 +21,7 @@ from openwisp_notifications.exceptions import NotificationRenderException
 from openwisp_notifications.handlers import (
     notify_handler,
     register_notification_cache_update,
+    send_email_notification
 )
 from openwisp_notifications.signals import notify
 from openwisp_notifications.swapper import load_model, swapper_load_model
@@ -851,3 +852,28 @@ class TestTransactionNotifications(TestOrganizationMixin, TransactionTestCase):
         self.assertEqual(notification.target.username, 'new operator name')
         # Done for populating cache
         self.assertEqual(operator_cache.username, 'new operator name')
+
+class test_email_notification(TestOrganizationMixin, TransactionTestCase):
+    def setUp(self):
+        self.user=self._create_user()
+        self.admin = self._create_admin()
+        self.target_obj = self._get_org_user()
+        self.data = dict(
+            email_subject='Test Email subject', url='https://localhost:8000/admin'
+        )
+
+    def test_email_notif_without_notif_setting(self):
+        
+        notif = Notification.objects.create(
+            actor=self.admin,
+            recipient=self.user,
+            description='Test Notification Description',
+            verb='Test Notification',
+            action_object=self.target_obj,
+            target=self.target_obj,
+            data=self.data,
+            type="default"
+        )
+        n=send_email_notification(sender=self.admin,instance=notif,created=True)
+        print(n)
+        self.assertEqual(n, None)
