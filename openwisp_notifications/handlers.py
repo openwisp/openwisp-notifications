@@ -169,22 +169,22 @@ def send_email_notification(sender, instance, created, **kwargs):
     # Get email preference of user for this type of notification.
     target_org = getattr(getattr(instance, 'target', None), 'organization_id', None)
     if instance.type and target_org:
-      
+
         try:
             notification_setting = instance.recipient.notificationsetting_set.get(
                 organization=target_org, type=instance.type
             )
         except NotificationSetting.DoesNotExist:
             return
-      
+
         email_preference = notification_setting.email_notification
-        
+
     else:
         # We can not check email preference if notification type is absent,
         # or if target_org is not present
         # therefore send email anyway.
         email_preference = True
-        
+
     if not (email_preference and instance.recipient.email):
         return
 
