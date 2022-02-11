@@ -813,6 +813,24 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
         user.delete()
         mocked_task.assert_not_called()
 
+    def test_email_notif_without_notif_setting(self):
+        target_obj = self._get_org_user()
+        data = dict(
+            email_subject='Test Email subject', url='https://localhost:8000/admin'
+        )
+        self.admin.notificationsetting_set.all().delete()
+        Notification.objects.create(
+            actor=self.admin,
+            recipient=self.admin,
+            description='Test Notification Description',
+            verb='Test Notification',
+            action_object=target_obj,
+            target=target_obj,
+            data=data,
+            type="default",
+        )
+        self.assertEqual(len(mail.outbox), 0)
+
 
 class TestTransactionNotifications(TestOrganizationMixin, TransactionTestCase):
     def setUp(self):
