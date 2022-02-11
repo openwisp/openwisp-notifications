@@ -818,6 +818,7 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
         data = dict(
             email_subject='Test Email subject', url='https://localhost:8000/admin'
         )
+        self.admin.notificationsetting_set.all().delete()
         Notification.objects.create(
             actor=self.admin,
             recipient=self.admin,
@@ -828,7 +829,7 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
             data=data,
             type="default",
         )
-        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(len(mail.outbox), 0)
 
 
 class TestTransactionNotifications(TestOrganizationMixin, TransactionTestCase):
