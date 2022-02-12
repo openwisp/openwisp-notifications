@@ -36,7 +36,11 @@ def bulk_create_notification(admin_user, count=10):
     notifications = []
     for _ in range(count):
         notifications.append(
-            Notification(recipient=admin_user, actor=admin_user, type='default',)
+            Notification(
+                recipient=admin_user,
+                actor=admin_user,
+                type='default',
+            )
         )
     Notification.objects.bulk_create(notifications)
 
@@ -75,7 +79,12 @@ class TestNotificationSockets:
         communicator = WebsocketCommunicator(
             self.application,
             path='ws/notification/',
-            headers=[(b'cookie', f'sessionid={session_id}'.encode('ascii'),)],
+            headers=[
+                (
+                    b'cookie',
+                    f'sessionid={session_id}'.encode('ascii'),
+                )
+            ],
         )
         connected, subprotocol = await communicator.connect()
         assert connected is True

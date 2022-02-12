@@ -324,7 +324,9 @@ def schedule_object_notification_deletion(instance, created, **kwargs):
 
 def register_notification_cache_update(model, signal, dispatch_uid=None):
     signal.connect(
-        update_notification_cache, sender=model, dispatch_uid=dispatch_uid,
+        update_notification_cache,
+        sender=model,
+        dispatch_uid=dispatch_uid,
     )
 
 
