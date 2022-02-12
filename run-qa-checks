@@ -5,6 +5,8 @@ jshint openwisp_notifications/static/openwisp-notifications/js/*.js
 stylelint "openwisp_notifications/static/openwisp-notifications/css/*.css"
 
 openwisp-qa-check \
+        --csslinter \
+        --jslinter \
         --migration-path "./openwisp_notifications/migrations/" \
         --migration-module "openwisp_notifications"
 
