@@ -9,6 +9,7 @@ from django.utils import timezone
 
 from openwisp_notifications.swapper import load_model, swapper_load_model
 from openwisp_notifications.types import NOTIFICATION_TYPES
+from openwisp_utils.tasks import OpenwispCeleryTask
 
 User = get_user_model()
 
@@ -20,7 +21,7 @@ Organization = swapper_load_model('openwisp_users', 'Organization')
 OrganizationUser = swapper_load_model('openwisp_users', 'OrganizationUser')
 
 
-@shared_task
+@shared_task(base=OpenwispCeleryTask)
 def delete_obsolete_objects(instance_app_label, instance_model, instance_id):
     """
     Delete Notification and IgnoreObjectNotification objects having
@@ -56,12 +57,12 @@ def delete_obsolete_objects(instance_app_label, instance_model, instance_id):
             return
 
 
-@shared_task
+@shared_task(base=OpenwispCeleryTask)
 def delete_notification(notification_id):
     Notification.objects.filter(pk=notification_id).delete()
 
 
-@shared_task
+@shared_task(base=OpenwispCeleryTask)
 def delete_old_notifications(days):
     """
     Delete notifications having 'timestamp' more than "days" days.
@@ -81,7 +82,7 @@ def create_notification_settings(user, organizations, notification_types):
             )
 
 
-@shared_task
+@shared_task(base=OpenwispCeleryTask)
 def update_superuser_notification_settings(instance_id, is_superuser, is_created):
     """
     Adds notification setting for all notification types and organizations.
@@ -108,7 +109,7 @@ def update_superuser_notification_settings(instance_id, is_superuser, is_created
     )
 
 
-@shared_task
+@shared_task(base=OpenwispCeleryTask)
 def ns_register_unregister_notification_type(
     notification_type=None, delete_unregistered=True
 ):
@@ -143,7 +144,7 @@ def ns_register_unregister_notification_type(
         Notification.objects.exclude(type__in=notification_types).delete()
 
 
-@shared_task
+@shared_task(base=OpenwispCeleryTask)
 def update_org_user_notificationsetting(org_user_id, user_id, org_id, is_org_admin):
     """
     Adds notification settings for all notification types when a new
@@ -169,7 +170,7 @@ def update_org_user_notificationsetting(org_user_id, user_id, org_id, is_org_adm
     )
 
 
-@shared_task
+@shared_task(base=OpenwispCeleryTask)
 def ns_organization_user_deleted(user_id, org_id):
     """
     Deletes notification settings for all notification types when
@@ -180,7 +181,7 @@ def ns_organization_user_deleted(user_id, org_id):
     )
 
 
-@shared_task
+@shared_task(base=OpenwispCeleryTask)
 def ns_organization_created(instance_id):
     """
     Adds notification setting of all registered types
@@ -195,7 +196,7 @@ def ns_organization_created(instance_id):
         )
 
 
-@shared_task
+@shared_task(base=OpenwispCeleryTask)
 def delete_ignore_object_notification(instance_id):
     """
     Deletes IgnoreObjectNotification object post it's expiration.
