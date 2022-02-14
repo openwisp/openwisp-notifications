@@ -23,6 +23,7 @@ Notification = load_model('Notification')
 NotificationSetting = load_model('NotificationSetting')
 notification_queryset = Notification.objects.order_by('-timestamp')
 Group = swapper_load_model('openwisp_users', 'Group')
+Organization = swapper_load_model('openwisp_users', 'Organization')
 
 
 class MockUser:
@@ -205,7 +206,10 @@ class TestAdmin(TestOrganizationMixin, TestMultitenantAdminMixin, TestCase):
         response = self.client.get(
             reverse('admin:openwisp_users_user_change', args=(self.admin.pk,))
         )
-        self.assertContains(response, 'default</option>')
+        self.assertContains(
+            response,
+            f'<option value="{Organization.objects.first().id}">default</option>',
+        )
 
     def test_notification_setting_inline_admin_has_change_permission(self):
         with self.subTest('Test for superuser'):
