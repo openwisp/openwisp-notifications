@@ -49,6 +49,8 @@ class BaseNotificationView(GenericAPIView):
     serializer_class = serializers.Serializer
 
     def get_queryset(self):
+        if self.request.user.is_anonymous:
+            return
         return self.queryset.filter(recipient=self.request.user)
 
 
@@ -113,6 +115,8 @@ class BaseNotificationSettingView(GenericAPIView):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
+        if self.request.user.is_anonymous:
+            return
         return NotificationSetting.objects.filter(user=self.request.user)
 
 
