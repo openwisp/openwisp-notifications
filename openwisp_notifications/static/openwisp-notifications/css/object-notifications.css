@@ -2,7 +2,6 @@
   display: flex;
 }
 .ow-object-notify {
-  display: flex;
   align-items: center;
 }
 
@@ -46,7 +45,7 @@
 #ow-object-notify .ow-icon {
   display: inline-block;
   width: 15px;
-  height: 15px;
+  height: 14px;
   position: relative;
   bottom: -2px;
   background: #fff;
