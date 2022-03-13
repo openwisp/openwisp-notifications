@@ -6,6 +6,7 @@ from django.core.cache import cache
 
 from openwisp_notifications.swapper import load_model, swapper_load_model
 from openwisp_notifications.tests.test_admin import TestAdmin as BaseTestAdmin
+from openwisp_notifications.tests.test_admin import TestAdminMedia as BaseTestAdminMedia
 from openwisp_notifications.tests.test_api import (
     TestNotificationApi as BaseTestNotificationApi,
 )
@@ -34,6 +35,10 @@ NotificationAppConfig = apps.get_app_config(Notification._meta.app_label)
 
 class TestAdmin(BaseTestAdmin):
     app_label = 'sample_notifications'
+
+
+class TestAdminMedia(BaseTestAdminMedia):
+    pass
 
 
 class TestNotifications(BaseTestNotifications):
@@ -109,6 +114,7 @@ class TestChecks(BaseTestChecks):
 
 
 del BaseTestAdmin
+del BaseTestAdminMedia
 del BaseTestNotifications
 del BaseTestNotificationApi
 del BaseTestNotificationSetting

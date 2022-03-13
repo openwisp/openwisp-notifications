@@ -140,31 +140,6 @@ class TestAdmin(TestOrganizationMixin, TestMultitenantAdminMixin, TestCase):
         self.assertContains(res, 'https://example.com')
         self.assertNotContains(res, 'window.location')
 
-    def test_jquery_import(self):
-        response = self.client.get(self._url)
-        self.assertInHTML(
-            '<script src="/static/admin/js/jquery.init.js">',
-            str(response.content),
-            1,
-        )
-        self.assertInHTML(
-            '<script src="/static/admin/js/vendor/jquery/jquery.min.js">',
-            str(response.content),
-            1,
-        )
-
-        response = self.client.get(reverse('admin:sites_site_changelist'))
-        self.assertIn(
-            '/static/admin/js/jquery.init.js',
-            str(response.content),
-            1,
-        )
-        self.assertIn(
-            '/static/admin/js/vendor/jquery/jquery.min.js',
-            str(response.content),
-            1,
-        )
-
     def test_login_load_javascript(self):
         self.client.logout()
         response = self.client.get(reverse('admin:login'))
@@ -250,6 +225,64 @@ class TestAdmin(TestOrganizationMixin, TestMultitenantAdminMixin, TestCase):
             response, '<option value="default" selected>Default Type</option>'
         )
 
+    def test_ignore_notification_widget_add_view(self):
+        url = reverse('admin:openwisp_users_organization_add')
+        response = self.client.get(url)
+        self.assertNotContains(response, 'owIsChangeForm')
+
+
+class TestAdminMedia(TestOrganizationMixin, TestMultitenantAdminMixin, TestCase):
+    """
+    Tests notifications admin media
+    """
+
+    def _login_admin(self):
+        u = User.objects.create_superuser('admin', 'admin', 'test@test.com')
+        self.client.force_login(u)
+        return u
+
+    def setUp(self):
+        self.admin = self._login_admin()
+        self.notification_options = dict(
+            sender=self.admin,
+            recipient=self.admin,
+            description='Test Notification',
+            verb='Test Notification',
+            email_subject='Test Email subject',
+            url='localhost:8000/admin',
+        )
+        self.site = AdminSite()
+        self.ns_inline = NotificationSettingInline(NotificationSetting, self.site)
+
+    @property
+    def _url(self):
+        return reverse('admin:index')
+
+    def test_jquery_import(self):
+        response = self.client.get(self._url)
+        self.assertInHTML(
+            '<script src="/static/admin/js/jquery.init.js">',
+            str(response.content),
+            1,
+        )
+        self.assertInHTML(
+            '<script src="/static/admin/js/vendor/jquery/jquery.min.js">',
+            str(response.content),
+            1,
+        )
+
+        response = self.client.get(reverse('admin:sites_site_changelist'))
+        self.assertIn(
+            '/static/admin/js/jquery.init.js',
+            str(response.content),
+            1,
+        )
+        self.assertIn(
+            '/static/admin/js/vendor/jquery/jquery.min.js',
+            str(response.content),
+            1,
+        )
+
     def test_object_notification_setting_empty(self):
         response = self.client.get(
             reverse('admin:openwisp_users_user_change', args=(self.admin.pk,))
@@ -295,8 +328,3 @@ class TestAdmin(TestOrganizationMixin, TestMultitenantAdminMixin, TestCase):
             reverse('admin:openwisp_users_user_change', args=(self.admin.pk,))
         )
         UserAdmin.Media = None
-
-    def test_ignore_notification_widget_add_view(self):
-        url = reverse('admin:openwisp_users_organization_add')
-        response = self.client.get(url)
-        self.assertNotContains(response, 'owIsChangeForm')
