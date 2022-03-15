@@ -46,13 +46,7 @@ op_request = MessagingRequest()
 op_request.user = MockUser(is_superuser=False)
 
 
-class TestAdmin(TestOrganizationMixin, TestMultitenantAdminMixin, TestCase):
-    """
-    Tests notifications in admin
-    """
-
-    app_label = 'openwisp_notifications'
-
+class BaseTestAdmin:
     def _login_admin(self):
         u = User.objects.create_superuser('admin', 'admin', 'test@test.com')
         self.client.force_login(u)
@@ -79,6 +73,16 @@ class TestAdmin(TestOrganizationMixin, TestMultitenantAdminMixin, TestCase):
         if count:
             return '<span id="ow-notification-count">{0}</span>'.format(count)
         return 'id="openwisp_notifications">'
+
+
+class TestAdmin(
+    BaseTestAdmin, TestOrganizationMixin, TestMultitenantAdminMixin, TestCase
+):
+    """
+    Tests notifications in admin
+    """
+
+    app_label = 'openwisp_notifications'
 
     def test_zero_notifications(self):
         r = self.client.get(self._url)
@@ -231,32 +235,12 @@ class TestAdmin(TestOrganizationMixin, TestMultitenantAdminMixin, TestCase):
         self.assertNotContains(response, 'owIsChangeForm')
 
 
-class TestAdminMedia(TestOrganizationMixin, TestMultitenantAdminMixin, TestCase):
+class TestAdminMedia(
+    BaseTestAdmin, TestOrganizationMixin, TestMultitenantAdminMixin, TestCase
+):
     """
     Tests notifications admin media
     """
-
-    def _login_admin(self):
-        u = User.objects.create_superuser('admin', 'admin', 'test@test.com')
-        self.client.force_login(u)
-        return u
-
-    def setUp(self):
-        self.admin = self._login_admin()
-        self.notification_options = dict(
-            sender=self.admin,
-            recipient=self.admin,
-            description='Test Notification',
-            verb='Test Notification',
-            email_subject='Test Email subject',
-            url='localhost:8000/admin',
-        )
-        self.site = AdminSite()
-        self.ns_inline = NotificationSettingInline(NotificationSetting, self.site)
-
-    @property
-    def _url(self):
-        return reverse('admin:index')
 
     def test_jquery_import(self):
         response = self.client.get(self._url)
