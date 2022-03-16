@@ -49,6 +49,8 @@ class BaseNotificationView(GenericAPIView):
     serializer_class = serializers.Serializer
 
     def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False):
+            return self.queryset.none()  # pragma: no cover
         return self.queryset.filter(recipient=self.request.user)
 
 
@@ -113,6 +115,8 @@ class BaseNotificationSettingView(GenericAPIView):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False):
+            return NotificationSetting.objects.none()  # pragma: no cover
         return NotificationSetting.objects.filter(user=self.request.user)
 
 
