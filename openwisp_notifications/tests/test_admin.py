@@ -46,7 +46,7 @@ op_request = MessagingRequest()
 op_request.user = MockUser(is_superuser=False)
 
 
-class BaseTestAdmin:
+class BaseTestAdmin(TestOrganizationMixin, TestMultitenantAdminMixin, TestCase):
     def _login_admin(self):
         u = User.objects.create_superuser('admin', 'admin', 'test@test.com')
         self.client.force_login(u)
@@ -75,9 +75,7 @@ class BaseTestAdmin:
         return 'id="openwisp_notifications">'
 
 
-class TestAdmin(
-    BaseTestAdmin, TestOrganizationMixin, TestMultitenantAdminMixin, TestCase
-):
+class TestAdmin(BaseTestAdmin):
     """
     Tests notifications in admin
     """
@@ -235,9 +233,7 @@ class TestAdmin(
         self.assertNotContains(response, 'owIsChangeForm')
 
 
-class TestAdminMedia(
-    BaseTestAdmin, TestOrganizationMixin, TestMultitenantAdminMixin, TestCase
-):
+class TestAdminMedia(BaseTestAdmin):
     """
     Tests notifications admin media
     """
