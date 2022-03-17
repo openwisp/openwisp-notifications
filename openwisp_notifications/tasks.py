@@ -62,7 +62,7 @@ def delete_notification(notification_id):
     Notification.objects.filter(pk=notification_id).delete()
 
 
-@shared_task(base=OpenwispCeleryTask)
+@shared_task
 def delete_old_notifications(days):
     """
     Delete notifications having 'timestamp' more than "days" days.
