@@ -865,8 +865,8 @@ the results in conjunction with the ``page`` parameter.
 
 .. code-block:: text
 
-    GET /api/v1/notification/?page_size=10
-    GET /api/v1/notification/?page_size=10&page=2
+    GET /api/v1/notifications/notification/?page_size=10
+    GET /api/v1/notifications/notification/?page_size=10&page=2
 
 List of endpoints
 ~~~~~~~~~~~~~~~~~
@@ -881,84 +881,84 @@ List user's notifications
 
 .. code-block:: text
 
-    GET /api/v1/notification/
+    GET /api/v1/notifications/notification/
 
 Mark all user's notifications as read
 #####################################
 
 .. code-block:: text
 
-    POST /api/v1/notification/read/
+    POST /api/v1/notifications/notification/read/
 
 Get notification details
 ########################
 
 .. code-block:: text
 
-    GET /api/v1/notification/{pk}/
+    GET /api/v1/notifications/notification/{pk}/
 
 Mark a notification read
 ########################
 
 .. code-block:: text
 
-    PATCH /api/v1/notification/{pk}/
+    PATCH /api/v1/notifications/notification/{pk}/
 
 Delete a notification
 #####################
 
 .. code-block:: text
 
-    DELETE /api/v1/notification/{pk}/
+    DELETE /api/v1/notifications/notification/{pk}/
 
 List user's notification setting
 ################################
 
 .. code-block:: text
 
-    GET /api/v1/notification/user-setting/
+    GET /api/v1/notifications/notification/user-setting/
 
 Get notification setting details
 ################################
 
 .. code-block:: text
 
-    GET /api/v1/notification/user-setting/{pk}/
+    GET /api/v1/notifications/notification/user-setting/{pk}/
 
 Update notification setting details
 ###################################
 
 .. code-block:: text
 
-    PATCH /api/v1/notification/user-setting/{pk}/
+    PATCH /api/v1/notifications/notification/user-setting/{pk}/
 
 List user's object notification setting
 #######################################
 
 .. code-block:: text
 
-    GET /api/v1/notification/ignore/
+    GET /api/v1/notifications/notification/ignore/
 
 Get object notification setting details
 #######################################
 
 .. code-block:: text
 
-    GET /api/v1/notification/ignore/{app_label}/{model_name}/{object_id}/
+    GET /api/v1/notifications/notification/ignore/{app_label}/{model_name}/{object_id}/
 
 Create object notification setting
 ##################################
 
 .. code-block:: text
 
-    PUT /api/v1/notification/ignore/{app_label}/{model_name}/{object_id}/
+    PUT /api/v1/notifications/notification/ignore/{app_label}/{model_name}/{object_id}/
 
 Delete object notification setting
 ##################################
 
 .. code-block:: text
 
-    DELETE /api/v1/notification/ignore/{app_label}/{model_name}/{object_id}/
+    DELETE /api/v1/notifications/notification/ignore/{app_label}/{model_name}/{object_id}/
 
 
 Management Commands

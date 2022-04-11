@@ -80,7 +80,7 @@ function addObjectNotificationHandlers($) {
 
         $.ajax({
             type: 'PUT',
-            url: getAbsoluteUrl(`/api/v1/notification/ignore/${owNotifyAppLabel}/${owNotifyModelName}/${owNotifyObjectId}/`),
+            url: getAbsoluteUrl(`/api/v1/notifications/notification/ignore/${owNotifyAppLabel}/${owNotifyModelName}/${owNotifyObjectId}/`),
             headers: {
                 'X-CSRFToken': $('input[name="csrfmiddlewaretoken"]').val()
             },
@@ -110,7 +110,7 @@ function addObjectNotificationHandlers($) {
         e.stopPropagation();
         $.ajax({
             type: 'DELETE',
-            url: getAbsoluteUrl(`/api/v1/notification/ignore/${owNotifyAppLabel}/${owNotifyModelName}/${owNotifyObjectId}/`),
+            url: getAbsoluteUrl(`/api/v1/notifications/notification/ignore/${owNotifyAppLabel}/${owNotifyModelName}/${owNotifyObjectId}/`),
             headers: {
                 'X-CSRFToken': $('input[name="csrfmiddlewaretoken"]').val()
             },
