@@ -89,7 +89,7 @@ function initNotificationDropDown($) {
 
 function notificationWidget($) {
 
-    let nextPageUrl = getAbsoluteUrl('/api/v1/notification/'),
+    let nextPageUrl = getAbsoluteUrl('/api/v1/notifications/notification/'),
         renderedPages = 2,
         busy = false,
         fetchedPages = [],
@@ -228,7 +228,7 @@ function notificationWidget($) {
         $('.ow-notifications').off('click', initNotificationWidget);
     }
 
-    function refreshNotificationWidget(e = null, url = '/api/v1/notification/') {
+    function refreshNotificationWidget(e = null, url = '/api/v1/notifications/notification/') {
         $('.ow-notification-wrapper > div').remove('.page');
         fetchedPages.length = 0;
         lastRenderedPage = 0;
@@ -259,10 +259,10 @@ function notificationWidget($) {
     // Handler for filtering unread notifications
     $('#ow-show-unread').click(function () {
         if ($(this).html().includes('Show unread only')) {
-            refreshNotificationWidget(null, '/api/v1/notification/?unread=true');
+            refreshNotificationWidget(null, '/api/v1/notifications/notification/?unread=true');
             $(this).html('Show all');
         } else {
-            refreshNotificationWidget(null, '/api/v1/notification/');
+            refreshNotificationWidget(null, '/api/v1/notifications/notification/');
             $(this).html('Show unread only');
         }
     });
@@ -274,7 +274,7 @@ function notificationWidget($) {
         $('#ow-notification-count').hide();
         $.ajax({
             type: 'POST',
-            url: getAbsoluteUrl('/api/v1/notification/read/'),
+            url: getAbsoluteUrl('/api/v1/notifications/notification/read/'),
             headers: {
                 'X-CSRFToken': $('input[name="csrfmiddlewaretoken"]').val()
             },
