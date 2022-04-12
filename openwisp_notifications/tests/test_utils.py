@@ -11,20 +11,32 @@ from openwisp_notifications.swapper import load_model
 from openwisp_users.tests.utils import TestOrganizationMixin
 
 Notification = load_model('Notification')
+NotificationSetting = load_model('NotificationSetting')
 Organization = swapper.load_model('openwisp_users', 'Organization')
 
 
 class TestManagementCommands(TestCase, TestOrganizationMixin):
     def test_create_notification_command(self):
         admin = self._get_admin()
-        management.call_command('create_notification')
         default_org = Organization.objects.first()
-
+        ns = NotificationSetting(user=admin, organization=default_org, type='default')
+        ns.save()
+        management.call_command('create_notification')
         self.assertEqual(Notification.objects.count(), 1)
         n = Notification.objects.first()
         self.assertEqual(n.type, 'default')
         self.assertEqual(n.actor, default_org)
         self.assertEqual(n.recipient, admin)
+
+    def test_create_notification_command_when_notificationsetting_disable(self):
+        admin = self._get_admin()
+        default_org = Organization.objects.first()
+        ns = NotificationSetting(
+            user=admin, organization=default_org, type='default', web=False, email=False
+        )
+        ns.save()
+        management.call_command('create_notification')
+        self.assertEqual(Notification.objects.count(), 0)
 
     @patch(
         'openwisp_notifications.tasks.ns_register_unregister_notification_type.delay'
