@@ -18,11 +18,11 @@ function getObjectNotificationComponent() {
     <li class="ow-object-notification-container">
         <a href="#" id="ow-object-notify" class="ow-object-notify" title="You are receiving notifications for this object.">
             <span class="ow-icon ow-object-notify-bell"></span>
-            <span id="ow-unsubscribe-label">Unsubscribe</span>
+            <span id="ow-silence-label">Silence notifications</span>
         </a>
         <div class="ow-object-notification-option-container option-container ow-hide">
-            <p id="ow-notification-help-text">Disable notifications for</p>
-            <button data-days=0 class="ow-hide ow-notification-option" id="ow-enable-notification">Enable Notifications</button>
+            <p id="ow-notification-help-text">Disable notifications for this object</p>
+            <button data-days=0 class="ow-hide ow-notification-option" id="ow-enable-notification">Enable notifications for this object</button>
             <button data-days=1 class="ow-notification-option option disable-notification">1 Day</button>
             <button data-days=7 class="ow-notification-option option disable-notification">1 Week</button>
             <button data-days=30 class="ow-notification-option option disable-notification">1 Month</button>
@@ -125,10 +125,10 @@ function addObjectNotificationHandlers($) {
             success: function () {
                 $('#ow-object-notify > span.ow-icon').removeClass('ow-object-notify-slash-bell');
                 $('#ow-object-notify > span.ow-icon').addClass('ow-object-notify-bell');
-                $('#ow-unsubscribe-label').html('Unsubscribe');
+                $('#ow-silence-label').html('Silence notifications');
                 $('#ow-object-notify').prop('title', 'You are receiving notifications for this object.');
 
-                $('#ow-notification-help-text').html(`Disable notifications for`);
+                $('#ow-notification-help-text').html(`Disable notifications for this object`);
                 $('#ow-object-notification-loader').addClass('ow-hide');
                 $('.ow-notification-option.disable-notification').removeClass('ow-hide');
                 $('.ow-object-notification-option-container > button:visible:first').focus();
@@ -183,6 +183,6 @@ function updateObjectNotificationHelpText($, validTill) {
 
     $('#ow-object-notify > span.ow-icon').removeClass('ow-object-notify-bell');
     $('#ow-object-notify > span.ow-icon').addClass('ow-object-notify-slash-bell');
-    $('#ow-unsubscribe-label').html('Unsubscribed');
+    $('#ow-silence-label').html('Silenced notifications');
     $('#ow-object-notify').prop('title', 'You have disabled notifications for this object.');
 }
