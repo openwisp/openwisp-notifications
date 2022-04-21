@@ -183,6 +183,6 @@ function updateObjectNotificationHelpText($, validTill) {
 
     $('#ow-object-notify > span.ow-icon').removeClass('ow-object-notify-bell');
     $('#ow-object-notify > span.ow-icon').addClass('ow-object-notify-slash-bell');
-    $('#ow-silence-label').html('Silenced notifications');
+    $('#ow-silence-label').html('Unsilence notifications');
     $('#ow-object-notify').prop('title', 'You have disabled notifications for this object.');
 }
