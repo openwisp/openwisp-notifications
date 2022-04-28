@@ -1,6 +1,6 @@
-**********************
+======================
 OpenWISP Notifications
-**********************
+======================
 
 .. image:: https://github.com/openwisp/openwisp-notifications/workflows/OpenWISP%20CI%20Build/badge.svg?branch=master
    :target: https://github.com/openwisp/openwisp-notifications/actions?query=workflow%3A%22OpenWISP+CI+Build%22
@@ -10,9 +10,9 @@ OpenWISP Notifications
    :target: https://coveralls.io/github/openwisp/openwisp-notifications?branch=master
    :alt: Test Coverage
 
-.. image:: https://requires.io/github/openwisp/openwisp-notifications/requirements.svg?branch=master
-   :target: https://requires.io/github/openwisp/openwisp-notifications/requirements/?branch=master
-   :alt: Requirements Status
+.. image:: https://img.shields.io/librariesio/github/openwisp/openwisp-notifications
+   :target: https://libraries.io/github/openwisp/openwisp-notifications#repository_dependencies
+   :alt: Dependency monitoring
 
 .. image:: https://img.shields.io/gitter/room/nwjs/nw.js.svg
    :target: https://gitter.im/openwisp/general
