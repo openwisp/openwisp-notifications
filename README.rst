@@ -40,6 +40,11 @@ meaningful events that happen in their network.
 .. figure:: https://drive.google.com/uc?export=view&id=1d603-pemsop1nnJeN49Y04hOcg8aHkoW
    :align: center
 
+**For a more complete overview of the OpenWISP modules and architecture**,
+see the
+`OpenWISP Architecture Overview
+<https://openwisp.io/docs/general/architecture.html>`_.
+
 ------------
 
 .. contents:: **Table of Contents**:
