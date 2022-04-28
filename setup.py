@@ -44,7 +44,7 @@ setup(
     version=get_version(),
     license='GPL3',
     author='Gagan Deep',
-    author_email='pandafy.dev@gmail.com',
+    author_email='support@openwisp.io',
     description='Notifications module of OpenWISP',
     long_description=open('README.rst').read(),
     url='http://openwisp.org',
