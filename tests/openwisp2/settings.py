@@ -30,10 +30,6 @@ INSTALLED_APPS = [
     'allauth',
     'allauth.account',
     'allauth.socialaccount',
-    # rest framework
-    'rest_framework',
-    'rest_framework.authtoken',
-    'drf_yasg',
     'django_filters',
     'openwisp_users',
     # notifications module
@@ -42,6 +38,10 @@ INSTALLED_APPS = [
     # (must be loaded here)
     'openwisp_utils.admin_theme',
     'django.contrib.admin',
+    # rest framework
+    'rest_framework',
+    'rest_framework.authtoken',
+    'drf_yasg',
     # channels
     'channels',
     # CORS

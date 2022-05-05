@@ -37,7 +37,7 @@ OpenWISP Notifications
 Its main goal is to allow the other OpenWISP modules to notify users about
 meaningful events that happen in their network.
 
-.. figure:: https://drive.google.com/uc?export=view&id=1d603-pemsop1nnJeN49Y04hOcg8aHkoW
+.. figure:: https://github.com/openwisp/openwisp-notifications/raw/docs/docs/images/notification-demo.gif
    :align: center
 
 **For a more complete overview of the OpenWISP modules and architecture**,
@@ -347,7 +347,7 @@ web notifications:
 Notification Widget
 ~~~~~~~~~~~~~~~~~~~
 
-.. figure:: https://drive.google.com/uc?export=view&id=1EnjVxp_hjJEmUOTGyaqhd5uYCcyWnRaY
+.. figure:: https://github.com/openwisp/openwisp-notifications/raw/docs/docs/images/notification-widget.gif
    :align: center
 
 A javascript widget has been added to make consuming notifications easy for users.
@@ -362,7 +362,7 @@ The notification widget provides following features:
 Notification Toasts
 ~~~~~~~~~~~~~~~~~~~
 
-.. figure:: https://drive.google.com/uc?export=view&id=1Lm0caDi3_DdiYzKc02DX3Cn2smj6ptWG
+.. figure:: https://github.com/openwisp/openwisp-notifications/raw/docs/docs/images/notification-toast.gif
    :align: center
 
 A notification toast delivers notifications at real-time. This allows
