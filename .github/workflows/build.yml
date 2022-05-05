@@ -14,7 +14,7 @@ jobs:
 
   build:
     name: Python==${{ matrix.python-version }} | ${{ matrix.django-version }}
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
 
     services:
       redis:
@@ -55,7 +55,7 @@ jobs:
         sudo apt-get -qq -y install sqlite3 gdal-bin
 
     - name: Upgrade python system packages
-      run: pip install -U "pip==20.2.4" wheel
+      run: pip install -U pip wheel setuptools
 
     - name: Install openwisp-notifications
       run: |
@@ -79,7 +79,7 @@ jobs:
         coverage run -a --source=openwisp_notifications runtests.py
 
     - name: Upload Coverage
-      run: coveralls
+      run: coveralls --service=github
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         COVERALLS_FLAG_NAME: python-${{ matrix.python-version }}-${{ matrix.django-version }}
