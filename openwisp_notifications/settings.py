@@ -7,8 +7,8 @@ OPENWISP_NOTIFICATIONS_HOST = getattr(settings, 'OPENWISP_NOTIFICATIONS_HOST', N
 OPENWISP_NOTIFICATIONS_SOUND = getattr(
     settings,
     'OPENWISP_NOTIFICATIONS_SOUND',
-    '/static/openwisp-notifications/audio/notification_bell.mp3',
-)
+    'openwisp-notifications/audio/notification_bell.mp3',
+).replace('/static', '')
 
 OPENWISP_NOTIFICATIONS_CACHE_TIMEOUT = getattr(
     settings, 'OPENWISP_NOTIFICATIONS_CACHE_TIMEOUT', 2 * 24 * 60 * 60
