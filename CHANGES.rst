@@ -1,6 +1,18 @@
 Changelog
 =========
 
+Version 1.0.1 [2022-06-09]
+--------------------------
+
+Bugfixes
+~~~~~~~~
+
+- Fixed `handling of the "OPENWISP_NOTIFICATIONS_SOUND" setting
+  <https://github.com/openwisp/openwisp-notifications/issues/239>`_.
+  The code was not passing the sound file path to the utilities
+  of ``django.contrib.staticfiles`` and hence the sound file was
+  not loaded properly when using different static storage backend.
+
 Version 1.0.0 [2022-04-28]
 --------------------------
 
