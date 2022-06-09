@@ -832,11 +832,11 @@ for more information on ``SESSION_COOKIE_DOMAIN`` and ``CSRF_COOKIE_DOMAIN`` set
 This setting defines notification sound to be played when notification is received
 in real-time on admin site.
 
-Provide an absolute or relative path(hosted on your webserver) to audio file as show below.
+Provide a relative path (hosted on your webserver) to audio file as show below.
 
 .. code-block:: python
 
-    OPENWISP_NOTIFICATIONS_SOUND = '/static/your-appname/audio/notification.mp3'
+    OPENWISP_NOTIFICATIONS_SOUND = 'your-appname/audio/notification.mp3'
 
 ``OPENWISP_NOTIFICATIONS_CACHE_TIMEOUT``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

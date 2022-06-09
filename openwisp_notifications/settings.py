@@ -1,14 +1,11 @@
+import re
+
 from django.conf import settings
 from notifications.settings import CONFIG_DEFAULTS
 
 CONFIG_DEFAULTS.update({'USE_JSONFIELD': True})
 
 OPENWISP_NOTIFICATIONS_HOST = getattr(settings, 'OPENWISP_NOTIFICATIONS_HOST', None)
-OPENWISP_NOTIFICATIONS_SOUND = getattr(
-    settings,
-    'OPENWISP_NOTIFICATIONS_SOUND',
-    '/static/openwisp-notifications/audio/notification_bell.mp3',
-)
 
 OPENWISP_NOTIFICATIONS_CACHE_TIMEOUT = getattr(
     settings, 'OPENWISP_NOTIFICATIONS_CACHE_TIMEOUT', 2 * 24 * 60 * 60
@@ -33,6 +30,17 @@ NOTIFICATION_STORM_PREVENTION = getattr(
         'max_allowed_backoff': 15,
     },
 )
+
+OPENWISP_NOTIFICATIONS_SOUND = getattr(
+    settings,
+    'OPENWISP_NOTIFICATIONS_SOUND',
+    'openwisp-notifications/audio/notification_bell.mp3',
+)
+
+# Remove the leading "/static/" here as it will
+# conflict with the "static()" call in context_processors.py.
+# This is done for backward compatibility.
+OPENWISP_NOTIFICATIONS_SOUND = re.sub('^/static/', '', OPENWISP_NOTIFICATIONS_SOUND)
 
 
 def get_config():
