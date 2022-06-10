@@ -274,11 +274,10 @@ def notification_type_registered_unregistered_handler(sender, **kwargs):
 def organization_user_post_save(instance, created, **kwargs):
     transaction.on_commit(
         lambda: tasks.update_org_user_notificationsetting.delay(
-            instance.pk,
-            instance.user_id,
-            instance.organization_id,
-            instance.is_admin,
-            created,
+            org_user_id=instance.pk,
+            user_id=instance.user_id,
+            org_id=instance.organization_id,
+            is_org_admin=instance.is_admin,
         )
     )
 
@@ -306,9 +305,8 @@ def update_superuser_notification_settings(instance, created, **kwargs):
 @receiver(
     post_save, sender=Organization, dispatch_uid='org_created_notification_setting'
 )
-def notification_setting_org_created(created, instance, **kwargs):
-    if created:
-        tasks.ns_organization_created.delay(instance.pk)
+def notification_setting_org_created(instance, **kwargs):
+    transaction.on_commit(lambda: tasks.ns_organization_created.delay(instance.pk))
 
 
 @receiver(
