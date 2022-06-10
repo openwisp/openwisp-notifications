@@ -1,6 +1,4 @@
 from datetime import timedelta
-from operator import is_
-
 from celery import shared_task
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
@@ -146,7 +144,9 @@ def ns_register_unregister_notification_type(
 
 
 @shared_task(base=OpenwispCeleryTask)
-def update_org_user_notificationsetting(org_user_id, user_id, org_id, is_org_admin, is_created):
+def update_org_user_notificationsetting(
+    org_user_id, user_id, org_id, is_org_admin, is_created
+):
     """
     Adds notification settings for all notification types when a new
     organization user is added.
