@@ -274,11 +274,8 @@ def notification_type_registered_unregistered_handler(sender, **kwargs):
 def organization_user_post_save(instance, created, **kwargs):
     transaction.on_commit(
         lambda: tasks.update_org_user_notificationsetting.delay(
-            org_user_id=instance.pk,
-            user_id=instance.user_id,
-            org_id=instance.organization_id,
-            is_org_admin=instance.is_admin,
-        )
+            instance.pk, instance.user_id, instance.organization_id, instance.is_admin, created
+        )   
     )
 
 

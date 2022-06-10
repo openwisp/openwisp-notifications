@@ -1,4 +1,5 @@
 from datetime import timedelta
+from operator import is_
 
 from celery import shared_task
 from django.contrib.auth import get_user_model
@@ -145,13 +146,13 @@ def ns_register_unregister_notification_type(
 
 
 @shared_task(base=OpenwispCeleryTask)
-def update_org_user_notificationsetting(org_user_id, user_id, org_id, is_org_admin):
+def update_org_user_notificationsetting(org_user_id, user_id, org_id, is_org_admin, is_created):
     """
     Adds notification settings for all notification types when a new
     organization user is added.
     """
     user = User.objects.get(pk=user_id)
-    if not user.is_superuser:
+    if not (user.is_superuser or is_created):
         # The following query covers conditions for change in admin status
         # and organization field of related OrganizationUser objects
         NotificationSetting.objects.filter(user=user).exclude(
