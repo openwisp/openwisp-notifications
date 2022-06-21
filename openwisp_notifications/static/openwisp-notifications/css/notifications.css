@@ -280,19 +280,19 @@
   brightness(100%) contrast(85%);
 }
 .ow-notify-info {
-  background-image: url('/static/openwisp-notifications/images/icons/icon-info.svg');
+  background-image: url('../../openwisp-notifications/images/icons/icon-info.svg');
 }
 .ow-notify-warning {
-  background-image: url('/static/openwisp-notifications/images/icons/icon-warning.svg');
+  background-image: url('../../openwisp-notifications/images/icons/icon-warning.svg');
 }
 .ow-notify-error {
-  background-image: url('/static/openwisp-notifications/images/icons/icon-error.svg');
+  background-image: url('../../openwisp-notifications/images/icons/icon-error.svg');
 }
 .ow-notify-success {
-  background-image: url('/static/openwisp-notifications/images/icons/icon-success.svg');
+  background-image: url('../../openwisp-notifications/images/icons/icon-success.svg');
 }
 .ow-notify-close {
-  background-image: url('/static/openwisp-notifications/images/icons/icon-close.svg');
+  background-image: url('../../openwisp-notifications/images/icons/icon-close.svg');
 }
 .ow-notification-inner {
   border-bottom: 1px solid rgba(0, 0, 0, 0.1);
