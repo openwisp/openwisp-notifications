@@ -35,12 +35,12 @@
 
 /* Icons */
 .ow-object-notify-bell {
-  mask-image: url('/static/openwisp-notifications/images/icons/icon-bell.svg');
-  -webkit-mask-image: url('/static/openwisp-notifications/images/icons/icon-bell.svg');
+  mask-image: url('../../openwisp-notifications/images/icons/icon-bell.svg');
+  -webkit-mask-image: url('../../openwisp-notifications/images/icons/icon-bell.svg');
 }
 .ow-object-notify-slash-bell {
-  mask-image: url('/static/openwisp-notifications/images/icons/icon-bell-slash.svg');
-  -webkit-mask-image: url('/static/openwisp-notifications/images/icons/icon-bell-slash.svg');
+  mask-image: url('../../openwisp-notifications/images/icons/icon-bell-slash.svg');
+  -webkit-mask-image: url('../../openwisp-notifications/images/icons/icon-bell-slash.svg');
 }
 #ow-object-notify .ow-icon {
   display: inline-block;
