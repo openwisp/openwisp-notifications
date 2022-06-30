@@ -307,7 +307,7 @@ def update_superuser_notification_settings(instance, created, **kwargs):
 )
 def notification_setting_org_created(created, instance, **kwargs):
     if created:
-        tasks.ns_organization_created.delay(instance.pk)
+        transaction.on_commit(lambda: tasks.ns_organization_created.delay(instance.pk))
 
 
 @receiver(
