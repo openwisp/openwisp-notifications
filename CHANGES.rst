@@ -1,6 +1,19 @@
 Changelog
 =========
 
+Version 1.0.2 [2022-07-01]
+--------------------------
+
+Bugfixes
+~~~~~~~~
+
+- Fixed `hardcoded static image URLs
+  <https://github.com/openwisp/openwisp-notifications/issues/243>`_.
+  These create issues when static files are served using an
+  external service (e.g. S3 storage buckets).
+- Fixed `"Organization.DoesNotExist" error on creating
+  a new organization <https://github.com/openwisp/openwisp-notifications/issues/238>`_.
+
 Version 1.0.1 [2022-06-09]
 --------------------------
 
