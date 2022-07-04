@@ -1,4 +1,4 @@
-openwisp-utils[qa]~=1.0.1
+openwisp-utils[qa] @ https://github.com/openwisp/openwisp-utils/tarball/master
 django-redis~=4.12.1
 django-cors-headers~=3.5.0
 redis~=3.5.3
