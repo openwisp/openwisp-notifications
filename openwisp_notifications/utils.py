@@ -3,7 +3,7 @@ from django.contrib.sites.models import Site
 from django.urls import NoReverseMatch, reverse
 
 
-def _get_object_link(obj, field, url_only=False, absolute_url=False, *args, **kwargs):
+def _get_object_link(obj, field, absolute_url=False, *args, **kwargs):
     related_obj = getattr(obj, field)
     try:
         url = reverse(
@@ -17,10 +17,10 @@ def _get_object_link(obj, field, url_only=False, absolute_url=False, *args, **kw
         return '#'
 
 
-def _get_absolute_url(url):
+def _get_absolute_url(path):
     site = Site.objects.get_current()
     protocol = 'http' if getattr(settings, 'DEBUG', False) else 'https'
-    return f'{protocol}://{site.domain}{url}'
+    return f'{protocol}://{site.domain}{path}'
 
 
 def normalize_unread_count(unread_count):

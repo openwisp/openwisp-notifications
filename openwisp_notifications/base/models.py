@@ -11,6 +11,7 @@ from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils.functional import cached_property
 from django.utils.html import mark_safe
+from django.utils.module_loading import import_string
 from django.utils.translation import gettext_lazy as _
 from markdown import markdown
 from notifications.base.models import AbstractNotification as BaseNotification
@@ -72,22 +73,33 @@ class AbstractNotification(UUIDModel, BaseNotification):
         """
         cache.delete(cls.count_cache_key(user.pk))
 
+    def _get_related_object_url(self, field):
+        """
+        Returns URLs for "actor", "action_object" and "target" fields.
+        """
+        if self.type:
+            # Generate URL according to the notification configuration
+            config = get_notification_configuration(self.type)
+            url = config.get(f'{field}_link', None)
+            if url:
+                try:
+                    url_callable = import_string(url)
+                    return url_callable(self, field=field, absolute_url=True)
+                except ImportError:
+                    return url
+        return _get_object_link(self, field=field, absolute_url=True)
+
     @property
     def actor_url(self):
-        return _get_object_link(self, field='actor', url_only=True, absolute_url=True)
+        return self._get_related_object_url(field='actor')
 
     @property
     def action_url(self):
-        return _get_object_link(
-            self,
-            field='action_object',
-            url_only=True,
-            absolute_url=True,
-        )
+        return self._get_related_object_url(field='action_object')
 
     @property
     def target_url(self):
-        return _get_object_link(self, field='target', url_only=True, absolute_url=True)
+        return self._get_related_object_url(field='target')
 
     @cached_property
     def message(self):

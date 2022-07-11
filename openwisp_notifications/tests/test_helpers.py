@@ -42,3 +42,8 @@ def register_notification_type(type_name, type_config, models=[]):
 def unregister_notification_type(type_name):
     base_unregister_notification_type(type_name)
     NotificationSetting.objects.filter(type=type_name).update(deleted=True)
+
+
+def notification_related_object_url(obj, field, *args, **kwargs):
+    related_obj = getattr(obj, field)
+    return f'https://{related_obj}.example.com'

@@ -547,9 +547,39 @@ These properties can be configured for each notification type:
 +------------------------+----------------------------------------------------------------+
 | ``web_notification``   | Sets preference for web notifications. Defaults to ``True``.   |
 +------------------------+----------------------------------------------------------------+
+| ``actor_link``         | Overrides the default URL used for the ``actor`` object.       |
+|                        |                                                                |
+|                        | You can pass a static URL or a dotted path to a callable       |
+|                        | which returns the object URL.                                  |
++------------------------+----------------------------------------------------------------+
+| ``action_object_link`` | Overrides the default URL used for the ``action`` object.      |
+|                        |                                                                |
+|                        | You can pass a static URL or a dotted path to a callable       |
+|                        | which returns the object URL.                                  |
++------------------------+----------------------------------------------------------------+
+| ``target_link``        | Overrides the default URL used for the ``target`` object.      |
+|                        |                                                                |
+|                        | You can pass a static URL or a dotted path to a callable       |
+|                        | which returns the object URL.                                  |
++------------------------+----------------------------------------------------------------+
+
 
 **Note**: A notification type configuration should contain atleast one of ``message`` or ``message_template``
 settings. If both of them are present, ``message`` is given preference over ``message_template``.
+
+**Note**: The callable for ``actor_link``, ``action_object_link`` and ``target_link`` should
+have the following signature:
+
+.. code-block:: python
+
+    def related_object_link_callable(notification, field, absolute_url=True):
+        """
+        notification: the notification object for which the URL will be created
+        field: the related object field, any one of "actor", "action_object" or
+               "target" field of the notification object
+        absolute_url: boolean to flag if absolute URL should be returned
+        """
+        return url
 
 Defining ``message_template``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -619,6 +649,10 @@ An example usage has been shown below.
         'email_subject' : '[{site.name}] A device has been added',
         'web_notification': True,
         'email_notification': True,
+        # static URL for the actor object
+        'actor': 'https://openwisp.org/admin/config/device',
+        # URL generation using callable for target object
+        'target': 'mymodule.target_object_link'
     }
 
     # Register your custom notification type
