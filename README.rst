@@ -579,7 +579,7 @@ have the following signature:
                "target" field of the notification object
         absolute_url: boolean to flag if absolute URL should be returned
         """
-        return url
+        return 'https://custom.domain.com/custom/url/' 
 
 Defining ``message_template``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
