@@ -489,6 +489,64 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
 
         unregister_notification_type('test_type')
 
+    def test_notification_type_related_object_url(self):
+        test_type = {
+            'verbose_name': 'Test Notification Type',
+            'level': 'test',
+            'verb': 'testing',
+            'message': '{notification.verb} initiated by {notification.actor} since {notification}',
+            'email_subject': '[{site.name}] {notification.verb} reported by {notification.actor}',
+        }
+        self.notification_options.update(
+            {
+                'type': 'test_type',
+                'sender': self._create_user(
+                    username='actor', email='actor@example.com'
+                ),
+                'action_object': self._create_user(username='action-object'),
+                'target': self._create_user(
+                    username='target', email='target@example.com'
+                ),
+            }
+        )
+        # Creating notification will fail without registering
+        # notification type here
+        register_notification_type('test_type', test_type, models=[User])
+        self._create_notification()
+
+        with self.subTest('Test related object static URL'):
+            # Update the notification type configuration
+            unregister_notification_type('test_type')
+            test_type['action_object_link'] = 'https://action-object.example.com'
+            test_type['actor_link'] = 'https://actor.example.com'
+            test_type['target_link'] = 'https://target.example.com'
+            register_notification_type('test_type', test_type, models=[User])
+
+            notification = Notification.objects.first()
+            self.assertEqual(
+                notification.action_url, 'https://action-object.example.com'
+            )
+            self.assertEqual(notification.actor_url, 'https://actor.example.com')
+            self.assertEqual(notification.target_url, 'https://target.example.com')
+
+        with self.subTest('Test related object callable URL'):
+            # Update the notification type configuration
+            unregister_notification_type('test_type')
+            url_generator = 'openwisp_notifications.tests.test_helpers.notification_related_object_url'
+            test_type['action_object_link'] = url_generator
+            test_type['actor_link'] = url_generator
+            test_type['target_link'] = url_generator
+            register_notification_type('test_type', test_type, models=[User])
+
+            notification = Notification.objects.first()
+            self.assertEqual(
+                notification.action_url, 'https://action-object.example.com'
+            )
+            self.assertEqual(notification.actor_url, 'https://actor.example.com')
+            self.assertEqual(notification.target_url, 'https://target.example.com')
+
+        unregister_notification_type('test_type')
+
     @capture_any_output()
     @patch('openwisp_notifications.tasks.delete_notification.delay')
     def test_notification_invalid_message_attribute(self, mocked_task):
