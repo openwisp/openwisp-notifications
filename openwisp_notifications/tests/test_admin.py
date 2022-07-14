@@ -6,7 +6,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
 from django.core.cache import cache
 from django.forms.widgets import MediaOrderConflictWarning
-from django.test import TestCase, override_settings
+from django.test import TestCase, override_settings, tag
 from django.urls import reverse
 
 from openwisp_notifications import settings as app_settings
@@ -113,6 +113,11 @@ class TestAdmin(BaseTestAdmin):
         self.client.get(self._url)
         self.assertEqual(cache.get(cache_key), 1)
 
+    @tag('skip_prod')
+    # This tests depends on the static storage backend of the project.
+    # In prod environment, the filenames could get changed due to
+    # static minification and cache invalidation. Hence, these tests
+    # should not be run on prod environment because they'll fail.
     def test_default_notification_setting(self):
         res = self.client.get(self._url)
         self.assertContains(
@@ -120,6 +125,8 @@ class TestAdmin(BaseTestAdmin):
         )
         self.assertContains(res, 'window.location')
 
+    @tag('skip_prod')
+    # For more info, look at TestAdmin.test_default_notification_setting
     @patch.object(
         app_settings,
         'OPENWISP_NOTIFICATIONS_SOUND',
@@ -233,6 +240,8 @@ class TestAdmin(BaseTestAdmin):
         self.assertNotContains(response, 'owIsChangeForm')
 
 
+@tag('skip_prod')
+# For more info, look at TestAdmin.test_default_notification_setting
 class TestAdminMedia(BaseTestAdmin):
     """
     Tests notifications admin media

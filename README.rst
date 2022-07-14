@@ -186,6 +186,9 @@ Run tests with:
     # tests for the sample app
     SAMPLE_APP=1 ./runtests.py
 
+    # If you running tests on PROD environment
+    ./runtests.py --exclude skip_prod
+
 When running the last line of the previous example, the environment variable ``SAMPLE_APP`` activates
 the sample app in ``/tests/openwisp2/`` which is a simple django app that extends ``openwisp-notifications``
 with the sole purpose of testing its extensibility, for more information regarding this concept,
