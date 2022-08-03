@@ -1,6 +1,18 @@
 Changelog
 =========
 
+Version 1.0.3 [2022-08-03]
+--------------------------
+
+Bugfixes
+~~~~~~~~
+
+- Flagged tests that should not be run on a production environment:
+  These tests depend on the static storage backend of the project.
+  In a production environment, the filenames could get changed due to
+  static minification and cache invalidation. Hence, these tests
+  should not be run on the production environment because they'll fail.
+
 Version 1.0.2 [2022-07-01]
 --------------------------
 
