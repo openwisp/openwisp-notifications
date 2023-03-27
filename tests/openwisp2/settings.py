@@ -37,6 +37,8 @@ INSTALLED_APPS = [
     # add openwisp theme
     # (must be loaded here)
     'openwisp_utils.admin_theme',
+    # admin
+    'admin_auto_filters',
     'django.contrib.admin',
     # rest framework
     'rest_framework',
