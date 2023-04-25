@@ -595,6 +595,16 @@ class TestNotificationApi(
             ns = response.data['results'].pop()
             self.assertEqual(ns['organization'], org.id)
 
+        with self.subTest('Test listing notification setting for "default" org slug'):
+            org = Organization.objects.first()
+            count = NotificationSetting.objects.filter(organization=org).count()
+            org_slug_url = f'{url}?organization_slug={org.slug}'
+            response = self.client.get(org_slug_url)
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(len(response.data['results']), count)
+            ns = response.data['results'].pop()
+            self.assertEqual(ns['organization'], org.id)
+
         with self.subTest('Test listing notification for "default" type'):
             type_url = f'{url}?type=default'
             response = self.client.get(type_url)

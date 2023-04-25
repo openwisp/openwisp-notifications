@@ -1028,6 +1028,23 @@ List user's notifications
 
     GET /api/v1/notifications/notification/
 
+**Available Filters**
+
+You can filter the list of notifications based on
+whether they are read or unread using the ``unread`` parameter.
+
+To list read notifications:
+
+.. code-block:: text
+
+    GET /api/v1/notifications/notification/?unread=false
+
+To list unread notifications:
+
+.. code-block:: text
+
+    GET /api/v1/notifications/notification/?unread=true
+
 Mark all user's notifications as read
 #####################################
 
@@ -1062,6 +1079,29 @@ List user's notification setting
 .. code-block:: text
 
     GET /api/v1/notifications/notification/user-setting/
+
+**Available Filters**
+
+You can filter the list of user's
+notification setting based on their ``organization_id``.
+
+.. code-block:: text
+
+    GET /api/v1/notifications/notification/user-setting/?organization={organization_id}
+
+You can filter the list of user's
+notification setting based on their ``organization_slug``.
+
+.. code-block:: text
+
+    GET /api/v1/notifications/notification/user-setting/?organization_slug={organization_slug}
+
+You can filter the list of user's
+notification setting based on their ``type``.
+
+.. code-block:: text
+
+    GET /api/v1/notifications/notification/user-setting/?type={type}
 
 Get notification setting details
 ################################

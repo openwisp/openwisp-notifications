@@ -24,6 +24,8 @@ from openwisp_notifications.api.serializers import (
 from openwisp_notifications.swapper import load_model
 from openwisp_users.api.authentication import BearerAuthentication
 
+from .filters import NotificationSettingFilter
+
 UNAUTHORIZED_STATUS_CODES = (
     status.HTTP_401_UNAUTHORIZED,
     status.HTTP_403_FORBIDDEN,
@@ -123,7 +125,7 @@ class BaseNotificationSettingView(GenericAPIView):
 class NotificationSettingListView(BaseNotificationSettingView, ListModelMixin):
     pagination_class = NotificationPaginator
     filter_backends = [DjangoFilterBackend]
-    filterset_fields = ['organization', 'type']
+    filterset_class = NotificationSettingFilter
 
     def get(self, request, *args, **kwargs):
         return self.list(request, *args, **kwargs)
