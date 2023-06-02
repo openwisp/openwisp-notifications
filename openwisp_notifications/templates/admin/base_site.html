@@ -53,7 +53,11 @@
       const notificationSocket = new ReconnectingWebSocket(
           `${webSocketProtocol}://${notificationApiHost.host}/ws/notification/`,
           null, {
-              debug: false
+              debug: false,
+              // The library re-connects if it fails to establish a connection in "timeoutInterval".
+              // On slow internet connections, the default value of "timeoutInterval" will
+              // keep terminating and re-establishing the connection.
+              timeoutInterval: 7000,
           }
       );
     </script>
