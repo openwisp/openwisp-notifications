@@ -2,9 +2,6 @@
 from django.core.cache import cache
 from django.template import Library
 from django.utils.html import format_html
-from notifications.templatetags.notifications_tags import (
-    notifications_unread as base_notification_unread,
-)
 
 from openwisp_notifications.swapper import load_model
 from openwisp_notifications.utils import normalize_unread_count
@@ -14,12 +11,16 @@ Notification = load_model('Notification')
 register = Library()
 
 
+def _get_user_unread_count(user):
+    return user.notifications.unread().count()
+
+
 def get_notifications_count(context):
     user_pk = context['user'].is_authenticated and context['user'].pk
     cache_key = Notification.count_cache_key(user_pk)
     count = cache.get(cache_key)
     if count is None:
-        count = base_notification_unread(context)
+        count = _get_user_unread_count(context['user'])
         count = normalize_unread_count(count)
         cache.set(cache_key, count)
     return count

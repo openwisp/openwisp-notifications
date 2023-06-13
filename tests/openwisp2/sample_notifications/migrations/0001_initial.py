@@ -37,30 +37,74 @@ class Migration(migrations.Migration):
                         ],
                         default='info',
                         max_length=20,
+                        verbose_name='level',
                     ),
                 ),
-                ('unread', models.BooleanField(db_index=True, default=True)),
-                ('actor_object_id', models.CharField(max_length=255)),
-                ('verb', models.CharField(max_length=255)),
-                ('description', models.TextField(blank=True, null=True)),
+                (
+                    'unread',
+                    models.BooleanField(
+                        db_index=True, default=True, verbose_name='unread'
+                    ),
+                ),
+                (
+                    'actor_object_id',
+                    models.CharField(max_length=255, verbose_name='actor object id'),
+                ),
+                ('verb', models.CharField(max_length=255, verbose_name='verb')),
+                (
+                    'description',
+                    models.TextField(blank=True, null=True, verbose_name='description'),
+                ),
                 (
                     'target_object_id',
-                    models.CharField(blank=True, max_length=255, null=True),
+                    models.CharField(
+                        blank=True,
+                        max_length=255,
+                        null=True,
+                        verbose_name='target object id',
+                    ),
                 ),
                 (
                     'action_object_object_id',
-                    models.CharField(blank=True, max_length=255, null=True),
+                    models.CharField(
+                        blank=True,
+                        max_length=255,
+                        null=True,
+                        verbose_name='action object object id',
+                    ),
                 ),
                 (
                     'timestamp',
                     models.DateTimeField(
-                        db_index=True, default=django.utils.timezone.now
+                        db_index=True,
+                        default=django.utils.timezone.now,
+                        verbose_name='timestamp',
                     ),
                 ),
-                ('public', models.BooleanField(db_index=True, default=True)),
-                ('deleted', models.BooleanField(db_index=True, default=False)),
-                ('emailed', models.BooleanField(db_index=True, default=False)),
-                ('data', jsonfield.fields.JSONField(blank=True, null=True)),
+                (
+                    'public',
+                    models.BooleanField(
+                        db_index=True, default=True, verbose_name='public'
+                    ),
+                ),
+                (
+                    'deleted',
+                    models.BooleanField(
+                        db_index=True, default=False, verbose_name='deleted'
+                    ),
+                ),
+                (
+                    'emailed',
+                    models.BooleanField(
+                        db_index=True, default=False, verbose_name='emailed'
+                    ),
+                ),
+                (
+                    'data',
+                    jsonfield.fields.JSONField(
+                        blank=True, null=True, verbose_name='data'
+                    ),
+                ),
                 (
                     'id',
                     models.UUIDField(
@@ -78,6 +122,7 @@ class Migration(migrations.Migration):
                         on_delete=django.db.models.deletion.CASCADE,
                         related_name='notify_action_object',
                         to='contenttypes.ContentType',
+                        verbose_name='action object content type',
                     ),
                 ),
                 (
@@ -86,6 +131,7 @@ class Migration(migrations.Migration):
                         on_delete=django.db.models.deletion.CASCADE,
                         related_name='notify_actor',
                         to='contenttypes.ContentType',
+                        verbose_name='actor content type',
                     ),
                 ),
                 (
@@ -94,6 +140,7 @@ class Migration(migrations.Migration):
                         on_delete=django.db.models.deletion.CASCADE,
                         related_name='notifications',
                         to=settings.AUTH_USER_MODEL,
+                        verbose_name='recipient',
                     ),
                 ),
                 (
@@ -104,6 +151,7 @@ class Migration(migrations.Migration):
                         on_delete=django.db.models.deletion.CASCADE,
                         related_name='notify_target',
                         to='contenttypes.ContentType',
+                        verbose_name='target content type',
                     ),
                 ),
                 (
@@ -120,6 +168,8 @@ class Migration(migrations.Migration):
                 'ordering': ('-timestamp',),
                 'abstract': False,
                 'index_together': {('recipient', 'unread')},
+                'verbose_name': 'Notification',
+                'verbose_name_plural': 'Notifications',
             },
         ),
         migrations.CreateModel(

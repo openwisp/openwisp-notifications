@@ -26,18 +26,13 @@ jobs:
       fail-fast: false
       matrix:
         python-version:
-          - 3.7
-          - 3.8
-          - 3.9
+          - "3.8"
+          - "3.9"
+          - "3.10"
         django-version:
-          - django~=3.0.0
-          - django~=3.1.0
           - django~=3.2.0
-        include:
-          - django-version: django~=4.0.0
-            python-version: 3.9
-          - django-version: django~=4.0.0
-            python-version: 3.8
+          - django~=4.1.0
+          - django~=4.2.0
 
     steps:
     - uses: actions/checkout@v2
@@ -57,14 +52,14 @@ jobs:
     - name: Upgrade python system packages
       run: pip install -U pip wheel setuptools
 
-    - name: Install openwisp-notifications
-      run: |
-        pip install -e .
-
     - name: Install test dependencies
       run: |
-        pip install ${{ matrix.django-version }}
         pip install -U -r requirements-test.txt
+
+    - name: Install openwisp-notifications
+      run: |
+        pip install -U -e .
+        pip install ${{ matrix.django-version }}
 
     - name: Install npm dependencies
       run: sudo npm install -g jshint stylelint
