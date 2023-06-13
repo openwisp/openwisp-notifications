@@ -70,8 +70,9 @@ jobs:
 
     - name: Tests
       run: |
-        SAMPLE_APP=1 coverage run --source=openwisp_notifications runtests.py
-        coverage run -a --source=openwisp_notifications runtests.py
+        SAMPLE_APP=1 ./runtests.py
+        coverage run runtests.py --parallel
+        coverage combine
 
     - name: Upload Coverage
       run: coveralls --service=github
