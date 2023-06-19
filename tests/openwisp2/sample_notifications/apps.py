@@ -43,3 +43,6 @@ class SampleNotificationsConfig(OpenwispNotificationsConfig):
             test_app_name_changed,
             dispatch_uid='test_app_name_changed_invalidation',
         )
+
+
+del OpenwispNotificationsConfig

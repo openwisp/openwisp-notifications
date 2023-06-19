@@ -87,7 +87,7 @@ class TestAdmin(BaseTestAdmin):
         self.assertContains(r, self._expected_output())
 
     def test_non_zero_notifications(self):
-        patched_function = 'openwisp_notifications.templatetags.notification_tags.base_notification_unread'
+        patched_function = 'openwisp_notifications.templatetags.notification_tags._get_user_unread_count'
         with self.subTest("Test UI for less than 100 notifications"):
             with patch(patched_function, return_value=10):
                 r = self.client.get(self._url)
