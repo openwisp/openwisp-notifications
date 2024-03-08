@@ -87,7 +87,7 @@ class AbstractNotification(UUIDModel, BaseNotification):
                     return url_callable(self, field=field, absolute_url=True)
                 except ImportError:
                     return url
-        return _get_object_link(self, field=field, absolute_url=True)
+        return _get_object_link(self, field=field, absolute_url=False)
 
     @property
     def actor_url(self):
