@@ -208,15 +208,16 @@ function notificationWidget($) {
         }
         klass = notificationReadStatus.get(elem.id);
 
+        // Used to convert absolute URLs in notification messages to relative paths
         function convertMessageWithRelativeURL(htmlString) {
           const parser = new DOMParser();
-          const doc = parser.parseFromString(htmlString, "text/html");
-          const links = doc.querySelectorAll("a");
+          const doc = parser.parseFromString(htmlString, 'text/html');
+          const links = doc.querySelectorAll('a');
           links.forEach((link) => {
-            const absoluteUrl = link.getAttribute("href");
-            if (absoluteUrl) {
-              const url = new URL(absoluteUrl);
-              link.setAttribute("href", url.pathname);
+            let url = link.getAttribute('href');
+            if (url) {
+              url = new URL(url);
+              link.setAttribute('href', url.pathname);
             }
           });
           return doc.body.innerHTML;
