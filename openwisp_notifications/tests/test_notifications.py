@@ -5,6 +5,7 @@ from celery.exceptions import OperationalError
 from django.apps.registry import apps
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
+from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from django.core import mail
 from django.core.cache import cache
 from django.core.exceptions import ImproperlyConfigured
@@ -14,6 +15,8 @@ from django.test import TransactionTestCase
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.timesince import timesince
+from selenium.webdriver.common.by import By
+from selenium.webdriver.firefox.webdriver import WebDriver
 
 from openwisp_notifications import settings as app_settings
 from openwisp_notifications import tasks
@@ -927,3 +930,75 @@ class TestTransactionNotifications(TestOrganizationMixin, TransactionTestCase):
         self.assertEqual(notification.target.username, 'new operator name')
         # Done for populating cache
         self.assertEqual(operator_cache.username, 'new operator name')
+
+
+class SeleniumTestNotifications(StaticLiveServerTestCase, TestOrganizationMixin):
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.web_driver = WebDriver()
+        cls.web_driver.implicitly_wait(10)
+        user = User.objects.create_user(
+            username='testuser', password='password', is_superuser=True, is_staff=True
+        )
+        cls.notification_options = dict(
+            sender=user,
+            description='Test Notification',
+            level='info',
+            verb='Test Notification',
+            email_subject='Test Email subject',
+            url='https://localhost:8000/admin',
+        )
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.web_driver.quit()
+        super().tearDownClass()
+
+    def setUp(self):
+        self.admin = self._create_admin()
+        self.notification_options = dict(
+            sender=self.admin,
+            description='Test Notification',
+            level='info',
+            verb='Test Notification',
+            email_subject='Test Email subject',
+            url='https://localhost:8000/admin',
+        )
+        operator = super()._create_operator()
+        data = dict(
+            email_subject='Test Email subject', url='https://localhost:8000/admin'
+        )
+        Notification.objects.create(
+            actor=self.admin,
+            recipient=self.admin,
+            description='Test Notification Description',
+            verb='Test Notification',
+            action_object=operator,
+            target=operator,
+            data=data,
+        )
+
+    def _login(self):
+        self.web_driver.get(f'{self.live_server_url}/admin/')
+        username_input = self.web_driver.find_element(By.ID, 'id_username')
+        username_input.send_keys('testuser')
+        password_input = self.web_driver.find_element(By.ID, 'id_password')
+        password_input.send_keys('password')
+        self.web_driver.find_element(
+            by=By.XPATH,
+            value='/html/body/div[1]/div[3]/div[3]/div/div[1]/div[2]/form/div[4]/input',
+        ).click()
+        self.web_driver.implicitly_wait(10)
+
+    def _create_notification(self):
+        return notify.send(**self.notification_options)
+
+    def test_notification_relative_link(self):
+        self._login()
+        self._create_notification()
+        # self.web_driver.find_element(By.ID, 'openwisp_notifications').click()
+
+        import time
+
+        time.sleep(200)
