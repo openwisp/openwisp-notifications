@@ -6,6 +6,7 @@ from channels.testing.live import ChannelsLiveServerTestCase
 from django.apps.registry import apps
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
+from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from django.core import mail
 from django.core.cache import cache
 from django.core.exceptions import ImproperlyConfigured
@@ -935,7 +936,10 @@ class TestTransactionNotifications(TestOrganizationMixin, TransactionTestCase):
 
 
 class SeleniumTestNotifications(
-    ChannelsLiveServerTestCase, SeleniumTestMixin, TestOrganizationMixin
+    ChannelsLiveServerTestCase,
+    SeleniumTestMixin,
+    TestOrganizationMixin,
+    StaticLiveServerTestCase,
 ):
     serve_static = True
 
