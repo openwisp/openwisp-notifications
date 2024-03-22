@@ -73,6 +73,8 @@ jobs:
         SAMPLE_APP=1 ./runtests.py
         coverage run runtests.py --parallel
         coverage combine
+      env:
+        SELENIUM_HEADLESS: 1
 
     - name: Upload Coverage
       run: coveralls --service=github
