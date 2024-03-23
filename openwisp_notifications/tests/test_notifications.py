@@ -2,7 +2,6 @@ from datetime import timedelta
 from unittest.mock import patch
 
 from celery.exceptions import OperationalError
-from channels.testing.live import ChannelsLiveServerTestCase
 from django.apps.registry import apps
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
@@ -936,7 +935,6 @@ class TestTransactionNotifications(TestOrganizationMixin, TransactionTestCase):
 
 
 class SeleniumTestNotifications(
-    ChannelsLiveServerTestCase,
     SeleniumTestMixin,
     TestOrganizationMixin,
     StaticLiveServerTestCase,
