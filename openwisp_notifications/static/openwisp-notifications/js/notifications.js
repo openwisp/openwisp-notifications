@@ -197,6 +197,7 @@ function notificationWidget($) {
     function notificationListItem(elem) {
         let klass,
             datetime = dateTimeStampToDateTimeLocaleString(new Date(elem.timestamp));
+        const target_url = new URL(elem.target_url);
 
         if (!notificationReadStatus.has(elem.id)) {
             if (elem.unread) {
@@ -207,8 +208,23 @@ function notificationWidget($) {
         }
         klass = notificationReadStatus.get(elem.id);
 
+        // Used to convert absolute URLs in notification messages to relative paths
+        function convertMessageWithRelativeURL(htmlString) {
+          const parser = new DOMParser();
+          const doc = parser.parseFromString(htmlString, 'text/html');
+          const links = doc.querySelectorAll('a');
+          links.forEach((link) => {
+            let url = link.getAttribute('href');
+            if (url) {
+              url = new URL(url);
+              link.setAttribute('href', url.pathname);
+            }
+          });
+          return doc.body.innerHTML;
+        }
+
         return `<div class="ow-notification-elem ${klass}" id=ow-${elem.id}
-                        data-location="${elem.target_url}" role="link" tabindex="0">
+                        data-location="${target_url.pathname}" role="link" tabindex="0">
                     <div class="ow-notification-inner">
                         <div class="ow-notification-meta">
                         <div class="ow-notification-level-wrapper">
@@ -217,7 +233,7 @@ function notificationWidget($) {
                         </div>
                         <div class="ow-notification-date">${datetime}</div>
                         </div>
-                    ${elem.message}
+                    ${convertMessageWithRelativeURL(elem.message)}
                     </div>
                 </div>`;
     }
