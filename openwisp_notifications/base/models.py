@@ -20,7 +20,7 @@ from swapper import get_model_name
 from openwisp_notifications import settings as app_settings
 from openwisp_notifications.exceptions import NotificationRenderException
 from openwisp_notifications.types import (
-    NOTIFICATION_CHOICES,
+    get_notification_choices,
     get_notification_configuration,
 )
 from openwisp_notifications.utils import _get_absolute_url, _get_object_link
@@ -31,7 +31,7 @@ logger = logging.getLogger(__name__)
 
 class AbstractNotification(UUIDModel, BaseNotification):
     CACHE_KEY_PREFIX = 'ow-notifications-'
-    type = models.CharField(max_length=30, null=True, choices=NOTIFICATION_CHOICES)
+    type = models.CharField(max_length=30, null=True, choices=get_notification_choices)
     _actor = BaseNotification.actor
     _action_object = BaseNotification.action_object
     _target = BaseNotification.target
@@ -212,7 +212,7 @@ class AbstractNotificationSetting(UUIDModel):
     type = models.CharField(
         max_length=30,
         null=True,
-        choices=NOTIFICATION_CHOICES,
+        choices=get_notification_choices,
         verbose_name='Notification Type',
     )
     organization = models.ForeignKey(

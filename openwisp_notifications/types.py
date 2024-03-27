@@ -23,6 +23,15 @@ NOTIFICATION_CHOICES = [('default', 'Default Type')]
 NOTIFICATION_ASSOCIATED_MODELS = set()
 
 
+def get_notification_choices():
+    """
+    Return a list of notification choices.
+    This method used as a callable for 'choices' attribute in models
+    allowing the models to deal with the updated list.
+    """
+    return NOTIFICATION_CHOICES
+
+
 def get_notification_configuration(notification_type):
     if not notification_type:
         return {}
