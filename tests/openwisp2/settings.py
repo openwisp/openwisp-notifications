@@ -14,9 +14,6 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': os.path.join(BASE_DIR, 'openwisp_notifications.db'),
-        "TEST": {
-            "NAME": os.path.join(BASE_DIR, "openwisp_notifications_test.db"),
-        },
     }
 }
 
