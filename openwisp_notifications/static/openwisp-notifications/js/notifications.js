@@ -195,9 +195,9 @@ function notificationWidget($) {
     }
 
     function notificationListItem(elem) {
-        let klass,
-            datetime = dateTimeStampToDateTimeLocaleString(new Date(elem.timestamp));
-        const target_url = new URL(elem.target_url);
+        let klass;
+        const datetime = dateTimeStampToDateTimeLocaleString(new Date(elem.timestamp)),
+              target_url = new URL(elem.target_url);
 
         if (!notificationReadStatus.has(elem.id)) {
             if (elem.unread) {
@@ -210,9 +210,9 @@ function notificationWidget($) {
 
         // Used to convert absolute URLs in notification messages to relative paths
         function convertMessageWithRelativeURL(htmlString) {
-          const parser = new DOMParser();
-          const doc = parser.parseFromString(htmlString, 'text/html');
-          const links = doc.querySelectorAll('a');
+          const parser = new DOMParser(),
+                doc = parser.parseFromString(htmlString, 'text/html'),
+                links = doc.querySelectorAll('a');
           links.forEach((link) => {
             let url = link.getAttribute('href');
             if (url) {
