@@ -1,4 +1,4 @@
-openwisp-utils[qa] @ https://github.com/openwisp/openwisp-utils/tarball/master
+openwisp-utils[qa,selenium] @ https://github.com/openwisp/openwisp-utils/tarball/master
 django-cors-headers~=4.0.0
 django-redis~=5.2.0
 channels_redis~=4.1.0
