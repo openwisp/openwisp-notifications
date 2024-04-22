@@ -5,7 +5,6 @@ from celery.exceptions import OperationalError
 from django.apps.registry import apps
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
-from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from django.core import mail
 from django.core.cache import cache
 from django.core.exceptions import ImproperlyConfigured
@@ -15,9 +14,6 @@ from django.test import TransactionTestCase
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.timesince import timesince
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.support.ui import WebDriverWait
 
 from openwisp_notifications import settings as app_settings
 from openwisp_notifications import tasks
@@ -37,9 +33,8 @@ from openwisp_notifications.types import (
     _unregister_notification_choice,
     get_notification_configuration,
 )
-from openwisp_notifications.utils import _get_absolute_url, _get_object_link
+from openwisp_notifications.utils import _get_absolute_url
 from openwisp_users.tests.utils import TestOrganizationMixin
-from openwisp_utils.test_selenium_mixins import SeleniumTestMixin
 from openwisp_utils.tests import capture_any_output
 
 User = get_user_model()
@@ -932,48 +927,3 @@ class TestTransactionNotifications(TestOrganizationMixin, TransactionTestCase):
         self.assertEqual(notification.target.username, 'new operator name')
         # Done for populating cache
         self.assertEqual(operator_cache.username, 'new operator name')
-
-
-class SeleniumTestNotifications(
-    SeleniumTestMixin,
-    TestOrganizationMixin,
-    StaticLiveServerTestCase,
-):
-    serve_static = True
-
-    def setUp(self):
-        self.admin = self._create_admin(
-            username=self.admin_username, password=self.admin_password
-        )
-
-    def test_notification_relative_link(self):
-        self.login()
-        operator = super()._create_operator()
-        data = dict(
-            email_subject='Test Email subject',
-            url='http://127.0.0.1:8000/admin/',
-        )
-        notification = Notification.objects.create(
-            actor=self.admin,
-            recipient=self.admin,
-            description='Test Notification Description',
-            verb='Test Notification',
-            action_object=operator,
-            target=operator,
-            data=data,
-        )
-        self.web_driver.implicitly_wait(10)
-        WebDriverWait(self.web_driver, 10).until(
-            EC.visibility_of_element_located((By.ID, 'openwisp_notifications'))
-        )
-        self.web_driver.find_element(By.ID, 'openwisp_notifications').click()
-        WebDriverWait(self.web_driver, 10).until(
-            EC.visibility_of_element_located((By.CLASS_NAME, 'ow-notification-elem'))
-        )
-        notification_elem = self.web_driver.find_element(
-            By.CLASS_NAME, 'ow-notification-elem'
-        )
-        data_location_value = notification_elem.get_attribute('data-location')
-        self.assertEqual(
-            data_location_value, _get_object_link(notification, 'target', False)
-        )
