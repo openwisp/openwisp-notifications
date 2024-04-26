@@ -1,6 +1,8 @@
 Notification Types
 ------------------
 
+.. include:: /partials/developers-docs-warning.rst
+
 **OpenWISP Notifications** simplifies configuring individual notification by
 using notification types. You can think of a notification type as a template
 for notifications.

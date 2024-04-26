@@ -1,6 +1,8 @@
 Settings
 --------
 
+.. _openwisp_notifications_host:
+
 ``OPENWISP_NOTIFICATIONS_HOST``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -63,6 +65,8 @@ Provide a relative path (hosted on your webserver) to audio file as show below.
 
     OPENWISP_NOTIFICATIONS_SOUND = 'your-appname/audio/notification.mp3'
 
+.. _openwisp_notifications_cache_timeout:
+
 ``OPENWISP_NOTIFICATIONS_CACHE_TIMEOUT``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -75,6 +79,8 @@ Provide a relative path (hosted on your webserver) to audio file as show below.
 It sets the number of seconds the notification contents should be stored in the cache.
 If you want cached notification content to never expire, then set it to ``None``.
 Set it to ``0`` if you don't want to store notification contents in cache at all.
+
+.. _openwisp_notifications_ignore_enabled_admin:
 
 ``OPENWISP_NOTIFICATIONS_IGNORE_ENABLED_ADMIN``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

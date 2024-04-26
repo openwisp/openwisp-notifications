@@ -1,6 +1,8 @@
 Management Commands
 -------------------
 
+.. include:: /partials/developers-docs-warning.rst
+
 ``populate_notification_preferences``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

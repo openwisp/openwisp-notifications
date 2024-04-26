@@ -6,7 +6,7 @@ for a number of notifications. To optimize database queries, these objects are c
 `Django's cache framework <https://docs.djangoproject.com/en/3.0/topics/cache/>`_.
 The cached values are updated automatically to reflect actual data from database. You can control
 the duration of caching these objects using
-`OPENWISP_NOTIFICATIONS_CACHE_TIMEOUT setting <#OPENWISP_NOTIFICATIONS_CACHE_TIMEOUT>`_.
+:ref:`OPENWISP_NOTIFICATIONS_CACHE_TIMEOUT setting <openwisp_notifications_cache_timeout>`.
 
 Cache invalidation
 ~~~~~~~~~~~~~~~~~~

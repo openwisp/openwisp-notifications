@@ -3,8 +3,7 @@ Scheduled deletion of notifications
 
 *OpenWISP Notifications* provides a celery task to automatically delete
 notifications older than a pre-configured number of days. In order to run this
-task periodically, you will need to configure ``CELERY_BEAT_SCHEDULE`` setting as shown
-in `setup instructions <#setup-integrate-into-an-existing-django-project>`_.
+task periodically, you will need to configure ``CELERY_BEAT_SCHEDULE``.
 
 The celery task takes only one argument, i.e. number of days. You can provide
 any number of days in `args` key while configuring ``CELERY_BEAT_SCHEDULE`` setting.

@@ -1,6 +1,8 @@
 Registering / Unregistering Notification Types
 ----------------------------------------------
 
+.. include:: /partials/developers-docs-warning.rst
+
 **OpenWISP Notifications** provides registering and unregistering notifications through utility functions
 ``openwisp_notifications.types.register_notification_type`` and ``openwisp_notifications.types.unregister_notification_type``.
 Using these functions you can register or unregister notification types from your code.

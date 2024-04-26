@@ -1,6 +1,8 @@
 Sending notifications
 ---------------------
 
+.. include:: /partials/developers-docs-warning.rst
+
 Notifications can be created using the ``notify`` signal. Eg:
 
 .. code-block:: python

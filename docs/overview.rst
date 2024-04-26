@@ -13,11 +13,11 @@ meaningful events that happen in their network.
 - `Web notifications <#web-notifications>`_
 - `Email notifications <#email-notifications>`_
 - `Notification types <#notification-types>`_
-- `Registering new notification types <#registering--unregistering-notification-types>`_
+- :ref:`Registering new notification types <Registering / Unregistering Chart Configuration>`
 - `User notification preferences <#notification-preferences>`_
 - `Silencing notifications for specific objects temporarily or permanently <#silencing-notifications-for-specific-objects-temporarily-or-permanently>`_
 - `Automatic cleanup of old notifications <#scheduled-deletion-of-notifications>`_
-- `Configurable host for API endpoints <#openwisp_notifications_host>`_
+- :ref:`Configurable host for API endpoints <openwisp_notifications_host>`_
 
 .. toctree::
    :maxdepth: 1
