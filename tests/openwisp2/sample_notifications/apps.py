@@ -15,7 +15,7 @@ class SampleNotificationsConfig(OpenwispNotificationsConfig):
     def ready(self):
         super().ready()
         self.register_notification_types()
-        self.connect_recievers()
+        self.connect_receivers()
 
     def register_notification_types(self):
         register_notification_type(
@@ -29,7 +29,7 @@ class SampleNotificationsConfig(OpenwispNotificationsConfig):
             },
         )
 
-    def connect_recievers(self):
+    def connect_receivers(self):
         from openwisp_notifications.handlers import register_notification_cache_update
 
         Organization = load_model('openwisp_users', 'Organization')
