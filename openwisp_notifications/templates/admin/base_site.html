@@ -34,6 +34,17 @@
     <div class="ow-no-notifications ow-round-bottom-border ow-hide">
         <p>{% trans 'No new notification.' %}</p>
     </div>
+    <div class="ow-dialog-overlay ow-hide">
+        <div class="ow-dialog-notifications">
+            <span class="ow-dialog-close ow-dialog-close-x">&times;</span>
+            <h2 class="ow-message-title"></h2>
+            <div class="ow-message-description"></div>
+            <div class="ow-dialog-buttons">
+              <button class="ow-message-target-redirect ow-hide">Click to Redirect</button>
+              <button class="ow-dialog-close">Close</button>
+            </div>
+        </div>
+    </div>
   </div>
 {% endblock  %}
 

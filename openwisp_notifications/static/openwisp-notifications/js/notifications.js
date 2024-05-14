@@ -87,6 +87,21 @@ function initNotificationDropDown($) {
     });
 }
 
+// Used to convert absolute URLs in notification messages to relative paths
+function convertMessageWithRelativeURL(htmlString) {
+    const parser = new DOMParser(),
+    doc = parser.parseFromString(htmlString, 'text/html'),
+    links = doc.querySelectorAll('a');
+    links.forEach((link) => {
+        let url = link.getAttribute('href');
+        if (url) {
+          url = new URL(url);
+          link.setAttribute('href', url.pathname);
+        }
+    });
+    return doc.body.innerHTML;
+}
+
 function notificationWidget($) {
 
     let nextPageUrl = getAbsoluteUrl('/api/v1/notifications/notification/'),
@@ -208,21 +223,6 @@ function notificationWidget($) {
         }
         klass = notificationReadStatus.get(elem.id);
 
-        // Used to convert absolute URLs in notification messages to relative paths
-        function convertMessageWithRelativeURL(htmlString) {
-          const parser = new DOMParser(),
-                doc = parser.parseFromString(htmlString, 'text/html'),
-                links = doc.querySelectorAll('a');
-          links.forEach((link) => {
-            let url = link.getAttribute('href');
-            if (url) {
-              url = new URL(url);
-              link.setAttribute('href', url.pathname);
-            }
-          });
-          return doc.body.innerHTML;
-        }
-
         return `<div class="ow-notification-elem ${klass}" id=ow-${elem.id}
                         data-location="${target_url.pathname}" role="link" tabindex="0">
                     <div class="ow-notification-inner">
@@ -324,7 +324,35 @@ function notificationWidget($) {
         if (elem.hasClass('unread')) {
             markNotificationRead(elem.get(0));
         }
-        window.location = elem.data('location');
+
+        var notification = fetchedPages.flat().find((notification) => notification.id == elem.get(0).id.replace('ow-', ''));
+        if (notification.description) {
+            document.querySelector('.ow-message-title').innerHTML = convertMessageWithRelativeURL(notification.message);
+            document.querySelector('.ow-message-description').textContent = notification.description;
+            $('.ow-dialog-overlay').removeClass('ow-hide');
+            if (notification.target_url) {
+                var target_url = new URL(notification.target_url);
+                console.log(target_url.pathname)
+                $(document).on('click', '.ow-message-target-redirect', function () {
+                    window.location = target_url.pathname
+                });
+                $('.ow-message-target-redirect').removeClass('ow-hide');
+            }
+        } else {
+            window.location = elem.data('location');
+        }
+        console.log(fetchedPages)
+    });
+
+    // Close dialog on click, keypress or esc
+    $('.ow-dialog-close').on('click keypress', function (e) {
+        if (e.type === 'keypress' && e.which !== 13 && e.which !== 27) {
+            return;
+        }
+        $('.ow-dialog-overlay').addClass('ow-hide');
+        if (!$('.ow-message-target-redirect').hasClass('ow-hide')) {
+            $('.ow-message-target-redirect').addClass('ow-hide');
+        }
     });
 
     // Handler for marking notification as read on mouseout event

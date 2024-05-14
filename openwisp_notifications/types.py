@@ -17,9 +17,23 @@ NOTIFICATION_TYPES = {
         'email_notification': True,
         'web_notification': True,
     },
+    'general_message': {
+        'level': 'info',
+        'verb': 'message verb',
+        'verbose_name': 'Message Type',
+        'email_subject': '[{site.name}] Message Notification Subject',
+        'message': (
+            'Message notification with {notification.verb} and level {notification.level}'
+            ' by [{notification.actor}]({notification.actor_link})'
+        ),
+        'description': '{notification.description}',
+        'message_template': 'openwisp_notifications/default_message.md',
+        'email_notification': False,
+        'web_notification': True,
+    },
 }
 
-NOTIFICATION_CHOICES = [('default', 'Default Type')]
+NOTIFICATION_CHOICES = [('default', 'Default Type'), ('general_message', 'General Message Type')]
 NOTIFICATION_ASSOCIATED_MODELS = set()
 
 

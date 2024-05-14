@@ -5,6 +5,68 @@
   border-bottom-left-radius: 3px;
   border-bottom-right-radius: 3px;
 }
+.ow-dialog-overlay {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: opacity 0.3s;
+}
+.ow-dialog-notifications {
+  position: relative;
+  background-color: white;
+  padding: 20px;
+  padding-top: 40px;
+  border-radius: 10px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  width: 90%;
+  max-width: 500px;
+  text-align: left;
+}
+.ow-dialog-close-x {
+  color: #333;
+  cursor: pointer;
+  font-size: 1.25em;
+  position: absolute;
+  display: block;
+  font-weight: bold;
+  top: 10px;
+  right: 10px;
+}
+.ow-dialog-close-x:hover {
+  color: #e04343;
+}
+.ow-message-title {
+  color: #333;
+  margin-bottom: 10px;
+}
+.ow-message-title a {
+  color: #df5d43 !important;
+  font-weight: bold;
+}
+.ow-message-description {
+  margin-bottom: 20px;
+  line-height: 1.6;
+  color: #666;
+}
+.ow-dialog-buttons button {
+  margin-right: 10px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+.ow-dialog-buttons button:hover {
+  background-color: #0056b3;
+}
 
 /* Notification bell */
 .ow-notifications {
