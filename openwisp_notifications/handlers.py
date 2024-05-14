@@ -1,5 +1,6 @@
 import logging
 
+from allauth.account.models import EmailAddress
 from celery.exceptions import OperationalError
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
@@ -182,7 +183,10 @@ def send_email_notification(sender, instance, created, **kwargs):
         # therefore send email anyway.
         email_preference = True
 
-    if not (email_preference and instance.recipient.email):
+    email_address = EmailAddress.objects.filter(user=instance.recipient, email=instance.recipient.email).first()
+    is_email_verified = email_address.verified if email_address else False
+
+    if not (email_preference and instance.recipient.email and is_email_verified):
         return
 
     try:
