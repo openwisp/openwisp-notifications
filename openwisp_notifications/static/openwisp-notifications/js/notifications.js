@@ -332,16 +332,14 @@ function notificationWidget($) {
             $('.ow-dialog-overlay').removeClass('ow-hide');
             if (notification.target_url) {
                 var target_url = new URL(notification.target_url);
-                console.log(target_url.pathname)
                 $(document).on('click', '.ow-message-target-redirect', function () {
-                    window.location = target_url.pathname
+                    window.location = target_url.pathname;
                 });
                 $('.ow-message-target-redirect').removeClass('ow-hide');
             }
         } else {
             window.location = elem.data('location');
         }
-        console.log(fetchedPages)
     });
 
     // Close dialog on click, keypress or esc

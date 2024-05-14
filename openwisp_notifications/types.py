@@ -33,7 +33,10 @@ NOTIFICATION_TYPES = {
     },
 }
 
-NOTIFICATION_CHOICES = [('default', 'Default Type'), ('general_message', 'General Message Type')]
+NOTIFICATION_CHOICES = [
+    ('default', 'Default Type'),
+    ('general_message', 'General Message Type'),
+]
 NOTIFICATION_ASSOCIATED_MODELS = set()
 
 
