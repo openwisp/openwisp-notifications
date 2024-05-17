@@ -1,4 +1,3 @@
-from django.core.exceptions import ImproperlyConfigured
 from django.db.models.signals import post_save
 from django.test import TransactionTestCase
 
@@ -9,10 +8,9 @@ from openwisp_notifications.swapper import load_model, swapper_load_model
 from openwisp_notifications.tests.test_helpers import (
     base_register_notification_type,
     base_unregister_notification_type,
+    mock_notification_types,
     register_notification_type,
-    unregister_notification_type,
 )
-from openwisp_notifications.types import get_notification_configuration
 from openwisp_users.tests.utils import TestOrganizationMixin
 
 test_notification_type = {
@@ -32,15 +30,7 @@ ns_queryset = NotificationSetting.objects.filter(type='default')
 
 class TestNotificationSetting(TestOrganizationMixin, TransactionTestCase):
     def setUp(self):
-        if not Organization.objects.first():
-            self._create_org(name='default', slug='default')
-
-    def tearDown(self):
-        super().tearDown()
-        try:
-            unregister_notification_type('test')
-        except ImproperlyConfigured:
-            pass
+        self.default_org = self._get_org('default')
 
     def _create_staff_org_admin(self):
         return self._create_org_user(user=self._create_operator(), is_admin=True)
@@ -56,6 +46,7 @@ class TestNotificationSetting(TestOrganizationMixin, TransactionTestCase):
         self._get_user()
         self.assertEqual(ns_queryset.count(), 0)
 
+    @mock_notification_types
     def test_notification_type_registered(self):
         register_notification_type('test', test_notification_type)
         queryset = NotificationSetting.objects.filter(type='test')
@@ -95,6 +86,7 @@ class TestNotificationSetting(TestOrganizationMixin, TransactionTestCase):
         self.assertEqual(ns_queryset.filter(deleted=False).count(), 1)
         self.assertEqual(ns_queryset.filter(deleted=True).count(), 1)
 
+    @mock_notification_types
     def test_register_notification_org_user(self):
         self._create_staff_org_admin()
 
@@ -103,13 +95,15 @@ class TestNotificationSetting(TestOrganizationMixin, TransactionTestCase):
         register_notification_type('test', test_notification_type)
         self.assertEqual(queryset.count(), 1)
 
+    @mock_notification_types
     def test_post_migration_handler(self):
+        from openwisp_notifications.types import NOTIFICATION_CHOICES
+
         # Simulates loading of app when Django server starts
         admin = self._get_admin()
         org_user = self._create_staff_org_admin()
         self.assertEqual(ns_queryset.count(), 3)
 
-        default_type_config = get_notification_configuration('default')
         base_unregister_notification_type('default')
         base_register_notification_type('test', test_notification_type)
         notification_type_registered_unregistered_handler(sender=self)
@@ -119,16 +113,14 @@ class TestNotificationSetting(TestOrganizationMixin, TransactionTestCase):
 
         # Notification Settings for "test" type are created
         queryset = NotificationSetting.objects.filter(deleted=False)
-        if NotificationSetting._meta.app_label == 'sample_notifications':
-            self.assertEqual(queryset.count(), 6)
-            self.assertEqual(queryset.filter(user=admin).count(), 4)
-            self.assertEqual(queryset.filter(user=org_user.user).count(), 2)
-        else:
-            self.assertEqual(queryset.count(), 3)
-            self.assertEqual(queryset.filter(user=admin).count(), 2)
-            self.assertEqual(queryset.filter(user=org_user.user).count(), 1)
-
-        base_register_notification_type('default', default_type_config)
+        notification_types_count = len(NOTIFICATION_CHOICES)
+        self.assertEqual(queryset.count(), 3 * notification_types_count)
+        self.assertEqual(
+            queryset.filter(user=admin).count(), 2 * notification_types_count
+        )
+        self.assertEqual(
+            queryset.filter(user=org_user.user).count(), 1 * notification_types_count
+        )
 
     def test_superuser_demoted_to_user(self):
         admin = self._get_admin()
@@ -187,6 +179,7 @@ class TestNotificationSetting(TestOrganizationMixin, TransactionTestCase):
         OrganizationUser.objects.create(user=user, organization=test_org, is_admin=True)
         self.assertEqual(ns_queryset.count(), 2)
 
+    @mock_notification_types
     def test_notification_setting_full_clean(self):
         test_type = {
             'verbose_name': 'Test Notification Type',
@@ -206,8 +199,6 @@ class TestNotificationSetting(TestOrganizationMixin, TransactionTestCase):
         notification_setting.full_clean()
         self.assertIsNone(notification_setting.email)
         self.assertIsNone(notification_setting.web)
-
-        unregister_notification_type('test_type')
 
     def test_organization_user_updated(self):
         default_org = Organization.objects.first()
