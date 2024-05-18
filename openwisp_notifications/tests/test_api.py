@@ -13,8 +13,8 @@ from openwisp_notifications.signals import notify
 from openwisp_notifications.swapper import load_model, swapper_load_model
 from openwisp_notifications.tests.test_helpers import (
     TEST_DATETIME,
+    mock_notification_types,
     register_notification_type,
-    unregister_notification_type,
 )
 from openwisp_users.tests.test_api import AuthenticationMixin
 from openwisp_users.tests.utils import TestOrganizationMixin
@@ -436,6 +436,7 @@ class TestNotificationApi(
             self.assertEqual(response.data['count'], number_of_notifications)
 
     @capture_any_output()
+    @mock_notification_types
     def test_malformed_notifications(self):
         test_type = {
             'verbose_name': 'Test Notification Type',
@@ -469,9 +470,8 @@ class TestNotificationApi(
             self.assertEqual(response.status_code, 404)
             self.assertDictEqual(response.data, {'detail': NOT_FOUND_ERROR})
 
-        unregister_notification_type('test_type')
-
     @capture_any_output()
+    @mock_notification_types
     @patch('openwisp_notifications.tasks.delete_obsolete_objects.delay')
     def test_obsolete_notifications_busy_worker(self, mocked_task):
         """
@@ -515,8 +515,6 @@ class TestNotificationApi(
             response = self.client.get(url)
             self.assertEqual(response.status_code, 404)
             self.assertDictEqual(response.data, {'detail': NOT_FOUND_ERROR})
-
-        unregister_notification_type('test_type')
 
     def test_notification_setting_list_api(self):
         self._create_org_user(is_admin=True)
@@ -904,6 +902,7 @@ class TestNotificationApi(
             self.assertIn('object_content_type', ignore_obj_notification)
             self.assertIsNone(ignore_obj_notification['valid_till'])
 
+    @capture_any_output()
     @patch('openwisp_notifications.tasks.delete_notification.delay')
     def test_deleted_notification_type(self, *args):
         notify.send(sender=self.admin, type='default', target=self.admin)

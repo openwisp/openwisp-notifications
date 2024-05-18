@@ -25,11 +25,11 @@ from openwisp_notifications.handlers import (
 from openwisp_notifications.signals import notify
 from openwisp_notifications.swapper import load_model, swapper_load_model
 from openwisp_notifications.tests.test_helpers import (
+    mock_notification_types,
     register_notification_type,
     unregister_notification_type,
 )
 from openwisp_notifications.types import (
-    NOTIFICATION_CHOICES,
     _unregister_notification_choice,
     get_notification_configuration,
 )
@@ -322,6 +322,7 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
         )
         self.assertEqual(n.email_subject, '[example.com] Default Notification Subject')
 
+    @mock_notification_types
     def test_misc_notification_type_validation(self):
         with self.subTest('Registering with incomplete notification configuration.'):
             with self.assertRaises(AssertionError):
@@ -339,6 +340,7 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
             with self.assertRaises(ImproperlyConfigured):
                 unregister_notification_type(dict())
 
+    @mock_notification_types
     def test_notification_type_message_template(self):
         message_template = {
             'level': 'info',
@@ -374,7 +376,10 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
             )
             self.assertEqual(n.message, message)
 
+    @mock_notification_types
     def test_register_unregister_notification_type(self):
+        from openwisp_notifications.types import NOTIFICATION_CHOICES
+
         test_type = {
             'verbose_name': 'Test Notification Type',
             'level': 'test',
@@ -437,6 +442,7 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
         self._create_notification()
         self.assertEqual(len(mail.outbox), 1)
 
+    @mock_notification_types
     def test_missing_relation_object(self):
         test_type = {
             'verbose_name': 'Test Notification Type',
@@ -487,8 +493,7 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
             n_count = notification_queryset.count()
             self.assertEqual(n_count, 0)
 
-        unregister_notification_type('test_type')
-
+    @mock_notification_types
     def test_notification_type_related_object_url(self):
         test_type = {
             'verbose_name': 'Test Notification Type',
@@ -545,9 +550,8 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
             self.assertEqual(notification.actor_url, 'https://actor.example.com')
             self.assertEqual(notification.target_url, 'https://target.example.com')
 
-        unregister_notification_type('test_type')
-
     @capture_any_output()
+    @mock_notification_types
     @patch('openwisp_notifications.tasks.delete_notification.delay')
     def test_notification_invalid_message_attribute(self, mocked_task):
         self.notification_options.update({'type': 'test_type'})
@@ -574,7 +578,6 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
             'Error encountered in generating notification email',
         )
         mocked_task.assert_called_with(notification_id=notification.id)
-        unregister_notification_type('test_type')
 
     def test_related_objects_database_query(self):
         operator = self._get_operator()
@@ -635,16 +638,15 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
         tasks.delete_old_notifications.delay(days_old)
         self.assertEqual(notification_queryset.count(), 1)
 
+    @mock_notification_types
     def test_unregistered_notification_type_related_notification(self):
         # Notifications related to notification type should
         # get deleted on unregistration of notification type
-        default_type_config = get_notification_configuration('default')
         self.notification_options.update({'type': 'default'})
         unregister_notification_type('default')
         self.assertEqual(notification_queryset.count(), 0)
 
-        register_notification_type('default', default_type_config)
-
+    @mock_notification_types
     def test_notification_type_email_notification_setting_true(self):
         test_type = {
             'verbose_name': 'Test Notification Type',
@@ -672,8 +674,7 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
             self._create_notification()
             self.assertEqual(len(mail.outbox), 0)
 
-        unregister_notification_type('test_type')
-
+    @mock_notification_types
     def test_notification_type_email_notification_setting_false(self):
         test_type = {
             'verbose_name': 'Test Notification Type',
@@ -700,8 +701,7 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
             self._create_notification()
             self.assertEqual(len(mail.outbox), 1)
 
-        unregister_notification_type('test_type')
-
+    @mock_notification_types
     def test_notification_type_web_notification_setting_true(self):
         self.notification_options.update({'target': self._get_org_user()})
         test_type = {
@@ -727,8 +727,7 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
             self._create_notification()
             self.assertEqual(notification_queryset.count(), 0)
 
-        unregister_notification_type('test_type')
-
+    @mock_notification_types
     def test_notification_type_web_notification_setting_false(self):
         target_obj = self._get_org_user()
         self.notification_options.update({'target': target_obj})
@@ -764,8 +763,7 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
             self._create_notification()
             self.assertEqual(notification_queryset.count(), 1)
 
-        unregister_notification_type('test_type')
-
+    @mock_notification_types
     def test_notification_type_email_web_notification_defaults(self):
         test_type = {
             'verbose_name': 'Test Notification Type',
@@ -779,8 +777,6 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
         notification_type_config = get_notification_configuration('test_type')
         self.assertTrue(notification_type_config['web_notification'])
         self.assertTrue(notification_type_config['email_notification'])
-
-        unregister_notification_type('test_type')
 
     def test_inactive_user_not_receive_notification(self):
         target = self._get_org_user()
@@ -846,6 +842,7 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
         )
         mocked_logger.assert_called_once()
 
+    @mock_notification_types
     @patch.object(post_migrate, 'receivers', [])
     @patch(
         'openwisp_notifications.tasks.ns_register_unregister_notification_type.delay',
