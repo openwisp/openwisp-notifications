@@ -1,6 +1,7 @@
 from datetime import timedelta
 from unittest.mock import patch
 
+from allauth.account.models import EmailAddress
 from celery.exceptions import OperationalError
 from django.apps.registry import apps
 from django.contrib.auth import get_user_model
@@ -887,6 +888,11 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
             data=data,
             type="default",
         )
+        self.assertEqual(len(mail.outbox), 0)
+
+    def test_email_notification_with_unverified_status(self):
+        EmailAddress.objects.filter(user=self.admin).update(verified=False)
+        self._create_notification()
         self.assertEqual(len(mail.outbox), 0)
 
 
