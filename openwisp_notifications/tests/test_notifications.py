@@ -890,9 +890,10 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
         )
         self.assertEqual(len(mail.outbox), 0)
 
-    def test_email_notification_with_unverified_status(self):
+    def test_notification_for_unverified_email(self):
         EmailAddress.objects.filter(user=self.admin).update(verified=False)
         self._create_notification()
+        # we don't send emails to unverified email addresses
         self.assertEqual(len(mail.outbox), 0)
 
 
