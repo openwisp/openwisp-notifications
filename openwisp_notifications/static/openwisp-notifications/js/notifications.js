@@ -212,7 +212,7 @@ function notificationWidget($) {
     function notificationListItem(elem) {
         let klass;
         const datetime = dateTimeStampToDateTimeLocaleString(new Date(elem.timestamp)),
-              target_url = new URL(elem.target_url);
+              target_url = new URL(elem.target_url, window.location.href);
 
         if (!notificationReadStatus.has(elem.id)) {
             if (elem.unread) {
@@ -331,7 +331,7 @@ function notificationWidget($) {
             document.querySelector('.ow-message-description').textContent = notification.description;
             $('.ow-dialog-overlay').removeClass('ow-hide');
             if (notification.target_url) {
-                var target_url = new URL(notification.target_url);
+                var target_url = new URL(notification.target_url, window.location.href);
                 $(document).on('click', '.ow-message-target-redirect', function () {
                     window.location = target_url.pathname;
                 });
