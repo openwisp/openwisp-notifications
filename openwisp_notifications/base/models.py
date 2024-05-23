@@ -120,7 +120,9 @@ class AbstractNotification(UUIDModel, BaseNotification):
             try:
                 config = get_notification_configuration(self.type)
                 data = self.data or {}
-                if 'message' in config:
+                if 'message' in data:
+                    md_text = data['message']
+                elif 'message' in config:
                     md_text = config['message'].format(notification=self, **data)
                 else:
                     md_text = render_to_string(

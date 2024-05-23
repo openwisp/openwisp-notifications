@@ -19,11 +19,11 @@ NOTIFICATION_TYPES = {
     },
     'general_message': {
         'level': 'info',
-        'verb': 'message verb',
-        'verbose_name': 'Message Type',
-        'email_subject': '[{site.name}] Message Notification Subject',
+        'verb': 'generic verb',
+        'verbose_name': 'Generic Type',
+        'email_subject': '[{site.name}] Generic Notification Subject',
         'message': (
-            'Message notification with {notification.verb} and level {notification.level}'
+            'Generic notification with {notification.verb} and level {notification.level}'
             ' by [{notification.actor}]({notification.actor_link})'
         ),
         'description': '{notification.description}',
