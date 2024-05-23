@@ -233,7 +233,7 @@ function notificationWidget($) {
                             </div>
                             <div class="ow-notification-date">${datetime}</div>
                         </div>
-                    ${elem.description ? elem.message.replace(/<a [^>]*>([^<]*)<\/a>/g, '$1') : convertMessageWithRelativeURL(elem.message)}
+                    ${elem.get_description ? elem.message.replace(/<a [^>]*>([^<]*)<\/a>/g, '$1') : convertMessageWithRelativeURL(elem.message)}
                     </div>
                 </div>`;
     }
@@ -326,7 +326,7 @@ function notificationWidget($) {
         }
 
         var notification = fetchedPages.flat().find((notification) => notification.id == elem.get(0).id.replace('ow-', ''));
-        if (notification.description) {
+        if (notification.get_description) {
             const datetime = dateTimeStampToDateTimeLocaleString(new Date(notification.timestamp));
             document.querySelector('.ow-dialog-notification-level-wrapper').innerHTML = `
                         <div class="ow-notification-level-wrapper">
@@ -336,7 +336,7 @@ function notificationWidget($) {
                         <div class="ow-notification-date">${datetime}</div>
             `;
             document.querySelector('.ow-message-title').innerHTML = convertMessageWithRelativeURL(notification.message);
-            document.querySelector('.ow-message-description').innerHTML = notification.description;
+            document.querySelector('.ow-message-description').innerHTML = notification.get_description;
             $('.ow-dialog-overlay').removeClass('ow-hide');
             if (notification.target_url) {
                 var target_url = new URL(notification.target_url, window.location.href);

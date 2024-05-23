@@ -105,6 +105,10 @@ class AbstractNotification(UUIDModel, BaseNotification):
     def message(self):
         return self.get_message()
 
+    @cached_property
+    def get_description(self):
+        return mark_safe(markdown(self.description))
+
     @property
     def email_message(self):
         return self.get_message(email_message=True)
