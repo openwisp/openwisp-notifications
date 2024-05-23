@@ -17,7 +17,7 @@ NOTIFICATION_TYPES = {
         'email_notification': True,
         'web_notification': True,
     },
-    'general_message': {
+    'generic_message': {
         'level': 'info',
         'verb': 'generic verb',
         'verbose_name': 'Generic Type',
@@ -35,7 +35,7 @@ NOTIFICATION_TYPES = {
 
 NOTIFICATION_CHOICES = [
     ('default', 'Default Type'),
-    ('general_message', 'General Message Type'),
+    ('generic_message', 'Generic Message Type'),
 ]
 NOTIFICATION_ASSOCIATED_MODELS = set()
 
