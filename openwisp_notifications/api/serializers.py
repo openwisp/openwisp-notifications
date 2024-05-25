@@ -59,7 +59,7 @@ class NotificationListSerializer(NotificationSerializer):
         fields = [
             'id',
             'message',
-            'get_description',
+            'rendered_description',
             'unread',
             'target_url',
             'email_subject',
