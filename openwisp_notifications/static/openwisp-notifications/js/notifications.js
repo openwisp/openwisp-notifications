@@ -2,6 +2,7 @@
 const notificationReadStatus = new Map();
 const userLanguage = navigator.language || navigator.userLanguage;
 const owWindowId = String(Date.now());
+var isNotificationDialogOpen = false;
 
 if (typeof gettext === 'undefined') {
     var gettext = function(word){ return word; };
@@ -59,7 +60,9 @@ function initNotificationDropDown($) {
         // Check if the clicked area is dropDown / notification-btn or not
         if (
             $('.ow-notification-dropdown').has(e.target).length === 0 &&
-            !$(e.target).is($('.ow-notifications'))
+            !$(e.target).is($('.ow-notifications')) &&
+            !$(e.target).is($('.ow-dialog-close')) &&
+            !isNotificationDialogOpen
         ) {
             $('.ow-notification-dropdown').addClass('ow-hide');
         }
@@ -69,7 +72,10 @@ function initNotificationDropDown($) {
     $(document).focusin(function(e){
         // Hide notification widget if focus is shifted to an element outside it
         e.stopPropagation();
-        if ($('.ow-notification-dropdown').has(e.target).length === 0){
+        if (
+            $('.ow-notification-dropdown').has(e.target).length === 0 &&
+            !isNotificationDialogOpen
+        ) {
             // Don't hide if focus changes to notification bell icon
             if (e.target != $('#openwisp_notifications').get(0)) {
                 $('.ow-notification-dropdown').addClass('ow-hide');
@@ -77,12 +83,20 @@ function initNotificationDropDown($) {
         }
     });
 
-    $('.ow-notification-dropdown').on('keyup', '*', function(e){
+    $(document).on('keyup', '*', function(e){
         e.stopPropagation();
         // Hide notification widget on "Escape" key
-        if (e.keyCode == 27){
-            $('.ow-notification-dropdown').addClass('ow-hide');
-            $('#openwisp_notifications').focus();
+        if (e.keyCode == 27) {
+            if (isNotificationDialogOpen) {
+                $('.ow-dialog-overlay').addClass('ow-hide');
+                $('.ow-message-target-redirect').addClass('ow-hide');
+                isNotificationDialogOpen = false;
+            } else {
+                $('.ow-notification-dropdown').addClass('ow-hide');
+            }
+            if ($(e.target).is($('.ow-notification-dropdown'))) {
+                $('#openwisp_notifications').focus();
+            }
         }
     });
 }
@@ -325,8 +339,22 @@ function notificationWidget($) {
             markNotificationRead(elem.get(0));
         }
 
+        var container = document.querySelector('#container');
+        // Check if the container exists and does not already have a direct child with the class '.ow-dialog-overlay'
+        if (container && !Array.from(container.children).some(child => child.classList.contains('ow-dialog-overlay'))) {
+            const overlayElement = document.querySelector('.ow-dialog-overlay');
+
+            if (overlayElement) {
+                // Remove the overlay element from its current parent
+                overlayElement.parentNode.removeChild(overlayElement);
+                // Append the overlay element to the container
+                container.appendChild(overlayElement);
+            }
+        }
+
         var notification = fetchedPages.flat().find((notification) => notification.id == elem.get(0).id.replace('ow-', ''));
         if (notification.get_description) {
+            isNotificationDialogOpen = true;
             const datetime = dateTimeStampToDateTimeLocaleString(new Date(notification.timestamp));
             document.querySelector('.ow-dialog-notification-level-wrapper').innerHTML = `
                         <div class="ow-notification-level-wrapper">
@@ -355,10 +383,9 @@ function notificationWidget($) {
         if (e.type === 'keypress' && e.which !== 13 && e.which !== 27) {
             return;
         }
+        isNotificationDialogOpen = false;
         $('.ow-dialog-overlay').addClass('ow-hide');
-        if (!$('.ow-message-target-redirect').hasClass('ow-hide')) {
-            $('.ow-message-target-redirect').addClass('ow-hide');
-        }
+        $('.ow-message-target-redirect').addClass('ow-hide');
     });
 
     // Handler for marking notification as read on mouseout event
