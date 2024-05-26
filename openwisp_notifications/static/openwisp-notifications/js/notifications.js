@@ -14,6 +14,7 @@ if (typeof gettext === 'undefined') {
         initNotificationDropDown($);
         initWebSockets($);
         owNotificationWindow.init($);
+        moveNotificationDialog($);
     });
 })(django.jQuery);
 
@@ -99,6 +100,15 @@ function initNotificationDropDown($) {
             }
         }
     });
+}
+
+function moveNotificationDialog($) {
+    var $container = $('#container');
+    var $overlayElement = $('.ow-dialog-overlay');
+    // Remove the overlay element from its current parent
+    $overlayElement.detach();
+    // Append the overlay element to the container
+    $container.append($overlayElement);
 }
 
 // Used to convert absolute URLs in notification messages to relative paths
@@ -337,19 +347,6 @@ function notificationWidget($) {
         // If notification is unread then send read request
         if (elem.hasClass('unread')) {
             markNotificationRead(elem.get(0));
-        }
-
-        var container = document.querySelector('#container');
-        // Check if the container exists and does not already have a direct child with the class '.ow-dialog-overlay'
-        if (container && !Array.from(container.children).some(child => child.classList.contains('ow-dialog-overlay'))) {
-            const overlayElement = document.querySelector('.ow-dialog-overlay');
-
-            if (overlayElement) {
-                // Remove the overlay element from its current parent
-                overlayElement.parentNode.removeChild(overlayElement);
-                // Append the overlay element to the container
-                container.appendChild(overlayElement);
-            }
         }
 
         var notification = fetchedPages.flat().find((notification) => notification.id == elem.get(0).id.replace('ow-', ''));
