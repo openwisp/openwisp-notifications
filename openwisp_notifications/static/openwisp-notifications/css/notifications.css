@@ -37,6 +37,7 @@
 .ow-dialog-notification .icon {
   min-height: 15;
   min-width: 15px;
+  background-repeat: no-repeat;
 }
 .ow-dialog-close-x {
   color: #333;
