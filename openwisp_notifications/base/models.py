@@ -107,7 +107,7 @@ class AbstractNotification(UUIDModel, BaseNotification):
 
     @cached_property
     def rendered_description(self):
-        return mark_safe(markdown(self.description))
+        return mark_safe(markdown(self.description)) if self.description else None
 
     @property
     def email_message(self):
