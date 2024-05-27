@@ -321,6 +321,13 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
         )
         self.assertEqual(n.email_subject, '[example.com] Default Notification Subject')
 
+    def test_notification_level_kwarg_precedence(self):
+        # Create a notification with level kwarg set to 'warning'
+        self.notification_options.update({'level': 'warning'})
+        self._create_notification()
+        n = notification_queryset.first()
+        self.assertEqual(n.level, 'warning')
+
     @mock_notification_types
     def test_misc_notification_type_validation(self):
         with self.subTest('Registering with incomplete notification configuration.'):
