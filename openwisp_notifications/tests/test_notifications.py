@@ -60,7 +60,6 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
         self.notification_options = dict(
             sender=self.admin,
             description='Test Notification',
-            level='info',
             verb='Test Notification',
             email_subject='Test Email subject',
             url='https://localhost:8000/admin',
