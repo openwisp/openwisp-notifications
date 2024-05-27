@@ -62,7 +62,6 @@ class TestWidget(
         WebDriverWait(self.web_driver, 10).until(
             EC.visibility_of_element_located((By.ID, f'ow-{notification.id}'))
         )
-        # self.web_driver.find_element(By.ID, f'ow-{notification.id}').click()
         self.web_driver.find_element(By.ID, f'ow-{notification.id}').click()
         WebDriverWait(self.web_driver, 10).until(
             EC.visibility_of_element_located((By.CLASS_NAME, 'ow-dialog-notification'))
