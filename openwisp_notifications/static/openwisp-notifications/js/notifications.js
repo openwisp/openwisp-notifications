@@ -2,7 +2,6 @@
 const notificationReadStatus = new Map();
 const userLanguage = navigator.language || navigator.userLanguage;
 const owWindowId = String(Date.now());
-var isNotificationDialogOpen = false;
 
 if (typeof gettext === 'undefined') {
     var gettext = function(word){ return word; };
@@ -14,7 +13,6 @@ if (typeof gettext === 'undefined') {
         initNotificationDropDown($);
         initWebSockets($);
         owNotificationWindow.init($);
-        moveNotificationDialog($);
     });
 })(django.jQuery);
 
@@ -58,12 +56,15 @@ function initNotificationDropDown($) {
 
     $(document).click(function (e) {
         e.stopPropagation();
-        // Check if the clicked area is dropDown / notification-btn or not
         if (
+            // Check if the clicked area is dropDown
             $('.ow-notification-dropdown').has(e.target).length === 0 &&
+            // Check notification-btn or not
             !$(e.target).is($('.ow-notifications')) &&
+             // Hide the notification dropdown when a click occurs outside of it
             !$(e.target).is($('.ow-dialog-close')) &&
-            !isNotificationDialogOpen
+            // Do not hide if the user is interacting with the notification dialog
+            !$('.ow-dialog-overlay').is(':visible')
         ) {
             $('.ow-notification-dropdown').addClass('ow-hide');
         }
@@ -75,7 +76,8 @@ function initNotificationDropDown($) {
         e.stopPropagation();
         if (
             $('.ow-notification-dropdown').has(e.target).length === 0 &&
-            !isNotificationDialogOpen
+            // Do not hide if the user is interacting with the notification dialog
+            !$('.ow-dialog-overlay').is(':visible')
         ) {
             // Don't hide if focus changes to notification bell icon
             if (e.target != $('#openwisp_notifications').get(0)) {
@@ -86,29 +88,20 @@ function initNotificationDropDown($) {
 
     $(document).on('keyup', '*', function(e){
         e.stopPropagation();
+        if (e.keyCode !== 27) {
+            return;
+        }
         // Hide notification widget on "Escape" key
-        if (e.keyCode == 27) {
-            if (isNotificationDialogOpen) {
-                $('.ow-dialog-overlay').addClass('ow-hide');
-                $('.ow-message-target-redirect').addClass('ow-hide');
-                isNotificationDialogOpen = false;
-            } else {
-                $('.ow-notification-dropdown').addClass('ow-hide');
-            }
-            if ($(e.target).is($('.ow-notification-dropdown'))) {
-                $('#openwisp_notifications').focus();
-            }
+        if ($('.ow-dialog-overlay').is(':visible')) {
+            $('.ow-dialog-overlay').addClass('ow-hide');
+            $('.ow-message-target-redirect').addClass('ow-hide');
+        } else {
+            $('.ow-notification-dropdown').addClass('ow-hide');
+        }
+        if ($(e.target).is($('.ow-notification-dropdown'))) {
+            $('#openwisp_notifications').focus();
         }
     });
-}
-
-function moveNotificationDialog($) {
-    var $container = $('#container');
-    var $overlayElement = $('.ow-dialog-overlay');
-    // Remove the overlay element from its current parent
-    $overlayElement.detach();
-    // Append the overlay element to the container
-    $container.append($overlayElement);
 }
 
 // Used to convert absolute URLs in notification messages to relative paths
@@ -236,7 +229,8 @@ function notificationWidget($) {
     function notificationListItem(elem) {
         let klass;
         const datetime = dateTimeStampToDateTimeLocaleString(new Date(elem.timestamp)),
-              target_url = new URL(elem.target_url, window.location.href);
+            // target_url can be null or '#', so we need to handle it without any errors
+            target_url = new URL(elem.target_url, window.location.href);
 
         if (!notificationReadStatus.has(elem.id)) {
             if (elem.unread) {
@@ -247,6 +241,7 @@ function notificationWidget($) {
         }
         klass = notificationReadStatus.get(elem.id);
 
+        // Remove hyperlinks from notification messages if description is present
         return `<div class="ow-notification-elem ${klass}" id=ow-${elem.id}
                         data-location="${target_url.pathname}" role="link" tabindex="0">
                     <div class="ow-notification-inner">
@@ -257,7 +252,7 @@ function notificationWidget($) {
                             </div>
                             <div class="ow-notification-date">${datetime}</div>
                         </div>
-                    ${elem.description ? elem.message.replace(/<a [^>]*>([^<]*)<\/a>/g, '$1') : convertMessageWithRelativeURL(elem.message)}
+                        ${elem.description ? elem.message.replace(/<a [^>]*>([^<]*)<\/a>/g, '$1') : convertMessageWithRelativeURL(elem.message)}
                     </div>
                 </div>`;
     }
@@ -344,30 +339,36 @@ function notificationWidget($) {
             return;
         }
         let elem = $(this);
+        var notification = fetchedPages.flat().find((notification) => notification.id == elem.get(0).id.replace('ow-', ''));
+
         // If notification is unread then send read request
-        if (elem.hasClass('unread')) {
+        if (!notification.description && elem.hasClass('unread')) {
             markNotificationRead(elem.get(0));
         }
 
-        var notification = fetchedPages.flat().find((notification) => notification.id == elem.get(0).id.replace('ow-', ''));
         if (notification.description) {
-            isNotificationDialogOpen = true;
-            const datetime = dateTimeStampToDateTimeLocaleString(new Date(notification.timestamp));
-            document.querySelector('.ow-dialog-notification-level-wrapper').innerHTML = `
-                        <div class="ow-notification-level-wrapper">
-                            <div class="ow-notify-${notification.level} icon"></div>
-                            <div class="ow-notification-level-text">${notification.level}</div>
-                        </div>
-                        <div class="ow-notification-date">${datetime}</div>
-            `;
-            document.querySelector('.ow-message-title').innerHTML = convertMessageWithRelativeURL(notification.message);
-            document.querySelector('.ow-message-description').innerHTML = notification.description;
+            var datetime = dateTimeStampToDateTimeLocaleString(new Date(notification.timestamp));
+
+            $('.ow-dialog-notification-level-wrapper').html(`
+                <div class="ow-notification-level-wrapper">
+                    <div class="ow-notify-${notification.level} icon"></div>
+                    <div class="ow-notification-level-text">${notification.level}</div>
+                </div>
+                <div class="ow-notification-date">${datetime}</div>
+            `);
+
+            $('.ow-message-title').html(convertMessageWithRelativeURL(notification.message));
+            $('.ow-message-description').html(notification.description);
+
             $('.ow-dialog-overlay').removeClass('ow-hide');
-            if (notification.target_url) {
-                var target_url = new URL(notification.target_url, window.location.href);
-                $(document).on('click', '.ow-message-target-redirect', function () {
+
+            if (notification.target_url && notification.target_url !== '#') {
+                var target_url = new URL(notification.target_url);
+
+                $(document).on('click', '.ow-message-target-redirect', function() {
                     window.location = target_url.pathname;
                 });
+
                 $('.ow-message-target-redirect').removeClass('ow-hide');
             }
         } else {
@@ -380,7 +381,6 @@ function notificationWidget($) {
         if (e.type === 'keypress' && e.which !== 13 && e.which !== 27) {
             return;
         }
-        isNotificationDialogOpen = false;
         $('.ow-dialog-overlay').addClass('ow-hide');
         $('.ow-message-target-redirect').addClass('ow-hide');
     });

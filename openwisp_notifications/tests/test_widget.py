@@ -1,5 +1,3 @@
-import time
-
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
@@ -61,11 +59,10 @@ class TestWidget(
         )
         notification = self._create_notification().pop()[1][0]
         self.web_driver.find_element(By.ID, 'openwisp_notifications').click()
-        time.sleep(4)
         WebDriverWait(self.web_driver, 10).until(
             EC.visibility_of_element_located((By.ID, f'ow-{notification.id}'))
         )
-        self.web_driver.find_element(By.ID, f'ow-{notification.id}').click()
+        # self.web_driver.find_element(By.ID, f'ow-{notification.id}').click()
         self.web_driver.find_element(By.ID, f'ow-{notification.id}').click()
         WebDriverWait(self.web_driver, 10).until(
             EC.visibility_of_element_located((By.CLASS_NAME, 'ow-dialog-notification'))

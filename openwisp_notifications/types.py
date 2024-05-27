@@ -27,7 +27,6 @@ NOTIFICATION_TYPES = {
             ' by [{notification.actor}]({notification.actor_link})'
         ),
         'description': '{notification.description}',
-        'message_template': 'openwisp_notifications/default_message.md',
         'email_notification': False,
         'web_notification': True,
     },

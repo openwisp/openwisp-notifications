@@ -34,20 +34,20 @@
     <div class="ow-no-notifications ow-round-bottom-border ow-hide">
         <p>{% trans 'No new notification.' %}</p>
     </div>
-    <div class="ow-dialog-overlay ow-overlay-inner ow-hide">
-        <div class="ow-dialog-notification">
-            <span class="ow-dialog-close ow-dialog-close-x">&times;</span>
-            <div class="ow-notification-level-wrapper ow-dialog-notification-level-wrapper"></div>
-            <h2 class="ow-message-title"></h2>
-            <div class="ow-message-description"></div>
-            <button class="ow-message-target-redirect ow-hide button default">{% trans 'Open' %}</button>
-            <button class="ow-dialog-close button default">{% trans 'Close' %}</button>
-        </div>
-    </div>
   </div>
 {% endblock  %}
 
 {% block footer %}
+  <div class="ow-dialog-overlay ow-overlay-inner ow-hide">
+      <div class="ow-dialog-notification">
+          <span class="ow-dialog-close ow-dialog-close-x">&times;</span>
+          <div class="ow-notification-level-wrapper ow-dialog-notification-level-wrapper"></div>
+          <h2 class="ow-message-title"></h2>
+          <div class="ow-message-description"></div>
+          <button class="ow-message-target-redirect ow-hide button default">{% trans 'Open' %}</button>
+          <button class="ow-dialog-close button default">{% trans 'Close' %}</button>
+      </div>
+  </div>
   {{ block.super }}
   {% if request.user.is_authenticated %}
     <script type="text/javascript" src="{% static 'openwisp-notifications/js/vendor/reconnecting-websocket.min.js' %}"></script>
