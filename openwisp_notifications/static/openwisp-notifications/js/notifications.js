@@ -97,8 +97,6 @@ function initNotificationDropDown($) {
             $('.ow-message-target-redirect').addClass('ow-hide');
         } else {
             $('.ow-notification-dropdown').addClass('ow-hide');
-        }
-        if ($(e.target).is($('.ow-notification-dropdown'))) {
             $('#openwisp_notifications').focus();
         }
     });
