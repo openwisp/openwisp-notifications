@@ -182,7 +182,11 @@ def send_email_notification(sender, instance, created, **kwargs):
         # therefore send email anyway.
         email_preference = True
 
-    if not (email_preference and instance.recipient.email):
+    email_verified = instance.recipient.emailaddress_set.filter(
+        verified=True, email=instance.recipient.email
+    ).exists()
+
+    if not (email_preference and instance.recipient.email and email_verified):
         return
 
     try:
