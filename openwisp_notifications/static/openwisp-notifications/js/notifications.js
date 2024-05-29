@@ -64,7 +64,7 @@ function initNotificationDropDown($) {
              // Hide the notification dropdown when a click occurs outside of it
             !$(e.target).is($('.ow-dialog-close')) &&
             // Do not hide if the user is interacting with the notification dialog
-            !$('.ow-dialog-overlay').is(':visible')
+            !$('.ow-overlay-notification').is(':visible')
         ) {
             $('.ow-notification-dropdown').addClass('ow-hide');
         }
@@ -77,7 +77,7 @@ function initNotificationDropDown($) {
         if (
             $('.ow-notification-dropdown').has(e.target).length === 0 &&
             // Do not hide if the user is interacting with the notification dialog
-            !$('.ow-dialog-overlay').is(':visible')
+            !$('.ow-overlay-notification').is(':visible')
         ) {
             // Don't hide if focus changes to notification bell icon
             if (e.target != $('#openwisp_notifications').get(0)) {
@@ -92,8 +92,8 @@ function initNotificationDropDown($) {
             return;
         }
         // Hide notification widget on "Escape" key
-        if ($('.ow-dialog-overlay').is(':visible')) {
-            $('.ow-dialog-overlay').addClass('ow-hide');
+        if ($('.ow-overlay-notification').is(':visible')) {
+            $('.ow-overlay-notification').addClass('ow-hide');
             $('.ow-message-target-redirect').addClass('ow-hide');
         } else {
             $('.ow-notification-dropdown').addClass('ow-hide');
@@ -358,7 +358,7 @@ function notificationWidget($) {
             $('.ow-message-title').html(convertMessageWithRelativeURL(notification.message));
             $('.ow-message-description').html(notification.description);
 
-            $('.ow-dialog-overlay').removeClass('ow-hide');
+            $('.ow-overlay-notification').removeClass('ow-hide');
 
             if (notification.target_url && notification.target_url !== '#') {
                 var target_url = new URL(notification.target_url);
@@ -379,7 +379,7 @@ function notificationWidget($) {
         if (e.type === 'keypress' && e.which !== 13 && e.which !== 27) {
             return;
         }
-        $('.ow-dialog-overlay').addClass('ow-hide');
+        $('.ow-overlay-notification').addClass('ow-hide');
         $('.ow-message-target-redirect').addClass('ow-hide');
     });
 

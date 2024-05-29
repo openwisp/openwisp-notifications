@@ -38,14 +38,20 @@
 {% endblock  %}
 
 {% block footer %}
-  <div class="ow-dialog-overlay ow-overlay-inner ow-hide">
+  <div class="ow-overlay ow-overlay-notification ow-overlay-inner ow-hide">
       <div class="ow-dialog-notification">
           <span class="ow-dialog-close ow-dialog-close-x">&times;</span>
           <div class="ow-notification-level-wrapper ow-dialog-notification-level-wrapper"></div>
           <h2 class="ow-message-title"></h2>
           <div class="ow-message-description"></div>
-          <button class="ow-message-target-redirect ow-hide button default">{% trans 'Open' %}</button>
-          <button class="ow-dialog-close button default">{% trans 'Close' %}</button>
+          <div class="ow-dialog-buttons">
+            <button class="ow-message-target-redirect ow-hide button default success-btn">
+              {% trans 'Open' %}
+            </button>
+            <button class="ow-dialog-close button default">
+              {% trans 'Close' %}
+            </button>
+          </div>
       </div>
   </div>
   {{ block.super }}
