@@ -376,13 +376,20 @@ function markNotificationRead(elem) {
 }
 
 function notificationHandler($, elem) {
-    var notification = fetchedPages.flat().find((notification) => notification.id == elem.get(0).id.replace('ow-', ''));
+    var notification = fetchedPages.flat().find((notification) =>
+      notification.id == elem.get(0).id.replace('ow-', '')),
+      targetUrl = elem.data('location');
 
     // If notification is unread then send read request
     if (!notification.description && elem.hasClass('unread')) {
         markNotificationRead(elem.get(0));
     }
 
+    if (notification.target_url && notification.target_url !== '#') {
+        targetUrl = new URL(notification.target_url).pathname;
+    }
+
+    // Notification with overlay dialog
     if (notification.description) {
         var datetime = dateTimeStampToDateTimeLocaleString(new Date(notification.timestamp));
 
@@ -393,23 +400,17 @@ function notificationHandler($, elem) {
             </div>
             <div class="ow-notification-date">${datetime}</div>
         `);
-
         $('.ow-message-title').html(convertMessageWithRelativeURL(notification.message));
         $('.ow-message-description').html(notification.description);
-
         $('.ow-overlay-notification').removeClass('ow-hide');
 
-        if (notification.target_url && notification.target_url !== '#') {
-            var target_url = new URL(notification.target_url);
-
-            $(document).on('click', '.ow-message-target-redirect', function() {
-                window.location = target_url.pathname;
-            });
-
-            $('.ow-message-target-redirect').removeClass('ow-hide');
-        }
+        $(document).on('click', '.ow-message-target-redirect', function() {
+            window.location = targetUrl;
+        });
+        $('.ow-message-target-redirect').removeClass('ow-hide');
+    // standard notification
     } else {
-        window.location = elem.data('location');
+        window.location = targetUrl;
     }
 }
 
