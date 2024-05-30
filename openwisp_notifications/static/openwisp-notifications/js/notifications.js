@@ -2,6 +2,7 @@
 const notificationReadStatus = new Map();
 const userLanguage = navigator.language || navigator.userLanguage;
 const owWindowId = String(Date.now());
+let fetchedPages = [];
 
 if (typeof gettext === 'undefined') {
     var gettext = function(word){ return word; };
@@ -122,7 +123,6 @@ function notificationWidget($) {
     let nextPageUrl = getAbsoluteUrl('/api/v1/notifications/notification/'),
         renderedPages = 2,
         busy = false,
-        fetchedPages = [],
         lastRenderedPage = 0;
     // 1 based indexing (0 -> no page rendered)
 
@@ -337,41 +337,7 @@ function notificationWidget($) {
             return;
         }
         let elem = $(this);
-        var notification = fetchedPages.flat().find((notification) => notification.id == elem.get(0).id.replace('ow-', ''));
-
-        // If notification is unread then send read request
-        if (!notification.description && elem.hasClass('unread')) {
-            markNotificationRead(elem.get(0));
-        }
-
-        if (notification.description) {
-            var datetime = dateTimeStampToDateTimeLocaleString(new Date(notification.timestamp));
-
-            $('.ow-dialog-notification-level-wrapper').html(`
-                <div class="ow-notification-level-wrapper">
-                    <div class="ow-notify-${notification.level} icon"></div>
-                    <div class="ow-notification-level-text">${notification.level}</div>
-                </div>
-                <div class="ow-notification-date">${datetime}</div>
-            `);
-
-            $('.ow-message-title').html(convertMessageWithRelativeURL(notification.message));
-            $('.ow-message-description').html(notification.description);
-
-            $('.ow-overlay-notification').removeClass('ow-hide');
-
-            if (notification.target_url && notification.target_url !== '#') {
-                var target_url = new URL(notification.target_url);
-
-                $(document).on('click', '.ow-message-target-redirect', function() {
-                    window.location = target_url.pathname;
-                });
-
-                $('.ow-message-target-redirect').removeClass('ow-hide');
-            }
-        } else {
-            window.location = elem.data('location');
-        }
+        notificationHandler($, elem);
     });
 
     // Close dialog on click, keypress or esc
@@ -407,6 +373,44 @@ function markNotificationRead(elem) {
             notification_id: elemId
         })
     );
+}
+
+function notificationHandler($, elem) {
+    var notification = fetchedPages.flat().find((notification) => notification.id == elem.get(0).id.replace('ow-', ''));
+
+    // If notification is unread then send read request
+    if (!notification.description && elem.hasClass('unread')) {
+        markNotificationRead(elem.get(0));
+    }
+
+    if (notification.description) {
+        var datetime = dateTimeStampToDateTimeLocaleString(new Date(notification.timestamp));
+
+        $('.ow-dialog-notification-level-wrapper').html(`
+            <div class="ow-notification-level-wrapper">
+                <div class="ow-notify-${notification.level} icon"></div>
+                <div class="ow-notification-level-text">${notification.level}</div>
+            </div>
+            <div class="ow-notification-date">${datetime}</div>
+        `);
+
+        $('.ow-message-title').html(convertMessageWithRelativeURL(notification.message));
+        $('.ow-message-description').html(notification.description);
+
+        $('.ow-overlay-notification').removeClass('ow-hide');
+
+        if (notification.target_url && notification.target_url !== '#') {
+            var target_url = new URL(notification.target_url);
+
+            $(document).on('click', '.ow-message-target-redirect', function() {
+                window.location = target_url.pathname;
+            });
+
+            $('.ow-message-target-redirect').removeClass('ow-hide');
+        }
+    } else {
+        window.location = elem.data('location');
+    }
 }
 
 function initWebSockets($) {
@@ -463,7 +467,7 @@ function initWebSockets($) {
     // Make toast message clickable
     $(document).on('click', '.ow-notification-toast', function () {
         markNotificationRead($(this).get(0));
-        window.location = $(this).data('location');
+        notificationHandler($, $(this));
     });
     $(document).on('click', '.ow-notification-toast .ow-notify-close.btn', function (event) {
         event.stopPropagation();
