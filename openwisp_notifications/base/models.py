@@ -107,40 +107,72 @@ class AbstractNotification(UUIDModel, BaseNotification):
 
     @cached_property
     def rendered_description(self):
-        return mark_safe(markdown(self.description)) if self.description else None
+        if not self.description:
+            return
+        md_description = self._get_formatted_string(self.description)
+        return mark_safe(markdown(md_description))
 
     @property
     def email_message(self):
         return self.get_message(email_message=True)
 
+    def _set_extra_attributes(self, email_message=False):
+        """
+        This method sets extra attributes for the notification
+        which are required to render the notification correctly.
+        """
+        self.actor_link = self.actor_url
+        self.action_link = self.action_url
+        self.target_link = (
+            self.target_url if not email_message else self.redirect_view_url
+        )
+
+    def _delete_extra_attributes(self):
+        """
+        This method removes the extra_attributes set by
+        _set_extra_attributes
+        """
+        for attr in ('actor_link', 'action_link', 'target_link'):
+            delattr(self, attr)
+
+    def _get_formatted_string(self, string, email_message=False):
+        self._set_extra_attributes(email_message=email_message)
+        data = self.data or {}
+        try:
+            formatted_output = string.format(notification=self, **data)
+        except AttributeError as exception:
+            self._invalid_notification(
+                self.pk,
+                exception,
+                'Error encountered in rendering notification message',
+            )
+        self._delete_extra_attributes()
+        return formatted_output
+
     def get_message(self, email_message=False):
         if self.type:
-            # setting links in notification object for message rendering
-            self.actor_link = self.actor_url
-            self.action_link = self.action_url
-            self.target_link = (
-                self.target_url if not email_message else self.redirect_view_url
-            )
             try:
                 config = get_notification_configuration(self.type)
                 data = self.data or {}
                 if 'message' in data:
                     md_text = data['message']
                 elif 'message' in config:
-                    md_text = config['message'].format(notification=self, **data)
+                    md_text = config['message']
                 else:
+                    self._set_extra_attributes(email_message=email_message)
                     md_text = render_to_string(
                         config['message_template'], context=dict(notification=self)
                     ).strip()
-            except (AttributeError, KeyError, NotificationRenderException) as exception:
+                    self._delete_extra_attributes()
+            except (KeyError, NotificationRenderException) as exception:
                 self._invalid_notification(
                     self.pk,
                     exception,
                     'Error encountered in rendering notification message',
                 )
-            # clean up
-            self.actor_link = self.action_link = self.target_link = None
-            return mark_safe(markdown(md_text))
+            return mark_safe(
+                markdown(self._get_formatted_string(md_text, email_message))
+            )
         else:
             return self.description
 

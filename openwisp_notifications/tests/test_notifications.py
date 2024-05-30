@@ -324,15 +324,24 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
 
     def test_generic_notification_type(self):
         self.notification_options.pop('verb')
-        self.notification_options.update({'message': 'Generic Message'})
-        self.notification_options.update({'type': 'generic_message'})
-        self.notification_options.update({'description': 'Generic Description'})
+        self.notification_options.update(
+            {
+                'message': '[{notification.actor}]({notification.actor_link})',
+                'type': 'generic_message',
+                'description': '[{notification.actor}]({notification.actor_link})',
+            }
+        )
         self._create_notification()
         n = notification_queryset.first()
         self.assertEqual(n.level, 'info')
         self.assertEqual(n.verb, 'generic verb')
-        self.assertIn('Generic Message', n.message)
-        self.assertEqual(n.description, 'Generic Description')
+        expected_output = (
+            '<p><a href="https://example.com{user_path}">admin</a></p>'
+        ).format(
+            user_path=reverse('admin:openwisp_users_user_change', args=[self.admin.pk])
+        )
+        self.assertEqual(n.message, expected_output)
+        self.assertEqual(n.rendered_description, expected_output)
         self.assertEqual(n.email_subject, '[example.com] Generic Notification Subject')
 
     def test_notification_level_kwarg_precedence(self):
@@ -605,8 +614,9 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
             {'action_object': operator, 'target': operator}
         )
         self._create_notification()
-        with self.assertNumQueries(2):
-            # 2 queries since admin is already cached
+        with self.assertNumQueries(1):
+            # 1 query since all related objects are cached
+            # when rendering the notification
             n = notification_queryset.first()
             self.assertEqual(n.actor, self.admin)
             self.assertEqual(n.action_object, operator)
