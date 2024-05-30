@@ -322,6 +322,19 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
         )
         self.assertEqual(n.email_subject, '[example.com] Default Notification Subject')
 
+    def test_generic_notification_type(self):
+        self.notification_options.pop('verb')
+        self.notification_options.update({'message': 'Generic Message'})
+        self.notification_options.update({'type': 'generic_message'})
+        self.notification_options.update({'description': 'Generic Description'})
+        self._create_notification()
+        n = notification_queryset.first()
+        self.assertEqual(n.level, 'info')
+        self.assertEqual(n.verb, 'generic verb')
+        self.assertIn('Generic Message', n.message)
+        self.assertEqual(n.description, 'Generic Description')
+        self.assertEqual(n.email_subject, '[example.com] Generic Notification Subject')
+
     def test_notification_level_kwarg_precedence(self):
         # Create a notification with level kwarg set to 'warning'
         self.notification_options.update({'level': 'warning'})
