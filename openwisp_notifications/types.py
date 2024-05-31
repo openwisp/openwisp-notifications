@@ -11,7 +11,7 @@ NOTIFICATION_TYPES = {
         'email_subject': '[{site.name}] Default Notification Subject',
         'message': (
             'Default notification with {notification.verb} and level {notification.level}'
-            ' by [{notification.actor}]({notification.actor_link})'
+            ' by [{notification.target}]({notification.target_link})'
         ),
         'message_template': 'openwisp_notifications/default_message.md',
         'email_notification': True,

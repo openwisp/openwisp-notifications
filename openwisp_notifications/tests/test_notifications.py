@@ -312,7 +312,10 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
 
     def test_default_notification_type(self):
         self.notification_options.pop('verb')
-        self.notification_options.update({'type': 'default'})
+        self.notification_options.pop('url')
+        self.notification_options.update(
+            {'type': 'default', 'target': self._get_org_user()}
+        )
         self._create_notification()
         n = notification_queryset.first()
         self.assertEqual(n.level, 'info')
@@ -321,6 +324,25 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
             'Default notification with default verb and level info by', n.message
         )
         self.assertEqual(n.email_subject, '[example.com] Default Notification Subject')
+        email = mail.outbox.pop()
+        html_email = email.alternatives[0][0]
+        self.assertEqual(
+            email.body,
+            (
+                'Default notification with default verb and'
+                ' level info by Tester Tester (test org)\n\n'
+                f'For more information see {n.redirect_view_url}.'
+            ),
+        )
+        self.assertIn(
+            (
+                '<div class="msg"><p>Default notification with'
+                ' default verb and level info by'
+                f' <a href="{n.redirect_view_url}">'
+                'Tester Tester (test org)</a></p></div>'
+            ),
+            html_email,
+        )
 
     def test_generic_notification_type(self):
         self.notification_options.pop('verb')
