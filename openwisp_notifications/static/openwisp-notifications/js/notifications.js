@@ -387,6 +387,7 @@ function notificationHandler($, elem) {
 
     if (notification.target_url && notification.target_url !== '#') {
         targetUrl = new URL(notification.target_url).pathname;
+        $('.ow-message-target-redirect').removeClass('ow-hide');
     }
 
     // Notification with overlay dialog
@@ -407,7 +408,6 @@ function notificationHandler($, elem) {
         $(document).on('click', '.ow-message-target-redirect', function() {
             window.location = targetUrl;
         });
-        $('.ow-message-target-redirect').removeClass('ow-hide');
     // standard notification
     } else {
         window.location = targetUrl;
