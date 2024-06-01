@@ -74,3 +74,22 @@ class TestWidget(
             dialog.find_element(By.CLASS_NAME, 'ow-message-description').text,
             'Test Description',
         )
+
+    def test_notification_dialog_open_button_visibility(self):
+        self.login()
+        self.notification_options.pop('target')
+        self.notification_options.update(
+            {'message': 'Test Message', 'description': 'Test Description'}
+        )
+        notification = self._create_notification().pop()[1][0]
+        self.web_driver.find_element(By.ID, 'openwisp_notifications').click()
+        WebDriverWait(self.web_driver, 10).until(
+            EC.visibility_of_element_located((By.ID, f'ow-{notification.id}'))
+        )
+        self.web_driver.find_element(By.ID, f'ow-{notification.id}').click()
+        WebDriverWait(self.web_driver, 10).until(
+            EC.visibility_of_element_located((By.CLASS_NAME, 'ow-dialog-notification'))
+        )
+        dialog = self.web_driver.find_element(By.CLASS_NAME, 'ow-dialog-notification')
+        # This confirms the button is hidden
+        dialog.find_element(By.CSS_SELECTOR, '.ow-message-target-redirect.ow-hide')
