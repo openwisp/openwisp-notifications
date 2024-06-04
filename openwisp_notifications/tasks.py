@@ -3,13 +3,20 @@ from datetime import timedelta
 from celery import shared_task
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
+from django.core.cache import cache
 from django.db.models import Q
 from django.db.utils import OperationalError
 from django.utils import timezone
 
 from openwisp_notifications import types
+from openwisp_notifications import settings as app_settings
+from openwisp_notifications import handlers
 from openwisp_notifications.swapper import load_model, swapper_load_model
+from openwisp_notifications import settings as app_settings
+from openwisp_utils.admin_theme.email import send_email
 from openwisp_utils.tasks import OpenwispCeleryTask
+
+EMAIL_BATCH_INTERVAL = app_settings.get_config()['EMAIL_BATCH_INTERVAL']
 
 User = get_user_model()
 
@@ -202,3 +209,15 @@ def delete_ignore_object_notification(instance_id):
     Deletes IgnoreObjectNotification object post it's expiration.
     """
     IgnoreObjectNotification.objects.filter(id=instance_id).delete()
+
+
+@shared_task(base=OpenwispCeleryTask)
+def batch_email_notification(instance_id):
+    # Get all unsent notifications for the user in the last 30 minutes
+    time_threshold = timezone.now() - timedelta(minutes=30)
+    unsent_notifications = Notification.objects.filter(
+        emailed=False,
+        recipient_id=instance_id,
+        created__gte=time_threshold
+    )
+    print("Sending email....")
