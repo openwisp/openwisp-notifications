@@ -37,10 +37,8 @@ OPENWISP_NOTIFICATIONS_SOUND = getattr(
     'openwisp-notifications/audio/notification_bell.mp3',
 )
 
-EMAIL_BATCH_INTERVAL = getattr(
-    settings,
-    'EMAIL_BATCH_INTERVAL',
-    30 * 60  # 30 minutes
+OPENWISP_NOTIFICATIONS_EMAIL_BATCH_INTERVAL = getattr(
+    settings, 'EMAIL_BATCH_INTERVAL', 30 * 60  # 30 minutes
 )
 
 # Remove the leading "/static/" here as it will

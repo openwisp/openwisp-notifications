@@ -1,7 +1,6 @@
 import logging
 
 from celery.exceptions import OperationalError
-from celery.result import AsyncResult
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.core.cache import cache
@@ -27,7 +26,7 @@ from openwisp_utils.admin_theme.email import send_email
 logger = logging.getLogger(__name__)
 
 EXTRA_DATA = app_settings.get_config()['USE_JSONFIELD']
-EMAIL_BATCH_INTERVAL = app_settings.get_config()['EMAIL_BATCH_INTERVAL']
+EMAIL_BATCH_INTERVAL = app_settings.OPENWISP_NOTIFICATIONS_EMAIL_BATCH_INTERVAL
 
 User = get_user_model()
 
@@ -163,8 +162,12 @@ def notify_handler(**kwargs):
     return notification_list
 
 
-def can_send_email(instance):
-    # Get email preference of the user for this type of notification
+@receiver(post_save, sender=Notification, dispatch_uid='send_email_notification')
+def send_email_notification(sender, instance, created, **kwargs):
+    # Abort if a new notification is not created
+    if not created:
+        return
+    # Get email preference of user for this type of notification.
     target_org = getattr(getattr(instance, 'target', None), 'organization_id', None)
     if instance.type and target_org:
         try:
@@ -172,28 +175,26 @@ def can_send_email(instance):
                 organization=target_org, type=instance.type
             )
         except NotificationSetting.DoesNotExist:
-            return False
+            return
         email_preference = notification_setting.email_notification
     else:
-        # Send email anyway if notification type or target_org is absent
+        # We can not check email preference if notification type is absent,
+        # or if target_org is not present
+        # therefore send email anyway.
         email_preference = True
 
-    # Check if email is verified
     email_verified = instance.recipient.emailaddress_set.filter(
         verified=True, email=instance.recipient.email
     ).exists()
 
-    # Verify email preference and email verification status
     if not (email_preference and instance.recipient.email and email_verified):
-        return False
+        return
 
-    # Verify the email subject
     try:
         subject = instance.email_subject
     except NotificationRenderException:
-        return False
-
-    # Get the URL and description
+        # Do not send email if notification is malformed.
+        return
     url = instance.data.get('url', '') if instance.data else None
     description = instance.message
     if url:
@@ -203,61 +204,53 @@ def can_send_email(instance):
     else:
         target_url = None
     if target_url:
-        description += _('\n\nFor more information see %(target_url)s.') % {'target_url': target_url}
+        description += _('\n\nFor more information see %(target_url)s.') % {
+            'target_url': target_url
+        }
 
-    return True, subject, description, target_url
-
-
-@receiver(post_save, sender=Notification, dispatch_uid='send_email_notification')
-def send_email_notification(sender, instance, created, **kwargs):
-    # Abort if a new notification is not created
-    if not created:
-        return
-
-    can_send, subject, description, target_url = can_send_email(instance)
-
-    if not can_send:
-        return
-
-    recipient_id = instance.recipient.id 
+    recipient_id = instance.recipient.id
     cache_key = f'email_batch_{recipient_id}'
-    cache_data = cache.get(cache_key, {'last_email_sent_time': None, 'batch_scheduled': False})
-    is_send_email = False
+    cache_data = cache.get(
+        cache_key, {'last_email_sent_time': None, 'batch_task_id': None}
+    )
 
     if cache_data['last_email_sent_time']:
-        if (timezone.now() - cache_data['last_email_sent_time']).seconds < EMAIL_BATCH_INTERVAL:
-            if not cache_data['batch_scheduled']:
-                # Schedule batch email notification task
-                tasks.batch_email_notification.apply_async((recipient_id,), countdown=EMAIL_BATCH_INTERVAL)
-                cache_data['batch_scheduled'] = True
-                cache.set(cache_key, cache_data, timeout=EMAIL_BATCH_INTERVAL)
-            return
+        if not cache_data['batch_task_id']:
+            # Schedule batch email notification task
+            task = tasks.batch_email_notification.apply_async(
+                (instance.recipient.email,), countdown=EMAIL_BATCH_INTERVAL
+            )
+            cache_data['batch_task_id'] = task.id
+            cache.set(
+                cache_data['batch_task_id'],
+                [instance.id],
+                timeout=EMAIL_BATCH_INTERVAL * 2,
+            )
+            cache.set(cache_key, cache_data, timeout=EMAIL_BATCH_INTERVAL)
         else:
-            # If the interval has passed, send the email immediately
-            is_send_email = True
-            cache_data['last_email_sent_time'] = timezone.now()
-            cache_data['batch_scheduled'] = False
-    else:
-        # If no email has been sent yet, send the email immediately
-        is_send_email = True
-        cache_data['last_email_sent_time'] = timezone.now()
+            ids = cache.get(cache_data['batch_task_id'], [])
+            ids.append(instance.id)
+            cache.set(
+                cache_data['batch_task_id'], ids, timeout=EMAIL_BATCH_INTERVAL * 2
+            )
+        return
 
+    cache_data['last_email_sent_time'] = timezone.now()
     cache.set(cache_key, cache_data, timeout=EMAIL_BATCH_INTERVAL)
-    if is_send_email:
-        send_email(
-            subject,
-            description,
-            instance.message,
-            recipients=[instance.recipient.email],
-            extra_context={
-                'call_to_action_url': target_url,
-                'call_to_action_text': _('Find out more'),
-            },
-        )
-        # flag as emailed
-        instance.emailed = True
-        # bulk_update is used to prevent emitting post_save signal
-        Notification.objects.bulk_update([instance], ['emailed'])
+    send_email(
+        subject,
+        description,
+        instance.message,
+        recipients=[instance.recipient.email],
+        extra_context={
+            'call_to_action_url': target_url,
+            'call_to_action_text': _('Find out more'),
+        },
+    )
+    # flag as emailed
+    instance.emailed = True
+    # bulk_update is used to prevent emitting post_save signal
+    Notification.objects.bulk_update([instance], ['emailed'])
 
 
 @receiver(post_save, sender=Notification, dispatch_uid='clear_notification_cache_saved')
