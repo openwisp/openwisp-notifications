@@ -238,7 +238,14 @@ function notificationWidget($) {
         }
         klass = notificationReadStatus.get(elem.id);
 
-        // Remove hyperlinks from notification messages if description is present
+        // If description is present, remove hyperlinks from the message
+        let message;
+        if (elem.description) {
+            message = elem.message.replace(/<a [^>]*>([^<]*)<\/a>/g, '$1');
+        } else {
+            message = convertMessageWithRelativeURL(elem.message);
+        }
+
         return `<div class="ow-notification-elem ${klass}" id=ow-${elem.id}
                         data-location="${target_url.pathname}" role="link" tabindex="0">
                     <div class="ow-notification-inner">
@@ -249,7 +256,7 @@ function notificationWidget($) {
                             </div>
                             <div class="ow-notification-date">${datetime}</div>
                         </div>
-                        ${elem.description ? elem.message.replace(/<a [^>]*>([^<]*)<\/a>/g, '$1') : convertMessageWithRelativeURL(elem.message)}
+                        ${message}
                     </div>
                 </div>`;
     }
