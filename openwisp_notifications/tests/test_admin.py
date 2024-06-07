@@ -15,7 +15,7 @@ from openwisp_notifications.signals import notify
 from openwisp_notifications.swapper import load_model, swapper_load_model
 from openwisp_notifications.widgets import _add_object_notification_widget
 from openwisp_users.admin import UserAdmin
-from openwisp_users.tests.utils import TestMultitenantAdminMixin, TestOrganizationMixin
+from openwisp_users.tests.utils import TestMultitenantAdminMixin
 
 from .test_helpers import MessagingRequest
 
@@ -46,7 +46,7 @@ op_request = MessagingRequest()
 op_request.user = MockUser(is_superuser=False)
 
 
-class BaseTestAdmin(TestOrganizationMixin, TestMultitenantAdminMixin, TestCase):
+class BaseTestAdmin(TestMultitenantAdminMixin, TestCase):
     def _login_admin(self):
         u = User.objects.create_superuser('admin', 'admin', 'test@test.com')
         self.client.force_login(u)
