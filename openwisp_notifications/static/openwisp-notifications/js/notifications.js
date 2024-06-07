@@ -87,8 +87,7 @@ function initNotificationDropDown($) {
         }
     });
 
-    $(document).on('keyup', '*', function(e){
-        e.stopPropagation();
+    $('.ow-notification-dropdown').on('keyup', function(e){
         if (e.keyCode !== 27) {
             return;
         }
