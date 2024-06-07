@@ -893,6 +893,22 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
         # we don't send emails to unverified email addresses
         self.assertEqual(len(mail.outbox), 0)
 
+    @patch('openwisp_notifications.tasks.batch_email_notification.apply_async')
+    def test_batch_email_notification(self, mock_send_email):
+        notify.send(**self.notification_options)
+        notify.send(**self.notification_options)
+        notify.send(**self.notification_options)
+
+        # Check if only one mail is sent
+        self.assertEqual(len(mail.outbox), 1)
+
+        # Call the task
+        tasks.batch_email_notification(self.admin.email)
+
+        # Check if the rest of the notifications are sent in a batch
+        self.assertEqual(len(mail.outbox), 2)
+        self.assertEqual(mail.outbox[1].subject, "Summary of Notifications")
+
 
 class TestTransactionNotifications(TestOrganizationMixin, TransactionTestCase):
     def setUp(self):

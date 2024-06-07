@@ -210,29 +210,24 @@ def send_email_notification(sender, instance, created, **kwargs):
 
     recipient_id = instance.recipient.id
     cache_key = f'email_batch_{recipient_id}'
+    cache_key_pks = f'{instance.recipient.email}_pks'
     cache_data = cache.get(
-        cache_key, {'last_email_sent_time': None, 'batch_task_id': None}
+        cache_key, {'last_email_sent_time': None, 'batch_scheduled': False}
     )
 
     if cache_data['last_email_sent_time']:
-        if not cache_data['batch_task_id']:
+        if not cache_data['batch_scheduled']:
             # Schedule batch email notification task
-            task = tasks.batch_email_notification.apply_async(
+            tasks.batch_email_notification.apply_async(
                 (instance.recipient.email,), countdown=EMAIL_BATCH_INTERVAL
             )
-            cache_data['batch_task_id'] = task.id
-            cache.set(
-                cache_data['batch_task_id'],
-                [instance.id],
-                timeout=EMAIL_BATCH_INTERVAL * 2,
-            )
+            cache_data['batch_scheduled'] = True
+            cache.set(cache_key_pks, [instance.id], timeout=EMAIL_BATCH_INTERVAL * 2)
             cache.set(cache_key, cache_data, timeout=EMAIL_BATCH_INTERVAL)
         else:
-            ids = cache.get(cache_data['batch_task_id'], [])
+            ids = cache.get(cache_key_pks, [])
             ids.append(instance.id)
-            cache.set(
-                cache_data['batch_task_id'], ids, timeout=EMAIL_BATCH_INTERVAL * 2
-            )
+            cache.set(cache_key_pks, ids, timeout=EMAIL_BATCH_INTERVAL * 2)
         return
 
     cache_data['last_email_sent_time'] = timezone.now()

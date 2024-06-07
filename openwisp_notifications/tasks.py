@@ -211,9 +211,13 @@ def delete_ignore_object_notification(instance_id):
     IgnoreObjectNotification.objects.filter(id=instance_id).delete()
 
 
-@shared_task(base=OpenwispCeleryTask, bind=True)
-def batch_email_notification(self, email_id):
-    ids = cache.get(self.request.id, [])
+@shared_task(base=OpenwispCeleryTask)
+def batch_email_notification(email_id):
+    """
+    Sends a summary of notifications to the specified email address.
+    """
+    ids = cache.get(f'{email_id}_pks', [])
+
     if not ids:
         return
 
