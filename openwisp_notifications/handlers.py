@@ -215,7 +215,7 @@ def send_email_notification(sender, instance, created, **kwargs):
         cache_key, {'last_email_sent_time': None, 'batch_scheduled': False}
     )
 
-    if cache_data['last_email_sent_time']:
+    if cache_data['last_email_sent_time'] and EMAIL_BATCH_INTERVAL > 0:
         if not cache_data['batch_scheduled']:
             # Schedule batch email notification task
             tasks.batch_email_notification.apply_async(
