@@ -238,9 +238,9 @@ function notificationWidget($) {
         }
         klass = notificationReadStatus.get(elem.id);
 
-        // If description is present, remove hyperlinks from the message
         let message;
         if (elem.description) {
+            // Remove hyperlinks from generic notifications to enforce the opening of the message dialog
             message = elem.message.replace(/<a [^>]*>([^<]*)<\/a>/g, '$1');
         } else {
             message = convertMessageWithRelativeURL(elem.message);
