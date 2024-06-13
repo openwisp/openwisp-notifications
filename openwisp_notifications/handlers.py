@@ -57,8 +57,8 @@ def notify_handler(**kwargs):
     except NotificationRenderException as error:
         logger.error(f'Error encountered while creating notification: {error}')
         return
-    level = notification_template.get(
-        'level', kwargs.pop('level', Notification.LEVELS.info)
+    level = kwargs.pop(
+        'level', notification_template.get('level', Notification.LEVELS.info)
     )
     verb = notification_template.get('verb', kwargs.pop('verb', None))
     user_app_name = User._meta.app_label
@@ -198,7 +198,7 @@ def send_email_notification(sender, instance, created, **kwargs):
         # Do not send email if notification is malformed.
         return
     url = instance.data.get('url', '') if instance.data else None
-    description = instance.message
+    body_text = instance.email_message
     if url:
         target_url = url
     elif instance.target:
@@ -206,14 +206,14 @@ def send_email_notification(sender, instance, created, **kwargs):
     else:
         target_url = None
     if target_url:
-        description += _('\n\nFor more information see %(target_url)s.') % {
+        body_text += _('\n\nFor more information see %(target_url)s.') % {
             'target_url': target_url
         }
 
     send_email(
-        subject,
-        description,
-        instance.message,
+        subject=subject,
+        body_text=body_text,
+        body_html=instance.email_message,
         recipients=[instance.recipient.email],
         extra_context={
             'call_to_action_url': target_url,

@@ -257,6 +257,7 @@
 .ow-notification-level-text {
   padding: 0px 6px;
   text-transform: uppercase;
+  font-weight: bold;
 }
 .ow-notification-elem .icon,
 .ow-notification-toast .icon {
@@ -299,6 +300,66 @@
   padding: 16px 22px;
 }
 .ow-notification-elem:last-child .ow-notification-inner { border-bottom: none }
+
+/* Generic notification dialog */
+.ow-overlay-notification {
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: opacity 0.3s;
+}
+.ow-dialog-notification {
+  position: relative;
+  background-color: white;
+  padding: 20px;
+  padding-top: 20px;
+  border-radius: 10px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  width: 90%;
+  max-width: 500px;
+  text-align: left;
+}
+.ow-dialog-notification .ow-notification-date {
+  padding-right: 15px;
+}
+.ow-dialog-notification .button {
+  margin-right: 10px;
+}
+.ow-dialog-notification-level-wrapper {
+  display: flex;
+  justify-content: space-between;
+}
+.ow-dialog-notification .icon {
+  min-height: 15;
+  min-width: 15px;
+  background-repeat: no-repeat;
+}
+.ow-dialog-close-x {
+  cursor: pointer;
+  font-size: 1.75em;
+  position: absolute;
+  display: block;
+  font-weight: bold;
+  top: 3px;
+  right: 10px;
+}
+.ow-dialog-close-x:hover {
+  color: #df5d43;
+}
+.ow-message-title {
+  color: #333;
+  margin-bottom: 10px;
+}
+.ow-message-title a {
+  color: #df5d43;
+}
+.ow-message-title a:hover {
+  text-decoration: underline;
+}
+.ow-dialog-buttons {
+  line-height: 3em;
+}
 
 @media screen and (max-width: 600px) {
   .ow-notification-dropdown {
