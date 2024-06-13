@@ -893,6 +893,23 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
         # we don't send emails to unverified email addresses
         self.assertEqual(len(mail.outbox), 0)
 
+    def test_that_the_notification_is_only_sent_once_to_the_user(self):
+        first_org = self._create_org()
+        first_org.organization_id = first_org.id
+        second_org = self._create_org(name='second-org')
+        second_org.organization_id = second_org.id
+        OrganizationUser.objects.create(user=self.admin, organization=first_org)
+        OrganizationUser.objects.create(user=self.admin, organization=second_org)
+        self.notification_options.update(
+            {
+                'type': 'default',
+                'sender': first_org,
+                'target': first_org,
+            }
+        )
+        self._create_notification()
+        self.assertEqual(notification_queryset.count(), 1)
+
 
 class TestTransactionNotifications(TestOrganizationMixin, TransactionTestCase):
     def setUp(self):

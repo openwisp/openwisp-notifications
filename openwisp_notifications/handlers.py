@@ -114,7 +114,9 @@ def notify_handler(**kwargs):
         # Check if recipient is User, Group or QuerySet
         if isinstance(recipient, Group):
             recipients = recipient.user_set.filter(where_group)
-        elif isinstance(recipient, (QuerySet, list)):
+        elif isinstance(recipient, QuerySet):
+            recipients = recipient.distinct()
+        elif isinstance(recipient, list):
             recipients = recipient
         else:
             recipients = [recipient]
@@ -126,6 +128,7 @@ def notify_handler(**kwargs):
             .order_by('date_joined')
             .filter(where)
             .exclude(not_where)
+            .distinct()
         )
     optional_objs = [
         (kwargs.pop(opt, None), opt) for opt in ('target', 'action_object')
