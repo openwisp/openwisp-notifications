@@ -7,7 +7,7 @@ Code Utilities
     :depth: 2
     :local:
 
-.. _notifications_registering_unregistering_types:
+.. _DD:
 
 Registering / Unregistering Notification Types
 ----------------------------------------------

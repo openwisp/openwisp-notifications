@@ -49,4 +49,4 @@ Email Notifications
 
 Along with web notifications OpenWISP Notifications also sends email
 notifications leveraging the :ref:`send_email feature of OpeNWISP Utils
-<openwisp-utils-admin-theme-email-send-email>`.
+<utils_send_email>`.
