@@ -29,7 +29,7 @@ entirely by turning off both web and email notification settings.
 
 .. _notifications_silencing:
 
-Silencing notifications for specific objects temporarily or permanently
+Silencing Notifications for Specific Objects Temporarily or Permanently
 -----------------------------------------------------------------------
 
 .. image:: https://raw.githubusercontent.com/openwisp/openwisp-notifications/docs/docs/images/silence-notifications.png

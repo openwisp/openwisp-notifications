@@ -10,7 +10,7 @@ control the duration of caching these objects using
 :ref:`OPENWISP_NOTIFICATIONS_CACHE_TIMEOUT setting
 <openwisp_notifications_cache_timeout>`.
 
-Cache invalidation
+Cache Invalidation
 ------------------
 
 The function ``register_notification_cache_update`` can be used to

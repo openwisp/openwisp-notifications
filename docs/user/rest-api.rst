@@ -6,7 +6,9 @@ REST API
 Live Documentation
 ------------------
 
-.. image:: https://github.com/openwisp/openwisp-notifications/raw/docs/docs/images/api-docs.png
+.. image:: https://raw.githubusercontent.com/openwisp/openwisp-notifications/docs/docs/images/api-docs.png
+    :target: https://raw.githubusercontent.com/openwisp/openwisp-notifications/docs/docs/images/api-docs.png
+    :align: center
 
 A general live API documentation (following the OpenAPI specification) is
 available at ``/api/v1/docs/``.
@@ -16,7 +18,9 @@ available at ``/api/v1/docs/``.
 Browsable Web Interface
 -----------------------
 
-.. image:: https://github.com/openwisp/openwisp-notifications/raw/docs/docs/images/api-ui.png
+.. image:: https://raw.githubusercontent.com/openwisp/openwisp-notifications/docs/docs/images/api-ui.png
+    :target: https://raw.githubusercontent.com/openwisp/openwisp-notifications/docs/docs/images/api-ui.png
+    :align: center
 
 Additionally, opening any of the endpoints :ref:`listed below
 <notifications_rest_endpoints>` directly in the browser will show the
@@ -47,7 +51,7 @@ paginating the results in conjunction with the ``page`` parameter.
 
 .. _notifications_rest_endpoints:
 
-List of endpoints
+List of Endpoints
 -----------------
 
 Since the detailed explanation is contained in the
@@ -56,7 +60,7 @@ Since the detailed explanation is contained in the
 provide just a list of the available endpoints, for further information
 please open the URL of the endpoint in your browser.
 
-List user's notifications
+List User's Notifications
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: text
@@ -80,35 +84,35 @@ To list unread notifications:
 
     GET /api/v1/notifications/notification/?unread=true
 
-Mark all user's notifications as read
+Mark All User's Notifications as Read
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: text
 
     POST /api/v1/notifications/notification/read/
 
-Get notification details
+Get Notification Details
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: text
 
     GET /api/v1/notifications/notification/{pk}/
 
-Mark a notification read
+Mark a Notification Read
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: text
 
     PATCH /api/v1/notifications/notification/{pk}/
 
-Delete a notification
+Delete a Notification
 ~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: text
 
     DELETE /api/v1/notifications/notification/{pk}/
 
-List user's notification setting
+List User's Notification Setting
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: text
@@ -138,42 +142,42 @@ You can filter the list of user's notification setting based on their
 
     GET /api/v1/notifications/notification/user-setting/?type={type}
 
-Get notification setting details
+Get Notification Setting Details
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: text
 
     GET /api/v1/notifications/notification/user-setting/{pk}/
 
-Update notification setting details
+Update Notification Setting Details
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: text
 
     PATCH /api/v1/notifications/notification/user-setting/{pk}/
 
-List user's object notification setting
+List User's Object Notification Setting
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: text
 
     GET /api/v1/notifications/notification/ignore/
 
-Get object notification setting details
+Get Object Notification Setting Details
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: text
 
     GET /api/v1/notifications/notification/ignore/{app_label}/{model_name}/{object_id}/
 
-Create object notification setting
+Create Object Notification Setting
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: text
 
     PUT /api/v1/notifications/notification/ignore/{app_label}/{model_name}/{object_id}/
 
-Delete object notification setting
+Delete Object Notification Setting
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: text

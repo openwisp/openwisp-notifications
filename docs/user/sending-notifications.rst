@@ -55,7 +55,7 @@ consistency with ``django-notifications``. You can learn more about
 accepted parameters from `django-notifications documentation
 <https://github.com/django-notifications/django-notifications#generating-notifications>`_.
 
-Additional ``notify`` keyword arguments
+Additional ``notify`` Keyword Arguments
 ---------------------------------------
 
 ================= ======================================================
@@ -76,7 +76,7 @@ Additional ``notify`` keyword arguments
                   arguments.
 ================= ======================================================
 
-Passing extra data to notifications
+Passing Extra Data to Notifications
 -----------------------------------
 
 If needed, additional data, not known beforehand, can be included in the
