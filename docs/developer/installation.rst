@@ -1,44 +1,12 @@
-Installation instructions
--------------------------
+Developer Installation Instructions
+===================================
 
-.. include:: /partials/developers-docs-warning.rst
+.. include:: ../partials/developer-docs.rst
 
-Install stable version from pypi
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Installing for Development
+--------------------------
 
-Install from pypi:
-
-.. code-block:: shell
-
-    pip install openwisp-notifications
-
-Install development version
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Install tarball:
-
-.. code-block:: shell
-
-    pip install https://github.com/openwisp/openwisp-notifications/tarball/master
-
-Alternatively, you can install via pip using git:
-
-.. code-block:: shell
-
-    pip install -e git+git://github.com/openwisp/openwisp-notifications#egg=openwisp_notifications
-
-Installing for development
-~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-We use Redis as celery broker (you can use a different broker if you want).
-The recommended way for development is running it using Docker so you will need to
-`install docker and docker-compose <https://docs.docker.com/engine/install/>`_ beforehand.
-
-In case you prefer not to use Docker you can
-`install Redis from your repositories <https://redis.io/download>`_, but keep in mind that
-the version packaged by your distribution may be different.
-
-Install SQLite:
+Install the system dependencies:
 
 .. code-block:: shell
 
@@ -56,14 +24,22 @@ Navigate into the cloned repository:
 
     cd openwisp-notifications/
 
-Setup and activate a virtual-environment. (we'll be using  `virtualenv <https://pypi.org/project/virtualenv/>`_)
+Launch Redis:
+
+.. code-block:: shell
+
+    docker-compose up -d redis
+
+Setup and activate a virtual-environment (we'll be using `virtualenv
+<https://pypi.org/project/virtualenv/>`_):
 
 .. code-block:: shell
 
     python -m virtualenv env
     source env/bin/activate
 
-Upgrade the following base python packages:
+Make sure that your base python packages are up to date before moving to
+the next step:
 
 .. code-block:: shell
 
@@ -75,15 +51,9 @@ Install development dependencies:
 
     pip install -e .
     pip install -r requirements-test.txt
-    npm install -g jslint stylelint
+    sudo npm install -g jshint stylelint
 
-Start Redis using docker-compose:
-
-.. code-block:: shell
-
-    docker-compose up -d
-
-Create a database:
+Create database:
 
 .. code-block:: shell
 
@@ -91,7 +61,13 @@ Create a database:
     ./manage.py migrate
     ./manage.py createsuperuser
 
-Launch the development server:
+Launch celery worker (for background jobs):
+
+.. code-block:: shell
+
+    celery -A openwisp2 worker -l info
+
+Launch development server:
 
 .. code-block:: shell
 
@@ -99,30 +75,54 @@ Launch the development server:
 
 You can access the admin interface at http://127.0.0.1:8000/admin/.
 
-Run celery  worker (separate terminal window is needed):
-
-.. code-block:: shell
-
-    # (cd tests)
-    celery -A openwisp2 worker -l info
-
 Run tests with:
 
 .. code-block:: shell
 
-    # run qa checks
-    ./run-qa-checks
-
     # standard tests
     ./runtests.py
-
-    # tests for the sample app
-    SAMPLE_APP=1 ./runtests.py
 
     # If you running tests on PROD environment
     ./runtests.py --exclude skip_prod
 
-When running the last line of the previous example, the environment variable ``SAMPLE_APP`` activates
-the sample app in ``/tests/openwisp2/`` which is a simple django app that extends ``openwisp-notifications``
-with the sole purpose of testing its extensibility, for more information regarding this concept,
-read the following section.
+    # tests for the sample app
+    SAMPLE_APP=1 ./runtests.py
+
+When running the last line of the previous example, the environment
+variable ``SAMPLE_APP`` activates the sample app in ``/tests/openwisp2/``
+which is a simple django app that extends ``openwisp-notifications`` with
+the sole purpose of testing its extensibility, for more information
+regarding this concept, read the following section.
+
+Run quality assurance tests with:
+
+.. code-block:: shell
+
+    ./run-qa-checks
+
+Alternative Sources
+-------------------
+
+Pypi
+~~~~
+
+To install the latest stable version from pypi:
+
+.. code-block:: shell
+
+    pip install openwisp-notifications
+
+Github
+~~~~~~
+
+To install the latest development version tarball via HTTPs:
+
+.. code-block:: shell
+
+    pip install https://github.com/openwisp/openwisp-notifications/tarball/master
+
+Alternatively you can use the git protocol:
+
+.. code-block:: shell
+
+    pip install -e git+git://github.com/openwisp/openwisp-notifications#egg=openwisp_notifications

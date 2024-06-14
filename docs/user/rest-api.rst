@@ -1,54 +1,63 @@
 REST API
---------
+========
 
-Live documentation
-~~~~~~~~~~~~~~~~~~
+.. _notifications_live_documentation:
+
+Live Documentation
+------------------
 
 .. image:: https://github.com/openwisp/openwisp-notifications/raw/docs/docs/images/api-docs.png
 
-A general live API documentation (following the OpenAPI specification) is available at ``/api/v1/docs/``.
+A general live API documentation (following the OpenAPI specification) is
+available at ``/api/v1/docs/``.
 
-Browsable web interface
-~~~~~~~~~~~~~~~~~~~~~~~
+.. _notifications_browsable_web_interface:
+
+Browsable Web Interface
+-----------------------
 
 .. image:: https://github.com/openwisp/openwisp-notifications/raw/docs/docs/images/api-ui.png
 
-Additionally, opening any of the endpoints `listed below <#list-of-endpoints>`_
-directly in the browser will show the `browsable API interface of Django-REST-Framework
-<https://www.django-rest-framework.org/topics/browsable-api/>`_,
-which makes it even easier to find out the details of each endpoint.
+Additionally, opening any of the endpoints :ref:`listed below
+<notifications_rest_endpoints>` directly in the browser will show the
+`browsable API interface of Django-REST-Framework
+<https://www.django-rest-framework.org/topics/browsable-api/>`_, which
+makes it even easier to find out the details of each endpoint.
 
 Authentication
-~~~~~~~~~~~~~~
+--------------
 
-See openwisp-users: `authenticating with the user token
-<https://github.com/openwisp/openwisp-users#authenticating-with-the-user-token>`_.
+See openwisp-users: :ref:`authenticating with the user token
+<authenticating_rest_api>`.
 
-When browsing the API via the `Live documentation <#live-documentation>`_
-or the `Browsable web interface <#browsable-web-interface>`_, you can use
-the session authentication by logging in the django admin.
+When browsing the API via the :ref:`notifications_live_documentation` or
+the :ref:`notifications_browsable_web_interface`, you can also use the
+session authentication by logging in the django admin.
 
 Pagination
-~~~~~~~~~~
+----------
 
-The *list* endpoint support the ``page_size`` parameter that allows paginating
-the results in conjunction with the ``page`` parameter.
+The *list* endpoint support the ``page_size`` parameter that allows
+paginating the results in conjunction with the ``page`` parameter.
 
 .. code-block:: text
 
     GET /api/v1/notifications/notification/?page_size=10
     GET /api/v1/notifications/notification/?page_size=10&page=2
 
-List of endpoints
-~~~~~~~~~~~~~~~~~
+.. _notifications_rest_endpoints:
 
-Since the detailed explanation is contained in the `Live documentation <#live-documentation>`_
-and in the `Browsable web page <#browsable-web-interface>`_ of each endpoint,
-here we'll provide just a list of the available endpoints,
-for further information please open the URL of the endpoint in your browser.
+List of endpoints
+-----------------
+
+Since the detailed explanation is contained in the
+:ref:`notifications_live_documentation` and in the
+:ref:`notifications_browsable_web_interface` of each point, here we'll
+provide just a list of the available endpoints, for further information
+please open the URL of the endpoint in your browser.
 
 List user's notifications
-#########################
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: text
 
@@ -56,8 +65,8 @@ List user's notifications
 
 **Available Filters**
 
-You can filter the list of notifications based on
-whether they are read or unread using the ``unread`` parameter.
+You can filter the list of notifications based on whether they are read or
+unread using the ``unread`` parameter.
 
 To list read notifications:
 
@@ -72,35 +81,35 @@ To list unread notifications:
     GET /api/v1/notifications/notification/?unread=true
 
 Mark all user's notifications as read
-#####################################
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: text
 
     POST /api/v1/notifications/notification/read/
 
 Get notification details
-########################
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: text
 
     GET /api/v1/notifications/notification/{pk}/
 
 Mark a notification read
-########################
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: text
 
     PATCH /api/v1/notifications/notification/{pk}/
 
 Delete a notification
-#####################
+~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: text
 
     DELETE /api/v1/notifications/notification/{pk}/
 
 List user's notification setting
-################################
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: text
 
@@ -108,64 +117,64 @@ List user's notification setting
 
 **Available Filters**
 
-You can filter the list of user's
-notification setting based on their ``organization_id``.
+You can filter the list of user's notification setting based on their
+``organization_id``.
 
 .. code-block:: text
 
     GET /api/v1/notifications/notification/user-setting/?organization={organization_id}
 
-You can filter the list of user's
-notification setting based on their ``organization_slug``.
+You can filter the list of user's notification setting based on their
+``organization_slug``.
 
 .. code-block:: text
 
     GET /api/v1/notifications/notification/user-setting/?organization_slug={organization_slug}
 
-You can filter the list of user's
-notification setting based on their ``type``.
+You can filter the list of user's notification setting based on their
+``type``.
 
 .. code-block:: text
 
     GET /api/v1/notifications/notification/user-setting/?type={type}
 
 Get notification setting details
-################################
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: text
 
     GET /api/v1/notifications/notification/user-setting/{pk}/
 
 Update notification setting details
-###################################
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: text
 
     PATCH /api/v1/notifications/notification/user-setting/{pk}/
 
 List user's object notification setting
-#######################################
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: text
 
     GET /api/v1/notifications/notification/ignore/
 
 Get object notification setting details
-#######################################
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: text
 
     GET /api/v1/notifications/notification/ignore/{app_label}/{model_name}/{object_id}/
 
 Create object notification setting
-##################################
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: text
 
     PUT /api/v1/notifications/notification/ignore/{app_label}/{model_name}/{object_id}/
 
 Delete object notification setting
-##################################
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: text
 
