@@ -3,6 +3,7 @@ from datetime import timedelta
 from celery import shared_task
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
+from django.contrib.sites.models import Site
 from django.core.cache import cache
 from django.db.models import Q
 from django.db.utils import OperationalError
@@ -10,6 +11,7 @@ from django.template.loader import render_to_string
 from django.utils import timezone
 from django.utils.html import strip_tags
 
+from openwisp_notifications import handlers
 from openwisp_notifications import settings as app_settings
 from openwisp_notifications import types
 from openwisp_notifications.swapper import load_model, swapper_load_model
@@ -222,36 +224,56 @@ def batch_email_notification(email_id):
         return
 
     unsent_notifications = Notification.objects.filter(id__in=ids)
-    alerts = []
+    notifications_count = unsent_notifications.count()
+    current_site = Site.objects.get_current()
 
-    for notification in unsent_notifications:
-        url = notification.data.get('url', '') if notification.data else None
-        if url:
-            target_url = url
-        elif notification.target:
-            target_url = notification.redirect_view_url
-        else:
-            target_url = None
-        alerts.append(
-            {
-                'level': notification.level,
-                'message': notification.message,
-                'description': notification.message,
-                'timestamp': notification.timestamp,
-                'url': target_url,
+    if notifications_count == 1:
+        instance = unsent_notifications.first()
+        handlers.send_single_email(instance)
+    else:
+        alerts = []
+        for notification in unsent_notifications:
+            url = notification.data.get('url', '') if notification.data else None
+            if url:
+                target_url = url
+            elif notification.target:
+                target_url = notification.redirect_view_url
+            else:
+                target_url = None
+
+            description = notification.message if notifications_count <= 5 else None
+            alerts.append(
+                {
+                    'level': notification.level,
+                    'message': notification.message,
+                    'description': description,
+                    'timestamp': notification.timestamp,
+                    'url': target_url,
+                }
+            )
+
+        context = {
+            'alerts': alerts,
+            'notifications_count': notifications_count,
+            'site_name': current_site.name,
+            'site_domain': current_site.domain,
+        }
+        html_content = render_to_string('emails/batch_email.html', context)
+        plain_text_content = strip_tags(html_content)
+
+        extra_context = {}
+        if notifications_count > 5:
+            extra_context = {
+                'call_to_action_url': f"https://{current_site.domain}/admin",
+                'call_to_action_text': 'View all Notifications',
             }
-        )
 
-    context = {
-        'alerts': alerts,
-    }
-    html_content = render_to_string('emails/batch_email.html', context)
-    plain_text_content = strip_tags(html_content)
-    send_email(
-        subject='Summary of Notifications',
-        body_text=plain_text_content,
-        body_html=html_content,
-        recipients=[email_id],
-    )
+        send_email(
+            subject=f'Summary of {notifications_count} Notifications',
+            body_text=plain_text_content,
+            body_html=html_content,
+            recipients=[email_id],
+            extra_context=extra_context,
+        )
     unsent_notifications.update(emailed=True)
     Notification.objects.bulk_update(unsent_notifications, ['emailed'])

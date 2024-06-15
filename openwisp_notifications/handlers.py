@@ -162,6 +162,36 @@ def notify_handler(**kwargs):
     return notification_list
 
 
+def send_single_email(instance):
+    try:
+        subject = instance.email_subject
+    except NotificationRenderException:
+        # Do not send email if notification is malformed.
+        return
+    url = instance.data.get('url', '') if instance.data else None
+    description = instance.message
+    if url:
+        target_url = url
+    elif instance.target:
+        target_url = instance.redirect_view_url
+    else:
+        target_url = None
+    if target_url:
+        description += _('\n\nFor more information see %(target_url)s.') % {
+            'target_url': target_url
+        }
+    send_email(
+        subject,
+        description,
+        instance.message,
+        recipients=[instance.recipient.email],
+        extra_context={
+            'call_to_action_url': target_url,
+            'call_to_action_text': _('Find out more'),
+        },
+    )
+
+
 @receiver(post_save, sender=Notification, dispatch_uid='send_email_notification')
 def send_email_notification(sender, instance, created, **kwargs):
     # Abort if a new notification is not created
@@ -190,23 +220,7 @@ def send_email_notification(sender, instance, created, **kwargs):
     if not (email_preference and instance.recipient.email and email_verified):
         return
 
-    try:
-        subject = instance.email_subject
-    except NotificationRenderException:
-        # Do not send email if notification is malformed.
-        return
-    url = instance.data.get('url', '') if instance.data else None
-    description = instance.message
-    if url:
-        target_url = url
-    elif instance.target:
-        target_url = instance.redirect_view_url
-    else:
-        target_url = None
-    if target_url:
-        description += _('\n\nFor more information see %(target_url)s.') % {
-            'target_url': target_url
-        }
+    send_single_email(instance)
 
     recipient_id = instance.recipient.id
     cache_key = f'email_batch_{recipient_id}'
@@ -232,16 +246,9 @@ def send_email_notification(sender, instance, created, **kwargs):
 
     cache_data['last_email_sent_time'] = timezone.now()
     cache.set(cache_key, cache_data, timeout=EMAIL_BATCH_INTERVAL)
-    send_email(
-        subject,
-        description,
-        instance.message,
-        recipients=[instance.recipient.email],
-        extra_context={
-            'call_to_action_url': target_url,
-            'call_to_action_text': _('Find out more'),
-        },
-    )
+
+    send_single_email(instance)
+
     # flag as emailed
     instance.emailed = True
     # bulk_update is used to prevent emitting post_save signal
