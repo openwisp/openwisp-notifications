@@ -55,10 +55,13 @@ class NotificationSerializer(serializers.ModelSerializer):
 
 
 class NotificationListSerializer(NotificationSerializer):
+    description = serializers.CharField(source='rendered_description')
+
     class Meta(NotificationSerializer.Meta):
         fields = [
             'id',
             'message',
+            'description',
             'unread',
             'target_url',
             'email_subject',

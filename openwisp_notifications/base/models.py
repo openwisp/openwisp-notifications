@@ -1,4 +1,5 @@
 import logging
+from contextlib import contextmanager
 
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericForeignKey
@@ -27,6 +28,35 @@ from openwisp_notifications.utils import _get_absolute_url, _get_object_link
 from openwisp_utils.base import UUIDModel
 
 logger = logging.getLogger(__name__)
+
+
+@contextmanager
+def notification_render_attributes(obj, **attrs):
+    """
+    This context manager sets temporary attributes on
+    the notification object to allowing rendering of
+    notification.
+
+    It can only be used to set aliases of the existing attributes.
+    By default, it will set the following aliases:
+        - actor_link -> actor_url
+        - action_link -> action_url
+        - target_link -> target_url
+    """
+    defaults = {
+        'actor_link': 'actor_url',
+        'action_link': 'action_url',
+        'target_link': 'target_url',
+    }
+    defaults.update(attrs)
+
+    for target_attr, source_attr in defaults.items():
+        setattr(obj, target_attr, getattr(obj, source_attr))
+
+    yield obj
+
+    for attr in defaults.keys():
+        delattr(obj, attr)
 
 
 class AbstractNotification(UUIDModel, BaseNotification):
@@ -103,40 +133,44 @@ class AbstractNotification(UUIDModel, BaseNotification):
 
     @cached_property
     def message(self):
-        return self.get_message()
+        with notification_render_attributes(self):
+            return self.get_message()
+
+    @cached_property
+    def rendered_description(self):
+        if not self.description:
+            return
+        with notification_render_attributes(self):
+            data = self.data or {}
+            desc = self.description.format(notification=self, **data)
+        return mark_safe(markdown(desc))
 
     @property
     def email_message(self):
-        return self.get_message(email_message=True)
+        with notification_render_attributes(self, target_link='redirect_view_url'):
+            return self.get_message()
 
-    def get_message(self, email_message=False):
-        if self.type:
-            # setting links in notification object for message rendering
-            self.actor_link = self.actor_url
-            self.action_link = self.action_url
-            self.target_link = (
-                self.target_url if not email_message else self.redirect_view_url
-            )
-            try:
-                config = get_notification_configuration(self.type)
-                data = self.data or {}
-                if 'message' in config:
-                    md_text = config['message'].format(notification=self, **data)
-                else:
-                    md_text = render_to_string(
-                        config['message_template'], context=dict(notification=self)
-                    ).strip()
-            except (AttributeError, KeyError, NotificationRenderException) as exception:
-                self._invalid_notification(
-                    self.pk,
-                    exception,
-                    'Error encountered in rendering notification message',
-                )
-            # clean up
-            self.actor_link = self.action_link = self.target_link = None
-            return mark_safe(markdown(md_text))
-        else:
+    def get_message(self):
+        if not self.type:
             return self.description
+        try:
+            config = get_notification_configuration(self.type)
+            data = self.data or {}
+            if 'message' in data:
+                md_text = data['message'].format(notification=self, **data)
+            elif 'message' in config:
+                md_text = config['message'].format(notification=self, **data)
+            else:
+                md_text = render_to_string(
+                    config['message_template'], context=dict(notification=self, **data)
+                ).strip()
+        except (AttributeError, KeyError, NotificationRenderException) as exception:
+            self._invalid_notification(
+                self.pk,
+                exception,
+                'Error encountered in rendering notification message',
+            )
+        return mark_safe(markdown(md_text))
 
     @cached_property
     def email_subject(self):

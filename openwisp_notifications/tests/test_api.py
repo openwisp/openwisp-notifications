@@ -533,7 +533,7 @@ class TestNotificationApi(
             self.assertEqual(len(response.data['results']), number_of_settings)
 
         with self.subTest('Test "page_size" query'):
-            page_size = 1
+            page_size = 2
             url = f'{url}?page_size={page_size}'
             response = self.client.get(url)
             self.assertEqual(response.status_code, 200)

@@ -527,11 +527,61 @@ value you want but it needs to be unique. For more details read `preventing dupl
 Notification Types
 ------------------
 
-**OpenWISP Notifications** simplifies configuring individual notification by
-using notification types. You can think of a notification type as a template
+**OpenWISP Notifications** allows defining notification types for
+recurring events. Think of a notification type as a template
 for notifications.
 
-These properties can be configured for each notification type:
+``generic_message``
+~~~~~~~~~~~~~~~~~~~
+
+.. figure:: https://raw.githubusercontent.com/openwisp/openwisp-notifications/docs/docs/images/1.1/generic_message.png
+   :target: https://raw.githubusercontent.com/openwisp/openwisp-notifications/docs/docs/images/1.1/generic_message.png
+   :align: center
+
+This module includes a notification type called ``generic_message``.
+
+This notification type is designed to deliver custom messages in the
+user interface for infrequent events or errors that occur during
+background operations and cannot be communicated easily to the user
+in other ways.
+
+These messages may require longer explanations and are therefore
+displayed in a dialog overlay, as shown in the screenshot above.
+This notification type does not send emails.
+
+The following code example demonstrates how to send a notification
+of this type:
+
+.. code-block:: python
+
+    from openwisp_notifications.signals import notify
+    notify.send(
+        type='generic_message',
+        level='error',
+        message='An unexpected error happened!',
+        sender=User.objects.first(),
+        target=User.objects.last(),
+        description="""Lorem Ipsum is simply dummy text
+    of the printing and typesetting industry.
+
+    ### Heading 3
+
+    Lorem Ipsum has been the industry's standard dummy text ever since the 1500s,
+    when an unknown printer took a galley of type and scrambled it to make a
+    type specimen book.
+
+    It has survived not only **five centuries**, but also the leap into
+    electronic typesetting, remaining essentially unchanged.
+
+    It was popularised in the 1960s with the release of Letraset sheets
+    containing Lorem Ipsum passages, and more recently with desktop publishing
+    software like Aldus PageMaker including versions of *Lorem Ipsum*."""
+    )
+
+Properties of Notification Types
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The following properties can be configured for each notification type:
 
 +------------------------+----------------------------------------------------------------+
 | **Property**           | **Description**                                                |
@@ -569,8 +619,15 @@ These properties can be configured for each notification type:
 +------------------------+----------------------------------------------------------------+
 
 
-**Note**: A notification type configuration should contain atleast one of ``message`` or ``message_template``
-settings. If both of them are present, ``message`` is given preference over ``message_template``.
+**Note**: It is recommended that a notification type configuration
+for recurring events contains either the ``message`` or
+``message_template`` properties. If both are present,
+``message`` is given preference over ``message_template``.
+
+If you don't plan on using ``message`` or ``message_template``,
+it may be better to use the existing ``generic_message`` type.
+However, it's advised to do so only if the event being notified
+is infrequent.
 
 **Note**: The callable for ``actor_link``, ``action_object_link`` and ``target_link`` should
 have the following signature:

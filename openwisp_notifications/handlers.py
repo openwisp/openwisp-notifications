@@ -58,8 +58,8 @@ def notify_handler(**kwargs):
     except NotificationRenderException as error:
         logger.error(f'Error encountered while creating notification: {error}')
         return
-    level = notification_template.get(
-        'level', kwargs.pop('level', Notification.LEVELS.info)
+    level = kwargs.pop(
+        'level', notification_template.get('level', Notification.LEVELS.info)
     )
     verb = notification_template.get('verb', kwargs.pop('verb', None))
     user_app_name = User._meta.app_label
@@ -115,7 +115,9 @@ def notify_handler(**kwargs):
         # Check if recipient is User, Group or QuerySet
         if isinstance(recipient, Group):
             recipients = recipient.user_set.filter(where_group)
-        elif isinstance(recipient, (QuerySet, list)):
+        elif isinstance(recipient, QuerySet):
+            recipients = recipient.distinct()
+        elif isinstance(recipient, list):
             recipients = recipient
         else:
             recipients = [recipient]
@@ -127,6 +129,7 @@ def notify_handler(**kwargs):
             .order_by('date_joined')
             .filter(where)
             .exclude(not_where)
+            .distinct()
         )
     optional_objs = [
         (kwargs.pop(opt, None), opt) for opt in ('target', 'action_object')
@@ -219,8 +222,6 @@ def send_email_notification(sender, instance, created, **kwargs):
 
     if not (email_preference and instance.recipient.email and email_verified):
         return
-
-    send_single_email(instance)
 
     recipient_id = instance.recipient.id
     cache_key = f'email_batch_{recipient_id}'
