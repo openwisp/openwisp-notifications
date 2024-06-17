@@ -277,4 +277,4 @@ def batch_email_notification(email_id):
         )
     unsent_notifications.update(emailed=True)
     Notification.objects.bulk_update(unsent_notifications, ['emailed'])
-    cache.delete(f'{email_id}_pks')
+    cache.delete(f'{email_id}_batch_pks')
