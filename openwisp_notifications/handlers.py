@@ -10,7 +10,6 @@ from django.db.models.query import QuerySet
 from django.db.models.signals import post_delete, post_save
 from django.dispatch import receiver
 from django.utils import timezone
-from django.utils.translation import gettext as _
 
 from openwisp_notifications import settings as app_settings
 from openwisp_notifications import tasks
@@ -20,13 +19,13 @@ from openwisp_notifications.types import (
     NOTIFICATION_ASSOCIATED_MODELS,
     get_notification_configuration,
 )
+from openwisp_notifications.utils import send_notification_email
 from openwisp_notifications.websockets import handlers as ws_handlers
-from openwisp_utils.admin_theme.email import send_email
 
 logger = logging.getLogger(__name__)
 
 EXTRA_DATA = app_settings.get_config()['USE_JSONFIELD']
-EMAIL_BATCH_INTERVAL = app_settings.OPENWISP_NOTIFICATIONS_EMAIL_BATCH_INTERVAL
+EMAIL_BATCH_INTERVAL = app_settings.EMAIL_BATCH_INTERVAL
 
 User = get_user_model()
 
@@ -165,36 +164,6 @@ def notify_handler(**kwargs):
     return notification_list
 
 
-def send_single_email(instance):
-    try:
-        subject = instance.email_subject
-    except NotificationRenderException:
-        # Do not send email if notification is malformed.
-        return
-    url = instance.data.get('url', '') if instance.data else None
-    description = instance.message
-    if url:
-        target_url = url
-    elif instance.target:
-        target_url = instance.redirect_view_url
-    else:
-        target_url = None
-    if target_url:
-        description += _('\n\nFor more information see %(target_url)s.') % {
-            'target_url': target_url
-        }
-    send_email(
-        subject,
-        description,
-        instance.message,
-        recipients=[instance.recipient.email],
-        extra_context={
-            'call_to_action_url': target_url,
-            'call_to_action_text': _('Find out more'),
-        },
-    )
-
-
 @receiver(post_save, sender=Notification, dispatch_uid='send_email_notification')
 def send_email_notification(sender, instance, created, **kwargs):
     # Abort if a new notification is not created
@@ -223,32 +192,37 @@ def send_email_notification(sender, instance, created, **kwargs):
     if not (email_preference and instance.recipient.email and email_verified):
         return
 
-    recipient_id = instance.recipient.id
-    cache_key = f'email_batch_{recipient_id}'
-    cache_key_pks = f'{instance.recipient.email}_pks'
+    recipient_email = instance.recipient.email
+    cache_key = f'email_batch_{recipient_email}'
+    cache_key_pks = f'{recipient_email}_batch_pks'
     cache_data = cache.get(
         cache_key, {'last_email_sent_time': None, 'batch_scheduled': False}
     )
 
     if cache_data['last_email_sent_time'] and EMAIL_BATCH_INTERVAL > 0:
+        # Case 1: Batch email sending logic
         if not cache_data['batch_scheduled']:
-            # Schedule batch email notification task
+            # Schedule batch email notification task if not already scheduled
             tasks.batch_email_notification.apply_async(
                 (instance.recipient.email,), countdown=EMAIL_BATCH_INTERVAL
             )
+            # Mark batch as scheduled to prevent duplicate scheduling
             cache_data['batch_scheduled'] = True
-            cache.set(cache_key_pks, [instance.id], timeout=EMAIL_BATCH_INTERVAL * 2)
+            cache.set(cache_key_pks, [instance.id])  # Initialize list of IDs for batch
             cache.set(cache_key, cache_data, timeout=EMAIL_BATCH_INTERVAL)
         else:
+            # Add current instance ID to the list of IDs for batch
             ids = cache.get(cache_key_pks, [])
             ids.append(instance.id)
-            cache.set(cache_key_pks, ids, timeout=EMAIL_BATCH_INTERVAL * 2)
+            cache.set(cache_key_pks, ids)
         return
 
+    # Case 2: Single email sending logic
+    # Update the last email sent time and cache the data
     cache_data['last_email_sent_time'] = timezone.now()
     cache.set(cache_key, cache_data, timeout=EMAIL_BATCH_INTERVAL)
 
-    send_single_email(instance)
+    send_notification_email(instance)
 
     # flag as emailed
     instance.emailed = True

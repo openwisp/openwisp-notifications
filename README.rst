@@ -1013,7 +1013,7 @@ The default configuration is as follows:
         'max_allowed_backoff': 15,
     }
 
-``OPENWISP_NOTIFICATIONS_EMAIL_BATCH_INTERVAL``
+``EMAIL_BATCH_INTERVAL``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 +---------+-----------------------------------+

@@ -11,14 +11,14 @@ from django.template.loader import render_to_string
 from django.utils import timezone
 from django.utils.html import strip_tags
 
-from openwisp_notifications import handlers
 from openwisp_notifications import settings as app_settings
 from openwisp_notifications import types
 from openwisp_notifications.swapper import load_model, swapper_load_model
+from openwisp_notifications.utils import send_notification_email
 from openwisp_utils.admin_theme.email import send_email
 from openwisp_utils.tasks import OpenwispCeleryTask
 
-EMAIL_BATCH_INTERVAL = app_settings.OPENWISP_NOTIFICATIONS_EMAIL_BATCH_INTERVAL
+EMAIL_BATCH_INTERVAL = app_settings.EMAIL_BATCH_INTERVAL
 
 User = get_user_model()
 
@@ -218,7 +218,7 @@ def batch_email_notification(email_id):
     """
     Sends a summary of notifications to the specified email address.
     """
-    ids = cache.get(f'{email_id}_pks', [])
+    ids = cache.get(f'{email_id}_batch_pks', [])
 
     if not ids:
         return
@@ -229,7 +229,7 @@ def batch_email_notification(email_id):
 
     if notifications_count == 1:
         instance = unsent_notifications.first()
-        handlers.send_single_email(instance)
+        send_notification_email(instance)
     else:
         alerts = []
         for notification in unsent_notifications:
@@ -277,3 +277,4 @@ def batch_email_notification(email_id):
         )
     unsent_notifications.update(emailed=True)
     Notification.objects.bulk_update(unsent_notifications, ['emailed'])
+    cache.delete(f'{email_id}_pks')
