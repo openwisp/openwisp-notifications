@@ -34,21 +34,21 @@ def normalize_unread_count(unread_count):
         return unread_count
 
 
-def send_notification_email(instance):
+def send_notification_email(notification):
 
     """Send a single email notification"""
 
     try:
-        subject = instance.email_subject
+        subject = notification.email_subject
     except NotificationRenderException:
         # Do not send email if notification is malformed.
         return
-    url = instance.data.get('url', '') if instance.data else None
-    description = instance.message
+    url = notification.data.get('url', '') if notification.data else None
+    description = notification.message
     if url:
         target_url = url
-    elif instance.target:
-        target_url = instance.redirect_view_url
+    elif notification.target:
+        target_url = notification.redirect_view_url
     else:
         target_url = None
     if target_url:
@@ -58,8 +58,8 @@ def send_notification_email(instance):
     send_email(
         subject,
         description,
-        instance.message,
-        recipients=[instance.recipient.email],
+        notification.message,
+        recipients=[notification.recipient.email],
         extra_context={
             'call_to_action_url': target_url,
             'call_to_action_text': _('Find out more'),
