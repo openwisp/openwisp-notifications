@@ -6,7 +6,6 @@ from celery.exceptions import OperationalError
 from django.apps.registry import apps
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
-from django.contrib.sites.models import Site
 from django.core import mail
 from django.core.cache import cache
 from django.core.exceptions import ImproperlyConfigured
@@ -946,13 +945,11 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
         self.assertEqual(len(mail.outbox), 0)
 
     @patch('openwisp_notifications.tasks.batch_email_notification.apply_async')
-    def test_batch_email_notification(self, mock_send_email):
-        current_site = Site.objects.get_current()
-        notify.send(**self.notification_options)
-        notify.send(**self.notification_options)
-        notify.send(**self.notification_options)
+    def test_batch_email_notification_with_descriptions(self, mock_send_email):
+        for _ in range(5):
+            notify.send(recipient=self.admin, **self.notification_options)
 
-        # Check if only one mail is sent
+        # Check if only one mail is sent initially
         self.assertEqual(len(mail.outbox), 1)
 
         # Call the task
@@ -960,10 +957,32 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
 
         # Check if the rest of the notifications are sent in a batch
         self.assertEqual(len(mail.outbox), 2)
-        self.assertEqual(
-            mail.outbox[1].subject,
-            f'Summary of 2 Notifications from {current_site.name}',
+        self.assertIn('Summary of 4 Notifications', mail.outbox[1].subject)
+        self.assertNotIn('View all Notifications', mail.outbox[1].body)
+        self.assertIn('Test Notification', mail.outbox[1].body)
+
+    @patch('openwisp_notifications.tasks.batch_email_notification.apply_async')
+    def test_batch_email_notification_with_call_to_action(self, mock_send_email):
+        self.notification_options.update(
+            {
+                'message': 'Notification title',
+                'type': 'default',
+            }
         )
+        for _ in range(11):
+            notify.send(recipient=self.admin, **self.notification_options)
+
+        # Check if only one mail is sent initially
+        self.assertEqual(len(mail.outbox), 1)
+
+        # Call the task
+        tasks.batch_email_notification(self.admin.id)
+
+        # Check if the rest of the notifications are sent in a batch
+        self.assertEqual(len(mail.outbox), 2)
+        self.assertIn('Summary of 10 Notifications', mail.outbox[1].subject)
+        self.assertIn('View all Notifications', mail.outbox[1].body)
+        self.assertNotIn('Test Notification', mail.outbox[1].body)
 
     def test_that_the_notification_is_only_sent_once_to_the_user(self):
         first_org = self._create_org()
