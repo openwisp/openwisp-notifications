@@ -1,0 +1,15 @@
+Summary of {{ notifications_count }} Notifications from {{ site_name }}
+
+{% for notification in notifications %}
+- {{ notification.message }}
+  URL: {{ notification.url }}
+  Timestamp: {{ notification.timestamp|date:"F j, Y, g:i a" }}
+  {% if show_notification_message %}
+  Description: {{ notification.rendered_description }}
+  {% endif %}
+{% endfor %}
+
+{% if notifications_count > 5 %}
+View all Notifications: {{ call_to_action_url }}
+{% endif %}
+

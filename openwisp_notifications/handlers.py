@@ -25,7 +25,7 @@ from openwisp_notifications.websockets import handlers as ws_handlers
 logger = logging.getLogger(__name__)
 
 EXTRA_DATA = app_settings.get_config()['USE_JSONFIELD']
-EMAIL_BATCH_INTERVAL = app_settings.EMAIL_BATCH_INTERVAL
+EMAIL_BATCH_INTERVAL = app_settings.OPENWISP_NOTIFICATIONS_EMAIL_BATCH_INTERVAL
 
 User = get_user_model()
 
@@ -192,11 +192,17 @@ def send_email_notification(sender, instance, created, **kwargs):
     if not (email_preference and instance.recipient.email and email_verified):
         return
 
-    recipient_email = instance.recipient.email
-    cache_key = f'email_batch_{recipient_email}'
-    cache_key_pks = f'{recipient_email}_batch_pks'
+    recipient_id = instance.recipient.id
+    cache_key = f'email_batch_{recipient_id}'
+
     cache_data = cache.get(
-        cache_key, {'last_email_sent_time': None, 'batch_scheduled': False}
+        cache_key,
+        {
+            'last_email_sent_time': None,
+            'batch_scheduled': False,
+            'pks': [],
+            'email_id': instance.recipient.email,
+        },
     )
 
     if cache_data['last_email_sent_time'] and EMAIL_BATCH_INTERVAL > 0:
@@ -204,17 +210,16 @@ def send_email_notification(sender, instance, created, **kwargs):
         if not cache_data['batch_scheduled']:
             # Schedule batch email notification task if not already scheduled
             tasks.batch_email_notification.apply_async(
-                (instance.recipient.email,), countdown=EMAIL_BATCH_INTERVAL
+                (instance.recipient.id,), countdown=EMAIL_BATCH_INTERVAL
             )
             # Mark batch as scheduled to prevent duplicate scheduling
             cache_data['batch_scheduled'] = True
-            cache.set(cache_key_pks, [instance.id])  # Initialize list of IDs for batch
-            cache.set(cache_key, cache_data, timeout=EMAIL_BATCH_INTERVAL)
+            cache_data['pks'] = [instance.id]
+            cache.set(cache_key, cache_data)
         else:
             # Add current instance ID to the list of IDs for batch
-            ids = cache.get(cache_key_pks, [])
-            ids.append(instance.id)
-            cache.set(cache_key_pks, ids)
+            cache_data['pks'].append(instance.id)
+            cache.set(cache_key, cache_data)
         return
 
     # Case 2: Single email sending logic

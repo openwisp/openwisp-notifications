@@ -1,27 +1,5 @@
 {% block styles %}
     <style type="text/css">
-        .container-alerts {
-            margin: 0 auto;
-            background-color: #fff;
-            padding: 20px;
-            border: 1px solid #ddd;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        }
-        .header {
-            text-align: center;
-            padding: 10px 0;
-            border-bottom: 1px solid #ddd;
-            margin-bottom: 20px;
-        }
-        .header h1 {
-            margin: 0;
-            font-size: 24px;
-        }
-        .header p {
-            margin: 5px 0 0 0;
-            font-size: 14px;
-            color: #666;
-        }
         .alert {
             border: 1px solid #e0e0e0;
             border-radius: 5px;
@@ -106,28 +84,24 @@
 {% endblock styles %}
 
 {% block mail_body %}
-    <div class="container-alerts">
-        <div class="header">
-            <h1>Summary of {{ notifications_count }} Notifications</h1>
-            <p>From <a href="https://{{ site_domain }}" target="_blank">{{ site_name }}</a></p>
-        </div>
-        {% for alert in alerts %}
-        <div class="alert {{ alert.level }}">
-            <h2>
-                <span class="badge {{ alert.level }}">{{ alert.level|upper }}</span>
-                <span class="title">
-                    {% if alert.url %}
-                        <a href="{{ alert.url }}" target="_blank">{{ alert.message }}</a>
-                    {% else %}
-                        {{ alert.message }}
-                    {% endif %}
-                </span>
-            </h2>
-            <p>{{ alert.timestamp|date:"F j, Y, g:i a" }}</p>
-            {% if alert.description %}
-                <p>{{ alert.description }}</p>
-            {% endif %}
-        </div>
+    <div>
+        {% for notification in notifications %}
+            <div class="alert {{ notification.level }}">
+                <h2>
+                    <span class="badge {{ notification.level }}">{{ notification.level|upper }}</span>
+                    <span class="title">
+                        {% if notification.url %}
+                            <a href="{{ notification.url }}" target="_blank">{{ notification.message }}</a>
+                        {% else %}
+                            {{ notification.message }}
+                        {% endif %}
+                    </span>
+                </h2>
+                <p>{{ notification.timestamp|date:"F j, Y, g:i a" }}</p>
+                {% if show_notification_description %}
+                    <p>{{ notification.rendered_description|safe }}</p>
+                {% endif %}
+            </div>
         {% endfor %}
     </div>
 {% endblock mail_body %}

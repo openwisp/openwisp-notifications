@@ -6,6 +6,7 @@ from celery.exceptions import OperationalError
 from django.apps.registry import apps
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
+from django.contrib.sites.models import Site
 from django.core import mail
 from django.core.cache import cache
 from django.core.exceptions import ImproperlyConfigured
@@ -946,6 +947,7 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
 
     @patch('openwisp_notifications.tasks.batch_email_notification.apply_async')
     def test_batch_email_notification(self, mock_send_email):
+        current_site = Site.objects.get_current()
         notify.send(**self.notification_options)
         notify.send(**self.notification_options)
         notify.send(**self.notification_options)
@@ -954,11 +956,14 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
         self.assertEqual(len(mail.outbox), 1)
 
         # Call the task
-        tasks.batch_email_notification(self.admin.email)
+        tasks.batch_email_notification(self.admin.id)
 
         # Check if the rest of the notifications are sent in a batch
         self.assertEqual(len(mail.outbox), 2)
-        self.assertEqual(mail.outbox[1].subject, "Summary of 2 Notifications")
+        self.assertEqual(
+            mail.outbox[1].subject,
+            f'Summary of 2 Notifications from {current_site.name}',
+        )
 
     def test_that_the_notification_is_only_sent_once_to_the_user(self):
         first_org = self._create_org()
