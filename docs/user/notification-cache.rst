@@ -52,4 +52,4 @@ following code in your ``apps.py``.
     signal. You can pass any value you want but it needs to be unique. For
     more details read `preventing duplicate signals section of Django
     documentation
-    <https://docs.djangoproject.com/en/dev/topics/signals/#preventing-duplicate-signals>`_
+    <https://docs.djangoproject.com/en/4.2/topics/signals/#preventing-duplicate-signals>`_

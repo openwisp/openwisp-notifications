@@ -57,7 +57,7 @@ removed:
 
 For more information about how to work with django projects and django
 apps, please refer to the `django documentation
-<https://docs.djangoproject.com/en/dev/intro/tutorial01/>`_.
+<https://docs.djangoproject.com/en/4.2/intro/tutorial01/>`_.
 
 2. Install ``openwisp-notifications``
 -------------------------------------
@@ -131,7 +131,7 @@ Please refer to the following files in the sample app of the test project:
 
 For more information regarding the concept of ``AppConfig`` please refer
 to the `"Applications" section in the django documentation
-<https://docs.djangoproject.com/en/dev/ref/applications/>`_.
+<https://docs.djangoproject.com/en/4.2/ref/applications/>`_.
 
 7. Create your custom models
 ----------------------------
@@ -144,7 +144,7 @@ You can add fields in a similar way in your ``models.py`` file.
 
 **Note**: For doubts regarding how to use, extend or develop models please
 refer to the `"Models" section in the django documentation
-<https://docs.djangoproject.com/en/dev/topics/db/models/>`_.
+<https://docs.djangoproject.com/en/4.2/topics/db/models/>`_.
 
 8. Add swapper configurations
 -----------------------------
@@ -174,7 +174,7 @@ Create and apply database migrations:
 
 For more information, refer to the `"Migrations" section in the django
 documentation
-<https://docs.djangoproject.com/en/dev/topics/migrations/>`_.
+<https://docs.djangoproject.com/en/4.2/topics/migrations/>`_.
 
 10. Create your custom admin
 ----------------------------
@@ -188,7 +188,7 @@ are described below.
 **Note**: For more information regarding how the django admin works, or
 how it can be customized, please refer to `"The django admin site" section
 in the django documentation
-<https://docs.djangoproject.com/en/dev/ref/contrib/admin/>`_.
+<https://docs.djangoproject.com/en/4.2/ref/contrib/admin/>`_.
 
 1. Monkey patching
 ~~~~~~~~~~~~~~~~~~
@@ -239,7 +239,7 @@ file in the test project.
 
 For more information about URL configuration in django, please refer to
 the `"URL dispatcher" section in the django documentation
-<https://docs.djangoproject.com/en/dev/topics/http/urls/>`_.
+<https://docs.djangoproject.com/en/4.2/topics/http/urls/>`_.
 
 12. Create root routing configuration
 -------------------------------------
@@ -283,7 +283,7 @@ sample_notifications
 
 For more information about template tags in django, please refer to the
 `"Custom template tags and filters" section in the django documentation
-<https://docs.djangoproject.com/en/dev/topics/http/urls/>`_.
+<https://docs.djangoproject.com/en/4.2/topics/http/urls/>`_.
 
 16. Register Notification Types
 -------------------------------

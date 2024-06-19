@@ -48,5 +48,5 @@ Email Notifications
     :align: center
 
 Along with web notifications OpenWISP Notifications also sends email
-notifications leveraging the :ref:`send_email feature of OpeNWISP Utils
+notifications leveraging the :ref:`send_email feature of OpenWISP Utils
 <utils_send_email>`.
