@@ -7,7 +7,7 @@ Code Utilities
     :depth: 2
     :local:
 
-.. _DD:
+.. _dd:
 
 Registering / Unregistering Notification Types
 ----------------------------------------------
@@ -27,8 +27,8 @@ code.
 
 .. _notifications_register_type:
 
-register_notification_type
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+``register_notification_type``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This function is used to register a new notification type from your code.
 
@@ -87,8 +87,8 @@ already registered with same name(not to be confused with
     Similarly to ``message_template``, ``message`` property can also be
     formatted using markdown.
 
-unregister_notification_type
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+``unregister_notification_type``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This function is used to unregister a notification type from anywhere in
 your code.
