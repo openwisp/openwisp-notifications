@@ -7,8 +7,8 @@ from django.db.models import Q
 from django.db.utils import OperationalError
 from django.utils import timezone
 
+from openwisp_notifications import types
 from openwisp_notifications.swapper import load_model, swapper_load_model
-from openwisp_notifications.types import NOTIFICATION_TYPES
 from openwisp_utils.tasks import OpenwispCeleryTask
 
 User = get_user_model()
@@ -105,7 +105,7 @@ def update_superuser_notification_settings(instance_id, is_superuser, is_created
     create_notification_settings(
         user=user,
         organizations=Organization.objects.all(),
-        notification_types=NOTIFICATION_TYPES.keys(),
+        notification_types=types.NOTIFICATION_TYPES.keys(),
     )
 
 
@@ -119,7 +119,7 @@ def ns_register_unregister_notification_type(
     """
 
     notification_types = (
-        [notification_type] if notification_type else NOTIFICATION_TYPES.keys()
+        [notification_type] if notification_type else types.NOTIFICATION_TYPES.keys()
     )
 
     organizations = Organization.objects.all()
@@ -166,7 +166,7 @@ def update_org_user_notificationsetting(org_user_id, user_id, org_id, is_org_adm
     create_notification_settings(
         user=user,
         organizations=[organization],
-        notification_types=NOTIFICATION_TYPES.keys(),
+        notification_types=types.NOTIFICATION_TYPES.keys(),
     )
 
 
@@ -192,7 +192,7 @@ def ns_organization_created(instance_id):
         create_notification_settings(
             user=user,
             organizations=[organization],
-            notification_types=NOTIFICATION_TYPES.keys(),
+            notification_types=types.NOTIFICATION_TYPES.keys(),
         )
 
 
