@@ -729,6 +729,28 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
             self.assertEqual(notification_queryset.count(), 0)
 
     @mock_notification_types
+    def test_global_email_notification_setting(self):
+        with self.subTest('Test email global preference is "False"'):
+            NotificationSetting.objects.update_or_create(
+                user=self.admin,
+                organization=None,
+                type=None,
+                defaults={'email': False, 'web': False},
+            )
+            self._create_notification()
+            self.assertEqual(len(mail.outbox), 0)
+
+        with self.subTest('Test email global preference is "True"'):
+            NotificationSetting.objects.update_or_create(
+                user=self.admin,
+                organization=None,
+                type=None,
+                defaults={'email': True, 'web': True},
+            )
+            self._create_notification()
+            self.assertEqual(len(mail.outbox), 1)
+
+    @mock_notification_types
     def test_notification_type_web_notification_setting_false(self):
         target_obj = self._get_org_user()
         self.notification_options.update({'target': target_obj})

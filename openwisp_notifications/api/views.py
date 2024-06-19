@@ -198,6 +198,32 @@ class IgnoreObjectNotificationView(
         )
 
 
+class NotificationPreferenceView(BaseNotificationView):
+    def post(self, request):
+        data = request.data
+
+        email = data.get('email')
+        web = data.get('web')
+
+        if not isinstance(email, bool) or not isinstance(web, bool):
+            return Response({'error': 'Invalid values for email or web'}, status=400)
+
+        notification_settings, created = NotificationSetting.objects.update_or_create(
+            user=request.user,
+            organization=None,
+            type=None,
+            defaults={'email': email, 'web': web},
+        )
+
+        return Response(
+            {
+                'success': True,
+                'email': notification_settings.email,
+                'web': notification_settings.web,
+            }
+        )
+
+
 notifications_list = NotificationListView.as_view()
 notification_detail = NotificationDetailView.as_view()
 notifications_read_all = NotificationReadAllView.as_view()
@@ -206,3 +232,4 @@ notification_setting_list = NotificationSettingListView.as_view()
 notification_setting = NotificationSettingView.as_view()
 ignore_object_notification_list = IgnoreObjectNotificationListView.as_view()
 ignore_object_notification = IgnoreObjectNotificationView.as_view()
+notification_preference = NotificationPreferenceView.as_view()

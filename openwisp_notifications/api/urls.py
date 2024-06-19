@@ -37,4 +37,9 @@ def get_api_urls(api_views=None):
             views.ignore_object_notification,
             name='ignore_object_notification',
         ),
+        path(
+            'preference/',
+            views.notification_preference,
+            name='notification_preference',
+        ),
     ]
