@@ -61,7 +61,6 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
         self.notification_options = dict(
             sender=self.admin,
             description='Test Notification',
-            level='info',
             verb='Test Notification',
             email_subject='Test Email subject',
             url='https://localhost:8000/admin',
@@ -313,7 +312,10 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
 
     def test_default_notification_type(self):
         self.notification_options.pop('verb')
-        self.notification_options.update({'type': 'default'})
+        self.notification_options.pop('url')
+        self.notification_options.update(
+            {'type': 'default', 'target': self._get_org_user()}
+        )
         self._create_notification()
         n = notification_queryset.first()
         self.assertEqual(n.level, 'info')
@@ -322,6 +324,54 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
             'Default notification with default verb and level info by', n.message
         )
         self.assertEqual(n.email_subject, '[example.com] Default Notification Subject')
+        email = mail.outbox.pop()
+        html_email = email.alternatives[0][0]
+        self.assertEqual(
+            email.body,
+            (
+                'Default notification with default verb and'
+                ' level info by Tester Tester (test org)\n\n'
+                f'For more information see {n.redirect_view_url}.'
+            ),
+        )
+        self.assertIn(
+            (
+                '<div class="msg"><p>Default notification with'
+                ' default verb and level info by'
+                f' <a href="{n.redirect_view_url}">'
+                'Tester Tester (test org)</a></p></div>'
+            ),
+            html_email,
+        )
+
+    def test_generic_notification_type(self):
+        self.notification_options.pop('verb')
+        self.notification_options.update(
+            {
+                'message': '[{notification.actor}]({notification.actor_link})',
+                'type': 'generic_message',
+                'description': '[{notification.actor}]({notification.actor_link})',
+            }
+        )
+        self._create_notification()
+        n = notification_queryset.first()
+        self.assertEqual(n.level, 'info')
+        self.assertEqual(n.verb, 'generic verb')
+        expected_output = (
+            '<p><a href="https://example.com{user_path}">admin</a></p>'
+        ).format(
+            user_path=reverse('admin:openwisp_users_user_change', args=[self.admin.pk])
+        )
+        self.assertEqual(n.message, expected_output)
+        self.assertEqual(n.rendered_description, expected_output)
+        self.assertEqual(n.email_subject, '[example.com] Generic Notification Subject')
+
+    def test_notification_level_kwarg_precedence(self):
+        # Create a notification with level kwarg set to 'warning'
+        self.notification_options.update({'level': 'warning'})
+        self._create_notification()
+        n = notification_queryset.first()
+        self.assertEqual(n.level, 'warning')
 
     @mock_notification_types
     def test_misc_notification_type_validation(self):
@@ -586,8 +636,9 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
             {'action_object': operator, 'target': operator}
         )
         self._create_notification()
-        with self.assertNumQueries(2):
-            # 2 queries since admin is already cached
+        with self.assertNumQueries(1):
+            # 1 query since all related objects are cached
+            # when rendering the notification
             n = notification_queryset.first()
             self.assertEqual(n.actor, self.admin)
             self.assertEqual(n.action_object, operator)
@@ -914,6 +965,23 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
         self._create_notification()
         # we don't send emails to unverified email addresses
         self.assertEqual(len(mail.outbox), 0)
+
+    def test_that_the_notification_is_only_sent_once_to_the_user(self):
+        first_org = self._create_org()
+        first_org.organization_id = first_org.id
+        second_org = self._create_org(name='second-org')
+        second_org.organization_id = second_org.id
+        OrganizationUser.objects.create(user=self.admin, organization=first_org)
+        OrganizationUser.objects.create(user=self.admin, organization=second_org)
+        self.notification_options.update(
+            {
+                'type': 'default',
+                'sender': first_org,
+                'target': first_org,
+            }
+        )
+        self._create_notification()
+        self.assertEqual(notification_queryset.count(), 1)
 
 
 class TestTransactionNotifications(TestOrganizationMixin, TransactionTestCase):
