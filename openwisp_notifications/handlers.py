@@ -183,6 +183,9 @@ def send_email_notification(sender, instance, created, **kwargs):
             organization=None, type=None
         ).first()
 
+    if instance.type and target_org and not notification_setting:
+        return
+
     # Send email anyway if no notification setting
     email_preference = (
         notification_setting.email_notification if notification_setting else True
