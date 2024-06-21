@@ -338,7 +338,7 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
             (
                 '<div class="msg"><p>Default notification with'
                 ' default verb and level info by'
-                f' <a href="{n.redirect_view_url}">'
+                f' <a href="{n.target_url}">'
                 'Tester Tester (test org)</a></p></div>'
             ),
             html_email,
