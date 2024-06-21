@@ -91,8 +91,15 @@ def notify_handler(**kwargs):
                 notificationsetting__organization_id=target_org,
                 notificationsetting__deleted=False,
             )
-            where = where & notification_setting
-            where_group = where_group & notification_setting
+
+            global_setting = web_notification & Q(
+                notificationsetting__type=None,
+                notificationsetting__organization_id=None,
+                notificationsetting__deleted=False,
+            )
+
+            where = where & (notification_setting | global_setting)
+            where_group = where_group & (notification_setting | global_setting)
 
     # Ensure notifications are only sent to active user
     where = where & Q(is_active=True)
