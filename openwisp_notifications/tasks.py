@@ -3,13 +3,21 @@ from datetime import timedelta
 from celery import shared_task
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
+from django.contrib.sites.models import Site
+from django.core.cache import cache
 from django.db.models import Q
 from django.db.utils import OperationalError
+from django.template.loader import render_to_string
 from django.utils import timezone
 
+from openwisp_notifications import settings as app_settings
 from openwisp_notifications import types
 from openwisp_notifications.swapper import load_model, swapper_load_model
+from openwisp_notifications.utils import send_notification_email
+from openwisp_utils.admin_theme.email import send_email
 from openwisp_utils.tasks import OpenwispCeleryTask
+
+EMAIL_BATCH_INTERVAL = app_settings.OPENWISP_NOTIFICATIONS_EMAIL_BATCH_INTERVAL
 
 User = get_user_model()
 
@@ -202,3 +210,67 @@ def delete_ignore_object_notification(instance_id):
     Deletes IgnoreObjectNotification object post it's expiration.
     """
     IgnoreObjectNotification.objects.filter(id=instance_id).delete()
+
+
+@shared_task(base=OpenwispCeleryTask)
+def batch_email_notification(instance_id):
+    """
+    Sends a summary of notifications to the specified email address.
+    """
+    if not instance_id:
+        return
+
+    cache_key = f'email_batch_{instance_id}'
+    cache_data = cache.get(cache_key, {'pks': []})
+
+    if not cache_data['pks']:
+        return
+
+    unsent_notifications = Notification.objects.filter(id__in=cache_data['pks'])
+    notifications_count = unsent_notifications.count()
+    current_site = Site.objects.get_current()
+    email_id = cache_data.get('email_id')
+
+    # Send individual email if there is only one notification
+    if notifications_count == 1:
+        notification = unsent_notifications.first()
+        send_notification_email(notification)
+    else:
+        # Show notification description upto 5 notifications
+        show_notification_description = notifications_count <= 5
+        for notification in unsent_notifications:
+            url = notification.data.get('url', '') if notification.data else None
+            if url:
+                notification.url = url
+            elif notification.target:
+                notification.url = notification.redirect_view_url
+            else:
+                notification.url = None
+
+        context = {
+            'notifications': unsent_notifications,
+            'notifications_count': notifications_count,
+            'show_notification_description': show_notification_description,
+            'site_name': current_site.name,
+        }
+        html_content = render_to_string('emails/batch_email.html', context)
+        plain_text_content = render_to_string('emails/batch_email.txt', context)
+
+        extra_context = {}
+        if notifications_count > 5:
+            extra_context = {
+                'call_to_action_url': f"https://{current_site.domain}/admin",
+                'call_to_action_text': 'View all Notifications',
+            }
+
+        send_email(
+            subject=f'Summary of {notifications_count} Notifications from {current_site.name}',
+            body_text=plain_text_content,
+            body_html=html_content,
+            recipients=[email_id],
+            extra_context=extra_context,
+        )
+
+    unsent_notifications.update(emailed=True)
+    Notification.objects.bulk_update(unsent_notifications, ['emailed'])
+    cache.delete(cache_key)
