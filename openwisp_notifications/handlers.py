@@ -91,8 +91,15 @@ def notify_handler(**kwargs):
                 notificationsetting__organization_id=target_org,
                 notificationsetting__deleted=False,
             )
-            where = where & notification_setting
-            where_group = where_group & notification_setting
+
+            global_setting = web_notification & Q(
+                notificationsetting__type=None,
+                notificationsetting__organization_id=None,
+                notificationsetting__deleted=False,
+            )
+
+            where = where & (notification_setting | global_setting)
+            where_group = where_group & (notification_setting | global_setting)
 
     # Ensure notifications are only sent to active user
     where = where & Q(is_active=True)
@@ -171,20 +178,25 @@ def send_email_notification(sender, instance, created, **kwargs):
         return
     # Get email preference of user for this type of notification.
     target_org = getattr(getattr(instance, 'target', None), 'organization_id', None)
+    notification_setting = None
     if instance.type and target_org:
-        try:
-            notification_setting = instance.recipient.notificationsetting_set.get(
-                organization=target_org, type=instance.type
-            )
-        except NotificationSetting.DoesNotExist:
-            return
-        email_preference = notification_setting.email_notification
-    else:
-        # We can not check email preference if notification type is absent,
-        # or if target_org is not present
-        # therefore send email anyway.
-        email_preference = True
+        # Check for specific notification setting for the target organization and type
+        notification_setting = instance.recipient.notificationsetting_set.filter(
+            organization=target_org, type=instance.type
+        ).first()
+    if not notification_setting:
+        # Check for global notification setting
+        notification_setting = instance.recipient.notificationsetting_set.filter(
+            organization=None, type=None
+        ).first()
 
+    if instance.type and target_org and not notification_setting:
+        return
+
+    # Send email anyway if no notification setting
+    email_preference = (
+        notification_setting.email_notification if notification_setting else True
+    )
     email_verified = instance.recipient.emailaddress_set.filter(
         verified=True, email=instance.recipient.email
     ).exists()
