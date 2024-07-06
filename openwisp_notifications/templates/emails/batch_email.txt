@@ -1,15 +1,16 @@
-Summary of {{ notifications_count }} Notifications from {{ site_name }}
+{% load i18n %}
+
+[{{ site_name }}] {{ notifications_count }} {% translate "new notifications since" %} {{ start_time }}
 
 {% for notification in notifications %}
 - {{ notification.message }}
-  URL: {{ notification.url }}
-  Timestamp: {{ notification.timestamp|date:"F j, Y, g:i a" }}
+  {% translate "URL" %}: {{ notification.url }}
+  {% translate "Timestamp" %}: {{ notification.timestamp|date:"F j, Y, g:i a" }}
   {% if show_notification_description %}
-      Description: {{ notification.rendered_description }}
+      {% translate "Description" %}: {{ notification.rendered_description }}
   {% endif %}
 {% endfor %}
 
-{% if notifications_count > 5 %}
-View all Notifications: {{ call_to_action_url }}
+{% if not show_notification_description  %}
+{% translate "View all Notifications" %}: {{ call_to_action_url }}
 {% endif %}
-

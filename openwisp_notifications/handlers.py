@@ -25,7 +25,7 @@ from openwisp_notifications.websockets import handlers as ws_handlers
 logger = logging.getLogger(__name__)
 
 EXTRA_DATA = app_settings.get_config()['USE_JSONFIELD']
-EMAIL_BATCH_INTERVAL = app_settings.OPENWISP_NOTIFICATIONS_EMAIL_BATCH_INTERVAL
+EMAIL_BATCH_INTERVAL = app_settings.EMAIL_BATCH_INTERVAL
 
 User = get_user_model()
 
@@ -201,6 +201,7 @@ def send_email_notification(sender, instance, created, **kwargs):
             'last_email_sent_time': None,
             'batch_scheduled': False,
             'pks': [],
+            'start_time': None,
             'email_id': instance.recipient.email,
         },
     )
@@ -209,12 +210,13 @@ def send_email_notification(sender, instance, created, **kwargs):
         # Case 1: Batch email sending logic
         if not cache_data['batch_scheduled']:
             # Schedule batch email notification task if not already scheduled
-            tasks.batch_email_notification.apply_async(
+            tasks.send_batched_email_notifications.apply_async(
                 (instance.recipient.id,), countdown=EMAIL_BATCH_INTERVAL
             )
             # Mark batch as scheduled to prevent duplicate scheduling
             cache_data['batch_scheduled'] = True
             cache_data['pks'] = [instance.id]
+            cache_data['start_time'] = timezone.now()
             cache.set(cache_key, cache_data)
         else:
             # Add current instance ID to the list of IDs for batch
@@ -224,8 +226,9 @@ def send_email_notification(sender, instance, created, **kwargs):
 
     # Case 2: Single email sending logic
     # Update the last email sent time and cache the data
-    cache_data['last_email_sent_time'] = timezone.now()
-    cache.set(cache_key, cache_data, timeout=EMAIL_BATCH_INTERVAL)
+    if EMAIL_BATCH_INTERVAL > 0:
+        cache_data['last_email_sent_time'] = timezone.now()
+        cache.set(cache_key, cache_data, timeout=EMAIL_BATCH_INTERVAL)
 
     send_notification_email(instance)
 

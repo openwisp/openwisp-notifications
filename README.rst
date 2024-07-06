@@ -1014,7 +1014,7 @@ The default configuration is as follows:
     }
 
 ``OPENWISP_NOTIFICATIONS_EMAIL_BATCH_INTERVAL``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 +---------+-----------------------------------+
 | type    | ``int``                           |
@@ -1025,6 +1025,17 @@ The default configuration is as follows:
 This setting defines the interval at which the email notifications are sent in batches to users within the specified interval.
 
 If you want to send email notifications immediately, then set it to ``0``.
+
+``OPENWISP_NOTIFICATIONS_EMAIL_BATCH_DISPLAY_LIMIT``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
++---------+-----------------------------------+
+| type    | ``int``                           |
++---------+-----------------------------------+
+| default | ``15``                            |
++---------+-----------------------------------+
+
+This setting defines the number of email notifications to be displayed in a batched email.
 
 Exceptions
 ----------

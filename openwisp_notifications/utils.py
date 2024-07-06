@@ -35,9 +35,7 @@ def normalize_unread_count(unread_count):
 
 
 def send_notification_email(notification):
-
     """Send a single email notification"""
-
     try:
         subject = notification.email_subject
     except NotificationRenderException:

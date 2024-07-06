@@ -9,6 +9,7 @@ from django.db.models import Q
 from django.db.utils import OperationalError
 from django.template.loader import render_to_string
 from django.utils import timezone
+from django.utils.translation import gettext as _
 
 from openwisp_notifications import settings as app_settings
 from openwisp_notifications import types
@@ -17,7 +18,7 @@ from openwisp_notifications.utils import send_notification_email
 from openwisp_utils.admin_theme.email import send_email
 from openwisp_utils.tasks import OpenwispCeleryTask
 
-EMAIL_BATCH_INTERVAL = app_settings.OPENWISP_NOTIFICATIONS_EMAIL_BATCH_INTERVAL
+EMAIL_BATCH_INTERVAL = app_settings.EMAIL_BATCH_INTERVAL
 
 User = get_user_model()
 
@@ -213,7 +214,7 @@ def delete_ignore_object_notification(instance_id):
 
 
 @shared_task(base=OpenwispCeleryTask)
-def batch_email_notification(instance_id):
+def send_batched_email_notifications(instance_id):
     """
     Sends a summary of notifications to the specified email address.
     """
@@ -226,7 +227,10 @@ def batch_email_notification(instance_id):
     if not cache_data['pks']:
         return
 
-    unsent_notifications = Notification.objects.filter(id__in=cache_data['pks'])
+    display_limit = app_settings.EMAIL_BATCH_DISPLAY_LIMIT
+    unsent_notifications = Notification.objects.filter(
+        id__in=cache_data['pks']
+    ).order_by('-timestamp')
     notifications_count = unsent_notifications.count()
     current_site = Site.objects.get_current()
     email_id = cache_data.get('email_id')
@@ -236,8 +240,8 @@ def batch_email_notification(instance_id):
         notification = unsent_notifications.first()
         send_notification_email(notification)
     else:
-        # Show notification description upto 5 notifications
-        show_notification_description = notifications_count <= 5
+        # Show the amount of notifications according to configured display limit
+        show_notification_description = notifications_count <= display_limit
         for notification in unsent_notifications:
             url = notification.data.get('url', '') if notification.data else None
             if url:
@@ -247,24 +251,33 @@ def batch_email_notification(instance_id):
             else:
                 notification.url = None
 
+        starting_time = (
+            cache_data.get('start_time')
+            .strftime('%B %-d, %Y, %-I:%M %p')
+            .lower()
+            .replace('am', 'a.m.')
+            .replace('pm', 'p.m.')
+        ) + ' UTC'
+
         context = {
             'notifications': unsent_notifications,
             'notifications_count': notifications_count,
             'show_notification_description': show_notification_description,
             'site_name': current_site.name,
+            'start_time': starting_time,
         }
         html_content = render_to_string('emails/batch_email.html', context)
         plain_text_content = render_to_string('emails/batch_email.txt', context)
 
         extra_context = {}
-        if notifications_count > 5:
+        if notifications_count > display_limit:
             extra_context = {
                 'call_to_action_url': f"https://{current_site.domain}/admin",
-                'call_to_action_text': 'View all Notifications',
+                'call_to_action_text': _('View all Notifications'),
             }
 
         send_email(
-            subject=f'Summary of {notifications_count} Notifications from {current_site.name}',
+            subject=f'[{current_site.name}] {notifications_count} new notifications since {starting_time}',
             body_text=plain_text_content,
             body_html=html_content,
             recipients=[email_id],
