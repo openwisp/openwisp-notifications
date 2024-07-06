@@ -100,6 +100,12 @@ function initNotificationDropDown($) {
             $('#openwisp_notifications').focus();
         }
     });
+
+    // Show notification widget if URL has open_notification_widget query parameter
+    if (new URLSearchParams(window.location.search).get('open_notification_widget') === 'true') {
+        $('.ow-notification-dropdown').removeClass('ow-hide');
+        $('.ow-notification-wrapper').trigger('refreshNotificationWidget');
+    }
 }
 
 // Used to convert absolute URLs in notification messages to relative paths
