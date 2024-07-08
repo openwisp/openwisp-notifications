@@ -18,6 +18,7 @@ Notifications can be created using the ``notify`` signal. Eg:
     notify.send(
         sender=admin,
         recipient=operators,
+        type='default',
         description="Test Notification",
         verb="Test Notification",
         email_subject="Test Email Subject",
@@ -60,6 +61,11 @@ Additional ``notify`` Keyword Arguments
 
 ================= ======================================================
 **Parameter**     **Description**
+``type``          Set values of other parameters based on registered
+                  :doc:`notification types <./notification-types>`
+
+                  Defaults to ``None`` meaning you need to provide other
+                  arguments.
 ``email_subject`` Sets subject of email notification to be sent.
 
                   Defaults to the notification message.
@@ -69,11 +75,6 @@ Additional ``notify`` Keyword Arguments
 
                   Defaults to ``None``, meaning the above message would
                   not be added to the email text.
-``type``          Set values of other parameters based on registered
-                  `notification types <#notification-types>`_
-
-                  Defaults to ``None`` meaning you need to provide other
-                  arguments.
 ================= ======================================================
 
 Passing Extra Data to Notifications
