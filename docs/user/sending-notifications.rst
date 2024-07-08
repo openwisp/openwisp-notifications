@@ -18,7 +18,7 @@ Notifications can be created using the ``notify`` signal. Eg:
     notify.send(
         sender=admin,
         recipient=operators,
-        type='default',
+        type="default",
         description="Test Notification",
         verb="Test Notification",
         email_subject="Test Email Subject",
@@ -56,8 +56,7 @@ consistency with ``django-notifications``. You can learn more about
 accepted parameters from `django-notifications documentation
 <https://github.com/django-notifications/django-notifications#generating-notifications>`_.
 
-Additional ``notify`` Keyword Arguments
----------------------------------------
+The ``notify`` signal supports the following additional parameters:
 
 ================= ======================================================
 **Parameter**     **Description**
@@ -78,7 +77,7 @@ Additional ``notify`` Keyword Arguments
 ================= ======================================================
 
 Passing Extra Data to Notifications
------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 If needed, additional data, not known beforehand, can be included in the
 notification message.
