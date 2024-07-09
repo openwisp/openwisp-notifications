@@ -28,6 +28,11 @@ def get_api_urls(api_views=None):
             name='notification_setting',
         ),
         path(
+            'user-setting/organization/<uuid:organization_id>/',
+            views.org_notification_setting,
+            name='org_notification_setting',
+        ),
+        path(
             'ignore/',
             views.ignore_object_notification_list,
             name='ignore_object_notification_list',

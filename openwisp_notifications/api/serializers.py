@@ -73,6 +73,11 @@ class NotificationListSerializer(NotificationSerializer):
 
 
 class NotificationSettingSerializer(serializers.ModelSerializer):
+    organization_name = serializers.SerializerMethodField()
+
+    def get_organization_name(self, obj):
+        return obj.organization.name if obj.organization else None
+
     class Meta:
         model = NotificationSetting
         exclude = ['user']
@@ -87,3 +92,9 @@ class IgnoreObjectNotificationSerializer(serializers.ModelSerializer):
             'object_content_type',
             'object_id',
         ]
+
+
+class NotificationSettingUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = NotificationSetting
+        fields = ['email', 'web']
