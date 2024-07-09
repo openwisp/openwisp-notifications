@@ -5,10 +5,12 @@ on:
     branches:
       - master
       - dev
+      - gsoc24
   pull_request:
     branches:
       - master
       - dev
+      - gsoc24
 
 jobs:
 
