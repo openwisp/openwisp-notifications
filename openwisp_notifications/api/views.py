@@ -14,14 +14,16 @@ from rest_framework.mixins import CreateModelMixin, ListModelMixin, UpdateModelM
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from openwisp_notifications.api.serializers import (
     IgnoreObjectNotificationSerializer,
     NotificationListSerializer,
     NotificationSerializer,
     NotificationSettingSerializer,
+    NotificationSettingUpdateSerializer,
 )
-from openwisp_notifications.swapper import load_model
+from openwisp_notifications.swapper import load_model, swapper_load_model
 from openwisp_users.api.authentication import BearerAuthentication
 
 from .filters import NotificationSettingFilter
@@ -135,6 +137,27 @@ class NotificationSettingView(BaseNotificationSettingView, RetrieveUpdateAPIView
     lookup_field = 'pk'
 
 
+class OrganizationNotificationSettingView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, organization_id):
+        notification_settings = NotificationSetting.objects.filter(
+            organization_id=organization_id, user=request.user
+        )
+
+        serializer = NotificationSettingUpdateSerializer(data=request.data)
+        if serializer.is_valid():
+            email = serializer.validated_data.get('email')
+            web = serializer.validated_data.get('web')
+
+            # Update all notification settings for the specified organization
+            notification_settings.update(email=email, web=web)
+
+            return Response(status=status.HTTP_200_OK)
+        else:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
+
 class BaseIgnoreObjectNotificationView(GenericAPIView):
     model = IgnoreObjectNotification
     serializer_class = IgnoreObjectNotificationSerializer
@@ -204,5 +227,6 @@ notifications_read_all = NotificationReadAllView.as_view()
 notification_read_redirect = NotificationReadRedirect.as_view()
 notification_setting_list = NotificationSettingListView.as_view()
 notification_setting = NotificationSettingView.as_view()
+org_notification_setting = OrganizationNotificationSettingView.as_view()
 ignore_object_notification_list = IgnoreObjectNotificationListView.as_view()
 ignore_object_notification = IgnoreObjectNotificationView.as_view()
