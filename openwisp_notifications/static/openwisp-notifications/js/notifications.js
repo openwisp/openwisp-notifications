@@ -101,8 +101,8 @@ function initNotificationDropDown($) {
         }
     });
 
-    // Show notification widget if URL has open_notification_widget query parameter
-    if (new URLSearchParams(window.location.search).get('open_notification_widget') === 'true') {
+    // Show notification widget if URL contains #notifications
+    if (window.location.hash === '#notifications') {
         $('.ow-notification-dropdown').removeClass('ow-hide');
         $('.ow-notification-wrapper').trigger('refreshNotificationWidget');
     }

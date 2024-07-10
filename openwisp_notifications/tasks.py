@@ -272,7 +272,7 @@ def send_batched_email_notifications(instance_id):
         extra_context = {}
         if notifications_count > display_limit:
             extra_context = {
-                'call_to_action_url': f"https://{current_site.domain}/admin?open_notification_widget=true",
+                'call_to_action_url': f"https://{current_site.domain}/admin/#notifications",
                 'call_to_action_text': _('View all Notifications'),
             }
 
