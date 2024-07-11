@@ -1,6 +1,9 @@
 Notifications
 =============
 
+**Source code**: `github.com/openwisp/openwisp-notifications
+<https://github.com/openwisp/openwisp-notifications>`_.
+
 OpenWISP Notifications is a versatile system designed to deliver email and
 web notifications. Its primary function is to enable other OpenWISP
 modules to alert users about significant events occurring within their
