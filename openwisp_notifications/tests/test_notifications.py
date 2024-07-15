@@ -644,7 +644,7 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
             self.assertEqual(n.action_object, operator)
             self.assertEqual(n.target, operator)
 
-    @patch.object(app_settings, 'OPENWISP_NOTIFICATIONS_CACHE_TIMEOUT', 0)
+    @patch.object(app_settings, 'CACHE_TIMEOUT', 0)
     def test_notification_cache_timeout(self):
         # Timeout=0 means value is not cached
         operator = self._get_operator()
