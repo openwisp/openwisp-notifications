@@ -1,7 +1,10 @@
 Sending Notifications
 =====================
 
-Notifications can be created using the ``notify`` signal. Eg:
+Notifications can be created using the ``notify`` signal. Here's an
+example which uses the :ref:`generic_message
+<notifications_generic_message_type>` notification type to alert users
+of an account being deactivated:
 
 .. code-block:: python
 
@@ -11,28 +14,31 @@ Notifications can be created using the ``notify`` signal. Eg:
     from openwisp_notifications.signals import notify
 
     User = get_user_model()
-    Group = load_model("openwisp_users", "Group")
-    admin = User.objects.get(email="admin@admin.com")
-    operators = Group.objects.get(name="Operator")
+    admin = User.objects.get(username="admin")
+    deactivated_user = User.objects.get(username="johndoe", is_active=False)
 
     notify.send(
         sender=admin,
-        recipient=operators,
-        type="default",
-        description="Test Notification",
-        verb="Test Notification",
-        email_subject="Test Email Subject",
-        url="https://localhost:8000/admin",
+        type="generic_message",
+        level="info",
+        target=deactivated_user,
+        message="{notification.actor} has deactivated {notification.target}",
     )
 
-The above code snippet creates and sends a notification to all users
-belonging to the ``Operators`` group if they have opted-in to receive
-notifications. Non-superusers receive notifications only for organizations
-which they are a member of.
+The above snippet will send notifications to all superusers and
+organization administrators of the target object's organization who
+have opted-in to receive notifications. If the target object is omitted or
+does not have an organization, it will only send notifications to
+superusers.
 
-If recipient is not provided, it defaults to all superusers. If the target
-is provided, users of same organization of the target object are added to
-the list of recipients given that they have staff status and opted-in to
+You can override the recipients of the notification by passing the
+``recipient`` keyword argument. The ``recipient`` argument can be a:
+
+- ``Group`` object
+- A list or queryset of ``User`` objects
+- A single ``User`` object
+
+However, these users will only be notified if they have opted-in to
 receive notifications.
 
 The complete syntax for ``notify`` is:
@@ -113,3 +119,9 @@ Then in the application code:
         operation_which_can_fail()
     except Exception as error:
         notify.send(type="error_type", sender=sender, error=str(error))
+
+Since the ``error_type`` notification type defined the notification
+message, you don't need to pass the ``message`` argument in the notify
+signal. The message defined  in the notification type will be used by the
+notification. The ``error`` argument is used to set the value of the
+``{error}`` placeholder in the notification message.

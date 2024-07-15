@@ -4,6 +4,8 @@ Notification Types
 OpenWISP Notifications allows defining notification types for recurring
 events. Think of a notification type as a template for notifications.
 
+.. _notifications_generic_message_type:
+
 ``generic_message``
 -------------------
 
