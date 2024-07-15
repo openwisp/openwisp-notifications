@@ -2,4 +2,4 @@ django-notifications-hq~=1.8.2
 channels~=3.0.2
 openwisp-users @ https://github.com/openwisp/openwisp-users/tarball/master
 openwisp-utils[rest,celery] @ https://github.com/openwisp/openwisp-utils/tarball/master
-markdown~=3.6
+markdown~=3.6.0
