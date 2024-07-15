@@ -25,7 +25,6 @@ from openwisp_notifications.websockets import handlers as ws_handlers
 logger = logging.getLogger(__name__)
 
 EXTRA_DATA = app_settings.get_config()['USE_JSONFIELD']
-EMAIL_BATCH_INTERVAL = app_settings.EMAIL_BATCH_INTERVAL
 
 User = get_user_model()
 
@@ -205,6 +204,7 @@ def send_email_notification(sender, instance, created, **kwargs):
             'email_id': instance.recipient.email,
         },
     )
+    EMAIL_BATCH_INTERVAL = app_settings.EMAIL_BATCH_INTERVAL
 
     if cache_data['last_email_sent_time'] and EMAIL_BATCH_INTERVAL > 0:
         # Case 1: Batch email sending logic

@@ -11,7 +11,7 @@ from django.core.cache import cache
 from django.core.exceptions import ImproperlyConfigured
 from django.db.models.signals import post_migrate, post_save
 from django.template import TemplateDoesNotExist
-from django.test import TransactionTestCase, override_settings
+from django.test import TransactionTestCase
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.timesince import timesince
@@ -984,7 +984,7 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
         self.assertIn('View all Notifications', mail.outbox[1].body)
         self.assertNotIn('Test Notification', mail.outbox[1].body)
 
-    @override_settings(EMAIL_BATCH_INTERVAL=0)
+    @patch.object(app_settings, 'EMAIL_BATCH_INTERVAL', 0)
     def test_without_batch_email_notification(self):
         self.notification_options.update(
             {
