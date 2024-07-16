@@ -1,6 +1,10 @@
 Notification Types
 ==================
 
+.. contents:: **Table of contents**:
+    :depth: 2
+    :local:
+
 OpenWISP Notifications allows defining notification types for recurring
 events. Think of a notification type as a template for notifications.
 

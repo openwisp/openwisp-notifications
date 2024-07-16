@@ -1,6 +1,10 @@
 REST API
 ========
 
+.. contents:: **Table of Contents**:
+    :depth: 1
+    :local:
+
 .. _notifications_live_documentation:
 
 Live Documentation

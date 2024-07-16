@@ -1,6 +1,10 @@
 Web & Email Notifications
 =========================
 
+.. contents:: **Table of Contents**:
+    :depth: 2
+    :local:
+
 .. _notifications_web_notifications:
 
 Web Notifications

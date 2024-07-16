@@ -1,6 +1,13 @@
 Sending Notifications
 =====================
 
+.. contents:: **Table of contents**:
+    :depth: 2
+    :local:
+
+The ``notify`` signal
+---------------------
+
 Notifications can be created using the ``notify`` signal. Here's an
 example which uses the :ref:`generic_message
 <notifications_generic_message_type>` notification type to alert users
@@ -83,7 +90,7 @@ The ``notify`` signal supports the following additional parameters:
 ================= ======================================================
 
 Passing Extra Data to Notifications
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-----------------------------------
 
 If needed, additional data, not known beforehand, can be included in the
 notification message.
