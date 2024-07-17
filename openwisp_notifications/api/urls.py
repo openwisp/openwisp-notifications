@@ -38,13 +38,8 @@ def get_api_urls(api_views=None):
             name='ignore_object_notification',
         ),
         path(
-            'user-setting/organization/<uuid:organization_id>/',
+            'user/<uuid:user_id>/organization/<uuid:organization_id>/setting/',
             views.organization_notification_setting,
             name='organization_notification_setting',
-        ),
-        path(
-            'user/<uuid:user_id>/setting/organization/<uuid:organization_id>/',
-            views.admin_user_organization_notification_setting,
-            name='admin_user_organization_notification_setting',
         ),
     ]
