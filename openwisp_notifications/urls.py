@@ -9,9 +9,7 @@ def get_urls(api_views=None, social_views=None):
     Arguments:
         api_views(optional): views for Notifications API
     """
-    urls = [
-        path('api/v1/notifications/notification/', include(get_api_urls(api_views)))
-    ]
+    urls = [path('api/v1/notifications/', include(get_api_urls(api_views)))]
     return urls
 
 
