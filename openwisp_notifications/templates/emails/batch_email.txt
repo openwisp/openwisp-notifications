@@ -4,13 +4,15 @@
 
 {% for notification in notifications %}
 - {{ notification.message }}
+  {% if notification.rendered_description %}
+  {% translate "Description" %}: {{ notification.rendered_description }}
+  {% endif %}
+  {% translate "Date & Time" %}: {{ notification.timestamp|date:"F j, Y, g:i a" }}
+  {% if notification.url %}
   {% translate "URL" %}: {{ notification.url }}
-  {% translate "Timestamp" %}: {{ notification.timestamp|date:"F j, Y, g:i a" }}
-  {% if show_notification_description %}
-      {% translate "Description" %}: {{ notification.rendered_description }}
   {% endif %}
 {% endfor %}
 
-{% if not show_notification_description  %}
-{% translate "View all Notifications" %}: {{ call_to_action_url }}
+{% if call_to_action_url %}
+{{ call_to_action_text }}: {{ call_to_action_url }}
 {% endif %}

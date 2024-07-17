@@ -98,7 +98,7 @@
                     </span>
                 </h2>
                 <p>{{ notification.timestamp|date:"F j, Y, g:i a" }}</p>
-                {% if show_notification_description %}
+                {% if notification.rendered_description %}
                     <p>{{ notification.rendered_description|safe }}</p>
                 {% endif %}
             </div>

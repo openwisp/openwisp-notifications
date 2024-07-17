@@ -228,12 +228,13 @@ def send_batched_email_notifications(instance_id):
         return
 
     display_limit = app_settings.EMAIL_BATCH_DISPLAY_LIMIT
-    unsent_notifications = Notification.objects.filter(
+    unsent_notifications_query = Notification.objects.filter(
         id__in=cache_data['pks']
     ).order_by('-timestamp')
-    notifications_count = unsent_notifications.count()
+    notifications_count = unsent_notifications_query.count()
     current_site = Site.objects.get_current()
     email_id = cache_data.get('email_id')
+    unsent_notifications = []
 
     # Send individual email if there is only one notification
     if notifications_count == 1:
@@ -241,8 +242,7 @@ def send_batched_email_notifications(instance_id):
         send_notification_email(notification)
     else:
         # Show the amount of notifications according to configured display limit
-        show_notification_description = notifications_count <= display_limit
-        for notification in unsent_notifications:
+        for notification in unsent_notifications_query[:display_limit]:
             url = notification.data.get('url', '') if notification.data else None
             if url:
                 notification.url = url
@@ -250,6 +250,8 @@ def send_batched_email_notifications(instance_id):
                 notification.url = notification.redirect_view_url
             else:
                 notification.url = None
+
+            unsent_notifications.append(notification)
 
         starting_time = (
             cache_data.get('start_time')
@@ -260,14 +262,11 @@ def send_batched_email_notifications(instance_id):
         ) + ' UTC'
 
         context = {
-            'notifications': unsent_notifications,
+            'notifications': unsent_notifications[:display_limit],
             'notifications_count': notifications_count,
-            'show_notification_description': show_notification_description,
             'site_name': current_site.name,
             'start_time': starting_time,
         }
-        html_content = render_to_string('emails/batch_email.html', context)
-        plain_text_content = render_to_string('emails/batch_email.txt', context)
 
         extra_context = {}
         if notifications_count > display_limit:
@@ -275,6 +274,10 @@ def send_batched_email_notifications(instance_id):
                 'call_to_action_url': f"https://{current_site.domain}/admin/#notifications",
                 'call_to_action_text': _('View all Notifications'),
             }
+        context.update(extra_context)
+
+        html_content = render_to_string('emails/batch_email.html', context)
+        plain_text_content = render_to_string('emails/batch_email.txt', context)
 
         send_email(
             subject=f'[{current_site.name}] {notifications_count} new notifications since {starting_time}',
@@ -284,6 +287,6 @@ def send_batched_email_notifications(instance_id):
             extra_context=extra_context,
         )
 
-    unsent_notifications.update(emailed=True)
-    Notification.objects.bulk_update(unsent_notifications, ['emailed'])
+    unsent_notifications_query.update(emailed=True)
+    Notification.objects.bulk_update(unsent_notifications_query, ['emailed'])
     cache.delete(cache_key)
