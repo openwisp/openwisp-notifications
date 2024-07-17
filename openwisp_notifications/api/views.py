@@ -12,10 +12,12 @@ from rest_framework.generics import (
 )
 from rest_framework.mixins import CreateModelMixin, ListModelMixin, UpdateModelMixin
 from rest_framework.pagination import PageNumberPagination
-from rest_framework.permissions import IsAdminUser, IsAuthenticated
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.views import APIView
 
+from openwisp_notifications.api.permissions import (
+    IsAuthenticatedToUpdateNotificationSetting,
+)
 from openwisp_notifications.api.serializers import (
     IgnoreObjectNotificationSerializer,
     NotificationListSerializer,
@@ -200,44 +202,21 @@ class IgnoreObjectNotificationView(
         )
 
 
-class OrganizationNotificationSettingView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def post(self, request, organization_id):
-        notification_settings = NotificationSetting.objects.filter(
-            organization_id=organization_id, user=request.user
-        )
-        serializer = NotificationSettingUpdateSerializer(data=request.data)
-        if serializer.is_valid():
-            email = serializer.validated_data.get('email')
-            web = serializer.validated_data.get('web')
-
-            # Update all notification settings for the specific organization
-            notification_settings.update(email=email, web=web)
-
-            return Response(status=status.HTTP_200_OK)
-        else:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-
-
-class AdminUserOrganizationNotificationSettingView(APIView):
-    permission_classes = [IsAdminUser]
+class OrganizationNotificationSettingView(GenericAPIView):
+    permission_classes = [IsAuthenticated, IsAuthenticatedToUpdateNotificationSetting]
+    serializer_class = NotificationSettingUpdateSerializer
 
     def post(self, request, user_id, organization_id):
         notification_settings = NotificationSetting.objects.filter(
             organization_id=organization_id, user_id=user_id
         )
-        serializer = NotificationSettingUpdateSerializer(data=request.data)
+        serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
-            email = serializer.validated_data.get('email')
-            web = serializer.validated_data.get('web')
-
-            # Update all notification settings for the specific organization and user
-            notification_settings.update(email=email, web=web)
-
+            for notification_setting in notification_settings:
+                serializer.update(notification_setting, serializer.validated_data)
             return Response(status=status.HTTP_200_OK)
         else:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 notifications_list = NotificationListView.as_view()
@@ -247,8 +226,5 @@ notification_read_redirect = NotificationReadRedirect.as_view()
 notification_setting_list = NotificationSettingListView.as_view()
 notification_setting = NotificationSettingView.as_view()
 organization_notification_setting = OrganizationNotificationSettingView.as_view()
-admin_user_organization_notification_setting = (
-    AdminUserOrganizationNotificationSettingView.as_view()
-)
 ignore_object_notification_list = IgnoreObjectNotificationListView.as_view()
 ignore_object_notification = IgnoreObjectNotificationView.as_view()
