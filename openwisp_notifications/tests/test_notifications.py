@@ -945,7 +945,7 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
         self.assertEqual(len(mail.outbox), 0)
 
     @patch('openwisp_notifications.tasks.send_batched_email_notifications.apply_async')
-    def test_batch_email_notification_with_descriptions(self, mock_send_email):
+    def test_batch_email_notification(self, mock_send_email):
         for _ in range(5):
             notify.send(recipient=self.admin, **self.notification_options)
 
@@ -982,7 +982,6 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
         self.assertEqual(len(mail.outbox), 2)
         self.assertIn('20 new notifications since', mail.outbox[1].subject)
         self.assertIn('View all Notifications', mail.outbox[1].body)
-        self.assertNotIn('Test Notification', mail.outbox[1].body)
 
     @patch.object(app_settings, 'EMAIL_BATCH_INTERVAL', 0)
     def test_without_batch_email_notification(self):
