@@ -969,7 +969,8 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
                 'type': 'default',
             }
         )
-        for _ in range(21):
+        display_limit = app_settings.EMAIL_BATCH_DISPLAY_LIMIT
+        for _ in range(display_limit+2):
             notify.send(recipient=self.admin, **self.notification_options)
 
         # Check if only one mail is sent initially
@@ -980,7 +981,7 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
 
         # Check if the rest of the notifications are sent in a batch
         self.assertEqual(len(mail.outbox), 2)
-        self.assertIn('20 new notifications since', mail.outbox[1].subject)
+        self.assertIn(f'{display_limit} new notifications since', mail.outbox[1].subject)
         self.assertIn('View all Notifications', mail.outbox[1].body)
 
     @patch.object(app_settings, 'EMAIL_BATCH_INTERVAL', 0)

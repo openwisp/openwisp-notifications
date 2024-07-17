@@ -278,6 +278,7 @@ def send_batched_email_notifications(instance_id):
 
         html_content = render_to_string('emails/batch_email.html', context)
         plain_text_content = render_to_string('emails/batch_email.txt', context)
+        notifications_count = min(notifications_count, display_limit)
 
         send_email(
             subject=f'[{current_site.name}] {notifications_count} new notifications since {starting_time}',
