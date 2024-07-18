@@ -3,14 +3,10 @@
 [{{ site_name }}] {{ notifications_count }} {% translate "new notifications since" %} {{ start_time }}
 
 {% for notification in notifications %}
-- {{ notification.message }}
-  {% if notification.rendered_description %}
-  {% translate "Description" %}: {{ notification.rendered_description }}
-  {% endif %}
-  {% translate "Date & Time" %}: {{ notification.timestamp|date:"F j, Y, g:i a" }}
-  {% if notification.url %}
-  {% translate "URL" %}: {{ notification.url }}
-  {% endif %}
+- {{ notification.message }}{% if notification.rendered_description %}
+  {% translate "Description" %}: {{ notification.rendered_description }}{% endif %}
+  {% translate "Date & Time" %}: {{ notification.timestamp|date:"F j, Y, g:i a" }}{% if notification.url %}
+  {% translate "URL" %}: {{ notification.url }}{% endif %}
 {% endfor %}
 
 {% if call_to_action_url %}
