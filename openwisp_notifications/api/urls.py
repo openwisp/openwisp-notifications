@@ -26,16 +26,16 @@ def get_api_urls(api_views=None):
             name='notification_read_redirect',
         ),
         # WIP
-        # path(
-        #     'user/user-setting/',
-        #     views.notification_setting_list,
-        #     name='notification_setting_list',
-        # ),
-        # path(
-        #     'user/user-setting/<uuid:pk>/',
-        #     views.notification_setting,
-        #     name='notification_setting',
-        # ),
+        path(
+            'user/user-setting/',
+            views.notification_setting_list,
+            name='notification_setting_list',
+        ),
+        path(
+            'user/user-setting/<uuid:pk>/',
+            views.notification_setting,
+            name='notification_setting',
+        ),
         path(
             'notification/ignore/',
             views.ignore_object_notification_list,
@@ -50,5 +50,10 @@ def get_api_urls(api_views=None):
             'user/<uuid:user_id>/organization/<uuid:organization_id>/setting/',
             views.organization_notification_setting,
             name='organization_notification_setting',
+        ),
+        path(
+            'user/<uuid:user_id>/preference/',
+            views.notification_preference,
+            name='notification_preference',
         ),
     ]

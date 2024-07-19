@@ -252,6 +252,8 @@ class AbstractNotificationSetting(UUIDModel):
     organization = models.ForeignKey(
         get_model_name('openwisp_users', 'Organization'),
         on_delete=models.CASCADE,
+        null=True,
+        blank=True,
     )
     web = models.BooleanField(
         _('web notifications'), null=True, blank=True, help_text=_(_RECEIVE_HELP)
