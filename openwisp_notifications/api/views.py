@@ -215,8 +215,29 @@ class OrganizationNotificationSettingView(GenericAPIView):
             for notification_setting in notification_settings:
                 serializer.update(notification_setting, serializer.validated_data)
             return Response(status=status.HTTP_200_OK)
-        else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class NotificationPreferenceView(GenericAPIView):
+    permission_classes = [IsAuthenticated, IsAuthenticatedToUpdateNotificationSetting]
+    serializer_class = NotificationSettingUpdateSerializer
+
+    def post(self, request, user_id):
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            email = serializer.validated_data.get('email')
+            web = serializer.validated_data.get('web')
+            (
+                notification_settings,
+                created,
+            ) = NotificationSetting.objects.update_or_create(
+                user_id=user_id,
+                organization=None,
+                type=None,
+                defaults={'email': email, 'web': web},
+            )
+            return Response(status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 notifications_list = NotificationListView.as_view()
@@ -228,3 +249,4 @@ notification_setting = NotificationSettingView.as_view()
 organization_notification_setting = OrganizationNotificationSettingView.as_view()
 ignore_object_notification_list = IgnoreObjectNotificationListView.as_view()
 ignore_object_notification = IgnoreObjectNotificationView.as_view()
+notification_preference = NotificationPreferenceView.as_view()
