@@ -672,19 +672,20 @@ class TestNotificationApi(
             )
 
     def test_organization_notification_setting_update(self):
-        org = Organization.objects.first()
-        url = self._get_path('organization_notification_setting', self.admin.pk, org.pk)
-        response = self.client.post(url, data={'web': True, 'email': True})
-        self.assertEqual(response.status_code, 200)
-        notification_setting = NotificationSetting.objects.filter(
-            user=self.admin, organization_id=org.pk
-        ).first()
-        self.assertTrue(notification_setting.web, True)
-        self.assertTrue(notification_setting.email, True)
-
-    def test_admin_user_organization_notification_setting_update(self):
         tester = self._create_user()
         org = Organization.objects.first()
+
+        with self.subTest('Test for current user'):
+            url = self._get_path(
+                'organization_notification_setting', self.admin.pk, org.pk
+            )
+            response = self.client.post(url, data={'web': True, 'email': True})
+            self.assertEqual(response.status_code, 200)
+            notification_setting = NotificationSetting.objects.filter(
+                user=self.admin, organization_id=org.pk
+            ).first()
+            self.assertTrue(notification_setting.web, True)
+            self.assertTrue(notification_setting.email, True)
 
         with self.subTest('Test for admin user'):
             url = self._get_path(
@@ -700,9 +701,9 @@ class TestNotificationApi(
 
         with self.subTest('Test for non-admin user'):
             self.client.force_login(tester)
-            url = self._get_path('organization_notification_setting', tester.pk, org.pk)
+            url = self._get_path('organization_notification_setting', self.admin.pk, org.pk)
             response = self.client.post(url, data={'web': True, 'email': True})
-            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.status_code, 403)
 
     @patch('openwisp_notifications.tasks.delete_ignore_object_notification.apply_async')
     def test_create_ignore_obj_notification_api(self, mocked_task):
