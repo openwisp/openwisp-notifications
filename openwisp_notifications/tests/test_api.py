@@ -701,7 +701,49 @@ class TestNotificationApi(
 
         with self.subTest('Test for non-admin user'):
             self.client.force_login(tester)
-            url = self._get_path('organization_notification_setting', self.admin.pk, org.pk)
+            url = self._get_path(
+                'organization_notification_setting',
+                self.admin.pk,
+                org.pk,
+            )
+            response = self.client.post(url, data={'web': True, 'email': True})
+            self.assertEqual(response.status_code, 403)
+
+    def test_notification_preference_update(self):
+        tester = self._create_user()
+
+        with self.subTest('Test for current user'):
+            url = self._get_path(
+                'notification_preference',
+                self.admin.pk,
+            )
+            response = self.client.post(url, data={'web': True, 'email': True})
+            self.assertEqual(response.status_code, 200)
+            notification_setting = NotificationSetting.objects.get(
+                user=self.admin, organization_id=None, type=None
+            )
+            self.assertTrue(notification_setting.web, True)
+            self.assertTrue(notification_setting.email, True)
+
+        with self.subTest('Test for admin user'):
+            url = self._get_path(
+                'notification_preference',
+                tester.pk,
+            )
+            response = self.client.post(url, data={'web': True, 'email': True})
+            self.assertEqual(response.status_code, 200)
+            notification_setting = NotificationSetting.objects.get(
+                user=tester, organization_id=None, type=None
+            )
+            self.assertTrue(notification_setting.web, True)
+            self.assertTrue(notification_setting.email, True)
+
+        with self.subTest('Test for non-admin user'):
+            self.client.force_login(tester)
+            url = self._get_path(
+                'notification_preference',
+                self.admin.pk,
+            )
             response = self.client.post(url, data={'web': True, 'email': True})
             self.assertEqual(response.status_code, 403)
 
