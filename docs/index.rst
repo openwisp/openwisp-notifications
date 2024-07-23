@@ -1,8 +1,10 @@
 Notifications
 =============
 
-**Source code**: `github.com/openwisp/openwisp-notifications
-<https://github.com/openwisp/openwisp-notifications>`_.
+.. seealso::
+
+    **Source code**: `github.com/openwisp/openwisp-notifications
+    <https://github.com/openwisp/openwisp-notifications>`_.
 
 OpenWISP Notifications is a versatile system designed to deliver email and
 web notifications. Its primary function is to enable other OpenWISP
@@ -15,8 +17,25 @@ administrators aware and responsive to important developments.
 For a comprehensive overview of features, please refer to the
 :doc:`user/intro` page.
 
+The following diagram illustrates the role of the Notifications module
+within the OpenWISP architecture.
+
+.. figure:: images/architecture-v2-openwisp-notifications.png
+    :target: ../_images/architecture-v2-openwisp-notifications.png
+    :align: center
+    :alt: OpenWISP Architecture: Notifications module
+
+    **OpenWISP Architecture: highlighted notifications module**
+
+.. important::
+
+    For an enhanced viewing experience, open the image above in a new
+    browser tab.
+
+    Refer to :doc:`/general/architecture` for more information.
+
 .. toctree::
-    :caption: User Docs
+    :caption: Notifications Usage Docs
     :maxdepth: 1
 
     ./user/intro.rst
@@ -31,7 +50,7 @@ For a comprehensive overview of features, please refer to the
     ./user/management-commands.rst
 
 .. toctree::
-    :caption: Developer Docs
+    :caption: Notifications Developer Docs
     :maxdepth: 2
 
     Developer Docs Index <developer/index.rst>
