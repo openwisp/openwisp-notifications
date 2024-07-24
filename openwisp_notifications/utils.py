@@ -56,7 +56,7 @@ def send_notification_email(notification):
     send_email(
         subject,
         description,
-        notification.message,
+        notification.email_message,
         recipients=[notification.recipient.email],
         extra_context={
             'call_to_action_url': target_url,

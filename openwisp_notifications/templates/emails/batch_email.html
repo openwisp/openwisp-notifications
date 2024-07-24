@@ -91,9 +91,9 @@
                     <span class="badge {{ notification.level }}">{{ notification.level|upper }}</span>
                     <span class="title">
                         {% if notification.url %}
-                            <a href="{{ notification.url }}" target="_blank">{{ notification.message }}</a>
+                            <a href="{{ notification.url }}" target="_blank">{{ notification.email_message }}</a>
                         {% else %}
-                            {{ notification.message }}
+                            {{ notification.email_message }}
                         {% endif %}
                     </span>
                 </h2>
