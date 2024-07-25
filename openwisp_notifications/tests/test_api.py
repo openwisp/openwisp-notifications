@@ -260,7 +260,9 @@ class TestNotificationApi(
         notify.send(sender=self.admin, type='default', target=self._get_org_user())
         n = Notification.objects.first()
         notification_setting = NotificationSetting.objects.first()
-        notification_setting_count = NotificationSetting.objects.count()
+        notification_setting_count = NotificationSetting.objects.exclude(
+            organization__isnull=True
+        ).count()
         token = self._obtain_auth_token(username='admin', password='tester')
 
         with self.subTest('Test listing all notifications'):
@@ -499,7 +501,9 @@ class TestNotificationApi(
 
     def test_notification_setting_list_api(self):
         self._create_org_user(is_admin=True)
-        number_of_settings = NotificationSetting.objects.filter(user=self.admin).count()
+        number_of_settings = NotificationSetting.objects.filter(
+            user=self.admin, organization__isnull=False
+        ).count()
         url = self._get_path('notification_setting_list')
 
         with self.subTest('Test notification setting list view'):
@@ -551,15 +555,17 @@ class TestNotificationApi(
             self.assertEqual(response.status_code, 200)
             notification_setting = response.data['results'][0]
             self.assertIn('id', notification_setting)
-            self.assertIsNone(notification_setting['web'])
-            self.assertIsNone(notification_setting['email'])
+            self.assertTrue(notification_setting['web'])
+            self.assertTrue(notification_setting['email'])
             self.assertIn('organization', notification_setting)
 
     def test_list_notification_setting_filtering(self):
         url = self._get_path('notification_setting_list')
 
         with self.subTest('Test listing notification setting without filters'):
-            count = NotificationSetting.objects.count()
+            count = NotificationSetting.objects.exclude(
+                organization__isnull=True
+            ).count()
             response = self.client.get(url)
             self.assertEqual(response.status_code, 200)
             self.assertEqual(len(response.data['results']), count)
@@ -593,7 +599,9 @@ class TestNotificationApi(
             self.assertEqual(ns['type'], 'default')
 
     def test_retreive_notification_setting_api(self):
-        notification_setting = NotificationSetting.objects.first()
+        notification_setting = NotificationSetting.objects.exclude(
+            organization__isnull=True
+        ).first()
 
         with self.subTest('Test for non-existing notification setting'):
             url = self._get_path('notification_setting', uuid.uuid4())
@@ -614,7 +622,9 @@ class TestNotificationApi(
             self.assertEqual(data['email'], notification_setting.email)
 
     def test_update_notification_setting_api(self):
-        notification_setting = NotificationSetting.objects.first()
+        notification_setting = NotificationSetting.objects.exclude(
+            organization__isnull=True
+        ).first()
         update_data = {'web': False}
 
         with self.subTest('Test for non-existing notification setting'):
