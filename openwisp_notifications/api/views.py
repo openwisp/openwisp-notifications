@@ -236,6 +236,9 @@ class NotificationPreferenceView(GenericAPIView):
                 type=None,
                 defaults={'email': email, 'web': web},
             )
+            NotificationSetting.objects.filter(user_id=user_id).update(
+                email=email, web=web
+            )
             return Response(status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
