@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import datetime, timedelta
 from unittest.mock import patch
 
 from allauth.account.models import EmailAddress
@@ -946,20 +946,51 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
 
     @patch('openwisp_notifications.tasks.send_batched_email_notifications.apply_async')
     def test_batch_email_notification(self, mock_send_email):
-        for _ in range(5):
-            notify.send(recipient=self.admin, **self.notification_options)
+        fixed_datetime = datetime(2024, 7, 26, 11, 40)
 
-        # Check if only one mail is sent initially
-        self.assertEqual(len(mail.outbox), 1)
+        with patch.object(timezone, 'now', return_value=fixed_datetime):
+            for _ in range(5):
+                notify.send(recipient=self.admin, **self.notification_options)
 
-        # Call the task
-        tasks.send_batched_email_notifications(self.admin.id)
+            # Check if only one mail is sent initially
+            self.assertEqual(len(mail.outbox), 1)
 
-        # Check if the rest of the notifications are sent in a batch
-        self.assertEqual(len(mail.outbox), 2)
-        self.assertIn('4 new notifications since', mail.outbox[1].subject)
-        self.assertNotIn('View all Notifications', mail.outbox[1].body)
-        self.assertIn('Test Notification', mail.outbox[1].body)
+            # Call the task
+            tasks.send_batched_email_notifications(self.admin.id)
+
+            # Check if the rest of the notifications are sent in a batch
+            self.assertEqual(len(mail.outbox), 2)
+
+            expected_subject = (
+                '[example.com] 4 new notifications since july 26, 2024, 11:40 a.m. UTC'
+            )
+            expected_body = """
+[example.com] 4 new notifications since july 26, 2024, 11:40 a.m. UTC
+
+
+- Test Notification
+  Description: Test Notification
+  Date & Time: July 26, 2024, 11:40 a.m.
+  URL: https://localhost:8000/admin
+
+- Test Notification
+  Description: Test Notification
+  Date & Time: July 26, 2024, 11:40 a.m.
+  URL: https://localhost:8000/admin
+
+- Test Notification
+  Description: Test Notification
+  Date & Time: July 26, 2024, 11:40 a.m.
+  URL: https://localhost:8000/admin
+
+- Test Notification
+  Description: Test Notification
+  Date & Time: July 26, 2024, 11:40 a.m.
+  URL: https://localhost:8000/admin
+            """
+
+            self.assertEqual(mail.outbox[1].subject, expected_subject)
+            self.assertEqual(mail.outbox[1].body.strip(), expected_body.strip())
 
     @patch('openwisp_notifications.tasks.send_batched_email_notifications.apply_async')
     def test_batch_email_notification_with_call_to_action(self, mock_send_email):

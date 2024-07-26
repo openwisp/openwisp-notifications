@@ -18,8 +18,6 @@ from openwisp_notifications.utils import send_notification_email
 from openwisp_utils.admin_theme.email import send_email
 from openwisp_utils.tasks import OpenwispCeleryTask
 
-EMAIL_BATCH_INTERVAL = app_settings.EMAIL_BATCH_INTERVAL
-
 User = get_user_model()
 
 Notification = load_model('Notification')
