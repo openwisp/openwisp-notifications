@@ -10,8 +10,8 @@ The ``notify`` signal
 
 Notifications can be created using the ``notify`` signal. Here's an
 example which uses the :ref:`generic_message
-<notifications_generic_message_type>` notification type to alert users
-of an account being deactivated:
+<notifications_generic_message_type>` notification type to alert users of
+an account being deactivated:
 
 .. code-block:: python
 
@@ -33,10 +33,9 @@ of an account being deactivated:
     )
 
 The above snippet will send notifications to all superusers and
-organization administrators of the target object's organization who
-have opted-in to receive notifications. If the target object is omitted or
-does not have an organization, it will only send notifications to
-superusers.
+organization administrators of the target object's organization who have
+opted-in to receive notifications. If the target object is omitted or does
+not have an organization, it will only send notifications to superusers.
 
 You can override the recipients of the notification by passing the
 ``recipient`` keyword argument. The ``recipient`` argument can be a:
@@ -60,7 +59,7 @@ The complete syntax for ``notify`` is:
         target,
         level,
         description,
-        **kwargs
+        **kwargs,
     )
 
 Since ``openwisp-notifications`` uses ``django-notifications`` under the
@@ -129,6 +128,6 @@ Then in the application code:
 
 Since the ``error_type`` notification type defined the notification
 message, you don't need to pass the ``message`` argument in the notify
-signal. The message defined  in the notification type will be used by the
+signal. The message defined in the notification type will be used by the
 notification. The ``error`` argument is used to set the value of the
 ``{error}`` placeholder in the notification message.
