@@ -1,0 +1,107 @@
+{% block styles %}
+    <style type="text/css">
+        .alert {
+            border: 1px solid #e0e0e0;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            padding: 10px;
+        }
+        .alert.error {
+            background-color: #ffefef;
+        }
+        .alert.info {
+            background-color: #f0f0f0;
+        }
+        .alert.success {
+            background-color: #e6f9e8;
+        }
+        .alert.warning {
+            background-color: #fff8e1;
+        }
+        .alert h2 {
+            margin: 0 0 5px 0;
+            font-size: 16px;
+        }
+        .alert h2 .title {
+            display: inline-block;
+            max-width: 80%;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            vertical-align: middle;
+        }
+        .alert p {
+            margin: 0;
+            font-size: 14px;
+            color: #666;
+        }
+        .alert .title p {
+            display: inline;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin-right: 5px;
+            color: white;
+        }
+        .badge.error {
+            background-color: #d9534f;
+        }
+        .badge.info {
+            background-color: #333333;
+        }
+        .badge.success {
+            background-color: #1c8828;
+        }
+        .badge.warning {
+            background-color: #f0ad4e;
+        }
+        .alert a {
+            text-decoration: none;
+        }
+        .alert.error a, .alert.error h2 {
+            color: #d9534f;
+        }
+        .alert.info a, .alert.info h2 {
+            color: #333333;
+        }
+        .alert.success a, .alert.success h2 {
+            color: #1c8828;
+        }
+        .alert.warning a, .alert.warning h2 {
+            color: #f0ad4e;
+        }
+        .alert a:hover {
+            text-decoration: underline;
+        }
+    </style>
+{% endblock styles %}
+
+{% block mail_body %}
+    <div>
+        {% for notification in notifications %}
+            <div class="alert {{ notification.level }}">
+                <h2>
+                    <span class="badge {{ notification.level }}">{{ notification.level|upper }}</span>
+                    <span class="title">
+                        {% if notification.url %}
+                            <a href="{{ notification.url }}" target="_blank">{{ notification.email_message }}</a>
+                        {% else %}
+                            {{ notification.email_message }}
+                        {% endif %}
+                    </span>
+                </h2>
+                <p>{{ notification.timestamp|date:"F j, Y, g:i a" }}</p>
+                {% if notification.rendered_description %}
+                    <p>{{ notification.rendered_description|safe }}</p>
+                {% endif %}
+            </div>
+        {% endfor %}
+    </div>
+{% endblock mail_body %}
