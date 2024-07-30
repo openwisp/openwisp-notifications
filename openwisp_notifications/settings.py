@@ -36,6 +36,15 @@ SOUND = getattr(
     'OPENWISP_NOTIFICATIONS_SOUND',
     'openwisp-notifications/audio/notification_bell.mp3',
 )
+
+EMAIL_BATCH_INTERVAL = getattr(
+    settings, 'OPENWISP_NOTIFICATIONS_EMAIL_BATCH_INTERVAL', 30 * 60  # 30 minutes
+)
+
+EMAIL_BATCH_DISPLAY_LIMIT = getattr(
+    settings, 'OPENWISP_NOTIFICATIONS_EMAIL_BATCH_DISPLAY_LIMIT', 15
+)
+
 # Remove the leading "/static/" here as it will
 # conflict with the "static()" call in context_processors.py.
 # This is done for backward compatibility.
