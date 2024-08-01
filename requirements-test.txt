@@ -1,7 +1,7 @@
 openwisp-utils[qa,selenium] @ https://github.com/openwisp/openwisp-utils/tarball/master
-django-cors-headers~=4.0.0
-django-redis~=5.2.0
-channels_redis~=4.1.0
-pytest-asyncio~=0.21.0
-pytest-django~=4.5.0
-freezegun~=1.2.2
+django-cors-headers~=4.4.0
+django-redis~=5.4.0
+channels_redis~=4.2.0
+pytest-asyncio~=0.23.8
+pytest-django~=4.8.0
+freezegun~=1.5.1
