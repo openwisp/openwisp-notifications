@@ -1,4 +1,5 @@
 from django.contrib.contenttypes.models import ContentType
+from django.core.exceptions import PermissionDenied
 from django.http import Http404, HttpResponseRedirect
 from django.urls import reverse
 from django_filters.rest_framework import DjangoFilterBackend
@@ -123,6 +124,14 @@ class BaseNotificationSettingView(GenericAPIView):
     def get_queryset(self):
         if getattr(self, 'swagger_fake_view', False):
             return NotificationSetting.objects.none()  # pragma: no cover
+
+        user_id = self.kwargs.get('user_id')
+
+        if user_id:
+            if not (self.request.user.id == user_id or self.request.user.is_staff):
+                raise PermissionDenied()
+            return NotificationSetting.objects.filter(user_id=user_id)
+
         return NotificationSetting.objects.filter(user=self.request.user)
 
 
