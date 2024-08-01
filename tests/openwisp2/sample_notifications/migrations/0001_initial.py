@@ -13,7 +13,6 @@ from openwisp_notifications.types import NOTIFICATION_CHOICES
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [

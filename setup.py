@@ -43,7 +43,7 @@ setup(
     name='openwisp-notifications',
     version=get_version(),
     license='GPL3',
-    author='Gagan Deep',
+    author='OpenWISP',
     author_email='support@openwisp.io',
     description='Notifications module of OpenWISP',
     long_description=open('README.rst').read(),
@@ -56,7 +56,7 @@ setup(
     zip_safe=False,
     install_requires=get_install_requires(),
     classifiers=[
-        'Development Status :: 3 - Alpha',
+        'Development Status :: 5 - Production/Stable',
         'Environment :: Web Environment',
         'Topic :: Internet :: WWW/HTTP',
         'Topic :: System :: Networking',
