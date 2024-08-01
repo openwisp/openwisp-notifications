@@ -1,0 +1,41 @@
+{% extends "admin/base_site.html" %}
+
+{% load i18n %}
+{% load static %}
+
+{% block title %}{% trans "Notification Settings" %}{% endblock %}
+
+{% block extrastyle %}
+{{ block.super }}
+<link rel="stylesheet" type="text/css" href="{% static 'openwisp-notifications/css/settings.css' %}" />
+{% endblock extrastyle %}
+
+{% block breadcrumbs %}
+<div class='breadcrumbs'>
+<a href='{% url 'admin:index' %}'>{% trans 'Home' %}</a>
+&rsaquo; {% trans 'Notification Preferences' %}
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+  <h2>Notification Preferences</h2>
+
+  <div class="global-settings">
+    <strong>Global Settings:</strong>
+    <label><input type="checkbox" id="global-email" checked /> Email</label>
+    <label><input type="checkbox" id="global-web" checked /> Web</label>
+  </div>
+
+  <div id="org-panels">
+    <!-- Organization panels will be dynamically inserted here -->
+  </div>
+</div>
+{% endblock content %}
+
+{% block footer %}
+  {{ block.super }}
+  {% if request.user.is_authenticated %}
+    <script type="text/javascript" src="{% static 'openwisp-notifications/js/settings.js' %}"></script>
+  {% endif %}
+{% endblock footer %}
