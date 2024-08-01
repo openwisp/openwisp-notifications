@@ -1,0 +1,62 @@
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+h2 {
+  margin-bottom: 10px;
+}
+.global-settings {
+  margin-bottom: 20px;
+}
+.org-panel {
+  background-color: #fff;
+  border: 1px solid #ddd;
+}
+.org-header {
+  background-color: #e0e0e0;
+  padding: 10px;
+  font-weight: bold;
+  display: flex;
+  justify-content: space-between;
+  cursor: pointer;
+}
+.org-content {
+  padding: 10px;
+  display: none;
+}
+.org-content.active {
+  display: block;
+}
+table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+th,
+td {
+  padding: 8px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+th {
+  background-color: #f2f2f2;
+}
+th:not(:last-child),
+td:not(:last-child) {
+  border-right: 1px solid #ddd;
+}
+th:not(:first-child),
+td:not(:first-child) {
+  text-align: center;
+}
+.checkbox {
+  width: 15px;
+  height: 15px;
+  text-align: center;
+}
+.no-settings {
+  padding: 10px;
+  text-align: center;
+  color: #666;
+}
