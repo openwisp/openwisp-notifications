@@ -67,7 +67,6 @@ def reverse_notification_setting_groups_permissions(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
         swapper.dependency('openwisp_users', 'Organization'),

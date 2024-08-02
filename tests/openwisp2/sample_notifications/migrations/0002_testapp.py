@@ -8,7 +8,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ('openwisp_users', '0007_unique_email'),
         ('sample_notifications', '0001_initial'),
