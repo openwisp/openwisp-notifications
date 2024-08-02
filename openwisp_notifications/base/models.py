@@ -139,7 +139,7 @@ class AbstractNotification(UUIDModel, BaseNotification):
     @cached_property
     def rendered_description(self):
         if not self.description:
-            return
+            return ''
         with notification_render_attributes(self):
             data = self.data or {}
             desc = self.description.format(notification=self, **data)
@@ -204,7 +204,7 @@ class AbstractNotification(UUIDModel, BaseNotification):
             cache.set(
                 cache_key,
                 obj,
-                timeout=app_settings.OPENWISP_NOTIFICATIONS_CACHE_TIMEOUT,
+                timeout=app_settings.CACHE_TIMEOUT,
             )
         return obj
 

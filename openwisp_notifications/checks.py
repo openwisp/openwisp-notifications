@@ -9,7 +9,7 @@ from openwisp_notifications import settings as app_settings
 @checks.register
 def check_cors_configuration(app_configs, **kwargs):
     errors = []
-    if not app_settings.OPENWISP_NOTIFICATIONS_HOST:
+    if not app_settings.HOST:
         return errors
 
     if not (

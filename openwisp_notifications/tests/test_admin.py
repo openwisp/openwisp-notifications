@@ -129,7 +129,7 @@ class TestAdmin(BaseTestAdmin):
     # For more info, look at TestAdmin.test_default_notification_setting
     @patch.object(
         app_settings,
-        'OPENWISP_NOTIFICATIONS_SOUND',
+        'SOUND',
         '/static/notification.mp3',
     )
     def test_notification_sound_setting(self):
@@ -141,7 +141,7 @@ class TestAdmin(BaseTestAdmin):
 
     @patch.object(
         app_settings,
-        'OPENWISP_NOTIFICATIONS_HOST',
+        'HOST',
         'https://example.com',
     )
     def test_notification_host_setting(self):
