@@ -751,7 +751,7 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
                 type='test_type',
             ).update(email=True)
             self._create_notification()
-            self.assertEqual(len(mail.outbox), 2)
+            self.assertEqual(len(mail.outbox), 1)
 
     @mock_notification_types
     def test_notification_type_web_notification_setting_true(self):
