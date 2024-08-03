@@ -12,7 +12,7 @@ omit = [
 extend_exclude = ["**/*.py"]
 
 [tool.isort]
-known_third_party = ["django", "django_x509"]
+known_third_party = ["django", "django_x509", "notifications"]
 known_first_party = ["openwisp_users", "openwisp_utils", "openwisp_notifications"]
 default_section = "THIRDPARTY"
 line_length = 88
