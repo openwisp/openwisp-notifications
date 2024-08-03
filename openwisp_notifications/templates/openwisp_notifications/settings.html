@@ -3,34 +3,45 @@
 {% load i18n %}
 {% load static %}
 
-{% block title %}{% trans "Notification Settings" %}{% endblock %}
+{% block title %}
+  {% trans "Notification Settings" %}
+{% endblock %}
 
 {% block extrastyle %}
-{{ block.super }}
-<link rel="stylesheet" type="text/css" href="{% static 'openwisp-notifications/css/settings.css' %}" />
+  {{ block.super }}
+  <link rel="stylesheet" type="text/css" href="{% static 'openwisp-notifications/css/settings.css' %}" />
 {% endblock extrastyle %}
 
 {% block breadcrumbs %}
-<div class='breadcrumbs'>
-<a href='{% url 'admin:index' %}'>{% trans 'Home' %}</a>
-&rsaquo; {% trans 'Notification Preferences' %}
-</div>
-{% endblock %}
+  <div class="breadcrumbs">
+    {% if request.user.id == user.id %}
+      <a href="{% url 'admin:index' %}">{% trans 'Home' %}</a> &rsaquo;
+    {% else %}
+      <a href="{% url 'admin:index' %}">{% trans 'Home' %}</a> &rsaquo;
+      <a href="{% url 'admin:app_list' app_label='openwisp_users' %}">{% trans 'Users and Organizations' %}</a> &rsaquo;
+      <a href="{% url 'admin:openwisp_users_user_changelist' %}">{% trans 'Users' %}</a> &rsaquo;
+      <a href="{% url 'admin:openwisp_users_user_change' user.id %}">{{ user.username }}</a> &rsaquo;
+    {% endif %}
+    {% trans 'Notification Preferences' %}
+  </div>
+{% endblock breadcrumbs %}
 
 {% block content %}
-<div class="container">
-  <h2>Notification Preferences</h2>
-
-  <div class="global-settings">
-    <strong>Global Settings:</strong>
-    <label><input type="checkbox" id="global-email" checked /> Email</label>
-    <label><input type="checkbox" id="global-web" checked /> Web</label>
+  <div class="container" data-user-id="{{ user.id }}">
+    <h2>Notification Preferences</h2>
+    <div class="global-settings">
+      <strong>Global Settings:</strong>
+      <label>
+        <input type="checkbox" id="global-email" checked />
+        Email
+      </label>
+      <label>
+        <input type="checkbox" id="global-web" checked />
+        Web
+      </label>
+    </div>
+    <div id="org-panels"></div>
   </div>
-
-  <div id="org-panels">
-    <!-- Organization panels will be dynamically inserted here -->
-  </div>
-</div>
 {% endblock content %}
 
 {% block footer %}
