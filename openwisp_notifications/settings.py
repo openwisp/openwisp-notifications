@@ -1,6 +1,7 @@
 import re
 
 from django.conf import settings
+
 from notifications.settings import CONFIG_DEFAULTS
 
 CONFIG_DEFAULTS.update({'USE_JSONFIELD': True})
