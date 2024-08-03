@@ -12,8 +12,16 @@ def get_urls(api_views=None, social_views=None):
     """
     urls = [
         path('api/v1/notifications/', include(get_api_urls(api_views))),
-        path('notifications/settings/', notifiation_setting_page),
-        path('notifications/user/<uuid:pk>/settings/', notifiation_setting_page),
+        path(
+            'notifications/settings/',
+            notifiation_setting_page,
+            name='notifications_settings',
+        ),
+        path(
+            'notifications/user/<uuid:pk>/settings/',
+            notifiation_setting_page,
+            name='user_notification_settings',
+        ),
     ]
     return urls
 

@@ -2,18 +2,25 @@
 
 (function ($) {
     $(document).ready(function () {
-        fetchNotificationSettings();
+        const userId = $('.container').data('user-id');
+        fetchNotificationSettings(userId);
     });
 
-    function fetchNotificationSettings() {
+    function fetchNotificationSettings(userId) {
+        console.log("Fetching notification settings...");
+        console.log(`/api/v1/notifications/user/${userId}/user-setting/`)
         $.ajax({
-            url: "/api/v1/notifications/user/user-setting",
+            url: `/api/v1/notifications/user/${userId}/user-setting/`,
             method: "GET",
             success: function (data) {
                 const groupedData = groupByOrganization(data.results);
                 renderNotificationSettings(groupedData);
                 initializeEventListeners();
             },
+            error: function (error) {
+                console.error("Error fetching notification settings:", error);
+                showToast('error', 'Error fetching notification settings. Please try again.');
+            }
         });
     }
 
@@ -109,7 +116,7 @@
             const column = $(this).hasClass("email-checkbox") ? "email" : "web";
             const mainCheckbox = $(this).closest("table").find(`.main-checkbox[data-column="${column}"]`);
             const checkboxes = $(this).closest("table").find(`.${column}-checkbox`);
-            mainCheckbox.prop("checked", checkboxes.length === checkboxes.filter(":checked").length);
+            mainCheckbox.prop("checked", checkboxes.length === checkboxes.filter(':checked').length);
             showToast('success', 'Settings updated successfully.');
         });
 
@@ -133,13 +140,13 @@
             </div>
         `);
         $('.ow-notification-toast-wrapper').prepend(toast);
-        // toast.slideDown('slow', function () {
-        //     setTimeout(function () {
-        //         toast.slideUp('slow', function () {
-        //             toast.remove();
-        //         });
-        //     }, 3000);
-        // });
+        toast.slideDown('slow', function () {
+            setTimeout(function () {
+                toast.slideUp('slow', function () {
+                    toast.remove();
+                });
+            }, 3000);
+        });
 
         $(document).on('click', '.ow-notification-toast .ow-notify-close.btn', function () {
             toast.remove();
