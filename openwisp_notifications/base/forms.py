@@ -9,9 +9,11 @@ class NotificationSettingForm(ModelForm):
         if instance:
             kwargs['initial'] = {
                 'web': instance.web_notification,
-                'email': instance.email_notification
-                if instance.web_notification
-                else instance.web_notification,
+                'email': (
+                    instance.email_notification
+                    if instance.web_notification
+                    else instance.web_notification
+                ),
             }
         super().__init__(*args, **kwargs)
         try:
