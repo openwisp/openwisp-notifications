@@ -47,9 +47,9 @@ the OpenWISP documentation.
 Documentation
 -------------
 
+- `Usage documentation <https://openwisp.io/docs/dev/notifications/>`_
 - `Developer documentation
   <https://openwisp.io/docs/dev/notifications/developer/>`_
-- `User documentation <https://openwisp.io/docs/dev/notifications/>`_
 
 ----
 
