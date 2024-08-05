@@ -4,7 +4,7 @@
     let isGlobalChange = false;
 
     $(document).ready(function () {
-        const userId = $('.container').data('user-id');
+        const userId = $('.settings-container').data('user-id');
         fetchNotificationSettings(userId);
         initializeGlobalSettingsEventListener(userId);
     });
