@@ -1,17 +1,10 @@
-.container {
+.settings-container {
   max-width: 1200px;
   margin: 0 auto;
   padding: 20px;
 }
-h2 {
-  margin-bottom: 10px;
-}
 .global-settings {
-  margin-bottom: 20px;
-}
-.org-panel {
-  background-color: #fff;
-  border: 1px solid #ddd;
+  margin: 10px 0 20px;
 }
 .org-header {
   background-color: #e0e0e0;
@@ -51,8 +44,8 @@ td:not(:first-child) {
   text-align: center;
 }
 .checkbox {
-  width: 15px;
-  height: 15px;
+  width: 17px;
+  height: 17px;
   text-align: center;
 }
 .no-settings {
