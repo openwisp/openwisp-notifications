@@ -132,7 +132,7 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
             organization_id=target_obj.organization.pk,
             type='default',
         )
-        self.assertEqual(notification_preference.email, None)
+        self.assertTrue(notification_preference.email)
         notification_preference.web = False
         notification_preference.save()
         notification_preference.refresh_from_db()
@@ -743,7 +743,7 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
 
         with self.subTest('Test user email preference not defined'):
             self._create_notification()
-            self.assertEqual(len(mail.outbox), 0)
+            self.assertEqual(len(mail.outbox), 1)
 
         with self.subTest('Test user email preference is "True"'):
             NotificationSetting.objects.filter(
@@ -797,7 +797,7 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
 
         with self.subTest('Test user web preference not defined'):
             self._create_notification()
-            self.assertEqual(notification_queryset.count(), 0)
+            self.assertEqual(notification_queryset.count(), 1)
 
         with self.subTest('Test user email preference is "True"'):
             notification_setting = NotificationSetting.objects.get(
@@ -806,14 +806,14 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
             notification_setting.email = True
             notification_setting.save()
             notification_setting.refresh_from_db()
-            self.assertFalse(notification_setting.email)
+            self.assertTrue(notification_setting.email)
 
         with self.subTest('Test user web preference is "True"'):
             NotificationSetting.objects.filter(
                 user=self.admin, type='test_type'
             ).update(web=True)
             self._create_notification()
-            self.assertEqual(notification_queryset.count(), 1)
+            self.assertEqual(notification_queryset.count(), 2)
 
     @mock_notification_types
     def test_notification_type_email_web_notification_defaults(self):
