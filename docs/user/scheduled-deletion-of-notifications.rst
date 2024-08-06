@@ -11,7 +11,7 @@ Scheduled Deletion of Notifications
     OpenWISP, or who have deployed OpenWISP in a different way.
 
 OpenWISP Notifications provides a celery task to automatically delete
-notifications older than a pre-configured number of days. In order to run
+notifications older than a preconfigured number of days. In order to run
 this task periodically, you will need to configure
 ``CELERY_BEAT_SCHEDULE``.
 

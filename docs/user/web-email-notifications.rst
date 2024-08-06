@@ -24,7 +24,7 @@ Notification Widget
 A JavaScript widget has been added to make consuming notifications easy
 for users. The notification widget provides the following features:
 
-- A minimalistic UI to help users complete tasks quickly.
+- User Interface to help users complete tasks quickly.
 - Dynamically loads notifications with infinite scrolling to prevent
   unnecessary network requests.
 - Option to filter unread notifications.

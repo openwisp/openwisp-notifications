@@ -272,7 +272,7 @@ the `"First steps with Django" section in the celery documentation
 14. Import Celery Tasks
 -----------------------
 
-Add the following in your settings.py to import celery tasks from
+Add the following in your ``settings.py`` to import Celery tasks from
 ``openwisp_notifications`` app.
 
 .. code-block:: python
@@ -282,9 +282,8 @@ Add the following in your settings.py to import celery tasks from
 15. Register Template Tags
 --------------------------
 
-If you need to use template tags of *openwisp_notifications*, you will
-need to register as shown in `"templatetags/notification_tags.py" of
-sample_notifications
+If you need to use template tags, you will need to register them as shown
+in `"templatetags/notification_tags.py" of sample_notifications
 <https://github.com/openwisp/openwisp-notifications/blob/master/tests/openwisp2/sample_notifications/templatetags/notification_tags.py>`_.
 
 For more information about template tags in django, please refer to the
@@ -322,7 +321,7 @@ See the `tests of the sample_notifications
 to find out how to do this.
 
 **Note**: Some tests will fail if ``templatetags`` and ``admin/base.html``
-are not configured properly. See preceeding sections to configure them
+are not configured properly. See preceding sections to configure them
 properly.
 
 Other base classes that can be inherited and extended

@@ -80,7 +80,7 @@ The ``notify`` signal supports the following additional parameters:
 ``email_subject`` Sets subject of email notification to be sent.
 
                   Defaults to the notification message.
-``url``           Adds a URL in the email text, eg:
+``url``           Adds a URL in the email text, e.g.:
 
                   ``For more information see <url>.``
 

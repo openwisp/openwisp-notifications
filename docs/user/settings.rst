@@ -65,7 +65,7 @@ default `notification_bell.mp3
 This setting defines notification sound to be played when notification is
 received in real-time on admin site.
 
-Provide a relative path (hosted on your webserver) to audio file as show
+Provide a relative path (hosted on your web server) to audio file as show
 below.
 
 .. code-block:: python
