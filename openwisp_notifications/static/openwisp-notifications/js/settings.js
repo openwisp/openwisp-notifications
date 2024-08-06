@@ -1,5 +1,9 @@
 'use strict';
 
+if (typeof gettext === 'undefined') {
+    var gettext = function(word){ return word; };
+}
+
 (function ($) {
     let isGlobalChange = false;
 
@@ -15,7 +19,7 @@
             renderNotificationSettings(groupedData);
             initializeEventListeners(userId);
         }).fail(function () {
-            showToast('error', 'Error fetching notification settings. Please try again.');
+            showToast('error', gettext('Error fetching notification settings. Please try again.'));
         });
     }
 
@@ -27,7 +31,7 @@
     }
 
     function renderNotificationSettings(data) {
-        const orgPanelsContainer = $("#org-panels").empty();
+        const orgPanelsContainer = $('#org-panels').empty();
         Object.keys(data).sort().forEach(function(orgName) {
             const orgSettings = data[orgName].sort(function(a, b) {
                 return a.type.localeCompare(b.type);
@@ -38,14 +42,14 @@
                 '<div class="org-content"></div>' +
                 '</div>'
             );
-            const orgContent = orgPanel.find(".org-content");
+            const orgContent = orgPanel.find('.org-content');
             if (orgSettings.length > 0) {
                 const table = $(
                     '<table>' +
                     '<tr>' +
-                    '<th>Settings</th>' +
-                    '<th><input type="checkbox" class="checkbox main-checkbox" data-organization-id="' + orgSettings[0].organization + '" data-column="email" /> Email</th>' +
-                    '<th><input type="checkbox" class="checkbox main-checkbox" data-column="web" data-organization-id="' + orgSettings[0].organization + '" /> Web</th>' +
+                    '<th>' + gettext('Settings') + '</th>' +
+                    '<th><input type="checkbox" class="checkbox main-checkbox" data-organization-id="' + orgSettings[0].organization + '" data-column="email" /> ' + gettext('Email') + '</th>' +
+                    '<th><input type="checkbox" class="checkbox main-checkbox" data-column="web" data-organization-id="' + orgSettings[0].organization + '" /> ' + gettext('Web') + '</th>' +
                     '</tr>' +
                     '</table>'
                 );
@@ -53,8 +57,8 @@
                     const row = $(
                         '<tr>' +
                         '<td>' + setting.type + '</td>' +
-                        '<td><input type="checkbox" class="checkbox email-checkbox" ' + (setting.email ? "checked" : "") + ' data-pk="' + setting.id + '" data-organization-id="' + setting.organization + '" data-type="email" /></td>' +
-                        '<td><input type="checkbox" class="checkbox web-checkbox" ' + (setting.web ? "checked" : "") + ' data-pk="' + setting.id + '" data-organization-id="' + setting.organization + '" data-type="web" /></td>' +
+                        '<td><input type="checkbox" class="checkbox email-checkbox" ' + (setting.email ? 'checked' : '') + ' data-pk="' + setting.id + '" data-organization-id="' + setting.organization + '" data-type="email" /></td>' +
+                        '<td><input type="checkbox" class="checkbox web-checkbox" ' + (setting.web ? 'checked' : '') + ' data-pk="' + setting.id + '" data-organization-id="' + setting.organization + '" data-type="web" /></td>' +
                         '</tr>'
                     );
                     table.append(row);
@@ -62,7 +66,7 @@
                 orgContent.append(table);
                 updateMainCheckboxes(table);
             } else {
-                orgContent.append('<div class="no-settings">No settings available for this organization</div>');
+                orgContent.append('<div class="no-settings">' + gettext('No settings available for this organization') + '</div>');
             }
             orgPanelsContainer.append(orgPanel);
         });
@@ -78,9 +82,9 @@
 
     function initializeEventListeners(userId) {
         $(document).on('click', '.org-header', function () {
-            const toggle = $(this).find(".toggle");
-            toggle.text(toggle.text() === "▼" ? "▲" : "▼");
-            $(this).next(".org-content").toggleClass("active");
+            const toggle = $(this).find('.toggle');
+            toggle.text(toggle.text() === '▼' ? '▲' : '▼');
+            $(this).next('.org-content').toggleClass('active');
         });
 
         $(document).on('change', '.email-checkbox, .web-checkbox', function () {
@@ -109,13 +113,13 @@
             type: 'PATCH',
             url: '/api/v1/notifications/user/' + userId + '/user-setting/' + checkbox.data('pk') + '/',
             headers: { 'X-CSRFToken': $('input[name="csrfmiddlewaretoken"]').val() },
-            contentType: "application/json",
+            contentType: 'application/json',
             data: JSON.stringify(data),
             success: function () {
-                showToast('success', 'Settings updated successfully.');
+                showToast('success', gettext('Settings updated successfully.'));
             },
             error: function () {
-                showToast('error', 'Something went wrong. Please try again.');
+                showToast('error', gettext('Something went wrong. Please try again.'));
             }
         });
     }
@@ -130,13 +134,13 @@
             type: 'POST',
             url: '/api/v1/notifications/user/' + userId + '/organization/' + organizationId + '/setting/',
             headers: { 'X-CSRFToken': $('input[name="csrfmiddlewaretoken"]').val() },
-            contentType: "application/json",
+            contentType: 'application/json',
             data: JSON.stringify(data),
             success: function () {
-                showToast('success', 'Organization settings updated successfully.');
+                showToast('success', gettext('Organization settings updated successfully.'));
             },
             error: function () {
-                showToast('error', 'Something went wrong. Please try again.');
+                showToast('error', gettext('Something went wrong. Please try again.'));
             }
         });
     }
@@ -166,13 +170,13 @@
                 type: 'POST',
                 url: '/api/v1/notifications/user/' + userId + '/preference/',
                 headers: { 'X-CSRFToken': $('input[name="csrfmiddlewaretoken"]').val() },
-                contentType: "application/json",
+                contentType: 'application/json',
                 data: JSON.stringify(data),
                 success: function () {
-                    showToast('success', 'Global settings updated successfully.');
+                    showToast('success', gettext('Global settings updated successfully.'));
                 },
                 error: function () {
-                    showToast('error', 'Something went wrong. Please try again.');
+                    showToast('error', gettext('Something went wrong. Please try again.'));
                 },
                 complete: function() {
                     isGlobalChange = false;
