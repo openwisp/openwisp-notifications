@@ -19,9 +19,9 @@ class NotificationSettingPage(LoginRequiredMixin, UserPassesTestMixin, TemplateV
                 user = User.objects.get(pk=user_id)
                 # Only admin should access other users settings
                 if not self.request.user.is_staff:
-                    raise Http404("You do not have permission to access this page.")
+                    raise Http404('You do not have permission to access this page.')
             except User.DoesNotExist:
-                raise Http404("User does not exist")
+                raise Http404('User does not exist')
         else:
             user = self.request.user
 
@@ -29,9 +29,9 @@ class NotificationSettingPage(LoginRequiredMixin, UserPassesTestMixin, TemplateV
         return context
 
     def test_func(self):
-        """
+        '''
         This method ensures that only admins can access the view when a custom user ID is provided.
-        """
+        '''
         if 'pk' in self.kwargs:
             return self.request.user.is_staff
         return True
