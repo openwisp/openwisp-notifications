@@ -48,8 +48,8 @@ if (typeof gettext === 'undefined') {
                     '<table>' +
                     '<tr>' +
                     '<th>' + gettext('Settings') + '</th>' +
-                    '<th><input type="checkbox" class="checkbox main-checkbox" data-organization-id="' + orgSettings[0].organization + '" data-column="email" /> ' + gettext('Email') + '</th>' +
                     '<th><input type="checkbox" class="checkbox main-checkbox" data-column="web" data-organization-id="' + orgSettings[0].organization + '" /> ' + gettext('Web') + '</th>' +
+                    '<th><input type="checkbox" class="checkbox main-checkbox" data-organization-id="' + orgSettings[0].organization + '" data-column="email" /> ' + gettext('Email') + '</th>' +
                     '</tr>' +
                     '</table>'
                 );
@@ -57,8 +57,8 @@ if (typeof gettext === 'undefined') {
                     const row = $(
                         '<tr>' +
                         '<td>' + setting.type + '</td>' +
-                        '<td><input type="checkbox" class="checkbox email-checkbox" ' + (setting.email ? 'checked' : '') + ' data-pk="' + setting.id + '" data-organization-id="' + setting.organization + '" data-type="email" /></td>' +
                         '<td><input type="checkbox" class="checkbox web-checkbox" ' + (setting.web ? 'checked' : '') + ' data-pk="' + setting.id + '" data-organization-id="' + setting.organization + '" data-type="web" /></td>' +
+                        '<td><input type="checkbox" class="checkbox email-checkbox" ' + (setting.email ? 'checked' : '') + ' data-pk="' + setting.id + '" data-organization-id="' + setting.organization + '" data-type="email" /></td>' +
                         '</tr>'
                     );
                     table.append(row);
@@ -127,8 +127,8 @@ if (typeof gettext === 'undefined') {
     function updateOrganizationSetting(userId, checkbox) {
         const organizationId = checkbox.data('organization-id');
         const data = {
-            email: checkbox.closest('tr').find('.main-checkbox[data-column="email"]').is(':checked'),
-            web: checkbox.closest('tr').find('.main-checkbox[data-column="web"]').is(':checked')
+            web: checkbox.closest('tr').find('.main-checkbox[data-column="web"]').is(':checked'),
+            email: checkbox.closest('tr').find('.main-checkbox[data-column="email"]').is(':checked')
         };
         $.ajax({
             type: 'POST',
@@ -146,25 +146,25 @@ if (typeof gettext === 'undefined') {
     }
 
     function updateOrgLevelCheckboxes(organizationId) {
-        const emailCheckboxes = $('.email-checkbox[data-organization-id="' + organizationId + '"]');
         const webCheckboxes = $('.web-checkbox[data-organization-id="' + organizationId + '"]');
-        const emailMainCheckbox = $('.main-checkbox[data-column="email"][data-organization-id="' + organizationId + '"]');
+        const emailCheckboxes = $('.email-checkbox[data-organization-id="' + organizationId + '"]');
         const webMainCheckbox = $('.main-checkbox[data-column="web"][data-organization-id="' + organizationId + '"]');
-        emailMainCheckbox.prop('checked', emailCheckboxes.length === emailCheckboxes.filter(':checked').length);
+        const emailMainCheckbox = $('.main-checkbox[data-column="email"][data-organization-id="' + organizationId + '"]');
         webMainCheckbox.prop('checked', webCheckboxes.length === webCheckboxes.filter(':checked').length);
+        emailMainCheckbox.prop('checked', emailCheckboxes.length === emailCheckboxes.filter(':checked').length);
     }
 
     function initializeGlobalSettingsEventListener(userId) {
         $('#global-email, #global-web').change(function () {
-            const isGlobalEmailChecked = $('#global-email').is(':checked');
             const isGlobalWebChecked = $('#global-web').is(':checked');
-            const data = { email: isGlobalEmailChecked, web: isGlobalWebChecked };
+            const isGlobalEmailChecked = $('#global-email').is(':checked');
+            const data = { web: isGlobalWebChecked, email: isGlobalEmailChecked };
 
             isGlobalChange = true;
-            $('.main-checkbox[data-column="email"]').prop('checked', isGlobalEmailChecked).change();
             $('.main-checkbox[data-column="web"]').prop('checked', isGlobalWebChecked).change();
-            $('.email-checkbox').prop('checked', isGlobalEmailChecked);
+            $('.main-checkbox[data-column="email"]').prop('checked', isGlobalEmailChecked).change();
             $('.web-checkbox').prop('checked', isGlobalWebChecked);
+            $('.email-checkbox').prop('checked', isGlobalEmailChecked);
 
             $.ajax({
                 type: 'POST',
