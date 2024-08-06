@@ -26,6 +26,7 @@ class NotificationSettingAdminMixin:
             super()
             .get_queryset(request)
             .filter(deleted=False)
+            .exclude(organization=None)
             .prefetch_related('organization')
         )
 
