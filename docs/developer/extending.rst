@@ -258,8 +258,8 @@ For more information about URL configuration in django, please refer to
 the `"Routing" section in the Channels documentation
 <https://channels.readthedocs.io/en/latest/topics/routing.html>`_.
 
-13. Create celery.py
---------------------
+13. Create ``celery.py``
+------------------------
 
 Please refer to the `celery.py
 <https://github.com/openwisp/openwisp-notifications/blob/master/tests/openwisp2/celery.py>`_
