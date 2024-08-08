@@ -1,7 +1,7 @@
 Scheduled Deletion of Notifications
 ===================================
 
-.. note::
+.. important::
 
     If you have deployed OpenWISP using :doc:`ansible-openwisp2
     </ansible/index>` or :doc:`docker-openwisp </docker/index>`, then this
@@ -13,7 +13,9 @@ Scheduled Deletion of Notifications
 OpenWISP Notifications provides a celery task to automatically delete
 notifications older than a preconfigured number of days. In order to run
 this task periodically, you will need to configure
-``CELERY_BEAT_SCHEDULE``.
+``CELERY_BEAT_SCHEDULE`` in the Django project settings.
+
+.. include:: /partials/settings-note.rst
 
 The celery task takes only one argument, i.e. number of days. You can
 provide any number of days in `args` key while configuring
@@ -24,15 +26,17 @@ automatically, then configure ``CELERY_BEAT_SCHEDULE`` as follows:
 
 .. code-block:: python
 
-    CELERY_BEAT_SCHEDULE = {
-        "delete_old_notifications": {
-            "task": "openwisp_notifications.tasks.delete_old_notifications",
-            "schedule": timedelta(days=1),
-            "args": (
-                10,
-            ),  # Here we have defined 10 instead of 90 as shown in setup instructions
-        },
-    }
+    CELERY_BEAT_SCHEDULE.update(
+        {
+            "delete_old_notifications": {
+                "task": "openwisp_notifications.tasks.delete_old_notifications",
+                "schedule": timedelta(days=1),
+                "args": (
+                    10,
+                ),  # Here we have defined 10 instead of 90 as shown in setup instructions
+            },
+        }
+    )
 
 Please refer to `"Periodic Tasks" section of Celery's documentation
 <https://docs.celeryproject.org/en/stable/userguide/periodic-tasks.html>`_
