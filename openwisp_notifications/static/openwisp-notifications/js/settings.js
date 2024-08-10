@@ -32,7 +32,7 @@ if (typeof gettext === 'undefined') {
 
     function renderNotificationSettings(data) {
         const orgPanelsContainer = $('#org-panels').empty();
-        Object.keys(data).sort().forEach(function(orgName) {
+        Object.keys(data).sort().forEach(function(orgName, index) {
             const orgSettings = data[orgName].sort(function(a, b) {
                 return a.type.localeCompare(b.type);
             });
@@ -48,8 +48,8 @@ if (typeof gettext === 'undefined') {
                     '<table>' +
                     '<tr>' +
                     '<th>' + gettext('Settings') + '</th>' +
-                    '<th><input type="checkbox" class="checkbox main-checkbox" data-column="web" data-organization-id="' + orgSettings[0].organization + '" /> ' + gettext('Web') + '</th>' +
-                    '<th><input type="checkbox" class="checkbox main-checkbox" data-organization-id="' + orgSettings[0].organization + '" data-column="email" /> ' + gettext('Email') + '</th>' +
+                    '<th><label><input type="checkbox" class="checkbox main-checkbox" data-column="web" data-organization-id="' + orgSettings[0].organization + '" /> ' + gettext('Web') + '</label></th>' +
+                    '<th><label><input type="checkbox" class="checkbox main-checkbox" data-organization-id="' + orgSettings[0].organization + '" data-column="email" /> ' + gettext('Email') + '</label></th>' +
                     '</tr>' +
                     '</table>'
                 );
@@ -69,6 +69,12 @@ if (typeof gettext === 'undefined') {
                 orgContent.append('<div class="no-settings">' + gettext('No settings available for this organization') + '</div>');
             }
             orgPanelsContainer.append(orgPanel);
+
+            // Automatically open the first organization panel
+            if (index === 0) {
+                orgContent.addClass('active');
+                orgPanel.find('.toggle').text('▲');
+            }
         });
     }
 
