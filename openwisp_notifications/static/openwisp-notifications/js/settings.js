@@ -9,14 +9,29 @@ if (typeof gettext === 'undefined') {
 
     $(document).ready(function () {
         const userId = $('.settings-container').data('user-id');
-        fetchNotificationSettings(userId);
-        initializeGlobalSettingsEventListener(userId);
+        fetchGlobalSettings(userId);
     });
 
-    function fetchNotificationSettings(userId) {
+    function fetchGlobalSettings(userId) {
+        $.getJSON(`/api/v1/notifications/user/${userId}/preference/`, function (globalData) {
+            const isGlobalWebChecked = globalData.web;
+            const isGlobalEmailChecked = globalData.email;
+
+            $('#global-web').prop('checked', isGlobalWebChecked);
+            $('#global-email').prop('checked', isGlobalEmailChecked);
+
+            initializeGlobalSettingsEventListener(userId);
+
+            fetchNotificationSettings(userId, isGlobalWebChecked, isGlobalEmailChecked);
+        }).fail(function () {
+            showToast('error', gettext('Error fetching global settings. Please try again.'));
+        });
+    }
+
+    function fetchNotificationSettings(userId, isGlobalWebChecked, isGlobalEmailChecked) {
         $.getJSON(`/api/v1/notifications/user/${userId}/user-setting/`, function (data) {
             const groupedData = groupBy(data.results, 'organization_name');
-            renderNotificationSettings(groupedData);
+            renderNotificationSettings(groupedData, isGlobalWebChecked, isGlobalEmailChecked);
             initializeEventListeners(userId);
         }).fail(function () {
             showToast('error', gettext('Error fetching notification settings. Please try again.'));
@@ -30,7 +45,7 @@ if (typeof gettext === 'undefined') {
         }, {});
     }
 
-    function renderNotificationSettings(data) {
+    function renderNotificationSettings(data, isGlobalWebChecked, isGlobalEmailChecked) {
         const orgPanelsContainer = $('#org-panels').empty();
         Object.keys(data).sort().forEach(function(orgName, index) {
             const orgSettings = data[orgName].sort(function(a, b) {
@@ -48,8 +63,8 @@ if (typeof gettext === 'undefined') {
                     '<table>' +
                     '<tr>' +
                     '<th>' + gettext('Settings') + '</th>' +
-                    '<th><label><input type="checkbox" class="checkbox main-checkbox" data-column="web" data-organization-id="' + orgSettings[0].organization + '" /> ' + gettext('Web') + '</label></th>' +
-                    '<th><label><input type="checkbox" class="checkbox main-checkbox" data-organization-id="' + orgSettings[0].organization + '" data-column="email" /> ' + gettext('Email') + '</label></th>' +
+                    '<th><label><input type="checkbox" class="checkbox main-checkbox" data-column="web" data-organization-id="' + orgSettings[0].organization + '" ' + (isGlobalWebChecked ? 'checked' : '') + ' /> ' + gettext('Web') + '</label></th>' +
+                    '<th><label><input type="checkbox" class="checkbox main-checkbox" data-organization-id="' + orgSettings[0].organization + '" data-column="email" ' + (isGlobalEmailChecked ? 'checked' : '') + ' /> ' + gettext('Email') + '</label></th>' +
                     '</tr>' +
                     '</table>'
                 );
@@ -200,7 +215,7 @@ if (typeof gettext === 'undefined') {
 
     function updateOrgLevelCheckboxes(organizationId) {
         const webCheckboxes = $('.web-checkbox[data-organization-id="' + organizationId + '"]');
-        const emailCheckboxes = $('.email-checkbox[data-organization-id="' + organizationId + '"]');
+        const emailCheckboxes = $('..email-checkbox[data-organization-id="' + organizationId + '"]');
         const webMainCheckbox = $('.main-checkbox[data-column="web"][data-organization-id="' + organizationId + '"]');
         const emailMainCheckbox = $('.main-checkbox[data-column="email"][data-organization-id="' + organizationId + '"]');
         webMainCheckbox.prop('checked', webCheckboxes.length === webCheckboxes.filter(':checked').length);
@@ -232,11 +247,6 @@ if (typeof gettext === 'undefined') {
 
             isGlobalChange = true;
 
-            $('.main-checkbox[data-column="web"]').prop('checked', isGlobalWebChecked).change();
-            $('.main-checkbox[data-column="email"]').prop('checked', isGlobalEmailChecked).change();
-            $('.web-checkbox').prop('checked', isGlobalWebChecked);
-            $('.email-checkbox').prop('checked', isGlobalEmailChecked);
-
             $.ajax({
                 type: 'POST',
                 url: '/api/v1/notifications/user/' + userId + '/preference/',
@@ -245,6 +255,10 @@ if (typeof gettext === 'undefined') {
                 data: JSON.stringify(data),
                 success: function () {
                     showToast('success', gettext('Global settings updated successfully.'));
+                    $('.main-checkbox[data-column="web"]').prop('checked', isGlobalWebChecked).change();
+                    $('.main-checkbox[data-column="email"]').prop('checked', isGlobalEmailChecked).change();
+                    $('.web-checkbox').prop('checked', isGlobalWebChecked);
+                    $('.email-checkbox').prop('checked', isGlobalEmailChecked);
                 },
                 error: function () {
                     showToast('error', gettext('Something went wrong. Please try again.'));
