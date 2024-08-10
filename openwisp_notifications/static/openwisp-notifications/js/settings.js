@@ -71,7 +71,7 @@ if (typeof gettext === 'undefined') {
                 orgSettings.forEach(function(setting) {
                     const row = $(
                         '<tr>' +
-                        '<td>' + setting.type + '</td>' +
+                        '<td>' + setting.type_label + '</td>' +
                         '<td><input type="checkbox" class="checkbox web-checkbox" ' + (setting.web ? 'checked' : '') + ' data-pk="' + setting.id + '" data-organization-id="' + setting.organization + '" data-type="web" /></td>' +
                         '<td><input type="checkbox" class="checkbox email-checkbox" ' + (setting.email ? 'checked' : '') + ' data-pk="' + setting.id + '" data-organization-id="' + setting.organization + '" data-type="email" /></td>' +
                         '</tr>'
