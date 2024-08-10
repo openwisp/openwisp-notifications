@@ -231,6 +231,16 @@ class NotificationPreferenceView(GenericAPIView):
     permission_classes = [IsAuthenticated, IsAuthenticatedToUpdateNotificationSetting]
     serializer_class = NotificationSettingUpdateSerializer
 
+    def get(self, request, user_id):
+        notification_settings, created = NotificationSetting.objects.get_or_create(
+            user_id=user_id,
+            organization=None,
+            type=None,
+            defaults={'email': True, 'web': True}
+        )
+        serializer = self.get_serializer(notification_settings)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
     def post(self, request, user_id):
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
