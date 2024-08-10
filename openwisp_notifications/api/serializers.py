@@ -74,9 +74,13 @@ class NotificationListSerializer(NotificationSerializer):
 
 class NotificationSettingSerializer(serializers.ModelSerializer):
     organization_name = serializers.SerializerMethodField()
+    type_label = serializers.SerializerMethodField()
 
     def get_organization_name(self, obj):
         return obj.organization.name if obj.organization else None
+
+    def get_type_label(self, obj):
+        return obj.type_config['verbose_name']
 
     class Meta:
         model = NotificationSetting
