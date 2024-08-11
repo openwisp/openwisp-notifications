@@ -236,7 +236,7 @@ class NotificationPreferenceView(GenericAPIView):
             user_id=user_id,
             organization=None,
             type=None,
-            defaults={'email': True, 'web': True}
+            defaults={'email': True, 'web': True},
         )
         serializer = self.get_serializer(notification_settings)
         return Response(serializer.data, status=status.HTTP_200_OK)
