@@ -47,13 +47,20 @@ if (typeof gettext === 'undefined') {
 
     function renderNotificationSettings(data, isGlobalWebChecked, isGlobalEmailChecked) {
         const orgPanelsContainer = $('#org-panels').empty();
+
+        // Check if there are no organizations
+        if (Object.keys(data).length === 0) {
+            orgPanelsContainer.append('<div class="no-organizations">' + gettext('No organizations available.') + '</div>');
+            return;
+        }
+
         Object.keys(data).sort().forEach(function(orgName, index) {
             const orgSettings = data[orgName].sort(function(a, b) {
                 return a.type_label.localeCompare(b.type_label);
             });
             const orgPanel = $(
-                '<div class="org-panel">' +
-                '<div class="org-header"><span>' + orgName + '</span><span class="toggle">▼</span></div>' +
+                '<div class="module">' +
+                '<h2 class="toggle-header"><span>' + orgName + '</span><span class="toggle-icon">▼</span></h2>' +
                 '<div class="org-content"></div>' +
                 '</div>'
             );
@@ -91,7 +98,9 @@ if (typeof gettext === 'undefined') {
             // Automatically open the first organization panel
             if (index === 0) {
                 orgContent.addClass('active');
-                orgPanel.find('.toggle').text('▲');
+                orgPanel.find('.toggle-icon').text('▲');
+            } else {
+                orgContent.hide();
             }
         });
     }
@@ -105,10 +114,10 @@ if (typeof gettext === 'undefined') {
     }
 
     function initializeEventListeners(userId) {
-        $(document).on('click', '.org-header', function () {
-            const toggle = $(this).find('.toggle');
-            toggle.text(toggle.text() === '▼' ? '▲' : '▼');
-            $(this).next('.org-content').toggleClass('active');
+        $(document).on('click', '.toggle-header', function () {
+            const toggleIcon = $(this).find('.toggle-icon');
+            toggleIcon.text(toggleIcon.text() === '▼' ? '▲' : '▼');
+            $(this).next('.org-content').slideToggle();
         });
 
         $(document).on('change', '.email-checkbox, .web-checkbox', function () {
@@ -148,12 +157,10 @@ if (typeof gettext === 'undefined') {
             let isOrgWebChecked = $(`.main-checkbox[data-organization-id="${orgId}"][data-column="web"]`).is(':checked');
             let isOrgEmailChecked = $(`.main-checkbox[data-organization-id="${orgId}"][data-column="email"]`).is(':checked');
 
-            // Ensure web is checked if email is checked
             if (triggeredBy === 'email' && isOrgEmailChecked) {
                 isOrgWebChecked = true;
             } 
 
-            // Ensure email is unchecked if web is unchecked
             if (triggeredBy === 'web' && !isOrgWebChecked) {
                 isOrgEmailChecked = false;  
             }

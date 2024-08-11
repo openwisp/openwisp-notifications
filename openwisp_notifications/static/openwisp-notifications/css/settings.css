@@ -1,13 +1,13 @@
 .global-settings {
-  margin: 10px 0 20px;
+    margin: 10px 0 20px;
 }
-.org-header {
-  background-color: #e0e0e0;
+.module h2 {
   padding: 10px;
-  font-weight: bold;
+  cursor: pointer;
   display: flex;
   justify-content: space-between;
-  cursor: pointer;
+  align-items: center;
+  font-weight: bold;
 }
 .org-content {
   padding-top: 10px;
@@ -27,7 +27,7 @@ th:not(:first-child),
 td:not(:first-child) {
   text-align: center;
 }
-.no-settings {
+.no-settings, .no-organizations {
   padding: 10px;
   text-align: center;
   color: #666;
