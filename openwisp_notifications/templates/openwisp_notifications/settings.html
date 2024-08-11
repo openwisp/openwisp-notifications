@@ -4,7 +4,7 @@
 {% load static %}
 
 {% block title %}
-  {% trans "Notification Settings" %}
+  {% trans "Notification Preferences" %}
 {% endblock %}
 
 {% block extrastyle %}
@@ -26,9 +26,10 @@
   </div>
 {% endblock breadcrumbs %}
 
+{% block pretitle %}Notification Preferences{% endblock %}
+
 {% block content %}
   <div class="settings-container" data-user-id="{{ user.id }}">
-    <h2>Notification Preferences</h2>
     <div class="global-settings">
       <strong>Global Settings:</strong>
       <label>

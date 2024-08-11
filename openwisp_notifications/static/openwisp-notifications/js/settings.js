@@ -49,7 +49,7 @@ if (typeof gettext === 'undefined') {
         const orgPanelsContainer = $('#org-panels').empty();
         Object.keys(data).sort().forEach(function(orgName, index) {
             const orgSettings = data[orgName].sort(function(a, b) {
-                return a.type.localeCompare(b.type);
+                return a.type_label.localeCompare(b.type_label);
             });
             const orgPanel = $(
                 '<div class="org-panel">' +
@@ -61,11 +61,14 @@ if (typeof gettext === 'undefined') {
             if (orgSettings.length > 0) {
                 const table = $(
                     '<table>' +
+                    '<thead>' +
                     '<tr>' +
                     '<th>' + gettext('Settings') + '</th>' +
                     '<th><label><input type="checkbox" class="checkbox main-checkbox" data-column="web" data-organization-id="' + orgSettings[0].organization + '" ' + (isGlobalWebChecked ? 'checked' : '') + ' /> ' + gettext('Web') + '</label></th>' +
                     '<th><label><input type="checkbox" class="checkbox main-checkbox" data-organization-id="' + orgSettings[0].organization + '" data-column="email" ' + (isGlobalEmailChecked ? 'checked' : '') + ' /> ' + gettext('Email') + '</label></th>' +
                     '</tr>' +
+                    '</thead>' +
+                    '<tbody></tbody>' +
                     '</table>'
                 );
                 orgSettings.forEach(function(setting) {
@@ -76,7 +79,7 @@ if (typeof gettext === 'undefined') {
                         '<td><input type="checkbox" class="checkbox email-checkbox" ' + (setting.email ? 'checked' : '') + ' data-pk="' + setting.id + '" data-organization-id="' + setting.organization + '" data-type="email" /></td>' +
                         '</tr>'
                     );
-                    table.append(row);
+                    table.find('tbody').append(row);
                 });
                 orgContent.append(table);
                 updateMainCheckboxes(table);
@@ -215,7 +218,7 @@ if (typeof gettext === 'undefined') {
 
     function updateOrgLevelCheckboxes(organizationId) {
         const webCheckboxes = $('.web-checkbox[data-organization-id="' + organizationId + '"]');
-        const emailCheckboxes = $('..email-checkbox[data-organization-id="' + organizationId + '"]');
+        const emailCheckboxes = $('.email-checkbox[data-organization-id="' + organizationId + '"]');
         const webMainCheckbox = $('.main-checkbox[data-column="web"][data-organization-id="' + organizationId + '"]');
         const emailMainCheckbox = $('.main-checkbox[data-column="email"][data-organization-id="' + organizationId + '"]');
         webMainCheckbox.prop('checked', webCheckboxes.length === webCheckboxes.filter(':checked').length);
