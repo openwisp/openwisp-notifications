@@ -71,8 +71,8 @@ if (typeof gettext === 'undefined') {
                     '<thead>' +
                     '<tr>' +
                     '<th>' + gettext('Settings') + '</th>' +
-                    '<th><label><input type="checkbox" class="checkbox main-checkbox" data-column="web" data-organization-id="' + orgSettings[0].organization + '" ' + (isGlobalWebChecked ? 'checked' : '') + ' /> ' + gettext('Web') + '</label></th>' +
-                    '<th><label><input type="checkbox" class="checkbox main-checkbox" data-organization-id="' + orgSettings[0].organization + '" data-column="email" ' + (isGlobalEmailChecked ? 'checked' : '') + ' /> ' + gettext('Email') + '</label></th>' +
+'<th style="text-align: center;"><label style="display: inline-flex; align-items: center;"><input type="checkbox" class="checkbox main-checkbox" data-column="web" data-organization-id="' + orgSettings[0].organization + '" ' + (isGlobalWebChecked ? 'checked' : '') + ' style="margin-right: 4px;" /> ' + gettext('Web') + '</label></th>' +
+'<th style="text-align: center;"><label style="display: inline-flex; align-items: center;"><input type="checkbox" class="checkbox main-checkbox" data-organization-id="' + orgSettings[0].organization + '" data-column="email" ' + (isGlobalEmailChecked ? 'checked' : '') + ' style="margin-right: 4px;" /> ' + gettext('Email') + '</label></th>' +
                     '</tr>' +
                     '</thead>' +
                     '<tbody></tbody>' +
