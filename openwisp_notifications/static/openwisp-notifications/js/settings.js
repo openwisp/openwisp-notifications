@@ -281,26 +281,46 @@ if (typeof gettext === 'undefined') {
     }
 
     function showToast(level, message) {
-        const toast = $(
-            '<div class="ow-notification-toast ' + level + '">' +
-            '<div class="icon ow-notify-close btn" role="button" tabindex="1"></div>' +
-            '<div style="display:flex">' +
-            '<div class="icon ow-notify-' + level + '"></div>' +
-            message +
-            '</div>' +
-            '</div>'
-        );
-        $('.ow-notification-toast-wrapper').prepend(toast);
-        toast.slideDown('slow', function () {
-            setTimeout(function () {
-                toast.slideUp('slow', function () {
-                    toast.remove();
-                });
-            }, 3000);
-        });
+        const existingToast = document.querySelector('.toast');
+        if (existingToast) {
+            document.body.removeChild(existingToast);
+        }
 
-        $(document).on('click', '.ow-notification-toast .ow-notify-close.btn', function () {
-            toast.remove();
+        const toast = document.createElement('div');
+        toast.className = `toast ${level}`;
+        toast.innerHTML = `
+            <div style="display:flex">
+                <div class="icon ow-notify-${level}"></div>
+                ${message}
+            </div>
+            <div class="progress-bar"></div>
+        `;
+
+        document.body.appendChild(toast);
+
+        setTimeout(() => {
+            toast.style.opacity = '1';
+        }, 10);
+
+        const progressBar = toast.querySelector('.progress-bar');
+        progressBar.style.transition = `width 3000ms linear`;
+        setTimeout(() => {
+            progressBar.style.width = '0%';
+        }, 10);
+
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            setTimeout(() => {
+                if (document.body.contains(toast)) {
+                    document.body.removeChild(toast);
+                }
+            }, 500);
+        }, 3000);
+
+        toast.addEventListener('click', () => {
+            if (document.body.contains(toast)) {
+                document.body.removeChild(toast);
+            }
         });
     }
 })(django.jQuery);

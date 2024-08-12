@@ -32,3 +32,24 @@ td:not(:first-child) {
   text-align: center;
   color: #666;
 }
+.toast {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: #333;
+    color: white;
+    padding: 12px 20px;
+    border-radius: 5px;
+    transition: opacity 0.5s ease-in-out;
+    z-index: 9999;
+    cursor: pointer;
+}
+.toast .progress-bar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 4px;
+    background-color: #007bff;
+    width: 100%;
+    transition: width 3s linear;
+}
