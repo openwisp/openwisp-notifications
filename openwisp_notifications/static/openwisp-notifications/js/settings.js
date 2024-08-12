@@ -5,7 +5,7 @@ if (typeof gettext === 'undefined') {
 }
 
 (function ($) {
-    let isGlobalChange = false;
+    let isUpdateInProgress = false;
 
     $(document).ready(function () {
         const userId = $('.settings-container').data('user-id');
@@ -121,7 +121,7 @@ if (typeof gettext === 'undefined') {
         });
 
         $(document).on('change', '.email-checkbox, .web-checkbox', function () {
-            if (isGlobalChange) {
+            if (isUpdateInProgress) {
                 return;
             }
 
@@ -148,7 +148,7 @@ if (typeof gettext === 'undefined') {
         });
 
         $(document).on('change', '.main-checkbox', function () {
-            if (isGlobalChange) {
+            if (isUpdateInProgress) {
                 return;
             }
             const orgId = $(this).data('organization-id');
@@ -168,7 +168,7 @@ if (typeof gettext === 'undefined') {
             $(`.main-checkbox[data-organization-id="${orgId}"][data-column="web"]`).prop('checked', isOrgWebChecked);
             $(`.main-checkbox[data-organization-id="${orgId}"][data-column="email"]`).prop('checked', isOrgEmailChecked);
 
-            isGlobalChange = true;
+            isUpdateInProgress = true;
 
             const table = $(this).closest('table');
             table.find('.web-checkbox').prop('checked', isOrgWebChecked).change();
@@ -177,7 +177,7 @@ if (typeof gettext === 'undefined') {
             updateMainCheckboxes(table);
 
             updateOrganizationSetting(userId, $(this));
-            isGlobalChange = false;
+            isUpdateInProgress = false;
         });
     }
 
@@ -255,7 +255,7 @@ if (typeof gettext === 'undefined') {
                 email: isGlobalEmailChecked
             };
 
-            isGlobalChange = true;
+            isUpdateInProgress = true;
 
             $.ajax({
                 type: 'POST',
@@ -274,7 +274,7 @@ if (typeof gettext === 'undefined') {
                     showToast('error', gettext('Something went wrong. Please try again.'));
                 },
                 complete: function () {
-                    isGlobalChange = false;
+                    isUpdateInProgress = false;
                 }
             });
         });
