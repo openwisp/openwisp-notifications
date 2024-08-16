@@ -9,7 +9,7 @@
 
 {% block extrastyle %}
   {{ block.super }}
-  <link rel="stylesheet" type="text/css" href="{% static 'openwisp-notifications/css/settings.css' %}" />
+  <link rel="stylesheet" type="text/css" href="{% static 'openwisp-notifications/css/preferences.css' %}" />
 {% endblock extrastyle %}
 
 {% block breadcrumbs %}
@@ -25,8 +25,6 @@
     {% trans 'Notification Preferences' %}
   </div>
 {% endblock breadcrumbs %}
-
-{% block pretitle %}Notification Preferences{% endblock %}
 
 {% block content %}
   <div class="settings-container" data-user-id="{{ user.id }}">
@@ -48,6 +46,6 @@
 {% block footer %}
   {{ block.super }}
   {% if request.user.is_authenticated %}
-    <script type="text/javascript" src="{% static 'openwisp-notifications/js/settings.js' %}"></script>
+    <script type="text/javascript" src="{% static 'openwisp-notifications/js/preferences.js' %}"></script>
   {% endif %}
 {% endblock footer %}
