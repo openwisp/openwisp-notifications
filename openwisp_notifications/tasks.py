@@ -87,12 +87,15 @@ def create_notification_settings(user, organizations, notification_types):
     )
 
     for type in notification_types:
+        notification_config = types.get_notification_configuration(type)
         for org in organizations:
             NotificationSetting.objects.update_or_create(
                 defaults={
                     'deleted': False,
-                    'email': global_setting.email,
-                    'web': global_setting.web,
+                    'email': global_setting.email
+                    and notification_config.get('email_notification'),
+                    'web': global_setting.web
+                    and notification_config.get('web_notification'),
                 },
                 user=user,
                 type=type,
