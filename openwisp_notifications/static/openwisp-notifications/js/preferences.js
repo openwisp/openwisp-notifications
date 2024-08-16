@@ -48,7 +48,6 @@ if (typeof gettext === 'undefined') {
     function renderNotificationSettings(data, isGlobalWebChecked, isGlobalEmailChecked) {
         const orgPanelsContainer = $('#org-panels').empty();
 
-        // Check if there are no organizations
         if (Object.keys(data).length === 0) {
             orgPanelsContainer.append('<div class="no-organizations">' + gettext('No organizations available.') + '</div>');
             return;
@@ -60,7 +59,7 @@ if (typeof gettext === 'undefined') {
             });
             const orgPanel = $(
                 '<div class="module">' +
-                '<h2 class="toggle-header"><span>' + orgName + '</span><span class="toggle-icon">▼</span></h2>' +
+                '<h2 class="toggle-header"><span>' + orgName + '</span><span class="toggle-icon collapsed"></span></h2>' +
                 '<div class="org-content"></div>' +
                 '</div>'
             );
@@ -70,9 +69,9 @@ if (typeof gettext === 'undefined') {
                     '<table>' +
                     '<thead>' +
                     '<tr>' +
-                    '<th>' + gettext('Settings') + '</th>' +
-'<th style="text-align: center;"><label style="display: inline-flex; align-items: center;"><input type="checkbox" class="checkbox main-checkbox" data-column="web" data-organization-id="' + orgSettings[0].organization + '" ' + (isGlobalWebChecked ? 'checked' : '') + ' style="margin-right: 4px;" /> ' + gettext('Web') + '</label></th>' +
-'<th style="text-align: center;"><label style="display: inline-flex; align-items: center;"><input type="checkbox" class="checkbox main-checkbox" data-organization-id="' + orgSettings[0].organization + '" data-column="email" ' + (isGlobalEmailChecked ? 'checked' : '') + ' style="margin-right: 4px;" /> ' + gettext('Email') + '</label></th>' +
+                    '<th>' + gettext('Notification Type') + '</th>' +
+                    '<th style="text-align: center;"><label style="display: inline-flex; align-items: center;"><input type="checkbox" class="checkbox main-checkbox" data-column="web" data-organization-id="' + orgSettings[0].organization + '" ' + (isGlobalWebChecked ? 'checked' : '') + ' style="margin-right: 4px;" /> ' + gettext('Web') + '</label></th>' +
+                    '<th style="text-align: center;"><label style="display: inline-flex; align-items: center;"><input type="checkbox" class="checkbox main-checkbox" data-organization-id="' + orgSettings[0].organization + '" data-column="email" ' + (isGlobalEmailChecked ? 'checked' : '') + ' style="margin-right: 4px;" /> ' + gettext('Email') + '</label></th>' +
                     '</tr>' +
                     '</thead>' +
                     '<tbody></tbody>' +
@@ -95,10 +94,9 @@ if (typeof gettext === 'undefined') {
             }
             orgPanelsContainer.append(orgPanel);
 
-            // Automatically open the first organization panel
             if (index === 0) {
                 orgContent.addClass('active');
-                orgPanel.find('.toggle-icon').text('▲');
+                orgPanel.find('.toggle-icon').removeClass('collapsed').addClass('expanded');
             } else {
                 orgContent.hide();
             }
@@ -116,8 +114,15 @@ if (typeof gettext === 'undefined') {
     function initializeEventListeners(userId) {
         $(document).on('click', '.toggle-header', function () {
             const toggleIcon = $(this).find('.toggle-icon');
-            toggleIcon.text(toggleIcon.text() === '▼' ? '▲' : '▼');
-            $(this).next('.org-content').slideToggle();
+            const orgContent = $(this).next('.org-content');
+
+            if (orgContent.hasClass('active')) {
+                orgContent.removeClass('active').slideUp();
+                toggleIcon.removeClass('expanded').addClass('collapsed');
+            } else {
+                orgContent.addClass('active').slideDown();
+                toggleIcon.removeClass('collapsed').addClass('expanded');
+            }
         });
 
         $(document).on('change', '.email-checkbox, .web-checkbox', function () {

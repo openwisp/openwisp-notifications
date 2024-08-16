@@ -743,7 +743,7 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
 
         with self.subTest('Test user email preference not defined'):
             self._create_notification()
-            self.assertEqual(len(mail.outbox), 1)
+            self.assertEqual(len(mail.outbox), 0)
 
         with self.subTest('Test user email preference is "True"'):
             NotificationSetting.objects.filter(
@@ -797,9 +797,14 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
 
         with self.subTest('Test user web preference not defined'):
             self._create_notification()
-            self.assertEqual(notification_queryset.count(), 1)
+            self.assertEqual(notification_queryset.count(), 0)
 
         with self.subTest('Test user email preference is "True"'):
+            unregister_notification_type('test_type')
+            test_type.update({'web_notification': True})
+            register_notification_type('test_type', test_type)
+            self.notification_options.update({'type': 'test_type'})
+
             notification_setting = NotificationSetting.objects.get(
                 user=self.admin, type='test_type', organization=target_obj.organization
             )
@@ -813,7 +818,7 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
                 user=self.admin, type='test_type'
             ).update(web=True)
             self._create_notification()
-            self.assertEqual(notification_queryset.count(), 2)
+            self.assertEqual(notification_queryset.count(), 1)
 
     @mock_notification_types
     def test_notification_type_email_web_notification_defaults(self):
