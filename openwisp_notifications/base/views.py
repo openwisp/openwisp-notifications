@@ -1,13 +1,14 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.http import Http404
+from django.utils.translation import gettext as _
 from django.views.generic import TemplateView
 
 User = get_user_model()
 
 
-class NotificationSettingPage(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
-    template_name = 'openwisp_notifications/settings.html'
+class NotificationPreferencePage(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
+    template_name = 'openwisp_notifications/preferences.html'
     login_url = '/admin/login/'
 
     def get_context_data(self, **kwargs):
@@ -17,7 +18,7 @@ class NotificationSettingPage(LoginRequiredMixin, UserPassesTestMixin, TemplateV
         if user_id:
             try:
                 user = User.objects.get(pk=user_id)
-                # Only admin should access other users settings
+                # Only admin should access other users preferences
                 if not self.request.user.is_staff:
                     raise Http404('You do not have permission to access this page.')
             except User.DoesNotExist:
@@ -26,6 +27,7 @@ class NotificationSettingPage(LoginRequiredMixin, UserPassesTestMixin, TemplateV
             user = self.request.user
 
         context['user'] = user
+        context['title'] = _('Notification Preferences')
         return context
 
     def test_func(self):
@@ -37,4 +39,4 @@ class NotificationSettingPage(LoginRequiredMixin, UserPassesTestMixin, TemplateV
         return True
 
 
-notifiation_setting_page = NotificationSettingPage.as_view()
+notifiation_preference_page = NotificationPreferencePage.as_view()

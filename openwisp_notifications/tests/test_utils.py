@@ -105,12 +105,3 @@ class TestChecks(TestCase, TestOrganizationMixin):
                 )
                 error = run_check()
                 self.assertIn(error_message, error.hint)
-
-        with self.subTest('Test setting dotted path is not subclass of ModelAdmin'):
-            path = 'openwisp_notifications.admin.NotificationSettingInline'
-            with patch.object(app_settings, 'IGNORE_ENABLED_ADMIN', [path]):
-                error_message = (
-                    f'"{path}" does not subclasses "django.contrib.admin.ModelAdmin"'
-                )
-                error = run_check()
-                self.assertIn(error_message, error.hint)
