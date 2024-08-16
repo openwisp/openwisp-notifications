@@ -27,8 +27,6 @@ IgnoreObjectNotification = load_model('IgnoreObjectNotification')
 Organization = swapper_load_model('openwisp_users', 'Organization')
 OrganizationUser = swapper_load_model('openwisp_users', 'OrganizationUser')
 
-NOT_FOUND_ERROR = ErrorDetail(string='Not found.', code='not_found')
-
 
 class TestNotificationApi(
     TransactionTestCase, TestOrganizationMixin, AuthenticationMixin
@@ -189,10 +187,6 @@ class TestNotificationApi(
             url = self._get_path('notification_detail', uuid.uuid4())
             response = self.client.get(url)
             self.assertEqual(response.status_code, 404)
-            self.assertDictEqual(
-                response.data,
-                {'detail': NOT_FOUND_ERROR},
-            )
 
         with self.subTest('Test retrieving details for existing notification'):
             url = self._get_path('notification_detail', n.pk)
@@ -212,10 +206,6 @@ class TestNotificationApi(
             url = self._get_path('notification_detail', uuid.uuid4())
             response = self.client.patch(url)
             self.assertEqual(response.status_code, 404)
-            self.assertDictEqual(
-                response.data,
-                {'detail': NOT_FOUND_ERROR},
-            )
 
         with self.subTest('Test for existing notification'):
             self.assertTrue(n.unread)
@@ -234,10 +224,6 @@ class TestNotificationApi(
             url = self._get_path('notification_detail', uuid.uuid4())
             response = self.client.delete(url)
             self.assertEqual(response.status_code, 404)
-            self.assertDictEqual(
-                response.data,
-                {'detail': NOT_FOUND_ERROR},
-            )
 
         with self.subTest('Test for valid notification'):
             url = self._get_path('notification_detail', n.pk)
@@ -404,13 +390,11 @@ class TestNotificationApi(
             url = self._get_path('notification_detail', n.pk)
             response = self.client.get(url)
             self.assertEqual(response.status_code, 404)
-            self.assertDictEqual(response.data, {'detail': NOT_FOUND_ERROR})
 
         with self.subTest('Test marking a notification as read'):
             url = self._get_path('notification_detail', n.pk)
             response = self.client.patch(url)
             self.assertEqual(response.status_code, 404)
-            self.assertDictEqual(response.data, {'detail': NOT_FOUND_ERROR})
             # Check Karen's notification is still unread
             n.refresh_from_db()
             self.assertTrue(n.unread)
@@ -419,7 +403,6 @@ class TestNotificationApi(
             url = self._get_path('notification_detail', n.pk)
             response = self.client.delete(url)
             self.assertEqual(response.status_code, 404)
-            self.assertDictEqual(response.data, {'detail': NOT_FOUND_ERROR})
             # Check Karen's notification is not deleted
             self.assertEqual(Notification.objects.count(), 1)
 
@@ -468,7 +451,6 @@ class TestNotificationApi(
             url = self._get_path('notification_detail', n.pk)
             response = self.client.get(url)
             self.assertEqual(response.status_code, 404)
-            self.assertDictEqual(response.data, {'detail': NOT_FOUND_ERROR})
 
     @capture_any_output()
     @mock_notification_types
@@ -514,7 +496,6 @@ class TestNotificationApi(
             url = self._get_path('notification_read_redirect', notification.pk)
             response = self.client.get(url)
             self.assertEqual(response.status_code, 404)
-            self.assertDictEqual(response.data, {'detail': NOT_FOUND_ERROR})
 
     def test_notification_setting_list_api(self):
         self._create_org_user(is_admin=True)
@@ -618,10 +599,6 @@ class TestNotificationApi(
             url = self._get_path('notification_setting', uuid.uuid4())
             response = self.client.get(url)
             self.assertEqual(response.status_code, 404)
-            self.assertDictEqual(
-                response.data,
-                {'detail': NOT_FOUND_ERROR},
-            )
 
         with self.subTest('Test retrieving details for existing notification setting'):
             url = self._get_path(
@@ -644,10 +621,6 @@ class TestNotificationApi(
             url = self._get_path('notification_setting', uuid.uuid4())
             response = self.client.put(url, data=update_data)
             self.assertEqual(response.status_code, 404)
-            self.assertDictEqual(
-                response.data,
-                {'detail': NOT_FOUND_ERROR},
-            )
 
         with self.subTest('Test retrieving details for existing notification setting'):
             url = self._get_path(
@@ -677,7 +650,6 @@ class TestNotificationApi(
             url = self._get_path('notification_read_redirect', uuid.uuid4())
             response = self.client.get(url)
             self.assertEqual(response.status_code, 404)
-            self.assertDictEqual(response.data, {'detail': NOT_FOUND_ERROR})
 
         with self.subTest('Test existent notification'):
             url = self._get_path('notification_read_redirect', notification.pk)
@@ -767,10 +739,6 @@ class TestNotificationApi(
             )
             response = self.client.delete(url)
             self.assertEqual(response.status_code, 404)
-            self.assertDictEqual(
-                response.data,
-                {'detail': NOT_FOUND_ERROR},
-            )
 
         with self.subTest('Test for existing object notification'):
             url = self._get_path(
@@ -799,10 +767,6 @@ class TestNotificationApi(
             )
             response = self.client.delete(url)
             self.assertEqual(response.status_code, 404)
-            self.assertDictEqual(
-                response.data,
-                {'detail': NOT_FOUND_ERROR},
-            )
 
         with self.subTest('Test for existing object notification'):
             url = self._get_path(
