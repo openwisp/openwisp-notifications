@@ -70,8 +70,20 @@ if (typeof gettext === 'undefined') {
                     '<thead>' +
                     '<tr>' +
                     '<th>' + gettext('Notification Type') + '</th>' +
-                    '<th style="text-align: center;"><label style="display: inline-flex; align-items: center;"><input type="checkbox" class="checkbox main-checkbox" data-column="web" data-organization-id="' + orgSettings[0].organization + '" ' + (isGlobalWebChecked ? 'checked' : '') + ' style="margin-right: 4px;" /> ' + gettext('Web') + '</label></th>' +
-                    '<th style="text-align: center;"><label style="display: inline-flex; align-items: center;"><input type="checkbox" class="checkbox main-checkbox" data-organization-id="' + orgSettings[0].organization + '" data-column="email" ' + (isGlobalEmailChecked ? 'checked' : '') + ' style="margin-right: 4px;" /> ' + gettext('Email') + '</label></th>' +
+                    '<th style="text-align: center;">' +
+                    '<label style="display: inline-flex; align-items: center;">' +
+                    '<input type="checkbox" class="checkbox main-checkbox" data-column="web" data-organization-id="' + orgSettings[0].organization + '" ' + (isGlobalWebChecked ? 'checked' : '') + ' style="margin-right: 4px;" />' +
+                    gettext('Web') +
+                    '<span class="tooltip-icon" data-tooltip="' + gettext('Enable or disable web notifications for this organization') + '" style="margin-left: 2px;">?</span>' +
+                    '</label>' +
+                    '</th>' +
+                    '<th style="text-align: center;">' +
+                    '<label style="display: inline-flex; align-items: center;">' +
+                    '<input type="checkbox" class="checkbox main-checkbox" data-organization-id="' + orgSettings[0].organization + '" data-column="email" ' + (isGlobalEmailChecked ? 'checked' : '') + ' style="margin-right: 4px;" />' +
+                    gettext('Email') +
+                    '<span class="tooltip-icon" data-tooltip="' + gettext('Enable or disable email notifications for this organization') + '" style="margin-left: 2px;">?</span>' +
+                    '</label>' +
+                    '</th>' +
                     '</tr>' +
                     '</thead>' +
                     '<tbody></tbody>' +

@@ -67,3 +67,34 @@ span.toggle-icon.collapsed {
 span.toggle-icon.expanded {
   background-position: 0px -64px;
 }
+.tooltip-icon {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  color: var(--body-quiet-color);
+  text-align: center;
+  line-height: 14px;
+  font-size: 12px;
+  font-weight: bold;
+  position: relative;
+  border: 1px solid var(--body-quiet-color);
+  text-transform: none;
+}
+.tooltip-icon::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 125%;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #333;
+  color: #fff;
+  padding: 3px 6px;
+  border-radius: 2px;
+  font-size: 10px;
+  white-space: nowrap;
+  visibility: hidden;
+}
+.tooltip-icon:hover::after {
+  visibility: visible;
+}
