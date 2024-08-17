@@ -34,5 +34,4 @@ class NotificationSettingAdminMixin:
         extends = True
         js = [
             'admin/js/jquery.init.js',
-            'openwisp-notifications/js/notification-settings.js',
         ]
