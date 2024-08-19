@@ -26,7 +26,9 @@
   <div class="ow-notification-dropdown ow-hide">
     <div class="filters">
       <span class="toggle-btn" id="ow-mark-all-read" tabindex="0" role="button">{% trans 'Mark all as read' %}</span>
-      <span class="toggle-btn" id="ow-show-unread" tabindex="0" role="button">{% trans 'Show unread only' %}</span>
+      <a href="{% url 'notifications:notification_preferences' %}">
+        <span class="toggle-btn" id="ow-mark-all-read" tabindex="0" role="button">{% trans 'Settings' %}</span>
+      </a>
     </div>
     <div class="ow-notification-wrapper ow-round-bottom-border">
       <div id="ow-notifications-loader" class="ow-hide"><div class="loader"></div></div>
