@@ -145,6 +145,7 @@
 }
 .ow-notification-dropdown .toggle-btn {
   color: #777 !important;
+  text-decoration: none !important;
 }
 .ow-notification-dropdown .toggle-btn:active {
   position: relative;
