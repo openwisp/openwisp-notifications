@@ -251,29 +251,6 @@ if (typeof gettext === 'undefined') {
         });
     }
 
-    function updateIndividualSetting(settingId, isWebChecked, isEmailChecked) {
-        const userId = $('.settings-container').data('user-id');
-        const data = {
-            web: isWebChecked,
-            email: isEmailChecked
-        };
-        $.ajax({
-            type: 'PATCH',
-            url: '/api/v1/notifications/user/' + userId + '/user-setting/' + settingId + '/',
-            headers: { 'X-CSRFToken': $('input[name="csrfmiddlewaretoken"]').val() },
-            contentType: 'application/json',
-            data: JSON.stringify(data),
-            success: function () {
-                showToast('success', gettext('Settings updated successfully.'));
-            },
-            error: function () {
-                showToast('error', gettext('Something went wrong. Please try again.'));
-                $(`.web-checkbox[data-pk="${settingId}"]`).prop('checked', !isWebChecked);
-                $(`.email-checkbox[data-pk="${settingId}"]`).prop('checked', !isEmailChecked);
-            }
-        });
-    }
-
     function updateOrgLevelCheckboxes(organizationId) {
         const webCheckboxes = $('.web-checkbox[data-organization-id="' + organizationId + '"]');
         const emailCheckboxes = $('.email-checkbox[data-organization-id="' + organizationId + '"]');
