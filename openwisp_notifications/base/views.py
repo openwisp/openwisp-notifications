@@ -21,13 +21,15 @@ class NotificationPreferencePage(LoginRequiredMixin, UserPassesTestMixin, Templa
                 # Only admin should access other users preferences
                 if not self.request.user.is_staff:
                     raise Http404('You do not have permission to access this page.')
+                context['username'] = user.username
+                context['title'] = _(f'Notification Preference ({user.username})')
             except User.DoesNotExist:
                 raise Http404('User does not exist')
         else:
             user = self.request.user
+            context['title'] = _('Notification Preference')
 
-        context['user'] = user
-        context['title'] = _('Notification Preferences')
+        context['user_id'] = user.id
         return context
 
     def test_func(self):
@@ -39,4 +41,4 @@ class NotificationPreferencePage(LoginRequiredMixin, UserPassesTestMixin, Templa
         return True
 
 
-notifiation_preference_page = NotificationPreferencePage.as_view()
+notification_preference_page = NotificationPreferencePage.as_view()

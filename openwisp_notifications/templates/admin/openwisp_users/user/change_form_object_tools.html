@@ -3,6 +3,6 @@
 {% load i18n admin_urls %}
 
 {% block object-tools-items %}
-  <li><a class="button" href="{% url 'notifications:notification_preferences' %}">Notification Preferences</a></li>
+  <li><a class="button" href="{% url 'notifications:user_notification_preference' object_id %}">Notification Preferences</a></li>
   {{ block.super }}
 {% endblock %}
