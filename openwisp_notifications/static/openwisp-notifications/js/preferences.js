@@ -29,13 +29,27 @@ if (typeof gettext === 'undefined') {
     }
 
     function fetchNotificationSettings(userId, isGlobalWebChecked, isGlobalEmailChecked) {
-        $.getJSON(`/api/v1/notifications/user/${userId}/user-setting/`, function (data) {
-            const groupedData = groupBy(data.results, 'organization_name');
-            renderNotificationSettings(groupedData, isGlobalWebChecked, isGlobalEmailChecked);
-            initializeEventListeners(userId);
-        }).fail(function () {
-            showToast('error', gettext('Error fetching notification settings. Please try again.'));
-        });
+        let allResults = [];
+        let currentPage = 1;
+
+        (function fetchPage() {
+            $.getJSON(`/api/v1/notifications/user/${userId}/user-setting/?page_size=100&page=${currentPage}`, function (data) {
+                allResults = allResults.concat(data.results);
+
+                if (data.next) {
+                    currentPage++;
+                    // Continue fetching next page
+                    fetchPage();
+                } else {
+                    // Runs after all the pages are fetched
+                    const groupedData = groupBy(allResults, 'organization_name');
+                    renderNotificationSettings(groupedData, isGlobalWebChecked, isGlobalEmailChecked);
+                    initializeEventListeners(userId);
+                }
+            }).fail(function () {
+                showToast('error', gettext('Error fetching notification settings. Please try again.'));
+            });
+        })();
     }
 
     function groupBy(array, key) {
