@@ -73,7 +73,7 @@ if (typeof gettext === 'undefined') {
             });
             const orgPanel = $(
                 '<div class="module">' +
-                '<h2 class="toggle-header"><span>' + orgName + '</span><span class="toggle-icon collapsed"></span></h2>' +
+                '<h2 class="toggle-header"><span>Organization: ' + orgName + '</span><span class="toggle-icon collapsed"></span></h2>' +
                 '<div class="org-content"></div>' +
                 '</div>'
             );
