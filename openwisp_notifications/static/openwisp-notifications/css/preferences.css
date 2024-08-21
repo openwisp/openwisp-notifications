@@ -7,6 +7,9 @@
   justify-content: center;
   gap: 4px;
 }
+.global-settings-container {
+  margin-left: 10px;
+}
 .module h2 {
   padding: 10px;
   cursor: pointer;
