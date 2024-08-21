@@ -30,16 +30,22 @@
   <div class="settings-container" data-user-id="{{ user.id }}">
     <div class="global-settings">
       <strong>Global Settings:</strong>
-      <label>
-        <input type="checkbox" id="global-web" />
-        Web
+      <div class="global-settings-container">
+        <span>Web</span>
+        <label class="switch">
+          <input type="checkbox" id="global-web" />
+          <span class="slider round"></span>
+        </label>
         <span class="tooltip-icon" data-tooltip="{% trans 'Enable or disable web notifications globally' %}">?</span>
-      </label>
-      <label>
-        <input type="checkbox" id="global-email" />
-        Email
+      </div>
+      <div class="global-settings-container">
+        <span>Email</span>
+        <label class="switch">
+          <input type="checkbox" id="global-email" />
+          <span class="slider round"></span>
+        </label>
         <span class="tooltip-icon" data-tooltip="{% trans 'Enable or disable email notifications globally' %}">?</span>
-      </label>
+      </div>
     </div>
     <div id="org-panels"></div>
   </div>
