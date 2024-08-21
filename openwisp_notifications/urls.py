@@ -1,7 +1,7 @@
 from django.urls import include, path
 
 from .api.urls import get_api_urls
-from .base.views import notifiation_preference_page
+from .base.views import notification_preference_page
 
 
 def get_urls(api_views=None, social_views=None):
@@ -14,13 +14,13 @@ def get_urls(api_views=None, social_views=None):
         path('api/v1/notifications/', include(get_api_urls(api_views))),
         path(
             'notifications/preferences/',
-            notifiation_preference_page,
-            name='notification_preferences',
+            notification_preference_page,
+            name='notification_preference',
         ),
         path(
             'notifications/user/<uuid:pk>/preferences/',
-            notifiation_preference_page,
-            name='user_notification_preferences',
+            notification_preference_page,
+            name='user_notification_preference',
         ),
     ]
     return urls
