@@ -71,18 +71,24 @@ if (typeof gettext === 'undefined') {
                     '<tr>' +
                     '<th>' + gettext('Notification Type') + '</th>' +
                     '<th style="text-align: center;">' +
-                    '<label style="display: inline-flex; align-items: center;">' +
-                    '<input type="checkbox" class="checkbox main-checkbox" data-column="web" data-organization-id="' + orgSettings[0].organization + '" ' + (isGlobalWebChecked ? 'checked' : '') + ' style="margin-right: 4px;" />' +
-                    gettext('Web') +
-                    '<span class="tooltip-icon" data-tooltip="' + gettext('Enable or disable web notifications for this organization') + '" style="margin-left: 2px;">?</span>' +
+                    '<div style="display: inline-flex; align-items: center; justify-content: center; gap: 4px;">' +
+                    '<label class="switch">' +
+                    '<input type="checkbox" class="main-checkbox" data-column="web" data-organization-id="' + orgSettings[0].organization + '" ' + (isGlobalWebChecked ? 'checked' : '') + ' />' +
+                    '<span class="slider round"></span>' +
                     '</label>' +
+                    '<span>' + gettext('Web') + '</span>' +
+                    '<span class="tooltip-icon" data-tooltip="' + gettext('Enable or disable web notifications for this organization') + '">?</span>' +
+                    '</div>' +
                     '</th>' +
                     '<th style="text-align: center;">' +
-                    '<label style="display: inline-flex; align-items: center;">' +
-                    '<input type="checkbox" class="checkbox main-checkbox" data-organization-id="' + orgSettings[0].organization + '" data-column="email" ' + (isGlobalEmailChecked ? 'checked' : '') + ' style="margin-right: 4px;" />' +
-                    gettext('Email') +
-                    '<span class="tooltip-icon" data-tooltip="' + gettext('Enable or disable email notifications for this organization') + '" style="margin-left: 2px;">?</span>' +
+                    '<div style="display: inline-flex; align-items: center; justify-content: center; gap: 4px;">' +
+                    '<label class="switch">' +
+                    '<input type="checkbox" class="main-checkbox" data-organization-id="' + orgSettings[0].organization + '" data-column="email" ' + (isGlobalEmailChecked ? 'checked' : '') + ' />' +
+                    '<span class="slider round"></span>' +
                     '</label>' +
+                    '<span>' + gettext('Email') + '</span>' +
+                    '<span class="tooltip-icon" data-tooltip="' + gettext('Enable or disable email notifications for this organization') + '">?</span>' +
+                    '</div>' +
                     '</th>' +
                     '</tr>' +
                     '</thead>' +
@@ -93,8 +99,18 @@ if (typeof gettext === 'undefined') {
                     const row = $(
                         '<tr>' +
                         '<td>' + setting.type_label + '</td>' +
-                        '<td><input type="checkbox" class="checkbox web-checkbox" ' + (setting.web ? 'checked' : '') + ' data-pk="' + setting.id + '" data-organization-id="' + setting.organization + '" data-type="web" /></td>' +
-                        '<td><input type="checkbox" class="checkbox email-checkbox" ' + (setting.email ? 'checked' : '') + ' data-pk="' + setting.id + '" data-organization-id="' + setting.organization + '" data-type="email" /></td>' +
+                        '<td>' +
+                        '<label class="switch">' +
+                        '<input type="checkbox" class="web-checkbox" ' + (setting.web ? 'checked' : '') + ' data-pk="' + setting.id + '" data-organization-id="' + setting.organization + '" data-type="web" />' +
+                        '<span class="slider round"></span>' +
+                        '</label>' +
+                        '</td>' +
+                        '<td>' +
+                        '<label class="switch">' +
+                        '<input type="checkbox" class="email-checkbox" ' + (setting.email ? 'checked' : '') + ' data-pk="' + setting.id + '" data-organization-id="' + setting.organization + '" data-type="email" />' +
+                        '<span class="slider round"></span>' +
+                        '</label>' +
+                        '</td>' +
                         '</tr>'
                     );
                     table.find('tbody').append(row);
