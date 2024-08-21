@@ -149,6 +149,16 @@ if (typeof gettext === 'undefined') {
             let isWebChecked = $(`.web-checkbox[data-organization-id="${organizationId}"][data-pk="${settingId}"]`).is(':checked');
             let isEmailChecked = $(`.email-checkbox[data-organization-id="${organizationId}"][data-pk="${settingId}"]`).is(':checked');
 
+            let previousWebChecked, previousEmailChecked;
+
+            if (triggeredBy === 'email') {
+                previousEmailChecked = !isEmailChecked;
+                previousWebChecked = isWebChecked;
+            } else {
+                previousWebChecked = !isWebChecked;
+                previousEmailChecked = isEmailChecked;
+            }
+
             if (triggeredBy === 'email' && isEmailChecked) {
                 isWebChecked = true;
             }
@@ -164,6 +174,10 @@ if (typeof gettext === 'undefined') {
                 email: isEmailChecked
             };
 
+            $(`.web-checkbox[data-organization-id="${organizationId}"][data-pk="${settingId}"]`).prop('checked', isWebChecked);
+            $(`.email-checkbox[data-organization-id="${organizationId}"][data-pk="${settingId}"]`).prop('checked', isEmailChecked);
+            updateOrgLevelCheckboxes(organizationId);
+
             $.ajax({
                 type: 'PATCH',
                 url: `/api/v1/notifications/user/${userId}/user-setting/${settingId}/`,
@@ -171,20 +185,13 @@ if (typeof gettext === 'undefined') {
                 contentType: 'application/json',
                 data: JSON.stringify(data),
                 success: function () {
-                    $(`.web-checkbox[data-organization-id="${organizationId}"][data-pk="${settingId}"]`).prop('checked', isWebChecked);
-                    $(`.email-checkbox[data-organization-id="${organizationId}"][data-pk="${settingId}"]`).prop('checked', isEmailChecked);
-
-                    updateOrgLevelCheckboxes(organizationId);
-
                     showToast('success', gettext('Settings updated successfully.'));
                 },
                 error: function () {
                     showToast('error', gettext('Something went wrong. Please try again.'));
-                    if (triggeredBy === 'web') {
-                        $(`.web-checkbox[data-organization-id="${organizationId}"][data-pk="${settingId}"]`).prop('checked', !isWebChecked);
-                    } else if (triggeredBy === 'email') {
-                        $(`.email-checkbox[data-organization-id="${organizationId}"][data-pk="${settingId}"]`).prop('checked', !isEmailChecked);
-                    }
+                    $(`.web-checkbox[data-organization-id="${organizationId}"][data-pk="${settingId}"]`).prop('checked', previousWebChecked);
+                    $(`.email-checkbox[data-organization-id="${organizationId}"][data-pk="${settingId}"]`).prop('checked', previousEmailChecked);
+                    updateOrgLevelCheckboxes(organizationId);
                 },
                 complete: function () {
                     isUpdateInProgress = false;
@@ -202,6 +209,16 @@ if (typeof gettext === 'undefined') {
             let isOrgWebChecked = $(`.main-checkbox[data-organization-id="${orgId}"][data-column="web"]`).is(':checked');
             let isOrgEmailChecked = $(`.main-checkbox[data-organization-id="${orgId}"][data-column="email"]`).is(':checked');
 
+            let previousOrgWebChecked, previousOrgEmailChecked;
+
+            if (triggeredBy === 'email') {
+                previousOrgEmailChecked = !isOrgEmailChecked;
+                previousOrgWebChecked = isOrgWebChecked;
+            } else {
+                previousOrgWebChecked = !isOrgWebChecked;
+                previousOrgEmailChecked = isOrgEmailChecked;
+            }
+
             if (triggeredBy === 'email' && isOrgEmailChecked) {
                 isOrgWebChecked = true;
             }
@@ -217,7 +234,14 @@ if (typeof gettext === 'undefined') {
                 email: isOrgEmailChecked
             };
 
+            $(`.main-checkbox[data-organization-id="${orgId}"][data-column="web"]`).prop('checked', isOrgWebChecked);
+            $(`.main-checkbox[data-organization-id="${orgId}"][data-column="email"]`).prop('checked', isOrgEmailChecked);
+
             const table = $(this).closest('table');
+            table.find('.web-checkbox').prop('checked', isOrgWebChecked).change();
+            table.find('.email-checkbox').prop('checked', isOrgEmailChecked).change();
+
+            updateMainCheckboxes(table);
 
             $.ajax({
                 type: 'POST',
@@ -226,23 +250,15 @@ if (typeof gettext === 'undefined') {
                 contentType: 'application/json',
                 data: JSON.stringify(data),
                 success: function () {
-                    $(`.main-checkbox[data-organization-id="${orgId}"][data-column="web"]`).prop('checked', isOrgWebChecked);
-                    $(`.main-checkbox[data-organization-id="${orgId}"][data-column="email"]`).prop('checked', isOrgEmailChecked);
-
-                    table.find('.web-checkbox').prop('checked', isOrgWebChecked).change();
-                    table.find('.email-checkbox').prop('checked', isOrgEmailChecked).change();
-
-                    updateMainCheckboxes(table);
-
                     showToast('success', gettext('Organization settings updated successfully.'));
                 },
                 error: function () {
                     showToast('error', gettext('Something went wrong. Please try again.'));
-                    if (triggeredBy === 'web') {
-                        $(`.main-checkbox[data-organization-id="${orgId}"][data-column="web"]`).prop('checked', !isOrgWebChecked);
-                    } else if (triggeredBy === 'email') {
-                        $(`.main-checkbox[data-organization-id="${orgId}"][data-column="email"]`).prop('checked', !isOrgEmailChecked);
-                    }
+                    $(`.main-checkbox[data-organization-id="${orgId}"][data-column="web"]`).prop('checked', previousOrgWebChecked);
+                    $(`.main-checkbox[data-organization-id="${orgId}"][data-column="email"]`).prop('checked', previousOrgEmailChecked);
+                    table.find('.web-checkbox').prop('checked', previousOrgWebChecked);
+                    table.find('.email-checkbox').prop('checked', previousOrgEmailChecked);
+                    updateMainCheckboxes(table);
                 },
                 complete: function () {
                     isUpdateInProgress = false;
@@ -262,49 +278,89 @@ if (typeof gettext === 'undefined') {
 
     function initializeGlobalSettingsEventListener(userId) {
         $('#global-email, #global-web').change(function (event) {
+            if (isUpdateInProgress) {
+                return;
+            }
+
             const triggeredBy = $(event.target).attr('id');
 
             let isGlobalWebChecked = $('#global-web').is(':checked');
             let isGlobalEmailChecked = $('#global-email').is(':checked');
 
+            let previousGlobalWebChecked, previousGlobalEmailChecked;
+            if (triggeredBy === 'global-email') {
+                previousGlobalEmailChecked = !isGlobalEmailChecked;
+                previousGlobalWebChecked = isGlobalWebChecked;
+            } else {
+                previousGlobalWebChecked = !isGlobalWebChecked;
+                previousGlobalEmailChecked = isGlobalEmailChecked;
+            }
+
+            const previousCheckboxStates = {
+                mainWebChecked: $('.main-checkbox[data-column="web"]').map(function() {
+                    return { orgId: $(this).data('organization-id'), checked: $(this).is(':checked') };
+                }).get(),
+                mainEmailChecked: $('.main-checkbox[data-column="email"]').map(function() {
+                    return { orgId: $(this).data('organization-id'), checked: $(this).is(':checked') };
+                }).get(),
+                webChecked: $('.web-checkbox').map(function() {
+                    return { id: $(this).data('pk'), orgId: $(this).data('organization-id'), checked: $(this).is(':checked') };
+                }).get(),
+                emailChecked: $('.email-checkbox').map(function() {
+                    return { id: $(this).data('pk'), orgId: $(this).data('organization-id'), checked: $(this).is(':checked') };
+                }).get()
+            };
+
             if (triggeredBy === 'global-email' && isGlobalEmailChecked) {
                 isGlobalWebChecked = true;
-            } else if (triggeredBy === 'global-web' && !isGlobalWebChecked) {
+            }
+
+            if (triggeredBy === 'global-web' && !isGlobalWebChecked) {
                 isGlobalEmailChecked = false;
             }
+
+            isUpdateInProgress = true;
 
             const data = {
                 web: isGlobalWebChecked,
                 email: isGlobalEmailChecked
             };
 
-            isUpdateInProgress = true;
+            $('#global-web').prop('checked', isGlobalWebChecked);
+            $('#global-email').prop('checked', isGlobalEmailChecked);
+
+            $('.main-checkbox[data-column="web"]').prop('checked', isGlobalWebChecked).change();
+            $('.main-checkbox[data-column="email"]').prop('checked', isGlobalEmailChecked).change();
+            $('.web-checkbox').prop('checked', isGlobalWebChecked);
+            $('.email-checkbox').prop('checked', isGlobalEmailChecked);
 
             $.ajax({
                 type: 'POST',
-                url: '/api/v1/notifications/user/' + userId + '/preference/',
+                url: `/api/v1/notifications/user/${userId}/preference/`,
                 headers: { 'X-CSRFToken': $('input[name="csrfmiddlewaretoken"]').val() },
                 contentType: 'application/json',
                 data: JSON.stringify(data),
                 success: function () {
-                    $('#global-web').prop('checked', isGlobalWebChecked);
-                    $('#global-email').prop('checked', isGlobalEmailChecked);
-
-                    $('.main-checkbox[data-column="web"]').prop('checked', isGlobalWebChecked).change();
-                    $('.main-checkbox[data-column="email"]').prop('checked', isGlobalEmailChecked).change();
-                    $('.web-checkbox').prop('checked', isGlobalWebChecked);
-                    $('.email-checkbox').prop('checked', isGlobalEmailChecked);
-
                     showToast('success', gettext('Global settings updated successfully.'));
                 },
                 error: function () {
-                    if (triggeredBy === 'global-web') {
-                        $('#global-web').prop('checked', !isGlobalWebChecked);
-                    } else if (triggeredBy === 'global-email') {
-                        $('#global-email').prop('checked', !isGlobalEmailChecked);
-                    }
-
                     showToast('error', gettext('Something went wrong. Please try again.'));
+
+                    $('#global-web').prop('checked', previousGlobalWebChecked);
+                    $('#global-email').prop('checked', previousGlobalEmailChecked);
+
+                    previousCheckboxStates.mainWebChecked.forEach(function(item) {
+                        $(`.main-checkbox[data-organization-id="${item.orgId}"][data-column="web"]`).prop('checked', item.checked);
+                    });
+                    previousCheckboxStates.mainEmailChecked.forEach(function(item) {
+                        $(`.main-checkbox[data-organization-id="${item.orgId}"][data-column="email"]`).prop('checked', item.checked);
+                    });
+                    previousCheckboxStates.webChecked.forEach(function(item) {
+                        $(`.web-checkbox[data-organization-id="${item.orgId}"][data-pk="${item.id}"]`).prop('checked', item.checked);
+                    });
+                    previousCheckboxStates.emailChecked.forEach(function(item) {
+                        $(`.email-checkbox[data-organization-id="${item.orgId}"][data-pk="${item.id}"]`).prop('checked', item.checked);
+                    });
                 },
                 complete: function () {
                     isUpdateInProgress = false;
