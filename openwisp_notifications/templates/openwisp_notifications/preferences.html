@@ -14,13 +14,13 @@
 
 {% block breadcrumbs %}
   <div class="breadcrumbs">
-    {% if request.user.id == user.id %}
-      <a href="{% url 'admin:index' %}">{% trans 'Home' %}</a> &rsaquo;
-    {% else %}
+    {% if username %}
       <a href="{% url 'admin:index' %}">{% trans 'Home' %}</a> &rsaquo;
       <a href="{% url 'admin:app_list' app_label='openwisp_users' %}">{% trans 'Users and Organizations' %}</a> &rsaquo;
       <a href="{% url 'admin:openwisp_users_user_changelist' %}">{% trans 'Users' %}</a> &rsaquo;
-      <a href="{% url 'admin:openwisp_users_user_change' user.id %}">{{ user.username }}</a> &rsaquo;
+      <a href="{% url 'admin:openwisp_users_user_change' user_id %}">{{ username }}</a> &rsaquo;
+    {% else %}
+      <a href="{% url 'admin:index' %}">{% trans 'Home' %}</a> &rsaquo;
     {% endif %}
     {% trans 'Notification Preferences' %}
   </div>
