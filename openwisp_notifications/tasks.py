@@ -9,12 +9,16 @@ from django.db.models import Q
 from django.db.utils import OperationalError
 from django.template.loader import render_to_string
 from django.utils import timezone
+from django.utils.safestring import mark_safe
 from django.utils.translation import gettext as _
 
 from openwisp_notifications import settings as app_settings
 from openwisp_notifications import types
 from openwisp_notifications.swapper import load_model, swapper_load_model
-from openwisp_notifications.utils import send_notification_email
+from openwisp_notifications.utils import (
+    generate_unsubscribe_link,
+    send_notification_email,
+)
 from openwisp_utils.admin_theme.email import send_email
 from openwisp_utils.tasks import OpenwispCeleryTask
 
@@ -259,6 +263,8 @@ def send_batched_email_notifications(instance_id):
             .replace('pm', 'p.m.')
         ) + ' UTC'
 
+        user = User.objects.get(id=instance_id)
+
         context = {
             'notifications': unsent_notifications[:display_limit],
             'notifications_count': notifications_count,
@@ -266,10 +272,17 @@ def send_batched_email_notifications(instance_id):
             'start_time': starting_time,
         }
 
-        extra_context = {}
+        unsubscribe_link = generate_unsubscribe_link(user)
+
+        extra_context = {
+            'footer': mark_safe(
+                'To unsubscribe from these notifications, '
+                f'<a href="{unsubscribe_link}">click here</a>.'
+            ),
+        }
         if notifications_count > display_limit:
             extra_context = {
-                'call_to_action_url': f"https://{current_site.domain}/admin/#notifications",
+                'call_to_action_url': f'https://{current_site.domain}/admin/#notifications',
                 'call_to_action_text': _('View all Notifications'),
             }
         context.update(extra_context)
@@ -284,6 +297,10 @@ def send_batched_email_notifications(instance_id):
             body_html=html_content,
             recipients=[email_id],
             extra_context=extra_context,
+            headers={
+                'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+                'List-Unsubscribe': f'<{unsubscribe_link}>',
+            },
         )
 
     unsent_notifications_query.update(emailed=True)
