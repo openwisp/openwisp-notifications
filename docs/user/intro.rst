@@ -8,6 +8,7 @@ include:
 - :doc:`sending-notifications`
 - :ref:`notifications_web_notifications`
 - :ref:`notifications_email_notifications`
+- :ref:`notifications_batch_email_notifications`
 - :doc:`notification-types`
 - :doc:`User notification preferences <notification-preferences>`
 - :ref:`Silencing notifications for specific objects temporarily or
