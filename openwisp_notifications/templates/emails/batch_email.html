@@ -15,6 +15,9 @@
         .alert.success {
             background-color: #e6f9e8;
         }
+        .alert.warning {
+            background-color: #fff8e1;
+        }
         .alert h2 {
             margin: 0 0 5px 0;
             font-size: 16px;
@@ -26,15 +29,6 @@
             overflow: hidden;
             text-overflow: ellipsis;
             vertical-align: middle;
-        }
-        .alert.error h2 {
-            color: #d9534f;
-        }
-        .alert.info h2 {
-            color: #333333;
-        }
-        .alert.success h2 {
-            color: #1c8828;
         }
         .alert p {
             margin: 0;
@@ -65,17 +59,23 @@
         .badge.success {
             background-color: #1c8828;
         }
+        .badge.warning {
+            background-color: #f0ad4e;
+        }
         .alert a {
             text-decoration: none;
         }
-        .alert.error a {
+        .alert.error a, .alert.error h2 {
             color: #d9534f;
         }
-        .alert.info a {
+        .alert.info a, .alert.info h2 {
             color: #333333;
         }
-        .alert.success a {
+        .alert.success a, .alert.success h2 {
             color: #1c8828;
+        }
+        .alert.warning a, .alert.warning h2 {
+            color: #f0ad4e;
         }
         .alert a:hover {
             text-decoration: underline;
