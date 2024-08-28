@@ -86,22 +86,22 @@ if (typeof gettext === 'undefined') {
                     '<th>' + gettext('Notification Type') + '</th>' +
                     '<th style="text-align: center;">' +
                     '<div style="display: inline-flex; align-items: center; justify-content: center; gap: 4px;">' +
+                    '<span>' + gettext('Web') + '</span>' +
+                    '<span class="tooltip-icon" data-tooltip="' + gettext('Enable or disable web notifications for this organization') + '">?</span>' +
                     '<label class="switch">' +
                     '<input type="checkbox" class="main-checkbox" data-column="web" data-organization-id="' + orgSettings[0].organization + '" ' + (isGlobalWebChecked ? 'checked' : '') + ' />' +
                     '<span class="slider round"></span>' +
                     '</label>' +
-                    '<span>' + gettext('Web') + '</span>' +
-                    '<span class="tooltip-icon" data-tooltip="' + gettext('Enable or disable web notifications for this organization') + '">?</span>' +
                     '</div>' +
                     '</th>' +
                     '<th style="text-align: center;">' +
                     '<div style="display: inline-flex; align-items: center; justify-content: center; gap: 4px;">' +
+                    '<span>' + gettext('Email') + '</span>' +
+                    '<span class="tooltip-icon" data-tooltip="' + gettext('Enable or disable email notifications for this organization') + '">?</span>' +
                     '<label class="switch">' +
                     '<input type="checkbox" class="main-checkbox" data-organization-id="' + orgSettings[0].organization + '" data-column="email" ' + (isGlobalEmailChecked ? 'checked' : '') + ' />' +
                     '<span class="slider round"></span>' +
                     '</label>' +
-                    '<span>' + gettext('Email') + '</span>' +
-                    '<span class="tooltip-icon" data-tooltip="' + gettext('Enable or disable email notifications for this organization') + '">?</span>' +
                     '</div>' +
                     '</th>' +
                     '</tr>' +
