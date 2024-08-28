@@ -5,10 +5,10 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 4px;
+  gap: 8px;
 }
 .global-settings-container {
-  margin-left: 10px;
+  margin-left: 20px;
 }
 .module h2 {
   padding: 10px;
