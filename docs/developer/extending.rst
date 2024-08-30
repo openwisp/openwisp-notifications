@@ -195,9 +195,9 @@ are described below.
 
 .. note::
 
-    For more information regarding how the django admin works, or
-    how it can be customized, please refer to `"The django admin site" section
-    in the django documentation
+    For more information regarding how the django admin works, or how it
+    can be customized, please refer to `"The django admin site" section in
+    the django documentation
     <https://docs.djangoproject.com/en/4.2/ref/contrib/admin/>`_.
 
 1. Monkey patching
@@ -326,8 +326,8 @@ to find out how to do this.
 
 .. note::
 
-    Some tests will fail if ``templatetags`` and ``admin/base.html``
-    are not configured properly. See preceding sections to configure them
+    Some tests will fail if ``templatetags`` and ``admin/base.html`` are
+    not configured properly. See preceding sections to configure them
     properly.
 
 Other base classes that can be inherited and extended
