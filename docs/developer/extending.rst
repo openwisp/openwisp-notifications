@@ -148,9 +148,11 @@ to the `models of the sample app in the test project
 
 You can add fields in a similar way in your ``models.py`` file.
 
-**Note**: For doubts regarding how to use, extend or develop models please
-refer to the `"Models" section in the django documentation
-<https://docs.djangoproject.com/en/4.2/topics/db/models/>`_.
+.. note::
+
+    If you have questions about using, extending, or developing models,
+    refer to the `"Models" section of the Django documentation
+    <https://docs.djangoproject.com/en/4.2/topics/db/models/>`_.
 
 8. Add swapper configurations
 -----------------------------
@@ -191,10 +193,12 @@ Refer to the `admin.py file of the sample app
 To introduce changes to the admin, you can do it in two main ways which
 are described below.
 
-**Note**: For more information regarding how the django admin works, or
-how it can be customized, please refer to `"The django admin site" section
-in the django documentation
-<https://docs.djangoproject.com/en/4.2/ref/contrib/admin/>`_.
+.. note::
+
+    For more information regarding how the django admin works, or
+    how it can be customized, please refer to `"The django admin site" section
+    in the django documentation
+    <https://docs.djangoproject.com/en/4.2/ref/contrib/admin/>`_.
 
 1. Monkey patching
 ~~~~~~~~~~~~~~~~~~
@@ -320,9 +324,11 @@ See the `tests of the sample_notifications
 <https://github.com/openwisp/openwisp-notifications/blob/master/tests/openwisp2/sample_notifications/tests.py>`_
 to find out how to do this.
 
-**Note**: Some tests will fail if ``templatetags`` and ``admin/base.html``
-are not configured properly. See preceding sections to configure them
-properly.
+.. note::
+
+    Some tests will fail if ``templatetags`` and ``admin/base.html``
+    are not configured properly. See preceding sections to configure them
+    properly.
 
 Other base classes that can be inherited and extended
 -----------------------------------------------------
