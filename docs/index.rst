@@ -46,7 +46,6 @@ within the OpenWISP architecture.
     ./user/scheduled-deletion-of-notifications.rst
     ./user/rest-api.rst
     ./user/settings.rst
-    ./user/notification-cache.rst
     ./user/management-commands.rst
 
 .. toctree::
