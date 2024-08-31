@@ -157,6 +157,8 @@ The default configuration is as follows:
         "max_allowed_backoff": 15,
     }
 
+.. _openwisp_notifications_email_batch_interval:
+
 ``OPENWISP_NOTIFICATIONS_EMAIL_BATCH_INTERVAL``
 -----------------------------------------------
 
@@ -169,6 +171,8 @@ This setting defines the interval at which the email notifications are
 sent in batches to users within the specified interval.
 
 If you want to send email notifications immediately, then set it to ``0``.
+
+.. _openwisp_notifications_email_batch_display_limit:
 
 ``OPENWISP_NOTIFICATIONS_EMAIL_BATCH_DISPLAY_LIMIT``
 ----------------------------------------------------
