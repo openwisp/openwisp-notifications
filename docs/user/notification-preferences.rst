@@ -1,8 +1,8 @@
 Notification Preferences
 ========================
 
-.. image:: https://raw.githubusercontent.com/openwisp/openwisp-notifications/docs/docs/images/notification-settings.png
-    :target: https://raw.githubusercontent.com/openwisp/openwisp-notifications/docs/docs/images/notification-settings.png
+.. image:: https://i.imgur.com/lIGqry5.png
+    :target: https://i.imgur.com/lIGqry5.png
     :align: center
 
 OpenWISP Notifications enables users to customize their notification
@@ -11,6 +11,10 @@ updates—either through web notifications or email. These settings are
 organized by notification type and organization, allowing users to tailor
 their notification experience by opting to receive updates only from
 specific organizations or notification types.
+
+Users can access and manage their notification preferences by visiting the
+``/notification/preferences/``. Alternatively, this page can also be
+accessed directly from the notification widget.
 
 Notification settings are automatically generated for all notification
 types and organizations for every user. Superusers have the ability to
