@@ -6,18 +6,14 @@ from django.utils.http import base36_to_int
 class EmailTokenGenerator(PasswordResetTokenGenerator):
     """
     Email token generator that extends the default PasswordResetTokenGenerator
-    with a fixed 7-day expiry period and a salt key.
+    without a fixed expiry period.
     """
 
     key_salt = "openwisp_notifications.tokens.EmailTokenGenerator"
 
-    def __init__(self):
-        super().__init__()
-        self.expiry_days = 7
-
     def check_token(self, user, token):
         """
-        Check that a token is correct for a given user and has not expired.
+        Check that a token is correct for a given user.
         """
         if not (user and token):
             return False
@@ -39,15 +35,9 @@ class EmailTokenGenerator(PasswordResetTokenGenerator):
                 self._make_token_with_timestamp(user, ts, secret),
                 token,
             ):
-                break
-        else:
-            return False
+                return True
 
-        # Check the timestamp is within the expiry limit.
-        if (self._num_seconds(self._now()) - ts) > self._expiry_seconds():
-            return False
-
-        return True
+        return False
 
     def _make_hash_value(self, user, timestamp):
         """
@@ -57,12 +47,6 @@ class EmailTokenGenerator(PasswordResetTokenGenerator):
         email_field = user.get_email_field_name()
         email = getattr(user, email_field, "") or ""
         return f"{user.pk}{user.password}{timestamp}{email}"
-
-    def _expiry_seconds(self):
-        """
-        Returns the number of seconds representing the token's expiry period.
-        """
-        return self.expiry_days * 24 * 3600
 
 
 email_token_generator = EmailTokenGenerator()
