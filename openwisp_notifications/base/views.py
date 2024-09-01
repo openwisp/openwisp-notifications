@@ -29,7 +29,7 @@ class UnsubscribeView(TemplateView):
         if not valid:
             return render(request, self.template_name, {'valid': False})
 
-        notification_preference = self.get_user_preference(user)
+        is_subscribed = self.get_user_preference(user)
 
         return render(
             request,
@@ -37,7 +37,7 @@ class UnsubscribeView(TemplateView):
             {
                 'valid': True,
                 'user': user,
-                'is_subscribed': notification_preference.email,
+                'is_subscribed': is_subscribed,
             },
         )
 
@@ -64,9 +64,7 @@ class UnsubscribeView(TemplateView):
                     {'success': False, 'message': 'Invalid JSON data'}, status=400
                 )
 
-        notification_preference = self.get_user_preference(user)
-        notification_preference.email = subscribe
-        notification_preference.save()
+        self.update_user_preferences(user, subscribe)
 
         status_message = 'subscribed' if subscribe else 'unsubscribed'
         return JsonResponse(
@@ -94,5 +92,13 @@ class UnsubscribeView(TemplateView):
         return None, False
 
     def get_user_preference(self, user):
-        # TODO: Should update this once the Notification Preferences Page PR is merged.
-        return NotificationSetting.objects.filter(user=user).first()
+        """
+        Check if any of the user's notification settings have email notifications enabled.
+        """
+        return NotificationSetting.objects.filter(user=user, email=True).exists()
+
+    def update_user_preferences(self, user, subscribe):
+        """
+        Update all of the user's notification settings to set email preference.
+        """
+        NotificationSetting.objects.filter(user=user).update(email=subscribe)
