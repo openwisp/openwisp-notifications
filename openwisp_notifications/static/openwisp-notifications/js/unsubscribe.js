@@ -1,10 +1,9 @@
+'use strict';
 if (typeof gettext === 'undefined') {
     var gettext = function(word) { return word; };
 }
 
 function updateSubscription(subscribe) {
-    const token = '{{ request.GET.token }}';
-
     fetch(window.location.href, {
         method: 'POST',
         headers: {
@@ -31,7 +30,7 @@ function updateSubscription(subscribe) {
 
             confirmationMsg.style.display = 'block';
         } else {
-            alert(data.message);
+            window.alert(data.message);
         }
     });
 }

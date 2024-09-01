@@ -30,6 +30,7 @@ from openwisp_notifications.tests.test_helpers import (
     register_notification_type,
     unregister_notification_type,
 )
+from openwisp_notifications.tokens import email_token_generator
 from openwisp_notifications.types import (
     _unregister_notification_choice,
     get_notification_configuration,
@@ -1046,6 +1047,24 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
         )
         self._create_notification()
         self.assertEqual(notification_queryset.count(), 1)
+
+    def test_email_unsubscribe_token(self):
+        token = email_token_generator.make_token(self.admin)
+
+        with self.subTest('Valid token for the user'):
+            is_valid = email_token_generator.check_token(self.admin, token)
+            self.assertTrue(is_valid)
+
+        with self.subTest('Token used with a different user'):
+            test_user = self._create_user(username='test')
+            is_valid = email_token_generator.check_token(test_user, token)
+            self.assertFalse(is_valid)
+
+        with self.subTest('Token invalidated after password change'):
+            self.admin.set_password('new_password')
+            self.admin.save()
+            is_valid = email_token_generator.check_token(self.admin, token)
+            self.assertFalse(is_valid)
 
 
 class TestTransactionNotifications(TestOrganizationMixin, TransactionTestCase):
