@@ -1,4 +1,5 @@
 from django.contrib.contenttypes.models import ContentType
+from django.core.exceptions import PermissionDenied
 from django.http import Http404, HttpResponseRedirect
 from django.urls import reverse
 from django_filters.rest_framework import DjangoFilterBackend
@@ -15,11 +16,15 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
+from openwisp_notifications.api.permissions import (
+    IsAuthenticatedToUpdateNotificationSetting,
+)
 from openwisp_notifications.api.serializers import (
     IgnoreObjectNotificationSerializer,
     NotificationListSerializer,
     NotificationSerializer,
     NotificationSettingSerializer,
+    NotificationSettingUpdateSerializer,
 )
 from openwisp_notifications.swapper import load_model
 from openwisp_users.api.authentication import BearerAuthentication
@@ -119,6 +124,14 @@ class BaseNotificationSettingView(GenericAPIView):
     def get_queryset(self):
         if getattr(self, 'swagger_fake_view', False):
             return NotificationSetting.objects.none()  # pragma: no cover
+
+        user_id = self.kwargs.get('user_id')
+
+        if user_id:
+            if not (self.request.user.id == user_id or self.request.user.is_staff):
+                raise PermissionDenied()
+            return NotificationSetting.objects.filter(user_id=user_id)
+
         return NotificationSetting.objects.filter(user=self.request.user)
 
 
@@ -198,11 +211,64 @@ class IgnoreObjectNotificationView(
         )
 
 
+class OrganizationNotificationSettingView(GenericAPIView):
+    permission_classes = [IsAuthenticated, IsAuthenticatedToUpdateNotificationSetting]
+    serializer_class = NotificationSettingUpdateSerializer
+
+    def post(self, request, user_id, organization_id):
+        notification_settings = NotificationSetting.objects.filter(
+            organization_id=organization_id, user_id=user_id
+        )
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            for notification_setting in notification_settings:
+                serializer.update(notification_setting, serializer.validated_data)
+            return Response(status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class NotificationPreferenceView(GenericAPIView):
+    permission_classes = [IsAuthenticated, IsAuthenticatedToUpdateNotificationSetting]
+    serializer_class = NotificationSettingUpdateSerializer
+
+    def get(self, request, user_id):
+        notification_settings, created = NotificationSetting.objects.get_or_create(
+            user_id=user_id,
+            organization=None,
+            type=None,
+            defaults={'email': True, 'web': True},
+        )
+        serializer = self.get_serializer(notification_settings)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def post(self, request, user_id):
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            email = serializer.validated_data.get('email')
+            web = serializer.validated_data.get('web')
+            (
+                notification_settings,
+                created,
+            ) = NotificationSetting.objects.update_or_create(
+                user_id=user_id,
+                organization=None,
+                type=None,
+                defaults={'email': email, 'web': web},
+            )
+            NotificationSetting.objects.filter(user_id=user_id).update(
+                email=email, web=web
+            )
+            return Response(status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
 notifications_list = NotificationListView.as_view()
 notification_detail = NotificationDetailView.as_view()
 notifications_read_all = NotificationReadAllView.as_view()
 notification_read_redirect = NotificationReadRedirect.as_view()
 notification_setting_list = NotificationSettingListView.as_view()
 notification_setting = NotificationSettingView.as_view()
+organization_notification_setting = OrganizationNotificationSettingView.as_view()
 ignore_object_notification_list = IgnoreObjectNotificationListView.as_view()
 ignore_object_notification = IgnoreObjectNotificationView.as_view()
+notification_preference = NotificationPreferenceView.as_view()

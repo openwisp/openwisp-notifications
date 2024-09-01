@@ -133,7 +133,7 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
             organization_id=target_obj.organization.pk,
             type='default',
         )
-        self.assertEqual(notification_preference.email, None)
+        self.assertTrue(notification_preference.email)
         notification_preference.web = False
         notification_preference.save()
         notification_preference.refresh_from_db()
@@ -801,13 +801,18 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
             self.assertEqual(notification_queryset.count(), 0)
 
         with self.subTest('Test user email preference is "True"'):
+            unregister_notification_type('test_type')
+            test_type.update({'web_notification': True})
+            register_notification_type('test_type', test_type)
+            self.notification_options.update({'type': 'test_type'})
+
             notification_setting = NotificationSetting.objects.get(
                 user=self.admin, type='test_type', organization=target_obj.organization
             )
             notification_setting.email = True
             notification_setting.save()
             notification_setting.refresh_from_db()
-            self.assertFalse(notification_setting.email)
+            self.assertTrue(notification_setting.email)
 
         with self.subTest('Test user web preference is "True"'):
             NotificationSetting.objects.filter(

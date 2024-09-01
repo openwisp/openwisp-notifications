@@ -86,10 +86,24 @@ def delete_old_notifications(days):
 # Following tasks updates notification settings in database.
 # 'ns' is short for notification_setting
 def create_notification_settings(user, organizations, notification_types):
+    global_setting, _ = NotificationSetting.objects.get_or_create(
+        user=user, organization=None, type=None, defaults={'email': True, 'web': True}
+    )
+
     for type in notification_types:
+        notification_config = types.get_notification_configuration(type)
         for org in organizations:
             NotificationSetting.objects.update_or_create(
-                defaults={'deleted': False}, user=user, type=type, organization=org
+                defaults={
+                    'deleted': False,
+                    'email': global_setting.email
+                    and notification_config.get('email_notification'),
+                    'web': global_setting.web
+                    and notification_config.get('web_notification'),
+                },
+                user=user,
+                type=type,
+                organization=org,
             )
 
 

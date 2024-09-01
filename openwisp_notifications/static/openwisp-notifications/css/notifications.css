@@ -113,7 +113,7 @@
   float: right;
   position: relative;
   right: -2px;
-  bottom: -8px;
+  bottom: -3px;
   background-size: 9px;
 }
 .ow-notification-toast.info .icon {
@@ -144,7 +144,8 @@
   top: 49px;
 }
 .ow-notification-dropdown .toggle-btn {
-  color: #777;
+  color: #777 !important;
+  text-decoration: none !important;
 }
 .ow-notification-dropdown .toggle-btn:active {
   position: relative;

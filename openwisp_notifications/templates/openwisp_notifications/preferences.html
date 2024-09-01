@@ -1,0 +1,59 @@
+{% extends "admin/base_site.html" %}
+
+{% load i18n %}
+{% load static %}
+
+{% block title %}
+  {% trans "Notification Preferences" %}
+{% endblock %}
+
+{% block extrastyle %}
+  {{ block.super }}
+  <link rel="stylesheet" type="text/css" href="{% static 'openwisp-notifications/css/preferences.css' %}" />
+{% endblock extrastyle %}
+
+{% block breadcrumbs %}
+  <div class="breadcrumbs">
+    {% if username %}
+      <a href="{% url 'admin:index' %}">{% trans 'Home' %}</a> &rsaquo;
+      <a href="{% url 'admin:app_list' app_label='openwisp_users' %}">{% trans 'Users and Organizations' %}</a> &rsaquo;
+      <a href="{% url 'admin:openwisp_users_user_changelist' %}">{% trans 'Users' %}</a> &rsaquo;
+      <a href="{% url 'admin:openwisp_users_user_change' user_id %}">{{ username }}</a> &rsaquo;
+    {% else %}
+      <a href="{% url 'admin:index' %}">{% trans 'Home' %}</a> &rsaquo;
+    {% endif %}
+    {% trans 'Notification Preferences' %}
+  </div>
+{% endblock breadcrumbs %}
+
+{% block content %}
+  <div class="settings-container" data-user-id="{{ user.id }}">
+    <div class="global-settings">
+      <strong>Global Settings:</strong>
+      <div class="global-settings-container">
+        <span>Web</span>
+        <label class="switch">
+          <input type="checkbox" id="global-web" />
+          <span class="slider round"></span>
+        </label>
+        <span class="tooltip-icon" data-tooltip="{% trans 'Enable or disable web notifications globally' %}">?</span>
+      </div>
+      <div class="global-settings-container">
+        <span>Email</span>
+        <label class="switch">
+          <input type="checkbox" id="global-email" />
+          <span class="slider round"></span>
+        </label>
+        <span class="tooltip-icon" data-tooltip="{% trans 'Enable or disable email notifications globally' %}">?</span>
+      </div>
+    </div>
+    <div id="org-panels"></div>
+  </div>
+{% endblock content %}
+
+{% block footer %}
+  {{ block.super }}
+  {% if request.user.is_authenticated %}
+    <script type="text/javascript" src="{% static 'openwisp-notifications/js/preferences.js' %}"></script>
+  {% endif %}
+{% endblock footer %}

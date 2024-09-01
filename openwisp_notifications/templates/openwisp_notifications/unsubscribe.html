@@ -41,7 +41,7 @@
         {% endif %}
         <div class="footer">
           <p>
-            {% trans 'Manage Other Preferences?' %} <a href="/notifications/preferences">{% trans 'Click here' %}</a>
+            {% trans 'Manage Other Preferences?' %} <a href="{% url 'notifications:notification_preference' %}">{% trans 'Click here' %}</a>
           </p>
         </div>
       </div>

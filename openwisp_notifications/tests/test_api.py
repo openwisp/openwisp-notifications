@@ -260,7 +260,9 @@ class TestNotificationApi(
         notify.send(sender=self.admin, type='default', target=self._get_org_user())
         n = Notification.objects.first()
         notification_setting = NotificationSetting.objects.first()
-        notification_setting_count = NotificationSetting.objects.count()
+        notification_setting_count = NotificationSetting.objects.exclude(
+            organization__isnull=True
+        ).count()
         token = self._obtain_auth_token(username='admin', password='tester')
 
         with self.subTest('Test listing all notifications'):
@@ -499,7 +501,9 @@ class TestNotificationApi(
 
     def test_notification_setting_list_api(self):
         self._create_org_user(is_admin=True)
-        number_of_settings = NotificationSetting.objects.filter(user=self.admin).count()
+        number_of_settings = NotificationSetting.objects.filter(
+            user=self.admin, organization__isnull=False
+        ).count()
         url = self._get_path('notification_setting_list')
 
         with self.subTest('Test notification setting list view'):
@@ -551,15 +555,18 @@ class TestNotificationApi(
             self.assertEqual(response.status_code, 200)
             notification_setting = response.data['results'][0]
             self.assertIn('id', notification_setting)
-            self.assertIsNone(notification_setting['web'])
-            self.assertIsNone(notification_setting['email'])
+            self.assertTrue(notification_setting['web'])
+            self.assertTrue(notification_setting['email'])
             self.assertIn('organization', notification_setting)
 
     def test_list_notification_setting_filtering(self):
         url = self._get_path('notification_setting_list')
+        tester = self._create_user()
 
         with self.subTest('Test listing notification setting without filters'):
-            count = NotificationSetting.objects.count()
+            count = NotificationSetting.objects.exclude(
+                organization__isnull=True
+            ).count()
             response = self.client.get(url)
             self.assertEqual(response.status_code, 200)
             self.assertEqual(len(response.data['results']), count)
@@ -592,8 +599,33 @@ class TestNotificationApi(
             ns = response.data['results'].pop()
             self.assertEqual(ns['type'], 'default')
 
+        with self.subTest('Test filtering by user_id as admin'):
+            user_url = self._get_path('user_notification_setting_list', tester.pk)
+            response = self.client.get(user_url)
+            self.assertEqual(response.status_code, 200)
+
+        with self.subTest('Test with user_id by user_id as the same user'):
+            self.client.force_login(tester)
+            user_url = self._get_path('user_notification_setting_list', tester.pk)
+            response = self.client.get(user_url)
+            self.assertEqual(response.status_code, 200)
+
+        with self.subTest('Test with user_id as a different non-admin user'):
+            self.client.force_login(tester)
+            user_url = self._get_path('user_notification_setting_list', self.admin.pk)
+            response = self.client.get(user_url)
+            self.assertEqual(response.status_code, 403)
+
     def test_retreive_notification_setting_api(self):
-        notification_setting = NotificationSetting.objects.first()
+        notification_setting = NotificationSetting.objects.exclude(
+            organization__isnull=True
+        ).first()
+        tester = self._create_user()
+        tester_notification_setting = NotificationSetting.objects.create(
+            user=tester,
+            type='default',
+            organization=Organization.objects.first(),
+        )
 
         with self.subTest('Test for non-existing notification setting'):
             url = self._get_path('notification_setting', uuid.uuid4())
@@ -613,8 +645,49 @@ class TestNotificationApi(
             self.assertEqual(data['web'], notification_setting.web)
             self.assertEqual(data['email'], notification_setting.email)
 
+        with self.subTest(
+            'Test retrieving details for existing notification setting as admin'
+        ):
+            url = self._get_path(
+                'user_notification_setting', tester.pk, tester_notification_setting.pk
+            )
+            response = self.client.get(url)
+            self.assertEqual(response.status_code, 200)
+            data = response.data
+            self.assertEqual(data['id'], str(tester_notification_setting.id))
+
+        with self.subTest(
+            'Test retrieving details for existing notification setting as the same user'
+        ):
+            self.client.force_login(tester)
+            url = self._get_path(
+                'user_notification_setting', tester.pk, tester_notification_setting.pk
+            )
+            response = self.client.get(url)
+            self.assertEqual(response.status_code, 200)
+            data = response.data
+            self.assertEqual(data['id'], str(tester_notification_setting.id))
+
+        with self.subTest(
+            'Test retrieving details for existing notification setting as different non-admin user'
+        ):
+            self.client.force_login(tester)
+            url = self._get_path(
+                'user_notification_setting', self.admin.pk, notification_setting.pk
+            )
+            response = self.client.get(url)
+            self.assertEqual(response.status_code, 403)
+
     def test_update_notification_setting_api(self):
-        notification_setting = NotificationSetting.objects.first()
+        notification_setting = NotificationSetting.objects.exclude(
+            organization__isnull=True
+        ).first()
+        tester = self._create_user()
+        tester_notification_setting = NotificationSetting.objects.create(
+            user=tester,
+            type='default',
+            organization=Organization.objects.first(),
+        )
         update_data = {'web': False}
 
         with self.subTest('Test for non-existing notification setting'):
@@ -622,7 +695,7 @@ class TestNotificationApi(
             response = self.client.put(url, data=update_data)
             self.assertEqual(response.status_code, 404)
 
-        with self.subTest('Test retrieving details for existing notification setting'):
+        with self.subTest('Test updating details for existing notification setting'):
             url = self._get_path(
                 'notification_setting',
                 notification_setting.pk,
@@ -637,6 +710,57 @@ class TestNotificationApi(
             self.assertEqual(data['organization'], notification_setting.organization.pk)
             self.assertEqual(data['web'], notification_setting.web)
             self.assertEqual(data['email'], notification_setting.email)
+
+        with self.subTest(
+            'Test updating details for existing notification setting as admin'
+        ):
+            url = self._get_path(
+                'user_notification_setting', tester.pk, tester_notification_setting.pk
+            )
+            response = self.client.put(
+                url, update_data, content_type='application/json'
+            )
+            self.assertEqual(response.status_code, 200)
+            data = response.data
+            tester_notification_setting.refresh_from_db()
+            self.assertEqual(data['id'], str(tester_notification_setting.id))
+            self.assertEqual(
+                data['organization'], tester_notification_setting.organization.pk
+            )
+            self.assertEqual(data['web'], tester_notification_setting.web)
+            self.assertEqual(data['email'], tester_notification_setting.email)
+
+        with self.subTest(
+            'Test updating details for existing notification setting as the same user'
+        ):
+            self.client.force_login(tester)
+            url = self._get_path(
+                'user_notification_setting', tester.pk, tester_notification_setting.pk
+            )
+            response = self.client.put(
+                url, update_data, content_type='application/json'
+            )
+            self.assertEqual(response.status_code, 200)
+            data = response.data
+            tester_notification_setting.refresh_from_db()
+            self.assertEqual(data['id'], str(tester_notification_setting.id))
+            self.assertEqual(
+                data['organization'], tester_notification_setting.organization.pk
+            )
+            self.assertEqual(data['web'], tester_notification_setting.web)
+            self.assertEqual(data['email'], tester_notification_setting.email)
+
+        with self.subTest(
+            'Test updating details for existing notification setting as a different non-admin user'
+        ):
+            self.client.force_login(tester)
+            url = self._get_path(
+                'user_notification_setting', self.admin.pk, notification_setting.pk
+            )
+            response = self.client.put(
+                url, update_data, content_type='application/json'
+            )
+            self.assertEqual(response.status_code, 403)
 
     def test_notification_redirect_api(self):
         def _unread_notification(notification):
@@ -670,6 +794,82 @@ class TestNotificationApi(
                 response.url,
                 '{view}?next={url}'.format(view=reverse('admin:login'), url=url),
             )
+
+    def test_organization_notification_setting_update(self):
+        tester = self._create_user()
+        org = Organization.objects.first()
+
+        with self.subTest('Test for current user'):
+            url = self._get_path(
+                'organization_notification_setting', self.admin.pk, org.pk
+            )
+            response = self.client.post(url, data={'web': True, 'email': True})
+            self.assertEqual(response.status_code, 200)
+            notification_setting = NotificationSetting.objects.filter(
+                user=self.admin, organization_id=org.pk
+            ).first()
+            self.assertTrue(notification_setting.web, True)
+            self.assertTrue(notification_setting.email, True)
+
+        with self.subTest('Test for admin user'):
+            url = self._get_path(
+                'organization_notification_setting', self.admin.pk, org.pk
+            )
+            response = self.client.post(url, data={'web': True, 'email': True})
+            self.assertEqual(response.status_code, 200)
+            notification_setting = NotificationSetting.objects.filter(
+                user=self.admin, organization_id=org.pk
+            ).first()
+            self.assertTrue(notification_setting.web, True)
+            self.assertTrue(notification_setting.email, True)
+
+        with self.subTest('Test for non-admin user'):
+            self.client.force_login(tester)
+            url = self._get_path(
+                'organization_notification_setting',
+                self.admin.pk,
+                org.pk,
+            )
+            response = self.client.post(url, data={'web': True, 'email': True})
+            self.assertEqual(response.status_code, 403)
+
+    def test_notification_preference_update(self):
+        tester = self._create_user()
+
+        with self.subTest('Test for current user'):
+            url = self._get_path(
+                'notification_preference',
+                self.admin.pk,
+            )
+            response = self.client.post(url, data={'web': True, 'email': True})
+            self.assertEqual(response.status_code, 200)
+            notification_setting = NotificationSetting.objects.get(
+                user=self.admin, organization_id=None, type=None
+            )
+            self.assertTrue(notification_setting.web, True)
+            self.assertTrue(notification_setting.email, True)
+
+        with self.subTest('Test for admin user'):
+            url = self._get_path(
+                'notification_preference',
+                tester.pk,
+            )
+            response = self.client.post(url, data={'web': True, 'email': True})
+            self.assertEqual(response.status_code, 200)
+            notification_setting = NotificationSetting.objects.get(
+                user=tester, organization_id=None, type=None
+            )
+            self.assertTrue(notification_setting.web, True)
+            self.assertTrue(notification_setting.email, True)
+
+        with self.subTest('Test for non-admin user'):
+            self.client.force_login(tester)
+            url = self._get_path(
+                'notification_preference',
+                self.admin.pk,
+            )
+            response = self.client.post(url, data={'web': True, 'email': True})
+            self.assertEqual(response.status_code, 403)
 
     @patch('openwisp_notifications.tasks.delete_ignore_object_notification.apply_async')
     def test_create_ignore_obj_notification_api(self, mocked_task):
