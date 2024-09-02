@@ -162,15 +162,18 @@ The default configuration is as follows:
 ``OPENWISP_NOTIFICATIONS_EMAIL_BATCH_INTERVAL``
 -----------------------------------------------
 
-======= ================================
-type    ``int``
-default ``1800`` `(30 mins, in seconds)`
-======= ================================
+======= =================================
+Type    ``int``
+Default ``1800`` (30 minutes, in seconds)
+======= =================================
 
-This setting defines the interval at which the email notifications are
-sent in batches to users within the specified interval.
+This setting determines the :ref:`interval of the email batching feature
+<notifications_batches>`.
 
-If you want to send email notifications immediately, then set it to ``0``.
+The interval is specified in seconds.
+
+To send email notifications immediately without batching, set this value
+to ``0``.
 
 .. _openwisp_notifications_email_batch_display_limit:
 
@@ -178,9 +181,9 @@ If you want to send email notifications immediately, then set it to ``0``.
 ----------------------------------------------------
 
 ======= =======
-type    ``int``
-default ``15``
+Type    ``int``
+Default ``15``
 ======= =======
 
-This setting defines the number of email notifications to be displayed in
-a batched email.
+This setting specifies the maximum number of email notifications that can
+be included in a single :ref:`email batch <notifications_batches>`.
