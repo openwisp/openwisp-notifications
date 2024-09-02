@@ -11,15 +11,18 @@
   margin-left: 20px;
 }
 .module h2 {
-  padding: 10px;
+  padding: 15px 10px;
   cursor: pointer;
   display: flex;
   justify-content: space-between;
   align-items: center;
   font-weight: bold;
+  font-size: 14px;
+  text-transform: uppercase;
 }
 .org-content {
-  padding-top: 10px;
+  margin-top: 0;
+  padding-top: 0;
   display: none;
 }
 .org-content.active {
@@ -66,6 +69,7 @@ td:not(:first-child) {
 span.toggle-icon {
   width: 16px;
   height: 16px;
+  margin-right: 5px;
   background: url(/static/admin/img/sorting-icons.svg) 0 0 no-repeat;
   background-size: 20px auto;
   transition: background-position 0.3s ease;
@@ -89,6 +93,7 @@ span.toggle-icon.expanded {
   position: relative;
   border: 1px solid var(--body-quiet-color);
   text-transform: none;
+  cursor: default;
 }
 .tooltip-icon::after {
   content: attr(data-tooltip);
@@ -157,4 +162,7 @@ input:checked + .slider:before {
 }
 .slider.round:before {
   border-radius: 50%;
+}
+.module {
+  border: 1px solid rgba(0, 0, 0, 0.1);
 }

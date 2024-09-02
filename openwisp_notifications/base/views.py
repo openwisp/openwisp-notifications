@@ -14,6 +14,7 @@ class NotificationPreferencePage(LoginRequiredMixin, UserPassesTestMixin, Templa
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         user_id = self.kwargs.get('pk')
+        context['title'] = _('Notification Preferences')
 
         if user_id:
             try:
@@ -22,12 +23,11 @@ class NotificationPreferencePage(LoginRequiredMixin, UserPassesTestMixin, Templa
                 if not self.request.user.is_staff:
                     raise Http404('You do not have permission to access this page.')
                 context['username'] = user.username
-                context['title'] = _(f'Notification Preference ({user.username})')
+                context['title'] += f' ({user.username})'
             except User.DoesNotExist:
                 raise Http404('User does not exist')
         else:
             user = self.request.user
-            context['title'] = _('Notification Preference')
 
         context['user_id'] = user.id
         return context
