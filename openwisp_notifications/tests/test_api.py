@@ -833,6 +833,16 @@ class TestNotificationApi(
             response = self.client.post(url, data={'web': True, 'email': True})
             self.assertEqual(response.status_code, 403)
 
+        with self.subTest('Test with invalid data'):
+            self.client.force_login(self.admin)
+            url = self._get_path(
+                'organization_notification_setting',
+                self.admin.pk,
+                org.pk,
+            )
+            response = self.client.post(url, data={'web': 'invalid'})
+            self.assertEqual(response.status_code, 400)
+
     def test_get_notification_preference(self):
         tester = self._create_user()
 
@@ -899,6 +909,15 @@ class TestNotificationApi(
             )
             response = self.client.post(url, data={'web': True, 'email': True})
             self.assertEqual(response.status_code, 403)
+
+        with self.subTest('Test with invalid data'):
+            self.client.force_login(self.admin)
+            url = self._get_path(
+                'notification_preference',
+                self.admin.pk,
+            )
+            response = self.client.post(url, data={'web': 'invalid'})
+            self.assertEqual(response.status_code, 400)
 
     @patch('openwisp_notifications.tasks.delete_ignore_object_notification.apply_async')
     def test_create_ignore_obj_notification_api(self, mocked_task):
