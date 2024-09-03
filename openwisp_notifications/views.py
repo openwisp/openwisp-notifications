@@ -35,8 +35,9 @@ class NotificationPreferencePage(LoginRequiredMixin, UserPassesTestMixin, Templa
         This method ensures that only admins can access the view when a custom user ID is provided.
         """
         if 'pk' in self.kwargs:
-            return self.request.user.is_superuser or self.request.user.id == self.kwargs.get(
-                'pk'
+            return (
+                self.request.user.is_superuser
+                or self.request.user.id == self.kwargs.get('pk')
             )
         return True
 
