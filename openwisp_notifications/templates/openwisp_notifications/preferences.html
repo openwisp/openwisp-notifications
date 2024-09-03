@@ -5,7 +5,7 @@
 
 {% block title %}
   {% trans "Notification Preferences" %}
-{% endblock %}
+{% endblock title %}
 
 {% block extrastyle %}
   {{ block.super }}
@@ -14,13 +14,11 @@
 
 {% block breadcrumbs %}
   <div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">{% trans 'Home' %}</a> &rsaquo;
     {% if username %}
-      <a href="{% url 'admin:index' %}">{% trans 'Home' %}</a> &rsaquo;
       <a href="{% url 'admin:app_list' app_label='openwisp_users' %}">{% trans 'Users and Organizations' %}</a> &rsaquo;
       <a href="{% url 'admin:openwisp_users_user_changelist' %}">{% trans 'Users' %}</a> &rsaquo;
       <a href="{% url 'admin:openwisp_users_user_change' user_id %}">{{ username }}</a> &rsaquo;
-    {% else %}
-      <a href="{% url 'admin:index' %}">{% trans 'Home' %}</a> &rsaquo;
     {% endif %}
     {% trans 'Notification Preferences' %}
   </div>
@@ -29,9 +27,9 @@
 {% block content %}
   <div class="settings-container" data-user-id="{{ user.id }}">
     <div class="global-settings">
-      <strong>Global Settings:</strong>
+      <strong>{% trans "Global Settings:" %}</strong>
       <div class="global-settings-container">
-        <span>Web</span>
+        <span>{% trans "Web" %}</span>
         <label class="switch">
           <input type="checkbox" id="global-web" />
           <span class="slider round"></span>
@@ -39,7 +37,7 @@
         <span class="tooltip-icon" data-tooltip="{% trans 'Enable or disable web notifications globally' %}">?</span>
       </div>
       <div class="global-settings-container">
-        <span>Email</span>
+        <span>{% trans "Email" %}</span>
         <label class="switch">
           <input type="checkbox" id="global-email" />
           <span class="slider round"></span>
