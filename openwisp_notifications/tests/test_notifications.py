@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 from unittest.mock import patch
+from uuid import uuid4
 
 from allauth.account.models import EmailAddress
 from celery.exceptions import OperationalError
@@ -1070,6 +1071,38 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
             self.admin.save()
             is_valid = email_token_generator.check_token(self.admin, token)
             self.assertFalse(is_valid)
+
+    def test_notification_preference_page(self):
+        preference_page = 'notifications:user_notification_preference'
+        tester = self._create_user(username='tester')
+
+        with self.subTest('Test user is not authenticated'):
+            response = self.client.get(reverse(preference_page, args=(self.admin.pk,)))
+            self.assertEqual(response.status_code, 302)
+
+        with self.subTest('Test with same user'):
+            self.client.force_login(self.admin)
+            response = self.client.get(reverse('notifications:notification_preference'))
+            self.assertEqual(response.status_code, 200)
+
+        with self.subTest('Test user is authenticated'):
+            self.client.force_login(self.admin)
+            response = self.client.get(reverse(preference_page, args=(self.admin.pk,)))
+            self.assertEqual(response.status_code, 200)
+
+        with self.subTest('Test user is authenticated but not superuser'):
+            self.client.force_login(tester)
+            response = self.client.get(reverse(preference_page, args=(self.admin.pk,)))
+            self.assertEqual(response.status_code, 403)
+
+        with self.subTest('Test user is authenticated and superuser'):
+            self.client.force_login(self.admin)
+            response = self.client.get(reverse(preference_page, args=(tester.pk,)))
+            self.assertEqual(response.status_code, 200)
+
+        with self.subTest('Test invalid user ID'):
+            response = self.client.get(reverse(preference_page, args=(uuid4(),)))
+            self.assertEqual(response.status_code, 404)
 
 
 class TestTransactionNotifications(TestOrganizationMixin, TransactionTestCase):

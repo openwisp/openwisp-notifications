@@ -1,5 +1,4 @@
 from django.contrib.contenttypes.models import ContentType
-from django.core.exceptions import PermissionDenied
 from django.http import Http404, HttpResponseRedirect
 from django.urls import reverse
 from django_filters.rest_framework import DjangoFilterBackend
@@ -16,9 +15,7 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from openwisp_notifications.api.permissions import (
-    IsAuthenticatedToUpdateNotificationSetting,
-)
+from openwisp_notifications.api.permissions import PreferencesPermission
 from openwisp_notifications.api.serializers import (
     IgnoreObjectNotificationSerializer,
     NotificationListSerializer,
@@ -119,7 +116,7 @@ class BaseNotificationSettingView(GenericAPIView):
     model = NotificationSetting
     serializer_class = NotificationSettingSerializer
     authentication_classes = [BearerAuthentication, SessionAuthentication]
-    permission_classes = [IsAuthenticated]
+    permission_classes = [PreferencesPermission]
 
     def get_queryset(self):
         if getattr(self, 'swagger_fake_view', False):
@@ -128,8 +125,6 @@ class BaseNotificationSettingView(GenericAPIView):
         user_id = self.kwargs.get('user_id')
 
         if user_id:
-            if not (self.request.user.id == user_id or self.request.user.is_staff):
-                raise PermissionDenied()
             return NotificationSetting.objects.filter(user_id=user_id)
 
         return NotificationSetting.objects.filter(user=self.request.user)
@@ -212,7 +207,7 @@ class IgnoreObjectNotificationView(
 
 
 class OrganizationNotificationSettingView(GenericAPIView):
-    permission_classes = [IsAuthenticated, IsAuthenticatedToUpdateNotificationSetting]
+    permission_classes = [IsAuthenticated, PreferencesPermission]
     serializer_class = NotificationSettingUpdateSerializer
 
     def post(self, request, user_id, organization_id):
@@ -228,7 +223,7 @@ class OrganizationNotificationSettingView(GenericAPIView):
 
 
 class NotificationPreferenceView(GenericAPIView):
-    permission_classes = [IsAuthenticated, IsAuthenticatedToUpdateNotificationSetting]
+    permission_classes = [IsAuthenticated, PreferencesPermission]
     serializer_class = NotificationSettingUpdateSerializer
 
     def get(self, request, user_id):

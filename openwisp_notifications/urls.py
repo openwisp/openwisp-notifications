@@ -1,7 +1,7 @@
 from django.urls import include, path
 
 from .api.urls import get_api_urls
-from .base.views import notification_preference_view, unsubscribe_view
+from .views import notification_preference_view, unsubscribe_view
 
 
 def get_urls(api_views=None, social_views=None):

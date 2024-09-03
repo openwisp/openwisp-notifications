@@ -1,11 +1,13 @@
 from rest_framework.permissions import BasePermission
 
 
-class IsAuthenticatedToUpdateNotificationSetting(BasePermission):
+class PreferencesPermission(BasePermission):
     """
-    Permission class to check if the user is authenticated to update notification settings.
-    Allows superusers to change the notification preferences of other users.
-    Regular users can only update their own settings.
+    Permission class for the notification preferences.
+
+    Permission is granted only in these two cases:
+    1. Superusers can change the notification preferences of any user.
+    2. Regular users can only change their own preferences.
     """
 
     def has_permission(self, request, view):
