@@ -9,7 +9,7 @@ def get_api_urls(api_views=None):
     if not api_views:
         api_views = views
     return [
-        path('notifications/', views.notifications_list, name='notifications_list'),
+        path('notification/', views.notifications_list, name='notifications_list'),
         path(
             'notification/read/',
             views.notifications_read_all,
