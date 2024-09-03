@@ -4,6 +4,10 @@ if (typeof gettext === 'undefined') {
     var gettext = function(word){ return word; };
 }
 
+function getAbsoluteUrl(url) {
+    return notificationApiHost.origin + url;
+}
+
 (function ($) {
     let isUpdateInProgress = false;
 
@@ -13,7 +17,7 @@ if (typeof gettext === 'undefined') {
     });
 
     function fetchGlobalSettings(userId) {
-        $.getJSON(`/api/v1/notifications/user/${userId}/preference/`, function (globalData) {
+        $.getJSON(getAbsoluteUrl(`/api/v1/notifications/user/${userId}/preference/`), function (globalData) {
             const isGlobalWebChecked = globalData.web;
             const isGlobalEmailChecked = globalData.email;
 
@@ -33,7 +37,7 @@ if (typeof gettext === 'undefined') {
         let currentPage = 1;
 
         (function fetchPage() {
-            $.getJSON(`/api/v1/notifications/user/${userId}/user-setting/?page_size=100&page=${currentPage}`, function (data) {
+            $.getJSON(getAbsoluteUrl(`/api/v1/notifications/user/${userId}/user-setting/?page_size=100&page=${currentPage}`), function (data) {
                 allResults = allResults.concat(data.results);
 
                 if (data.next) {
@@ -275,7 +279,7 @@ if (typeof gettext === 'undefined') {
 
             $.ajax({
                 type: 'POST',
-                url: `/api/v1/notifications/user/${userId}/organization/${orgId}/setting/`,
+                url: getAbsoluteUrl(`/api/v1/notifications/user/${userId}/organization/${orgId}/setting/`),
                 headers: { 'X-CSRFToken': $('input[name="csrfmiddlewaretoken"]').val() },
                 contentType: 'application/json',
                 data: JSON.stringify(data),
@@ -366,7 +370,7 @@ if (typeof gettext === 'undefined') {
 
             $.ajax({
                 type: 'POST',
-                url: `/api/v1/notifications/user/${userId}/preference/`,
+                url: getAbsoluteUrl(`/api/v1/notifications/user/${userId}/preference/`),
                 headers: { 'X-CSRFToken': $('input[name="csrfmiddlewaretoken"]').val() },
                 contentType: 'application/json',
                 data: JSON.stringify(data),
