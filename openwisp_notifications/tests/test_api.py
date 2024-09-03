@@ -833,7 +833,36 @@ class TestNotificationApi(
             response = self.client.post(url, data={'web': True, 'email': True})
             self.assertEqual(response.status_code, 403)
 
-    def test_notification_preference_update(self):
+    def test_get_notification_preference(self):
+        tester = self._create_user()
+
+        with self.subTest('Test for current user'):
+            self.client.force_login(self.admin)
+            url = self._get_path('notification_preference', self.admin.pk)
+            response = self.client.get(url)
+            self.assertEqual(response.status_code, 200)
+            self.assertIn('web', response.json())
+            self.assertIn('email', response.json())
+            self.assertTrue(response.json()['web'])
+            self.assertTrue(response.json()['email'])
+
+        with self.subTest('Test for admin user accessing another user'):
+            self.client.force_login(self.admin)
+            url = self._get_path('notification_preference', tester.pk)
+            response = self.client.get(url)
+            self.assertEqual(response.status_code, 200)
+            self.assertIn('web', response.json())
+            self.assertIn('email', response.json())
+            self.assertTrue(response.json()['web'])
+            self.assertTrue(response.json()['email'])
+
+        with self.subTest('Test for non-admin user accessing another user'):
+            self.client.force_login(tester)
+            url = self._get_path('notification_preference', self.admin.pk)
+            response = self.client.get(url)
+            self.assertEqual(response.status_code, 403)
+
+    def test_post_notification_preference(self):
         tester = self._create_user()
 
         with self.subTest('Test for current user'):
