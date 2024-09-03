@@ -20,8 +20,6 @@ class NotificationPreferencePage(LoginRequiredMixin, UserPassesTestMixin, Templa
             try:
                 user = User.objects.get(pk=user_id)
                 # Only admin should access other users preferences
-                if not self.request.user.is_staff:
-                    raise Http404('You do not have permission to access this page.')
                 context['username'] = user.username
                 context['title'] += f' ({user.username})'
             except User.DoesNotExist:
@@ -33,11 +31,13 @@ class NotificationPreferencePage(LoginRequiredMixin, UserPassesTestMixin, Templa
         return context
 
     def test_func(self):
-        '''
+        """
         This method ensures that only admins can access the view when a custom user ID is provided.
-        '''
+        """
         if 'pk' in self.kwargs:
-            return self.request.user.is_staff
+            return self.request.user.is_superuser or self.request.user.id == self.kwargs.get(
+                'pk'
+            )
         return True
 
 
