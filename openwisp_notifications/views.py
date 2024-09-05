@@ -92,8 +92,12 @@ class UnsubscribeView(TemplateView):
 
     def post(self, request, *args, **kwargs):
         try:
-            data = json.loads(request.body)
-            subscribe = data.get('subscribe', False)
+            if request.content_type == 'application/json':
+                data = json.loads(request.body)
+                subscribe = data.get('subscribe', False)
+            else:
+                # Unsubscribe by default
+                subscribe = False
         except json.JSONDecodeError:
             return JsonResponse(
                 {'success': False, 'message': 'Invalid JSON data'}, status=400
