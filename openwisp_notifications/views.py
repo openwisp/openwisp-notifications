@@ -6,6 +6,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.http import Http404, JsonResponse
 from django.shortcuts import render
 from django.utils.decorators import method_decorator
+from django.utils.http import urlsafe_base64_decode
 from django.utils.translation import gettext as _
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import TemplateView
@@ -57,52 +58,48 @@ class NotificationPreferenceView(LoginRequiredMixin, UserPassesTestMixin, Templa
 class UnsubscribeView(TemplateView):
     template_name = 'openwisp_notifications/unsubscribe.html'
 
-    def get(self, request, *args, **kwargs):
-        encoded_token = request.GET.get('token')
-        if not encoded_token:
+    def dispatch(self, request, *args, **kwargs):
+        self.encoded_token = request.GET.get('token')
+        if not self.encoded_token:
+            if request.method == 'POST':
+                return JsonResponse(
+                    {'success': False, 'message': 'No token provided'}, status=400
+                )
             return render(request, self.template_name, {'valid': False})
 
-        user, valid = self._validate_token(encoded_token)
-        if not valid:
+        self.user, self.valid = self._validate_token(self.encoded_token)
+        if not self.valid:
+            if request.method == 'POST':
+                return JsonResponse(
+                    {'success': False, 'message': 'Invalid or expired token'},
+                    status=400,
+                )
             return render(request, self.template_name, {'valid': False})
 
-        is_subscribed = self.get_user_preference(user)
+        return super().dispatch(request, *args, **kwargs)
 
-        return render(
-            request,
-            self.template_name,
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        is_subscribed = self.get_user_preference(self.user) if self.valid else False
+        context.update(
             {
-                'valid': True,
-                'user': user,
+                'valid': self.valid,
+                'user': self.user,
                 'is_subscribed': is_subscribed,
-            },
+            }
         )
+        return context
 
     def post(self, request, *args, **kwargs):
-        encoded_token = request.GET.get('token')
-        if not encoded_token:
+        try:
+            data = json.loads(request.body)
+            subscribe = data.get('subscribe', False)
+        except json.JSONDecodeError:
             return JsonResponse(
-                {'success': False, 'message': 'No token provided'}, status=400
+                {'success': False, 'message': 'Invalid JSON data'}, status=400
             )
 
-        user, valid = self._validate_token(encoded_token)
-        if not valid:
-            return JsonResponse(
-                {'success': False, 'message': 'Invalid or expired token'}, status=400
-            )
-
-        subscribe = False
-        if request.body:
-            try:
-                data = json.loads(request.body)
-                subscribe = data.get('subscribe', False)
-            except json.JSONDecodeError:
-                return JsonResponse(
-                    {'success': False, 'message': 'Invalid JSON data'}, status=400
-                )
-
-        self.update_user_preferences(user, subscribe)
-
+        self.update_user_preferences(self.user, subscribe)
         status_message = 'subscribed' if subscribe else 'unsubscribed'
         return JsonResponse(
             {'success': True, 'message': f'Successfully {status_message}'}
@@ -110,7 +107,7 @@ class UnsubscribeView(TemplateView):
 
     def _validate_token(self, encoded_token):
         try:
-            decoded_data = base64.urlsafe_b64decode(encoded_token).decode()
+            decoded_data = urlsafe_base64_decode(encoded_token).decode('utf-8')
             data = json.loads(decoded_data)
             user_id = data.get('user_id')
             token = data.get('token')

@@ -21,7 +21,7 @@ html {
   width: 100%;
 }
 .logo {
-  width: 300px;
+  width: 150px;
   margin-bottom: 20px;
 }
 .icon {
@@ -33,12 +33,11 @@ h1 {
 }
 p {
   color: #555;
-  font-size: 16px;
   margin-bottom: 20px;
   line-height: 1.5;
 }
 button {
-  background-color: #0077b5;
+  background-color: #333;
   color: white;
   padding: 10px 20px;
   border: none;
@@ -47,15 +46,8 @@ button {
   margin: 5px;
 }
 button:hover {
-  background-color: #005f8a;
-}
-a {
-  color: #0077b5;
-  text-decoration: none;
-  font-weight: bold;
-}
-a:hover {
-  text-decoration: underline;
+  opacity: 0.7;
+  border-color: #333;
 }
 .footer {
   margin-top: 20px;

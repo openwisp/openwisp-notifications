@@ -1,9 +1,10 @@
-import base64
 import json
 
 from django.conf import settings
 from django.contrib.sites.models import Site
 from django.urls import NoReverseMatch, reverse
+from django.utils.encoding import force_bytes
+from django.utils.http import urlsafe_base64_encode
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext as _
 
@@ -85,7 +86,7 @@ def send_notification_email(notification):
 def generate_unsubscribe_link(user):
     token = email_token_generator.make_token(user)
     data = json.dumps({'user_id': str(user.id), 'token': token})
-    encoded_data = base64.urlsafe_b64encode(data.encode()).decode()
+    encoded_data = urlsafe_base64_encode(force_bytes(data))
     unsubscribe_url = reverse('notifications:unsubscribe')
     current_site = Site.objects.get_current()
     return f"https://{current_site.domain}{unsubscribe_url}?token={encoded_data}"

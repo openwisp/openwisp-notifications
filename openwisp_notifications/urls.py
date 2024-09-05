@@ -22,7 +22,7 @@ def get_urls(api_views=None, social_views=None):
             notification_preference_view,
             name='user_notification_preference',
         ),
-        path('unsubscribe/', unsubscribe_view, name='unsubscribe'),
+        path('notifications/unsubscribe/', unsubscribe_view, name='unsubscribe'),
     ]
     return urls
 

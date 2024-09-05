@@ -7,6 +7,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{% trans 'Manage Subscription Preferences' %}</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'admin/css/openwisp.css' %}" />
+    <link rel="icon" type="image/x-icon" href="{% static 'ui/openwisp/images/favicon.png' %}" />
     <link rel="stylesheet" type="text/css" href="{% static 'openwisp-notifications/css/unsubscribe.css' %}" />
   </head>
   <body>
@@ -37,7 +39,7 @@
           <p id="confirmation-msg" style="display:none;"></p>
         {% else %}
           <h1>{% trans 'Invalid or Expired Link' %}</h1>
-          <p>{% trans 'The link you used is invalid or expired. Please contact support.' %}</p>
+          <p>{% trans 'The link you used is invalid or expired.' %}</p>
         {% endif %}
         <div class="footer">
           <p>
