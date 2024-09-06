@@ -48,7 +48,7 @@ class TestSelenium(
             By.CSS_SELECTOR, 'input[type="checkbox"]'
         )
         for checkbox in all_checkboxes:
-            self.assertTrue(checkbox.is_selected())
+            self.assertFalse(checkbox.is_selected())
 
         # Check the org level web checkbox
         org_level_email_checkbox = WebDriverWait(self.driver, 10).until(
