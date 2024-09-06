@@ -10,6 +10,7 @@ function getAbsoluteUrl(url) {
 
 (function ($) {
     let isUpdateInProgress = false;
+    $('#ow-notifications-loader').removeClass('ow-hide');
 
     $(document).ready(function () {
         const userId = $('.settings-container').data('user-id');
@@ -17,18 +18,30 @@ function getAbsoluteUrl(url) {
     });
 
     function fetchGlobalSettings(userId) {
-        $.getJSON(getAbsoluteUrl(`/api/v1/notifications/user/${userId}/preference/`), function (globalData) {
-            const isGlobalWebChecked = globalData.web;
-            const isGlobalEmailChecked = globalData.email;
+        $.ajax({
+            url: getAbsoluteUrl(`/api/v1/notifications/user/${userId}/preference/`),
+            dataType: 'json',
+            beforeSend: function () {
+                $('.loader').show();
+                $('.global-settings').hide();
+            },
+            complete: function () {
+                $('.loader').hide();
+            },
+            success: function (globalData) {
+                const isGlobalWebChecked = globalData.web;
+                const isGlobalEmailChecked = globalData.email;
 
-            $('#global-web').prop('checked', isGlobalWebChecked);
-            $('#global-email').prop('checked', isGlobalEmailChecked);
+                $('#global-web').prop('checked', isGlobalWebChecked);
+                $('#global-email').prop('checked', isGlobalEmailChecked);
 
-            initializeGlobalSettingsEventListener(userId);
+                initializeGlobalSettingsEventListener(userId);
 
-            fetchNotificationSettings(userId, isGlobalWebChecked, isGlobalEmailChecked);
-        }).fail(function () {
-            showToast('error', gettext('Error fetching global settings. Please try again.'));
+                fetchNotificationSettings(userId, isGlobalWebChecked, isGlobalEmailChecked);
+            },
+            error: function () {
+                showToast('error', gettext('Error fetching global settings. Please try again.'));
+            }
         });
     }
 
@@ -37,21 +50,34 @@ function getAbsoluteUrl(url) {
         let currentPage = 1;
 
         (function fetchPage() {
-            $.getJSON(getAbsoluteUrl(`/api/v1/notifications/user/${userId}/user-setting/?page_size=100&page=${currentPage}`), function (data) {
-                allResults = allResults.concat(data.results);
+            $.ajax({
+                url: getAbsoluteUrl(`/api/v1/notifications/user/${userId}/user-setting/?page_size=100&page=${currentPage}`),
+                dataType: 'json',
+                beforeSend: function () {
+                    $('.loader').show();
+                    $('.global-settings').hide();
+                },
+                complete: function () {
+                    $('.loader').hide();
+                },
+                success: function (data) {
+                    allResults = allResults.concat(data.results);
 
-                if (data.next) {
-                    currentPage++;
-                    // Continue fetching next page
-                    fetchPage();
-                } else {
-                    // Runs after all the pages are fetched
-                    const groupedData = groupBy(allResults, 'organization_name');
-                    renderNotificationSettings(groupedData, isGlobalWebChecked, isGlobalEmailChecked);
-                    initializeEventListeners(userId);
+                    if (data.next) {
+                        currentPage++;
+                        // Continue fetching next page
+                        fetchPage();
+                    } else {
+                        // Runs after all the pages are fetched
+                        const groupedData = groupBy(allResults, 'organization_name');
+                        renderNotificationSettings(groupedData, isGlobalWebChecked, isGlobalEmailChecked);
+                        initializeEventListeners(userId);
+                        $('.global-settings').show();
+                    }
+                },
+                error: function () {
+                    showToast('error', gettext('Error fetching notification settings. Please try again.'));
                 }
-            }).fail(function () {
-                showToast('error', gettext('Error fetching notification settings. Please try again.'));
             });
         })();
     }
