@@ -56,7 +56,7 @@ class TestSelenium(
             EC.presence_of_element_located(
                 (
                     By.XPATH,
-                    '//div[3]/div[3]/div/div[1]/div[2]/div[3]/div[1]/div/table/thead/tr/th[2]/div/label/span',
+                    '//div[3]/div[3]/div/div[1]/div[2]/div[3]/div/div/table/thead/tr/th[2]/div/label/span',
                 )
             )
         )
@@ -64,7 +64,7 @@ class TestSelenium(
 
         web_checkboxes = self.driver.find_elements(
             By.XPATH,
-            '//div[3]/div[3]/div/div[1]/div[2]/div[3]/div[1]/div/table/tbody//input[@class="web-checkbox"]',
+            '//div[3]/div[3]/div/div[1]/div[2]/div[3]/div/div/table/tbody//input[@class="web-checkbox"]',
         )
 
         for checkbox in web_checkboxes:
@@ -75,7 +75,7 @@ class TestSelenium(
             EC.presence_of_element_located(
                 (
                     By.XPATH,
-                    '//div[3]/div[3]/div/div[1]/div[2]/div[3]/div[1]/div/table/tbody/tr[1]/td[3]/label/span',
+                    '//div[3]/div[3]/div/div[1]/div[2]/div[3]/div/div/table/tbody/tr[1]/td[3]/label/span',
                 )
             )
         )
@@ -83,6 +83,6 @@ class TestSelenium(
 
         is_first_org_email_checkbox = self.driver.find_element(
             By.XPATH,
-            '//div[3]/div[3]/div/div[1]/div[2]/div[3]/div[1]/div/table/tbody/tr[1]/td[3]/label//input',
+            '//div[3]/div[3]/div/div[1]/div[2]/div[3]/div/div/table/tbody/tr[1]/td[3]/label//input',
         )
         self.assertTrue(is_first_org_email_checkbox.is_selected())
