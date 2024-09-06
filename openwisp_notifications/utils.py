@@ -83,10 +83,12 @@ def send_notification_email(notification):
     )
 
 
-def generate_unsubscribe_link(user):
+def generate_unsubscribe_link(user, full_url=True):
     token = email_token_generator.make_token(user)
     data = json.dumps({'user_id': str(user.id), 'token': token})
     encoded_data = urlsafe_base64_encode(force_bytes(data))
     unsubscribe_url = reverse('notifications:unsubscribe')
+    if not full_url:
+        return f"{unsubscribe_url}?token={encoded_data}"
     current_site = Site.objects.get_current()
     return f"https://{current_site.domain}{unsubscribe_url}?token={encoded_data}"

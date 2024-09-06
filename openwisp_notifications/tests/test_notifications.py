@@ -1074,7 +1074,7 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
             self.assertFalse(is_valid)
 
     def test_email_unsubscribe_view(self):
-        unsubscribe_link_generated = generate_unsubscribe_link(self.admin)
+        unsubscribe_link_generated = generate_unsubscribe_link(self.admin, False)
         token = unsubscribe_link_generated.split('?token=')[1]
         local_unsubscribe_url = reverse('notifications:unsubscribe')
         unsubscribe_url = f"{local_unsubscribe_url}?token={token}"
