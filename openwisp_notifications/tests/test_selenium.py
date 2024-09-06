@@ -43,6 +43,7 @@ class TestSelenium(
             """,
             global_web_checkbox,
         )
+        time.sleep(0.4)
 
         all_checkboxes = self.driver.find_elements(
             By.CSS_SELECTOR, 'input[type="checkbox"]'
