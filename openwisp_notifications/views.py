@@ -94,7 +94,7 @@ class UnsubscribeView(TemplateView):
         try:
             if request.content_type == 'application/json':
                 data = json.loads(request.body)
-                subscribe = data.get('subscribe', False)
+                subscribe = data.get('subscribe', False) is True
             else:
                 # Unsubscribe by default
                 subscribe = False

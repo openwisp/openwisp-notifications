@@ -21,25 +21,30 @@ function updateSubscription(subscribe) {
             if (subscribe) {
                 statusMessage.textContent = gettext('You are currently subscribed to notifications.');
                 toggleBtn.textContent = gettext('Unsubscribe');
-                confirmationMsg.textContent = data.message;
+                toggleBtn.setAttribute('data-hasSubscribe', 'true');
+                confirmationMsg.textContent = 'Successfully subscribed!';
             } else {
                 statusMessage.textContent = gettext('You are currently unsubscribed from notifications.');
                 toggleBtn.textContent = gettext('Subscribe');
-                confirmationMsg.textContent = data.message;
+                toggleBtn.setAttribute('data-hasSubscribe', 'false');
+                confirmationMsg.textContent = 'Successfully unsubscribed!';
             }
 
             confirmationMsg.style.display = 'block';
         } else {
             window.alert(data.message);
         }
+    })
+    .catch(error => {
+        console.error('Error:', error);
     });
 }
 
 document.addEventListener('DOMContentLoaded', function() {
     const toggleBtn = document.getElementById('toggle-btn');
     toggleBtn.addEventListener('click', function() {
-        const currentStatus = toggleBtn.textContent.trim().toLowerCase();
-        const subscribe = currentStatus === gettext('subscribe').toLowerCase();
+        const isSubscribed = toggleBtn.getAttribute('data-hasSubscribe') === 'true';
+        const subscribe = !isSubscribed;
         updateSubscription(subscribe);
     });
 });
