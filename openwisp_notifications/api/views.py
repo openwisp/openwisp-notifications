@@ -116,18 +116,13 @@ class BaseNotificationSettingView(GenericAPIView):
     model = NotificationSetting
     serializer_class = NotificationSettingSerializer
     authentication_classes = [BearerAuthentication, SessionAuthentication]
-    permission_classes = [PreferencesPermission]
+    permission_classes = [IsAuthenticated, PreferencesPermission]
 
     def get_queryset(self):
         if getattr(self, 'swagger_fake_view', False):
             return NotificationSetting.objects.none()  # pragma: no cover
-
-        user_id = self.kwargs.get('user_id')
-
-        if user_id:
-            return NotificationSetting.objects.filter(user_id=user_id)
-
-        return NotificationSetting.objects.filter(user=self.request.user)
+        user_id = self.kwargs.get('user_id', self.request.user.id)
+        return NotificationSetting.objects.filter(user=user_id)
 
 
 class NotificationSettingListView(BaseNotificationSettingView, ListModelMixin):
@@ -216,8 +211,17 @@ class OrganizationNotificationSettingView(GenericAPIView):
         )
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
+            validated_data = serializer.validated_data
             for notification_setting in notification_settings:
-                serializer.update(notification_setting, serializer.validated_data)
+                notification_setting.email = validated_data.get(
+                    'email', notification_setting.email
+                )
+                notification_setting.web = validated_data.get(
+                    'web', notification_setting.web
+                )
+            NotificationSetting.objects.bulk_update(
+                notification_settings, ['email', 'web']
+            )
             return Response(status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -237,7 +241,7 @@ class NotificationPreferenceView(GenericAPIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def post(self, request, user_id):
-        serializer = self.get_serializer(data=request.data)
+        serializer = NotificationSettingUpdateSerializer(data=request.data)
         if serializer.is_valid():
             email = serializer.validated_data.get('email')
             web = serializer.validated_data.get('web')

@@ -1,5 +1,6 @@
 .global-settings {
   margin: 10px 0 20px;
+  display: none;
 }
 .global-settings-container {
   display: inline-flex;
@@ -78,7 +79,7 @@ span.toggle-icon.collapsed {
   background-position: 0px -84px;
 }
 span.toggle-icon.expanded {
-  background-position: 0px -64px;
+  background-position: 0px -44px;
 }
 .tooltip-icon {
   display: inline-block;

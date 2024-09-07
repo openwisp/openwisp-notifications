@@ -10,6 +10,7 @@ function getAbsoluteUrl(url) {
 
 (function ($) {
     let isUpdateInProgress = false;
+    $('#ow-notifications-loader').removeClass('ow-hide');
 
     $(document).ready(function () {
         const userId = $('.settings-container').data('user-id');
@@ -17,18 +18,30 @@ function getAbsoluteUrl(url) {
     });
 
     function fetchGlobalSettings(userId) {
-        $.getJSON(getAbsoluteUrl(`/api/v1/notifications/user/${userId}/preference/`), function (globalData) {
-            const isGlobalWebChecked = globalData.web;
-            const isGlobalEmailChecked = globalData.email;
+        $.ajax({
+            url: getAbsoluteUrl(`/api/v1/notifications/user/${userId}/preference/`),
+            dataType: 'json',
+            beforeSend: function () {
+                $('.loader').show();
+                $('.global-settings').hide();
+            },
+            complete: function () {
+                $('.loader').hide();
+            },
+            success: function (globalData) {
+                const isGlobalWebChecked = globalData.web;
+                const isGlobalEmailChecked = globalData.email;
 
-            $('#global-web').prop('checked', isGlobalWebChecked);
-            $('#global-email').prop('checked', isGlobalEmailChecked);
+                $('#global-web').prop('checked', isGlobalWebChecked);
+                $('#global-email').prop('checked', isGlobalEmailChecked);
 
-            initializeGlobalSettingsEventListener(userId);
+                initializeGlobalSettingsEventListener(userId);
 
-            fetchNotificationSettings(userId, isGlobalWebChecked, isGlobalEmailChecked);
-        }).fail(function () {
-            showToast('error', gettext('Error fetching global settings. Please try again.'));
+                fetchNotificationSettings(userId, isGlobalWebChecked, isGlobalEmailChecked);
+            },
+            error: function () {
+                showToast('error', gettext('Error fetching global settings. Please try again.'));
+            }
         });
     }
 
@@ -37,21 +50,34 @@ function getAbsoluteUrl(url) {
         let currentPage = 1;
 
         (function fetchPage() {
-            $.getJSON(getAbsoluteUrl(`/api/v1/notifications/user/${userId}/user-setting/?page_size=100&page=${currentPage}`), function (data) {
-                allResults = allResults.concat(data.results);
+            $.ajax({
+                url: getAbsoluteUrl(`/api/v1/notifications/user/${userId}/user-setting/?page_size=100&page=${currentPage}`),
+                dataType: 'json',
+                beforeSend: function () {
+                    $('.loader').show();
+                    $('.global-settings').hide();
+                },
+                complete: function () {
+                    $('.loader').hide();
+                },
+                success: function (data) {
+                    allResults = allResults.concat(data.results);
 
-                if (data.next) {
-                    currentPage++;
-                    // Continue fetching next page
-                    fetchPage();
-                } else {
-                    // Runs after all the pages are fetched
-                    const groupedData = groupBy(allResults, 'organization_name');
-                    renderNotificationSettings(groupedData, isGlobalWebChecked, isGlobalEmailChecked);
-                    initializeEventListeners(userId);
+                    if (data.next) {
+                        currentPage++;
+                        // Continue fetching next page
+                        fetchPage();
+                    } else {
+                        // Runs after all the pages are fetched
+                        const groupedData = groupBy(allResults, 'organization_name');
+                        renderNotificationSettings(groupedData, isGlobalWebChecked, isGlobalEmailChecked);
+                        initializeEventListeners(userId);
+                        $('.global-settings').show();
+                    }
+                },
+                error: function () {
+                    showToast('error', gettext('Error fetching notification settings. Please try again.'));
                 }
-            }).fail(function () {
-                showToast('error', gettext('Error fetching notification settings. Please try again.'));
             });
         })();
     }
@@ -71,7 +97,7 @@ function getAbsoluteUrl(url) {
             return;
         }
 
-        Object.keys(data).sort().forEach(function(orgName, index) {
+        Object.keys(data).sort().forEach(function(orgName, orgIndex) {
             const orgSettings = data[orgName].sort(function(a, b) {
                 return a.type_label.localeCompare(b.type_label);
             });
@@ -92,7 +118,7 @@ function getAbsoluteUrl(url) {
                     '<div style="display: inline-flex; align-items: center; justify-content: center; gap: 4px;">' +
                     '<span>' + gettext('Web') + '</span>' +
                     '<span class="tooltip-icon" data-tooltip="' + gettext('Enable or disable web notifications for this organization') + '">?</span>' +
-                    '<label class="switch">' +
+                    '<label class="switch" id="org-' + (orgIndex + 1) + '-web">' +
                     '<input type="checkbox" class="main-checkbox" data-column="web" data-organization-id="' + orgSettings[0].organization + '" ' + (isGlobalWebChecked ? 'checked' : '') + ' />' +
                     '<span class="slider round"></span>' +
                     '</label>' +
@@ -102,7 +128,7 @@ function getAbsoluteUrl(url) {
                     '<div style="display: inline-flex; align-items: center; justify-content: center; gap: 4px;">' +
                     '<span>' + gettext('Email') + '</span>' +
                     '<span class="tooltip-icon" data-tooltip="' + gettext('Enable or disable email notifications for this organization') + '">?</span>' +
-                    '<label class="switch">' +
+                    '<label class="switch" id="org-' + (orgIndex + 1) + '-email">' +
                     '<input type="checkbox" class="main-checkbox" data-organization-id="' + orgSettings[0].organization + '" data-column="email" ' + (isGlobalEmailChecked ? 'checked' : '') + ' />' +
                     '<span class="slider round"></span>' +
                     '</label>' +
@@ -113,18 +139,18 @@ function getAbsoluteUrl(url) {
                     '<tbody></tbody>' +
                     '</table>'
                 );
-                orgSettings.forEach(function(setting) {
+                orgSettings.forEach(function(setting, settingIndex) {
                     const row = $(
                         '<tr>' +
                         '<td>' + setting.type_label + '</td>' +
                         '<td>' +
-                        '<label class="switch">' +
+                        '<label class="switch" id="org-' + (orgIndex + 1) + '-web-' + (settingIndex + 1) + '">' +
                         '<input type="checkbox" class="web-checkbox" ' + (setting.web ? 'checked' : '') + ' data-pk="' + setting.id + '" data-organization-id="' + setting.organization + '" data-type="web" />' +
                         '<span class="slider round"></span>' +
                         '</label>' +
                         '</td>' +
                         '<td>' +
-                        '<label class="switch">' +
+                        '<label class="switch" id="org-' + (orgIndex + 1) + '-email-' + (settingIndex + 1) + '">' +
                         '<input type="checkbox" class="email-checkbox" ' + (setting.email ? 'checked' : '') + ' data-pk="' + setting.id + '" data-organization-id="' + setting.organization + '" data-type="email" />' +
                         '<span class="slider round"></span>' +
                         '</label>' +
@@ -140,7 +166,7 @@ function getAbsoluteUrl(url) {
             }
             orgPanelsContainer.append(orgPanel);
 
-            if (index === 0) {
+            if (orgIndex === 0) {
                 orgContent.addClass('active');
                 orgPanel.find('.toggle-icon').removeClass('collapsed').addClass('expanded');
             } else {
