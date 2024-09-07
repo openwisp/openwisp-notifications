@@ -241,7 +241,7 @@ class NotificationPreferenceView(GenericAPIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def post(self, request, user_id):
-        serializer = self.get_serializer(data=request.data)
+        serializer = NotificationSettingUpdateSerializer(data=request.data)
         if serializer.is_valid():
             email = serializer.validated_data.get('email')
             web = serializer.validated_data.get('web')
