@@ -36,7 +36,7 @@ function updateSubscription(subscribe) {
         }
     })
     .catch(error => {
-        console.error('Error:', error);
+        window.console.error('Error:', error);
     });
 }
 
