@@ -5,8 +5,11 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
+from openwisp_notifications.swapper import swapper_load_model
 from openwisp_users.tests.utils import TestOrganizationMixin
 from openwisp_utils.test_selenium_mixins import SeleniumTestMixin
+
+OrganizationUser = swapper_load_model('openwisp_users', 'OrganizationUser')
 
 
 class TestSelenium(
@@ -21,6 +24,8 @@ class TestSelenium(
             username=self.admin_username, password=self.admin_password
         )
         self.driver = self.web_driver
+        org = self._create_org()
+        OrganizationUser.objects.create(user=self.admin, organization=org)
 
     def open(self, url, driver=None):
         driver = self.driver or self.web_driver
@@ -46,7 +51,7 @@ class TestSelenium(
 
         # Check the org-level web checkbox
         org_level_web_checkbox = WebDriverWait(self.driver, 10).until(
-            EC.presence_of_element_located((By.ID, 'org-1-web'))
+            EC.visibility_of_element_located((By.ID, 'org-1-web'))
         )
         org_level_web_checkbox.click()
 
@@ -61,4 +66,6 @@ class TestSelenium(
             EC.presence_of_element_located((By.ID, 'org-1-email-1'))
         )
         first_org_email_checkbox.click()
-        self.assertTrue(first_org_email_checkbox.find_element(By.TAG_NAME, 'input').is_selected())
+        self.assertTrue(
+            first_org_email_checkbox.find_element(By.TAG_NAME, 'input').is_selected()
+        )
