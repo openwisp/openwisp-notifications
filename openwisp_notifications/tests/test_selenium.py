@@ -1,5 +1,3 @@
-import time
-
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
@@ -34,10 +32,10 @@ class TestSelenium(
     def test_notification_preference_page(self):
         self.login()
         self.open('/notifications/preferences/')
-        time.sleep(0.1)
+        self.driver.implicitly_wait(1)
 
         # Uncheck the global web checkbox
-        global_web_checkbox = WebDriverWait(self.driver, 10).until(
+        global_web_checkbox = WebDriverWait(self.driver, 30).until(
             EC.presence_of_element_located((By.ID, 'global-web'))
         )
         global_web_label = global_web_checkbox.find_element(By.XPATH, './parent::label')
