@@ -35,15 +35,8 @@ class TestSelenium(
         global_web_checkbox = WebDriverWait(self.driver, 10).until(
             EC.presence_of_element_located((By.ID, 'global-web'))
         )
-
-        self.driver.execute_script(
-            """
-            arguments[0].checked = false;
-            arguments[0].dispatchEvent(new Event('change', { bubbles: true }));
-            """,
-            global_web_checkbox,
-        )
-        time.sleep(0.4)
+        global_web_label = global_web_checkbox.find_element(By.XPATH, './parent::label')
+        global_web_label.click()
 
         all_checkboxes = self.driver.find_elements(
             By.CSS_SELECTOR, 'input[type="checkbox"]'
@@ -51,38 +44,21 @@ class TestSelenium(
         for checkbox in all_checkboxes:
             self.assertFalse(checkbox.is_selected())
 
-        # Check the org level web checkbox
-        org_level_email_checkbox = WebDriverWait(self.driver, 10).until(
-            EC.presence_of_element_located(
-                (
-                    By.XPATH,
-                    '//div[3]/div[3]/div/div[1]/div[2]/div[3]/div/div/table/thead/tr/th[2]/div/label/span',
-                )
-            )
+        # Check the org-level web checkbox
+        org_level_web_checkbox = WebDriverWait(self.driver, 10).until(
+            EC.presence_of_element_located((By.ID, 'org-1-web'))
         )
-        org_level_email_checkbox.click()
+        org_level_web_checkbox.click()
 
         web_checkboxes = self.driver.find_elements(
-            By.XPATH,
-            '//div[3]/div[3]/div/div[1]/div[2]/div[3]/div/div/table/tbody//input[@class="web-checkbox"]',
+            By.CSS_SELECTOR, 'input[id^="org-1-web-"]'
         )
-
         for checkbox in web_checkboxes:
             self.assertTrue(checkbox.is_selected())
 
         # Check a single email checkbox
         first_org_email_checkbox = WebDriverWait(self.driver, 10).until(
-            EC.presence_of_element_located(
-                (
-                    By.XPATH,
-                    '//div[3]/div[3]/div/div[1]/div[2]/div[3]/div/div/table/tbody/tr[1]/td[3]/label/span',
-                )
-            )
+            EC.presence_of_element_located((By.ID, 'org-1-email-1'))
         )
         first_org_email_checkbox.click()
-
-        is_first_org_email_checkbox = self.driver.find_element(
-            By.XPATH,
-            '//div[3]/div[3]/div/div[1]/div[2]/div[3]/div/div/table/tbody/tr[1]/td[3]/label//input',
-        )
-        self.assertTrue(is_first_org_email_checkbox.is_selected())
+        self.assertTrue(first_org_email_checkbox.find_element(By.TAG_NAME, 'input').is_selected())
