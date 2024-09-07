@@ -22,14 +22,13 @@ function updateSubscription(subscribe) {
                 statusMessage.textContent = gettext('You are currently subscribed to notifications.');
                 toggleBtn.textContent = gettext('Unsubscribe');
                 toggleBtn.setAttribute('data-hasSubscribe', 'true');
-                confirmationMsg.textContent = 'Successfully subscribed!';
             } else {
                 statusMessage.textContent = gettext('You are currently unsubscribed from notifications.');
                 toggleBtn.textContent = gettext('Subscribe');
                 toggleBtn.setAttribute('data-hasSubscribe', 'false');
-                confirmationMsg.textContent = 'Successfully unsubscribed!';
             }
 
+            confirmationMsg.textContent = data.message;
             confirmationMsg.style.display = 'block';
         } else {
             window.alert(data.message);
