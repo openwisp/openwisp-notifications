@@ -97,9 +97,3 @@ class IgnoreObjectNotificationSerializer(serializers.ModelSerializer):
 class NotificationSettingUpdateSerializer(serializers.Serializer):
     email = serializers.BooleanField()
     web = serializers.BooleanField()
-
-    def update(self, instance, validated_data):
-        instance.email = validated_data.get('email', instance.email)
-        instance.web = validated_data.get('web', instance.web)
-        instance.save()
-        return instance
