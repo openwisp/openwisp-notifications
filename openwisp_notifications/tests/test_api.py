@@ -599,7 +599,14 @@ class TestNotificationApi(
             ns = response.data['results'].pop()
             self.assertEqual(ns['type'], 'default')
 
+        with self.subTest('Test without authenticated'):
+            self.client.logout()
+            user_url = self._get_path('user_notification_setting_list', tester.pk)
+            response = self.client.get(user_url)
+            self.assertEqual(response.status_code, 401)
+
         with self.subTest('Test filtering by user_id as admin'):
+            self.client.force_login(self.admin)
             user_url = self._get_path('user_notification_setting_list', tester.pk)
             response = self.client.get(user_url)
             self.assertEqual(response.status_code, 200)
