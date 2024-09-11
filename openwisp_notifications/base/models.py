@@ -279,10 +279,14 @@ class AbstractNotificationSetting(UUIDModel):
         ]
 
     def __str__(self):
-        return '{type} - {organization}'.format(
-            type=self.type_config['verbose_name'],
-            organization=self.organization,
-        )
+        type_name = self.type_config.get('verbose_name', 'Global Setting')
+        if self.organization:
+            return '{type} - {organization}'.format(
+                type=type_name,
+                organization=self.organization,
+            )
+        else:
+            return type_name
 
     def save(self, *args, **kwargs):
         if not self.web_notification:
