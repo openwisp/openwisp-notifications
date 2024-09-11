@@ -122,7 +122,13 @@ class TestNotificationSetting(TestOrganizationMixin, TransactionTestCase):
             queryset.filter(user=org_user.user).count(), 1 * notification_types_count
         )
 
-        # Global Notification Setting for admin is created
+        # Delete existing global notification settings
+        NotificationSetting.objects.filter(
+            user=admin, type=None, organization=None
+        ).delete()
+
+        # Check Global Notification Setting is created
+        notification_type_registered_unregistered_handler(sender=admin)
         self.assertEqual(
             NotificationSetting.objects.filter(
                 user=admin, type=None, organization=None
