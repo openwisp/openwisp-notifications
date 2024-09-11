@@ -73,7 +73,6 @@ span.toggle-icon {
   margin-right: 5px;
   background: url(/static/admin/img/sorting-icons.svg) 0 0 no-repeat;
   background-size: 20px auto;
-  transition: background-position 0.3s ease;
 }
 span.toggle-icon.collapsed {
   background-position: 0px -84px;
