@@ -122,6 +122,14 @@ class TestNotificationSetting(TestOrganizationMixin, TransactionTestCase):
             queryset.filter(user=org_user.user).count(), 1 * notification_types_count
         )
 
+        # Global Notification Setting for admin is created
+        self.assertEqual(
+            NotificationSetting.objects.filter(
+                user=admin, type=None, organization=None
+            ).count(),
+            1,
+        )
+
     def test_superuser_demoted_to_user(self):
         admin = self._get_admin()
         admin.is_superuser = False
