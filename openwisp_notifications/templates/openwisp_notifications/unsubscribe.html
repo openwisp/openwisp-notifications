@@ -1,53 +1,55 @@
-{% load static %}
+{% extends 'account/base_entrance.html' %}
 {% load i18n %}
+{% load static %}
 
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>{% trans 'Manage Subscription Preferences' %}</title>
-    <link rel="stylesheet" type="text/css" href="{% static 'admin/css/openwisp.css' %}" />
-    <link rel="icon" type="image/x-icon" href="{% static 'ui/openwisp/images/favicon.png' %}" />
-    <link rel="stylesheet" type="text/css" href="{% static 'openwisp-notifications/css/unsubscribe.css' %}" />
-  </head>
-  <body>
-    <div class="container">
-      <img
-        src="{% static 'ui/openwisp/images/openwisp-logo-black.svg' %}"
-        alt="{% trans 'OpenWISP Logo' %}"
-        class="logo"
-      />
-      <div class="content">
-        <div class="icon">✉️</div>
-        <h1>{% trans 'Manage Notification Preferences' %}</h1>
-        {% if valid %}
-          <p id="status-message">
-            {% if is_subscribed %}
-              {% trans 'You are currently subscribed to notifications.' %}
-            {% else %}
-              {% trans 'You are currently unsubscribed from notifications.' %}
-            {% endif %}
-          </p>
-          <button id="toggle-btn" data-hasSubscribe="{% if is_subscribed %}true{% else %}false{% endif %}">
-            {% if is_subscribed %}
-              {% trans 'Unsubscribe' %}
-            {% else %}
-              {% trans 'Subscribe' %}
-            {% endif %}
-          </button>
-          <p id="confirmation-msg" style="display:none;"></p>
-        {% else %}
-          <h1>{% trans 'Invalid or Expired Link' %}</h1>
-          <p>{% trans 'The link you used is invalid or expired.' %}</p>
-        {% endif %}
-        <div class="footer">
-          <p>
-            {% trans 'Manage Other Preferences?' %} <a href="{% url 'notifications:notification_preference' %}">{% trans 'Click here' %}</a>
-          </p>
-        </div>
+{% block head_title %}
+  <title>{% trans 'Manage Subscription Preferences' %}</title>
+{% endblock %}
+
+{% block extrastyle %}
+  {{ block.super }}
+  <link rel="stylesheet" type="text/css" href="{% static 'openwisp-notifications/css/unsubscribe.css' %}">
+  <script src="{% static 'openwisp-notifications/js/unsubscribe.js' %}"></script>
+{% endblock %}
+
+{% block menu-bar %}
+{% endblock %}
+
+{% block content %}
+  <div class="unsubscribe-container">
+    <img
+      src="{% static 'ui/openwisp/images/openwisp-logo-black.svg' %}"
+      alt="{% trans 'OpenWISP Logo' %}"
+      class="logo"
+    />
+    <div class="unsubscribe-content">
+      <div class="icon"></div>
+      <h1>{% trans 'Manage Notification Preferences' %}</h1>
+      {% if valid %}
+        <p id="status-message">
+          {% if is_subscribed %}
+            {% trans 'You are currently subscribed to notifications.' %}
+          {% else %}
+            {% trans 'You are currently unsubscribed from notifications.' %}
+          {% endif %}
+        </p>
+        <button id="toggle-btn" data-hasSubscribe="{% if is_subscribed %}true{% else %}false{% endif %}">
+          {% if is_subscribed %}
+            {% trans 'Unsubscribe' %}
+          {% else %}
+            {% trans 'Subscribe' %}
+          {% endif %}
+        </button>
+        <p id="confirmation-msg" style="display:none;"></p>
+      {% else %}
+        <h1>{% trans 'Invalid or Expired Link' %}</h1>
+        <p>{% trans 'The link you used is invalid or expired.' %}</p>
+      {% endif %}
+      <div class="footer">
+        <p>
+          {% trans 'Manage Other Preferences?' %} <a href="{% url 'notifications:notification_preference' %}">{% trans 'Click here' %}</a>
+        </p>
       </div>
     </div>
-    <script src="{% static 'openwisp-notifications/js/unsubscribe.js' %}"></script>
-  </body>
-</html>
+  </div>
+{% endblock %}

@@ -84,7 +84,6 @@ class UnsubscribeView(TemplateView):
         context.update(
             {
                 'valid': self.valid,
-                'user': self.user,
                 'is_subscribed': is_subscribed,
             }
         )
