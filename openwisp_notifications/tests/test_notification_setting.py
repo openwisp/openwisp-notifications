@@ -251,3 +251,17 @@ class TestNotificationSetting(TestOrganizationMixin, TransactionTestCase):
         self.assertEqual(ns_queryset.count(), 1)
         ns.refresh_from_db()
         self.assertEqual(ns.deleted, False)
+
+    def test_global_notification_setting_delete(self):
+        admin = self._get_admin()
+        global_setting = NotificationSetting.objects.get(
+            user=admin, type=None, organization=None
+        )
+        self.assertEqual(str(global_setting), 'Global Setting')
+        global_setting.delete()
+        self.assertEqual(
+            NotificationSetting.objects.filter(
+                user=admin, type=None, organization=None
+            ).count(),
+            0,
+        )
