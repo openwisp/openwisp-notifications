@@ -212,50 +212,18 @@ class OrganizationNotificationSettingView(GenericAPIView):
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
             validated_data = serializer.validated_data
+            web = validated_data.get('web')
+            email = validated_data.get('email')
+
             for notification_setting in notification_settings:
-                notification_setting.email = validated_data.get(
-                    'email', notification_setting.email
-                )
-                notification_setting.web = validated_data.get(
-                    'web', notification_setting.web
-                )
+                if web and not email:
+                    notification_setting.web = web
+                else:
+                    notification_setting.web = web
+                    notification_setting.email = email
+
             NotificationSetting.objects.bulk_update(
-                notification_settings, ['email', 'web']
-            )
-            return Response(status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-class NotificationPreferenceView(GenericAPIView):
-    permission_classes = [IsAuthenticated, PreferencesPermission]
-    serializer_class = NotificationSettingUpdateSerializer
-
-    def get(self, request, user_id):
-        notification_settings, created = NotificationSetting.objects.get_or_create(
-            user_id=user_id,
-            organization=None,
-            type=None,
-            defaults={'email': True, 'web': True},
-        )
-        serializer = self.get_serializer(notification_settings)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-    def post(self, request, user_id):
-        serializer = NotificationSettingUpdateSerializer(data=request.data)
-        if serializer.is_valid():
-            email = serializer.validated_data.get('email')
-            web = serializer.validated_data.get('web')
-            (
-                notification_settings,
-                created,
-            ) = NotificationSetting.objects.update_or_create(
-                user_id=user_id,
-                organization=None,
-                type=None,
-                defaults={'email': email, 'web': web},
-            )
-            NotificationSetting.objects.filter(user_id=user_id).update(
-                email=email, web=web
+                notification_settings, ['web', 'email']
             )
             return Response(status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -270,4 +238,3 @@ notification_setting = NotificationSettingView.as_view()
 organization_notification_setting = OrganizationNotificationSettingView.as_view()
 ignore_object_notification_list = IgnoreObjectNotificationListView.as_view()
 ignore_object_notification = IgnoreObjectNotificationView.as_view()
-notification_preference = NotificationPreferenceView.as_view()

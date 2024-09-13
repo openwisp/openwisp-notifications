@@ -259,10 +259,10 @@ class TestNotificationApi(
         self.client.logout()
         notify.send(sender=self.admin, type='default', target=self._get_org_user())
         n = Notification.objects.first()
-        notification_setting = NotificationSetting.objects.first()
-        notification_setting_count = NotificationSetting.objects.exclude(
-            organization__isnull=True
-        ).count()
+        notification_setting = NotificationSetting.objects.exclude(
+            organization=None
+        ).first()
+        notification_setting_count = NotificationSetting.objects.count()
         token = self._obtain_auth_token(username='admin', password='tester')
 
         with self.subTest('Test listing all notifications'):
@@ -501,9 +501,7 @@ class TestNotificationApi(
 
     def test_notification_setting_list_api(self):
         self._create_org_user(is_admin=True)
-        number_of_settings = NotificationSetting.objects.filter(
-            user=self.admin, organization__isnull=False
-        ).count()
+        number_of_settings = NotificationSetting.objects.filter(user=self.admin).count()
         url = self._get_path('notification_setting_list')
 
         with self.subTest('Test notification setting list view'):
@@ -548,7 +546,7 @@ class TestNotificationApi(
                     next_response.data['next'],
                 )
             else:
-                self.assertIsNone(next_response.data['next'])
+                self.assertIsNotNone(next_response.data['next'])
 
         with self.subTest('Test individual result object'):
             response = self.client.get(url)
@@ -564,9 +562,7 @@ class TestNotificationApi(
         tester = self._create_user()
 
         with self.subTest('Test listing notification setting without filters'):
-            count = NotificationSetting.objects.exclude(
-                organization__isnull=True
-            ).count()
+            count = NotificationSetting.objects.count()
             response = self.client.get(url)
             self.assertEqual(response.status_code, 200)
             self.assertEqual(len(response.data['results']), count)
@@ -846,82 +842,6 @@ class TestNotificationApi(
                 'organization_notification_setting',
                 self.admin.pk,
                 org.pk,
-            )
-            response = self.client.post(url, data={'web': 'invalid'})
-            self.assertEqual(response.status_code, 400)
-
-    def test_get_notification_preference(self):
-        tester = self._create_user()
-
-        with self.subTest('Test for current user'):
-            self.client.force_login(self.admin)
-            url = self._get_path('notification_preference', self.admin.pk)
-            response = self.client.get(url)
-            self.assertEqual(response.status_code, 200)
-            self.assertIn('web', response.json())
-            self.assertIn('email', response.json())
-            self.assertTrue(response.json()['web'])
-            self.assertTrue(response.json()['email'])
-
-        with self.subTest('Test for admin user accessing another user'):
-            self.client.force_login(self.admin)
-            url = self._get_path('notification_preference', tester.pk)
-            response = self.client.get(url)
-            self.assertEqual(response.status_code, 200)
-            self.assertIn('web', response.json())
-            self.assertIn('email', response.json())
-            self.assertTrue(response.json()['web'])
-            self.assertTrue(response.json()['email'])
-
-        with self.subTest('Test for non-admin user accessing another user'):
-            self.client.force_login(tester)
-            url = self._get_path('notification_preference', self.admin.pk)
-            response = self.client.get(url)
-            self.assertEqual(response.status_code, 403)
-
-    def test_post_notification_preference(self):
-        tester = self._create_user()
-
-        with self.subTest('Test for current user'):
-            url = self._get_path(
-                'notification_preference',
-                self.admin.pk,
-            )
-            response = self.client.post(url, data={'web': True, 'email': True})
-            self.assertEqual(response.status_code, 200)
-            notification_setting = NotificationSetting.objects.get(
-                user=self.admin, organization_id=None, type=None
-            )
-            self.assertTrue(notification_setting.web, True)
-            self.assertTrue(notification_setting.email, True)
-
-        with self.subTest('Test for admin user'):
-            url = self._get_path(
-                'notification_preference',
-                tester.pk,
-            )
-            response = self.client.post(url, data={'web': True, 'email': True})
-            self.assertEqual(response.status_code, 200)
-            notification_setting = NotificationSetting.objects.get(
-                user=tester, organization_id=None, type=None
-            )
-            self.assertTrue(notification_setting.web, True)
-            self.assertTrue(notification_setting.email, True)
-
-        with self.subTest('Test for non-admin user'):
-            self.client.force_login(tester)
-            url = self._get_path(
-                'notification_preference',
-                self.admin.pk,
-            )
-            response = self.client.post(url, data={'web': True, 'email': True})
-            self.assertEqual(response.status_code, 403)
-
-        with self.subTest('Test with invalid data'):
-            self.client.force_login(self.admin)
-            url = self._get_path(
-                'notification_preference',
-                self.admin.pk,
             )
             response = self.client.post(url, data={'web': 'invalid'})
             self.assertEqual(response.status_code, 400)
