@@ -50,11 +50,6 @@ def get_api_urls(api_views=None):
             views.organization_notification_setting,
             name='organization_notification_setting',
         ),
-        path(
-            'user/<uuid:user_id>/preference/',
-            views.notification_preference,
-            name='notification_preference',
-        ),
         # DEPRECATED
         path(
             'user/user-setting/',
