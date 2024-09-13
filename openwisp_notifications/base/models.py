@@ -6,8 +6,9 @@ from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.sites.models import Site
 from django.core.cache import cache
+from django.core.exceptions import ValidationError
 from django.db import models
-from django.db.models.constraints import UniqueConstraint, ValidationError
+from django.db.models.constraints import UniqueConstraint
 from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils.functional import cached_property
