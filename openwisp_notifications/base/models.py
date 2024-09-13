@@ -7,7 +7,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.sites.models import Site
 from django.core.cache import cache
 from django.db import models
-from django.db.models.constraints import UniqueConstraint
+from django.db.models.constraints import UniqueConstraint, ValidationError
 from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils.functional import cached_property
@@ -288,9 +288,36 @@ class AbstractNotificationSetting(UUIDModel):
         else:
             return type_name
 
+    def validate_global_setting(self):
+        if self.organization is None and self.type is None:
+            if (
+                self.__class__.objects.filter(
+                    user=self.user,
+                    organization=None,
+                    type=None,
+                )
+                .exclude(pk=self.pk)
+                .exists()
+            ):
+                raise ValidationError("There can only be one global setting per user.")
+
     def save(self, *args, **kwargs):
+        self.validate_global_setting()
         if not self.web_notification:
             self.email = self.web_notification
+        if not self.organization and not self.type:
+            try:
+                original = self.__class__.objects.get(pk=self.pk)
+                if self.web and (self.email == original.email):
+                    self.user.notificationsetting_set.exclude(pk=self.pk).update(
+                        web=self.web
+                    )
+                else:
+                    self.user.notificationsetting_set.exclude(pk=self.pk).update(
+                        web=self.web, email=self.email
+                    )
+            except self.__class__.DoesNotExist:
+                pass
         return super().save(*args, **kwargs)
 
     def full_clean(self, *args, **kwargs):

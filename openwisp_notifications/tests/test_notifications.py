@@ -9,7 +9,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.core import mail
 from django.core.cache import cache
-from django.core.exceptions import ImproperlyConfigured
+from django.core.exceptions import ImproperlyConfigured, ValidationError
 from django.db.models.signals import post_migrate, post_save
 from django.template import TemplateDoesNotExist
 from django.test import TransactionTestCase
@@ -949,6 +949,24 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
         self._create_notification()
         # we don't send emails to unverified email addresses
         self.assertEqual(len(mail.outbox), 0)
+
+    def test_validate_global_notification_setting(self):
+        with self.subTest('Test global notification setting creation'):
+            NotificationSetting.objects.filter(
+                user=self.admin, organization=None, type=None
+            ).delete()
+            global_setting = NotificationSetting(
+                user=self.admin, organization=None, type=None, email=True, web=True
+            )
+            global_setting.save()
+            self.assertIsNotNone(global_setting)
+
+        with self.subTest('Test only one global notification setting per user'):
+            global_setting = NotificationSetting(
+                user=self.admin, organization=None, type=None, email=True, web=True
+            )
+            with self.assertRaises(ValidationError):
+                global_setting.save()
 
     @patch('openwisp_notifications.tasks.send_batched_email_notifications.apply_async')
     def test_batch_email_notification(self, mock_send_email):
