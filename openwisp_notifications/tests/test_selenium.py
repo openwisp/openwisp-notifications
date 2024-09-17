@@ -3,10 +3,14 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
-from openwisp_notifications.swapper import swapper_load_model
+from openwisp_notifications.signals import notify
+from openwisp_notifications.swapper import load_model, swapper_load_model
+from openwisp_notifications.utils import _get_object_link
 from openwisp_users.tests.utils import TestOrganizationMixin
 from openwisp_utils.test_selenium_mixins import SeleniumTestMixin
 
+Notification = load_model('Notification')
+Organization = swapper_load_model('openwisp_users', 'Organization')
 OrganizationUser = swapper_load_model('openwisp_users', 'OrganizationUser')
 
 
@@ -15,55 +19,133 @@ class TestSelenium(
     TestOrganizationMixin,
     StaticLiveServerTestCase,
 ):
-    serve_static = True
-
     def setUp(self):
         self.admin = self._create_admin(
             username=self.admin_username, password=self.admin_password
         )
-        self.driver = self.web_driver
         org = self._create_org()
         OrganizationUser.objects.create(user=self.admin, organization=org)
+        self.operator = super()._get_operator()
+        self.notification_options = dict(
+            sender=self.admin,
+            recipient=self.admin,
+            verb='Test Notification',
+            email_subject='Test Email subject',
+            action_object=self.operator,
+            target=self.operator,
+            type='default',
+        )
 
-    def open(self, url, driver=None):
-        driver = self.driver or self.web_driver
-        driver.get(f'{self.live_server_url}{url}')
+    def _create_notification(self):
+        return notify.send(**self.notification_options)
+
+    def test_notification_relative_link(self):
+        self.login()
+        notification = self._create_notification().pop()[1][0]
+        self.web_driver.find_element(By.ID, 'openwisp_notifications').click()
+        WebDriverWait(self.web_driver, 10).until(
+            EC.visibility_of_element_located((By.CLASS_NAME, 'ow-notification-elem'))
+        )
+        notification_elem = self.web_driver.find_element(
+            By.CLASS_NAME, 'ow-notification-elem'
+        )
+        data_location_value = notification_elem.get_attribute('data-location')
+        self.assertEqual(
+            data_location_value, _get_object_link(notification, 'target', False)
+        )
+
+    def test_notification_dialog(self):
+        self.login()
+        self.notification_options.update(
+            {'message': 'Test Message', 'description': 'Test Description'}
+        )
+        notification = self._create_notification().pop()[1][0]
+        self.web_driver.find_element(By.ID, 'openwisp_notifications').click()
+        WebDriverWait(self.web_driver, 10).until(
+            EC.visibility_of_element_located((By.ID, f'ow-{notification.id}'))
+        )
+        self.web_driver.find_element(By.ID, f'ow-{notification.id}').click()
+        WebDriverWait(self.web_driver, 10).until(
+            EC.visibility_of_element_located((By.CLASS_NAME, 'ow-dialog-notification'))
+        )
+        dialog = self.web_driver.find_element(By.CLASS_NAME, 'ow-dialog-notification')
+        self.assertEqual(
+            dialog.find_element(By.CLASS_NAME, 'ow-message-title').text, 'Test Message'
+        )
+        self.assertEqual(
+            dialog.find_element(By.CLASS_NAME, 'ow-message-description').text,
+            'Test Description',
+        )
+
+    def test_notification_dialog_open_button_visibility(self):
+        self.login()
+        self.notification_options.pop('target')
+        self.notification_options.update(
+            {'message': 'Test Message', 'description': 'Test Description'}
+        )
+        notification = self._create_notification().pop()[1][0]
+        self.web_driver.find_element(By.ID, 'openwisp_notifications').click()
+        WebDriverWait(self.web_driver, 10).until(
+            EC.visibility_of_element_located((By.ID, f'ow-{notification.id}'))
+        )
+        self.web_driver.find_element(By.ID, f'ow-{notification.id}').click()
+        WebDriverWait(self.web_driver, 10).until(
+            EC.visibility_of_element_located((By.CLASS_NAME, 'ow-dialog-notification'))
+        )
+        dialog = self.web_driver.find_element(By.CLASS_NAME, 'ow-dialog-notification')
+        # This confirms the button is hidden
+        dialog.find_element(By.CSS_SELECTOR, '.ow-message-target-redirect.ow-hide')
 
     def test_notification_preference_page(self):
         self.login()
         self.open('/notifications/preferences/')
-        self.driver.implicitly_wait(1)
 
         # Uncheck the global web checkbox
-        global_web_checkbox = WebDriverWait(self.driver, 30).until(
-            EC.presence_of_element_located((By.ID, 'global-web'))
+        global_web_label = WebDriverWait(self.web_driver, 30).until(
+            EC.element_to_be_clickable(
+                (By.XPATH, "//*[@id='global-web']/parent::label")
+            )
         )
-        global_web_label = global_web_checkbox.find_element(By.XPATH, './parent::label')
         global_web_label.click()
 
-        all_checkboxes = self.driver.find_elements(
+        all_checkboxes = self.web_driver.find_elements(
             By.CSS_SELECTOR, 'input[type="checkbox"]'
         )
         for checkbox in all_checkboxes:
             self.assertFalse(checkbox.is_selected())
 
         # Check the org-level web checkbox
-        org_level_web_checkbox = WebDriverWait(self.driver, 10).until(
+        org_level_web_checkbox = WebDriverWait(self.web_driver, 10).until(
             EC.visibility_of_element_located((By.ID, 'org-1-web'))
         )
         org_level_web_checkbox.click()
 
-        web_checkboxes = self.driver.find_elements(
+        web_checkboxes = self.web_driver.find_elements(
             By.CSS_SELECTOR, 'input[id^="org-1-web-"]'
         )
         for checkbox in web_checkboxes:
             self.assertTrue(checkbox.is_selected())
 
         # Check a single email checkbox
-        first_org_email_checkbox = WebDriverWait(self.driver, 10).until(
+        first_org_email_checkbox = WebDriverWait(self.web_driver, 10).until(
             EC.presence_of_element_located((By.ID, 'org-1-email-1'))
         )
         first_org_email_checkbox.click()
         self.assertTrue(
             first_org_email_checkbox.find_element(By.TAG_NAME, 'input').is_selected()
+        )
+
+    def test_empty_notification_preference_page(self):
+        # Delete all organizations
+        Organization.objects.all().delete()
+
+        self.login()
+        self.open('/notifications/preferences/')
+
+        no_organizations_element = WebDriverWait(self.web_driver, 10).until(
+            EC.visibility_of_element_located((By.CLASS_NAME, 'no-organizations'))
+        )
+        self.assertEqual(
+            no_organizations_element.text,
+            'No organizations available.',
         )
