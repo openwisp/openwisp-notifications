@@ -7,7 +7,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.sites.models import Site
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
-from django.db import models
+from django.db import models, transaction
 from django.db.models.constraints import UniqueConstraint
 from django.template.loader import render_to_string
 from django.urls import reverse
@@ -247,6 +247,7 @@ class AbstractNotificationSetting(UUIDModel):
     type = models.CharField(
         max_length=30,
         null=True,
+        blank=True,
         choices=NOTIFICATION_CHOICES,
         verbose_name='Notification Type',
     )
@@ -303,29 +304,33 @@ class AbstractNotificationSetting(UUIDModel):
                 raise ValidationError("There can only be one global setting per user.")
 
     def save(self, *args, **kwargs):
-        self.validate_global_setting()
         if not self.web_notification:
             self.email = self.web_notification
-        if not self.organization and not self.type:
-            try:
-                original = self.__class__.objects.get(pk=self.pk)
-                if self.web and (self.email == original.email):
+        with transaction.atomic():
+            if not self.organization and not self.type:
+                try:
+                    original = self.__class__.objects.get(pk=self.pk)
+                    updates = {'web': self.web}
+
+                    # Update 'email' only if it's different from the previous state
+                    if not self.web or self.email != original.email:
+                        updates['email'] = self.email
+
                     self.user.notificationsetting_set.exclude(pk=self.pk).update(
-                        web=self.web
+                        **updates
                     )
-                else:
-                    self.user.notificationsetting_set.exclude(pk=self.pk).update(
-                        web=self.web, email=self.email
-                    )
-            except self.__class__.DoesNotExist:
-                pass
+                except self.__class__.DoesNotExist:
+                    # Handle case when the object is being created
+                    pass
         return super().save(*args, **kwargs)
 
     def full_clean(self, *args, **kwargs):
-        if self.email == self.type_config['email_notification']:
-            self.email = None
-        if self.web == self.type_config['web_notification']:
-            self.web = None
+        self.validate_global_setting()
+        if self.organization and self.type:
+            if self.email == self.type_config['email_notification']:
+                self.email = None
+            if self.web == self.type_config['web_notification']:
+                self.web = None
         return super().full_clean(*args, **kwargs)
 
     @property
