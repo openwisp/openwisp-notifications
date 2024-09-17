@@ -1,6 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.http import Http404
+from django.urls import reverse_lazy
 from django.utils.translation import gettext as _
 from django.views.generic import TemplateView
 
@@ -9,7 +10,7 @@ User = get_user_model()
 
 class NotificationPreferencePage(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
     template_name = 'openwisp_notifications/preferences.html'
-    login_url = '/admin/login/'
+    login_url = reverse_lazy('admin:login')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
