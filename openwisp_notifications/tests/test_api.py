@@ -559,17 +559,21 @@ class TestNotificationApi(
 
     def test_list_notification_setting_filtering(self):
         url = self._get_path('notification_setting_list')
-        tester = self._create_user()
+        tester = self._create_administrator(
+            organizations=[self._get_org(org_name='default')]
+        )
 
         with self.subTest('Test listing notification setting without filters'):
-            count = NotificationSetting.objects.count()
+            count = NotificationSetting.objects.filter(user=self.admin).count()
             response = self.client.get(url)
             self.assertEqual(response.status_code, 200)
             self.assertEqual(len(response.data['results']), count)
 
         with self.subTest('Test listing notification setting for "default" org'):
             org = Organization.objects.first()
-            count = NotificationSetting.objects.filter(organization_id=org.id).count()
+            count = NotificationSetting.objects.filter(
+                user=self.admin, organization_id=org.id
+            ).count()
             org_url = f'{url}?organization={org.id}'
             response = self.client.get(org_url)
             self.assertEqual(response.status_code, 200)
@@ -579,7 +583,9 @@ class TestNotificationApi(
 
         with self.subTest('Test listing notification setting for "default" org slug'):
             org = Organization.objects.first()
-            count = NotificationSetting.objects.filter(organization=org).count()
+            count = NotificationSetting.objects.filter(
+                user=self.admin, organization=org
+            ).count()
             org_slug_url = f'{url}?organization_slug={org.slug}'
             response = self.client.get(org_slug_url)
             self.assertEqual(response.status_code, 200)
@@ -620,15 +626,15 @@ class TestNotificationApi(
             self.assertEqual(response.status_code, 403)
 
     def test_retreive_notification_setting_api(self):
-        notification_setting = NotificationSetting.objects.exclude(
-            organization__isnull=True
-        ).first()
-        tester = self._create_user()
-        tester_notification_setting = NotificationSetting.objects.create(
-            user=tester,
-            type='default',
-            organization=Organization.objects.first(),
+        tester = self._create_administrator(
+            organizations=[self._get_org(org_name='default')]
         )
+        notification_setting = NotificationSetting.objects.filter(
+            user=self.admin, organization__isnull=False
+        ).first()
+        tester_notification_setting = NotificationSetting.objects.filter(
+            user=tester, organization__isnull=False
+        ).first()
 
         with self.subTest('Test for non-existing notification setting'):
             url = self._get_path('notification_setting', uuid.uuid4())
@@ -682,15 +688,15 @@ class TestNotificationApi(
             self.assertEqual(response.status_code, 403)
 
     def test_update_notification_setting_api(self):
-        notification_setting = NotificationSetting.objects.exclude(
-            organization__isnull=True
-        ).first()
-        tester = self._create_user()
-        tester_notification_setting = NotificationSetting.objects.create(
-            user=tester,
-            type='default',
-            organization=Organization.objects.first(),
+        tester = self._create_administrator(
+            organizations=[self._get_org(org_name='default')]
         )
+        notification_setting = NotificationSetting.objects.filter(
+            user=self.admin, organization__isnull=False
+        ).first()
+        tester_notification_setting = NotificationSetting.objects.filter(
+            user=tester, organization__isnull=False
+        ).first()
         update_data = {'web': False}
 
         with self.subTest('Test for non-existing notification setting'):
@@ -806,25 +812,20 @@ class TestNotificationApi(
             url = self._get_path(
                 'organization_notification_setting', self.admin.pk, org.pk
             )
+            NotificationSetting.objects.filter(
+                user=self.admin, organization_id=org.pk
+            ).update(email=False, web=False)
+            org_setting_count = NotificationSetting.objects.filter(
+                user=self.admin, organization_id=org.pk
+            ).count()
             response = self.client.post(url, data={'web': True, 'email': True})
             self.assertEqual(response.status_code, 200)
-            notification_setting = NotificationSetting.objects.filter(
-                user=self.admin, organization_id=org.pk
-            ).first()
-            self.assertTrue(notification_setting.web, True)
-            self.assertTrue(notification_setting.email, True)
-
-        with self.subTest('Test for admin user'):
-            url = self._get_path(
-                'organization_notification_setting', self.admin.pk, org.pk
+            self.assertEqual(
+                NotificationSetting.objects.filter(
+                    user=self.admin, organization_id=org.pk, email=True, web=True
+                ).count(),
+                org_setting_count,
             )
-            response = self.client.post(url, data={'web': True, 'email': True})
-            self.assertEqual(response.status_code, 200)
-            notification_setting = NotificationSetting.objects.filter(
-                user=self.admin, organization_id=org.pk
-            ).first()
-            self.assertTrue(notification_setting.web, True)
-            self.assertTrue(notification_setting.email, True)
 
         with self.subTest('Test for non-admin user'):
             self.client.force_login(tester)
@@ -845,6 +846,28 @@ class TestNotificationApi(
             )
             response = self.client.post(url, data={'web': 'invalid'})
             self.assertEqual(response.status_code, 400)
+
+        with self.subTest(
+            'Update organization-level web to False while keeping one of email notification setting to true'
+        ):
+            url = self._get_path(
+                'organization_notification_setting',
+                self.admin.pk,
+                org.pk,
+            )
+
+            # Set the default type notification setting's email to True
+            NotificationSetting.objects.filter(
+                user=self.admin, organization_id=org.pk, type='default'
+            ).update(email=True)
+
+            response = self.client.post(url, data={'web': True, 'email': False})
+
+            self.assertTrue(
+                NotificationSetting.objects.filter(
+                    user=self.admin, organization_id=org.pk, type='default', email=True
+                ).exists()
+            )
 
     @patch('openwisp_notifications.tasks.delete_ignore_object_notification.apply_async')
     def test_create_ignore_obj_notification_api(self, mocked_task):
