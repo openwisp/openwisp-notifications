@@ -287,6 +287,7 @@ class TestNotificationSetting(TestOrganizationMixin, TransactionTestCase):
         # Update global settings
         global_setting.email = False
         global_setting.web = False
+        global_setting.full_clean()
         global_setting.save()
 
         with self.subTest(
@@ -298,6 +299,7 @@ class TestNotificationSetting(TestOrganizationMixin, TransactionTestCase):
             ).update(email=True)
 
             global_setting.web = True
+            global_setting.full_clean()
             global_setting.save()
 
             self.assertTrue(
