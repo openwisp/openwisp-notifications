@@ -179,6 +179,7 @@ class TestAdmin(BaseTestAdmin):
         # Button does not appear for non-staff user
         with self.subTest("Button should not appear for non-staff user"):
             user.is_staff = False
+            user.full_clean()
             user.save()
             response = self.client.get(user_admin_page)
             self.assertNotContains(response, expected_html, html=True)
