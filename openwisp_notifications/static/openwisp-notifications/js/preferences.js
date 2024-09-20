@@ -314,8 +314,11 @@ function getAbsoluteUrl(url) {
 
             const data = {
                 web: isOrgWebChecked,
-                email: isOrgEmailChecked
             };
+
+            if (triggeredBy === 'email') {
+                data.email = isOrgEmailChecked;
+            }
 
             // Update the UI
             $(`.main-checkbox[data-organization-id="${orgId}"][data-column="web"]`).prop('checked', isOrgWebChecked);
