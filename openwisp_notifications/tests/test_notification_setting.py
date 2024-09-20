@@ -291,7 +291,7 @@ class TestNotificationSetting(TestOrganizationMixin, TransactionTestCase):
         global_setting.save()
 
         with self.subTest(
-            'Update global web to False while ensuring at least one email setting is True'
+            'Test global web to False while ensuring at least one email setting is True'
         ):
             # Set the default type notification setting's email to True
             NotificationSetting.objects.filter(
@@ -305,6 +305,22 @@ class TestNotificationSetting(TestOrganizationMixin, TransactionTestCase):
             self.assertTrue(
                 NotificationSetting.objects.filter(
                     user=admin, organization=org, email=True, type='default'
+                ).exists()
+            )
+
+        with self.subTest('Test global web to False'):
+            global_setting.web = False
+            global_setting.full_clean()
+            global_setting.save()
+
+            self.assertFalse(
+                NotificationSetting.objects.filter(
+                    user=admin, organization=org, web=True
+                ).exists()
+            )
+            self.assertFalse(
+                NotificationSetting.objects.filter(
+                    user=admin, organization=org, email=True
                 ).exists()
             )
 

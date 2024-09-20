@@ -309,11 +309,19 @@ class AbstractNotificationSetting(UUIDModel):
         with transaction.atomic():
             if not self.organization and not self.type:
                 try:
-                    original = self.__class__.objects.get(pk=self.pk)
+                    previous_state = self.__class__.objects.only('email').get(
+                        pk=self.pk
+                    )
                     updates = {'web': self.web}
 
-                    # Update 'email' only if it's different from the previous state
-                    if not self.web or self.email != original.email:
+                    # If global web notifiations are disabled, then disable email notifications as well
+                    if not self.web:
+                        updates['email'] = False
+
+                    # Update email notifiations only if it's different from the previous state
+                    # Otherwise, it would overwrite the email notification settings for specific
+                    # setting that were enabled by the user after disabling global email notifications
+                    if self.email != previous_state.email:
                         updates['email'] = self.email
 
                     self.user.notificationsetting_set.exclude(pk=self.pk).update(
