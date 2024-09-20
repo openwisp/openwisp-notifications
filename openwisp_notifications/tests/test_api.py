@@ -848,13 +848,17 @@ class TestNotificationApi(
             self.assertEqual(response.status_code, 400)
 
         with self.subTest(
-            'Update organization-level web to False while keeping one of email notification setting to true'
+            'Test email to False while keeping one of email notification setting to true'
         ):
             url = self._get_path(
                 'organization_notification_setting',
                 self.admin.pk,
                 org.pk,
             )
+
+            NotificationSetting.objects.filter(
+                user=self.admin, organization_id=org.pk
+            ).update(web=False, email=False)
 
             # Set the default type notification setting's email to True
             NotificationSetting.objects.filter(
@@ -863,9 +867,28 @@ class TestNotificationApi(
 
             response = self.client.post(url, data={'web': True, 'email': False})
 
-            self.assertTrue(
+            self.assertFalse(
                 NotificationSetting.objects.filter(
-                    user=self.admin, organization_id=org.pk, type='default', email=True
+                    user=self.admin, organization_id=org.pk, email=True
+                ).exists()
+            )
+
+        with self.subTest('Test web to False'):
+            url = self._get_path(
+                'organization_notification_setting',
+                self.admin.pk,
+                org.pk,
+            )
+
+            NotificationSetting.objects.filter(
+                user=self.admin, organization_id=org.pk
+            ).update(web=True, email=True)
+
+            response = self.client.post(url, data={'web': False})
+
+            self.assertFalse(
+                NotificationSetting.objects.filter(
+                    user=self.admin, organization_id=org.pk, email=True
                 ).exists()
             )
 

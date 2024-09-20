@@ -95,5 +95,11 @@ class IgnoreObjectNotificationSerializer(serializers.ModelSerializer):
 
 
 class NotificationSettingUpdateSerializer(serializers.Serializer):
-    email = serializers.BooleanField()
-    web = serializers.BooleanField()
+    email = serializers.BooleanField(required=False)
+    web = serializers.BooleanField(required=False)
+
+    def validate(self, attrs):
+        attrs = super().validate(attrs)
+        if 'email' not in attrs and attrs.get('web') is False:
+            attrs['email'] = False
+        return attrs
