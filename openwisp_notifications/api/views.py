@@ -206,25 +206,12 @@ class OrganizationNotificationSettingView(GenericAPIView):
     serializer_class = NotificationSettingUpdateSerializer
 
     def post(self, request, user_id, organization_id):
-        notification_settings = NotificationSetting.objects.filter(
-            organization_id=organization_id, user_id=user_id
-        )
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
             validated_data = serializer.validated_data
-            web = validated_data.get('web')
-            email = validated_data.get('email')
-
-            for notification_setting in notification_settings:
-                if web and not email:
-                    notification_setting.web = web
-                else:
-                    notification_setting.web = web
-                    notification_setting.email = email
-
-            NotificationSetting.objects.bulk_update(
-                notification_settings, ['web', 'email']
-            )
+            NotificationSetting.objects.filter(
+                organization_id=organization_id, user_id=user_id
+            ).update(**validated_data)
             return Response(status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
