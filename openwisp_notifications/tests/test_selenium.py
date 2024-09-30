@@ -100,13 +100,43 @@ class TestSelenium(
         self.login()
         self.open('/notifications/preferences/')
 
-        # Uncheck the global web checkbox
-        global_web_label = WebDriverWait(self.web_driver, 30).until(
-            EC.element_to_be_clickable(
-                (By.XPATH, "//*[@id='global-web']/parent::label")
+        WebDriverWait(self.web_driver, 30).until(
+            EC.visibility_of_element_located(
+                (By.CLASS_NAME, 'global-settings-container')
             )
         )
-        global_web_label.click()
+
+        # Uncheck the global web checkbox
+        global_web_dropdown_toggle = WebDriverWait(self.web_driver, 30).until(
+            EC.element_to_be_clickable(
+                (
+                    By.CSS_SELECTOR,
+                    '.global-setting-dropdown[data-web-state] .global-setting-dropdown-toggle',
+                )
+            )
+        )
+        global_web_dropdown_toggle.click()
+
+        global_web_dropdown_menu = WebDriverWait(self.web_driver, 10).until(
+            EC.visibility_of_element_located(
+                (
+                    By.CSS_SELECTOR,
+                    '.global-setting-dropdown[data-web-state] .global-setting-dropdown-menu-open',
+                )
+            )
+        )
+
+        dont_notify_on_web_option = global_web_dropdown_menu.find_element(
+            By.XPATH, './/li[normalize-space()="Don\'t Notify on Web"]'
+        )
+        dont_notify_on_web_option.click()
+
+        confirmation_modal = WebDriverWait(self.web_driver, 10).until(
+            EC.visibility_of_element_located((By.ID, 'confirmation-modal'))
+        )
+
+        confirm_button = confirmation_modal.find_element(By.ID, 'confirm')
+        confirm_button.click()
 
         all_checkboxes = self.web_driver.find_elements(
             By.CSS_SELECTOR, 'input[type="checkbox"]'
@@ -114,12 +144,19 @@ class TestSelenium(
         for checkbox in all_checkboxes:
             self.assertFalse(checkbox.is_selected())
 
+        # Expand the first organization panel if it's collapsed
+        first_org_toggle = WebDriverWait(self.web_driver, 10).until(
+            EC.element_to_be_clickable((By.CSS_SELECTOR, '.module .toggle-header'))
+        )
+        first_org_toggle.click()
+
         # Check the org-level web checkbox
         org_level_web_checkbox = WebDriverWait(self.web_driver, 10).until(
-            EC.visibility_of_element_located((By.ID, 'org-1-web'))
+            EC.element_to_be_clickable((By.ID, 'org-1-web'))
         )
         org_level_web_checkbox.click()
 
+        # Verify that all web checkboxes under org-1 are selected
         web_checkboxes = self.web_driver.find_elements(
             By.CSS_SELECTOR, 'input[id^="org-1-web-"]'
         )
@@ -142,7 +179,7 @@ class TestSelenium(
         self.login()
         self.open('/notifications/preferences/')
 
-        no_organizations_element = WebDriverWait(self.web_driver, 10).until(
+        no_organizations_element = WebDriverWait(self.web_driver, 30).until(
             EC.visibility_of_element_located((By.CLASS_NAME, 'no-organizations'))
         )
         self.assertEqual(
