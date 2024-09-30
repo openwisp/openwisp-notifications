@@ -170,9 +170,6 @@ function notificationWidget($) {
                     // If response does not have any notification, show no-notifications message.
                     $('.ow-no-notifications').removeClass('ow-hide');
                     $('#ow-mark-all-read').addClass('disabled');
-                    if ($('#ow-show-unread').html() !== 'Show all') {
-                        $('#ow-show-unread').addClass('disabled');
-                    }
                     busy = false;
                 } else {
                     if (res.results.length === 0 && nextPageUrl !== null){
@@ -301,17 +298,6 @@ function notificationWidget($) {
 
     $('.ow-notifications').on('click', initNotificationWidget);
 
-    // Handler for filtering unread notifications
-    $('#ow-show-unread').click(function () {
-        if ($(this).html().includes('Show unread only')) {
-            refreshNotificationWidget(null, '/api/v1/notifications/notification/?unread=true');
-            $(this).html('Show all');
-        } else {
-            refreshNotificationWidget(null, '/api/v1/notifications/notification/');
-            $(this).html('Show unread only');
-        }
-    });
-
     // Handler for marking all notifications read
     $('#ow-mark-all-read').click(function () {
         var unreads = $('.ow-notification-elem.unread');
@@ -328,7 +314,6 @@ function notificationWidget($) {
             },
             crossDomain: true,
             success: function () {
-                $('#ow-show-unread').html('Show unread only');
                 $('#ow-notification-count').remove();
             },
             error: function (error) {
