@@ -15,6 +15,7 @@ function getAbsoluteUrl(url) {
     $(document).ready(function () {
         const userId = $('.settings-container').data('user-id');
         fetchNotificationSettings(userId);
+        initializeGlobalSettings(userId);
     });
 
     function fetchNotificationSettings(userId) {
@@ -62,10 +63,7 @@ function getAbsoluteUrl(url) {
             const isGlobalEmailChecked = globalSetting.email;
             globalSettingId = globalSetting.id;
 
-            $('#global-web').prop('checked', isGlobalWebChecked);
-            $('#global-email').prop('checked', isGlobalEmailChecked);
-
-            initializeGlobalSettingsEventListener(userId);
+            initializeGlobalDropdowns(isGlobalWebChecked, isGlobalEmailChecked);
         } else {
             showToast('error', gettext('Global settings not found.'));
         }
@@ -76,6 +74,26 @@ function getAbsoluteUrl(url) {
 
         initializeEventListeners(userId);
         $('.global-settings').show();
+    }
+
+    function initializeGlobalDropdowns(isGlobalWebChecked, isGlobalEmailChecked) {
+        // Initialize Web dropdown
+        const webDropdown = document.querySelector('.global-setting-dropdown[data-web-state]');
+        const webToggle = webDropdown.querySelector('.global-setting-dropdown-toggle');
+        const webState = isGlobalWebChecked ? 'on' : 'off';
+
+        // Update toggle's data-state and button text
+        webToggle.setAttribute('data-state', webState);
+        webToggle.innerHTML = (isGlobalWebChecked ? 'Notify on Web' : 'Don\'t Notify on Web') + ' ' + createArrowSpanHtml();
+
+        // Initialize Email dropdown
+        const emailDropdown = document.querySelector('.global-setting-dropdown[data-email-state]');
+        const emailToggle = emailDropdown.querySelector('.global-setting-dropdown-toggle');
+        const emailState = isGlobalEmailChecked ? 'on' : 'off';
+
+        // Update toggle's data-state and button text
+        emailToggle.setAttribute('data-state', emailState);
+        emailToggle.innerHTML = (isGlobalEmailChecked ? 'Notify by Email' : 'Don\'t Notify by Email') + ' ' + createArrowSpanHtml();
     }
 
     function groupBy(array, key) {
@@ -101,10 +119,23 @@ function getAbsoluteUrl(url) {
 
             const orgName = orgSettings[0].organization_name;
 
+            // Calculate counts
+            const totalNotifications = orgSettings.length;
+            const enabledWebNotifications = orgSettings.filter(setting => setting.web).length;
+            const enabledEmailNotifications = orgSettings.filter(setting => setting.email).length;
+
             const orgPanel = $(
                 '<div class="module">' +
-                '<h2 class="toggle-header"><span>' + `${gettext('Organization')}: ${orgName}` + '</span><span class="toggle-icon collapsed"></span></h2>' +
-                '<div class="org-content"></div>' +
+                    '<table class="toggle-header" style="border: none;">' +
+                            '<thead>' +
+                                '<tr style="background: #f9f9f9">' +
+                                    '<td class="org-name"><h2 style="justify-content: flex-start;">' + `${gettext('Organization')}: ${orgName}` + '</h2></td>' +
+                                    '<td><h2 class="web-count">' + gettext('Web') + ' ' + enabledWebNotifications + '/' + totalNotifications + '</h2></td>' +
+                                    '<td class="email-row"><h2 class="email-count">' + gettext('Email') + ' ' + enabledEmailNotifications + '/' + totalNotifications + '</h2><span class="toggle-icon collapsed"></span></td>' +
+                                '</tr>' +
+                            '</thead>' +
+                    '</table>' +
+                    '<div class="org-content"></div>' +
                 '</div>'
             );
 
@@ -112,32 +143,32 @@ function getAbsoluteUrl(url) {
             if (orgSettings.length > 0) {
                 const table = $(
                     '<table>' +
-                    '<thead>' +
-                    '<tr>' +
-                    '<th>' + gettext('Notification Type') + '</th>' +
-                    '<th class="notification-web-header">' + 
-                        '<div class="notification-header-container">' +
-                        '<span>' + gettext('Web') + '</span>' +
-                        '<span class="tooltip-icon" data-tooltip="' + gettext('Enable or disable web notifications for this organization') + '">?</span>' +
-                        '<label class="switch" id="org-' + (orgIndex + 1) + '-web">' +
-                        '<input type="checkbox" class="main-checkbox" data-column="web" data-organization-id="' + orgId + '" />' +
-                        '<span class="slider round"></span>' +
-                        '</label>' +
-                        '</div>' +
-                    '</th>' +
-                    '<th class="notification-email-header">' +
-                        '<div class="notification-header-container">' +
-                        '<span>' + gettext('Email') + '</span>' +
-                        '<span class="tooltip-icon" data-tooltip="' + gettext('Enable or disable email notifications for this organization') + '">?</span>' +
-                        '<label class="switch" id="org-' + (orgIndex + 1) + '-email">' +
-                        '<input type="checkbox" class="main-checkbox" data-organization-id="' + orgId + '" data-column="email" />' +
-                        '<span class="slider round"></span>' +
-                        '</label>' +
-                        '</div>' +
-                    '</th>' +
-                    '</tr>' +
-                    '</thead>' +
-                    '<tbody></tbody>' +
+                        '<thead>' +
+                            '<tr>' +
+                                '<th style="width: 40%;">' + gettext('Notification Type') + '</th>' +
+                                '<th>' + 
+                                    '<div class="notification-header-container">' +
+                                    '<span>' + gettext('Web') + '</span>' +
+                                    '<span class="tooltip-icon" data-tooltip="' + gettext('Enable or disable web notifications for this organization') + '">?</span>' +
+                                    '<label class="switch" id="org-' + (orgIndex + 1) + '-web">' +
+                                    '<input type="checkbox" class="main-checkbox" data-column="web" data-organization-id="' + orgId + '" />' +
+                                    '<span class="slider round"></span>' +
+                                    '</label>' +
+                                    '</div>' +
+                                '</th>' +
+                                '<th>' +
+                                    '<div class="notification-header-container">' +
+                                    '<span>' + gettext('Email') + '</span>' +
+                                    '<span class="tooltip-icon" data-tooltip="' + gettext('Enable or disable email notifications for this organization') + '">?</span>' +
+                                    '<label class="switch" id="org-' + (orgIndex + 1) + '-email">' +
+                                    '<input type="checkbox" class="main-checkbox" data-organization-id="' + orgId + '" data-column="email" />' +
+                                    '<span class="slider round"></span>' +
+                                    '</label>' +
+                                    '</div>' +
+                                '</th>' +
+                            '</tr>' +
+                        '</thead>' +
+                        '<tbody></tbody>' +
                     '</table>'
                 );
 
@@ -145,19 +176,19 @@ function getAbsoluteUrl(url) {
                 orgSettings.forEach(function(setting, settingIndex) {
                     const row = $(
                         '<tr>' +
-                        '<td>' + setting.type_label + '</td>' +
-                        '<td>' +
-                        '<label class="switch" id="org-' + (orgIndex + 1) + '-web-' + (settingIndex + 1) + '">' +
-                        '<input type="checkbox" class="web-checkbox" ' + (setting.web ? 'checked' : '') + ' data-pk="' + setting.id + '" data-organization-id="' + orgId + '" data-type="web" />' +
-                        '<span class="slider round"></span>' +
-                        '</label>' +
-                        '</td>' +
-                        '<td>' +
-                        '<label class="switch" id="org-' + (orgIndex + 1) + '-email-' + (settingIndex + 1) + '">' +
-                        '<input type="checkbox" class="email-checkbox" ' + (setting.email ? 'checked' : '') + ' data-pk="' + setting.id + '" data-organization-id="' + orgId + '" data-type="email" />' +
-                        '<span class="slider round"></span>' +
-                        '</label>' +
-                        '</td>' +
+                            '<td>' + setting.type_label + '</td>' +
+                            '<td>' +
+                                '<label class="switch" id="org-' + (orgIndex + 1) + '-web-' + (settingIndex + 1) + '">' +
+                                '<input type="checkbox" class="web-checkbox" ' + (setting.web ? 'checked' : '') + ' data-pk="' + setting.id + '" data-organization-id="' + orgId + '" data-type="web" />' +
+                                '<span class="slider round"></span>' +
+                                '</label>' +
+                            '</td>' +
+                            '<td>' +
+                                '<label class="switch" id="org-' + (orgIndex + 1) + '-email-' + (settingIndex + 1) + '">' +
+                                    '<input type="checkbox" class="email-checkbox" ' + (setting.email ? 'checked' : '') + ' data-pk="' + setting.id + '" data-organization-id="' + orgId + '" data-type="email" />' +
+                                    '<span class="slider round"></span>' +
+                                '</label>' +
+                            '</td>' +
                         '</tr>'
                     );
                     table.find('tbody').append(row);
@@ -171,8 +202,8 @@ function getAbsoluteUrl(url) {
 
             orgPanelsContainer.append(orgPanel);
 
-            // Expand the first organization by default
-            if (orgIndex === 0) {
+            // Expand the first organization if there is only one organization
+            if (orgIndex === 0 && orgSettings.length === 1) {
                 orgContent.addClass('active');
                 orgPanel.find('.toggle-icon').removeClass('collapsed').addClass('expanded');
             } else {
@@ -181,12 +212,18 @@ function getAbsoluteUrl(url) {
         });
     }
 
-    // Update the org level checkboxes based on individual checkbox states in the table
+    // Update the org level checkboxes
     function updateMainCheckboxes(table) {
         table.find('.main-checkbox').each(function () {
             const column = $(this).data('column');
-            const allChecked = table.find('.' + column + '-checkbox').length === table.find('.' + column + '-checkbox:checked').length;
+            const totalCheckboxes = table.find('.' + column + '-checkbox').length;
+            const checkedCheckboxes = table.find('.' + column + '-checkbox:checked').length;
+            const allChecked = totalCheckboxes === checkedCheckboxes;
             $(this).prop('checked', allChecked);
+
+            // Update counts in the header
+            const headerSpan = table.find('.notification-' + column + '-header .notification-header-container span').first();
+            headerSpan.text((column === 'web' ? gettext('Web') : gettext('Email')) + ' ' + checkedCheckboxes + '/' + totalCheckboxes);
         });
     }
 
@@ -329,6 +366,7 @@ function getAbsoluteUrl(url) {
             }
 
             updateMainCheckboxes(table);
+            updateOrgLevelCheckboxes(orgId);
 
             $.ajax({
                 type: 'POST',
@@ -358,109 +396,361 @@ function getAbsoluteUrl(url) {
         });
     }
 
-    // Update individual setting checkboxes at the organization level
+    // Update individual setting checkboxes and counts at the organization level
     function updateOrgLevelCheckboxes(organizationId) {
-        const webCheckboxes = $('.web-checkbox[data-organization-id="' + organizationId + '"]');
-        const emailCheckboxes = $('.email-checkbox[data-organization-id="' + organizationId + '"]');
-        const webMainCheckbox = $('.main-checkbox[data-column="web"][data-organization-id="' + organizationId + '"]');
-        const emailMainCheckbox = $('.main-checkbox[data-column="email"][data-organization-id="' + organizationId + '"]');
-        webMainCheckbox.prop('checked', webCheckboxes.length === webCheckboxes.filter(':checked').length);
-        emailMainCheckbox.prop('checked', emailCheckboxes.length === emailCheckboxes.filter(':checked').length);
+        const table = $(`.main-checkbox[data-organization-id="${organizationId}"]`).closest('table');
+        const webCheckboxes = table.find('.web-checkbox');
+        const emailCheckboxes = table.find('.email-checkbox');
+        const webMainCheckbox = table.find('.main-checkbox[data-column="web"]');
+        const emailMainCheckbox = table.find('.main-checkbox[data-column="email"]');
+        const totalWebCheckboxes = webCheckboxes.length;
+        const totalEmailCheckboxes = emailCheckboxes.length;
+        const checkedWebCheckboxes = webCheckboxes.filter(':checked').length;
+        const checkedEmailCheckboxes = emailCheckboxes.filter(':checked').length;
+
+        webMainCheckbox.prop('checked', totalWebCheckboxes === checkedWebCheckboxes);
+        emailMainCheckbox.prop('checked', totalEmailCheckboxes === checkedEmailCheckboxes);
+
+        // Update counts in the header
+        const orgModule = table.closest('.module');
+        const webCountSpan = orgModule.find('.web-count');
+        const emailCountSpan = orgModule.find('.email-count');
+        webCountSpan.text(gettext('Web') + ' ' + checkedWebCheckboxes + '/' + totalWebCheckboxes);
+        emailCountSpan.text(gettext('Email') + ' ' + checkedEmailCheckboxes + '/' + totalEmailCheckboxes);
     }
 
-    // Initialize event listener for global settings
-    function initializeGlobalSettingsEventListener(userId) {
-        $('#global-email, #global-web').change(function (event) {
+    function initializeGlobalSettings(userId) {
+        var $dropdowns = $(".global-setting-dropdown");
+        var $modal = $("#confirmation-modal");
+        var $goBackBtn = $("#go-back");
+        var $confirmBtn = $("#confirm");
+        var activeDropdown = null;
+        var selectedOptionText = "";
+        var selectedOptionElement = null;
+        var previousCheckboxStates = null;
+
+        $dropdowns.each(function () {
+            var $dropdown = $(this);
+            var $toggle = $dropdown.find(".global-setting-dropdown-toggle");
+            var $menu = $dropdown.find(".global-setting-dropdown-menu");
+
+            $toggle.on("click", function (e) {
+                e.stopPropagation();
+                closeAllDropdowns();
+                $menu.toggleClass("global-setting-dropdown-menu-open");
+                adjustDropdownWidth($menu);
+            });
+
+            $menu.find("li").on("click", function () {
+                activeDropdown = $dropdown;
+                selectedOptionText = $(this).text().trim();
+                selectedOptionElement = $(this);
+                updateModalContent(); // Update modal content before showing
+                $modal.show();
+            });
+        });
+
+        // Close all dropdowns when clicking outside
+        $(document).on("click", closeAllDropdowns);
+
+        function closeAllDropdowns() {
+            $dropdowns.each(function () {
+                $(this)
+                    .find(".global-setting-dropdown-menu")
+                    .removeClass("global-setting-dropdown-menu-open");
+            });
+        }
+
+        function adjustDropdownWidth($menu) {
+            var $toggle = $menu.prev(".global-setting-dropdown-toggle");
+            var maxWidth = Math.max.apply(
+                null,
+                $menu
+                    .find("li")
+                    .map(function () {
+                        return $(this).outerWidth();
+                    })
+                    .get()
+            );
+            $menu.css(
+                "width",
+                Math.max($toggle.outerWidth(), maxWidth) + "px"
+            );
+        }
+
+        $goBackBtn.on("click", function () {
+            $modal.hide();
+        });
+
+        $confirmBtn.on("click", function () {
             if (isUpdateInProgress) {
                 return;
             }
 
-            const triggeredBy = $(event.target).attr('id');
+            if (activeDropdown) {
+                var dropdownType = activeDropdown.is("[data-web-state]") ? "web" : "email";
+                var triggeredBy = dropdownType;
 
-            let isGlobalWebChecked = $('#global-web').is(':checked');
-            let isGlobalEmailChecked = $('#global-email').is(':checked');
+                var $webDropdown = $('.global-setting-dropdown[data-web-state]');
+                var $emailDropdown = $('.global-setting-dropdown[data-email-state]');
+                var $webToggle = $webDropdown.find('.global-setting-dropdown-toggle');
+                var $emailToggle = $emailDropdown.find('.global-setting-dropdown-toggle');
 
-            // Store previous states for potential rollback
-            let previousGlobalWebChecked, previousGlobalEmailChecked;
-            if (triggeredBy === 'global-email') {
-                previousGlobalEmailChecked = !isGlobalEmailChecked;
-                previousGlobalWebChecked = isGlobalWebChecked;
-            } else {
-                previousGlobalWebChecked = !isGlobalWebChecked;
-                previousGlobalEmailChecked = isGlobalEmailChecked;
+                // Determine the current states
+                var isGlobalWebChecked = $webToggle.attr('data-state') === 'on';
+                var isGlobalEmailChecked = $emailToggle.attr('data-state') === 'on';
+
+                // Store previous states for potential rollback
+                var previousGlobalWebChecked = isGlobalWebChecked;
+                var previousGlobalEmailChecked = isGlobalEmailChecked;
+
+                previousCheckboxStates = {
+                    mainWebChecked: $('.main-checkbox[data-column="web"]')
+                        .map(function () {
+                            return {
+                                orgId: $(this).data("organization-id"),
+                                checked: $(this).is(":checked"),
+                            };
+                        })
+                        .get(),
+                    mainEmailChecked: $('.main-checkbox[data-column="email"]')
+                        .map(function () {
+                            return {
+                                orgId: $(this).data("organization-id"),
+                                checked: $(this).is(":checked"),
+                            };
+                        })
+                        .get(),
+                    webChecked: $(".web-checkbox")
+                        .map(function () {
+                            return {
+                                id: $(this).data("pk"),
+                                orgId: $(this).data("organization-id"),
+                                checked: $(this).is(":checked"),
+                            };
+                        })
+                        .get(),
+                    emailChecked: $(".email-checkbox")
+                        .map(function () {
+                            return {
+                                id: $(this).data("pk"),
+                                orgId: $(this).data("organization-id"),
+                                checked: $(this).is(":checked"),
+                            };
+                        })
+                        .get(),
+                };
+
+                // Update the state based on the selected option
+                if (dropdownType === "web") {
+                    isGlobalWebChecked = selectedOptionText === "Notify on Web";
+                } else if (dropdownType === "email") {
+                    isGlobalEmailChecked = selectedOptionText === "Notify by Email";
+                }
+
+                // Email notifications require web notifications to be enabled
+                if (triggeredBy === "email" && isGlobalEmailChecked) {
+                    isGlobalWebChecked = true;
+                }
+
+                // Disabling web notifications also disables email notifications
+                if (triggeredBy === "web" && !isGlobalWebChecked) {
+                    isGlobalEmailChecked = false;
+                }
+
+                isUpdateInProgress = true;
+
+                // Update the UI and data-state attributes
+                $webToggle
+                    .html(
+                        (isGlobalWebChecked ? "Notify on Web" : "Don't Notify on Web") +
+                            " " +
+                            createArrowSpanHtml()
+                    )
+                    .attr("data-state", isGlobalWebChecked ? "on" : "off");
+                $webDropdown.attr("data-web-state", isGlobalWebChecked ? "Yes" : "No");
+
+                $emailToggle
+                    .html(
+                        (isGlobalEmailChecked ? "Notify by Email" : "Don't Notify by Email") +
+                            " " +
+                            createArrowSpanHtml()
+                    )
+                    .attr("data-state", isGlobalEmailChecked ? "on" : "off");
+                $emailDropdown.attr("data-email-state", isGlobalEmailChecked ? "Yes" : "No");
+
+                // Update the checkboxes
+                $('.main-checkbox[data-column="web"]')
+                    .prop("checked", isGlobalWebChecked)
+                    .change();
+                $(".web-checkbox").prop("checked", isGlobalWebChecked);
+                if (
+                    (dropdownType === "web" && !isGlobalWebChecked) ||
+                    dropdownType === "email"
+                ) {
+                    $(".email-checkbox").prop("checked", isGlobalEmailChecked);
+                    $('.main-checkbox[data-column="email"]')
+                        .prop("checked", isGlobalEmailChecked)
+                        .change();
+                }
+
+                var data = JSON.stringify({
+                    web: isGlobalWebChecked,
+                    email: isGlobalEmailChecked,
+                });
+
+                $('.module').each(function () {
+                    const organizationId = $(this).find('.main-checkbox').data('organization-id');
+                    updateOrgLevelCheckboxes(organizationId);
+                });
+
+                $.ajax({
+                    type: "PATCH",
+                    url: getAbsoluteUrl(
+                        `/api/v1/notifications/user/${userId}/user-setting/${globalSettingId}/`
+                    ),
+                    headers: {
+                        "X-CSRFToken": $('input[name="csrfmiddlewaretoken"]').val(),
+                    },
+                    contentType: "application/json",
+                    data: data,
+                    success: function () {
+                        showToast(
+                            "success",
+                            gettext("Global settings updated successfully.")
+                        );
+                    },
+                    error: function () {
+                        showToast(
+                            "error",
+                            gettext("Something went wrong. Please try again.")
+                        );
+
+                        // Rollback the UI changes
+                        isGlobalWebChecked = previousGlobalWebChecked;
+                        isGlobalEmailChecked = previousGlobalEmailChecked;
+
+                        // Update the dropdown toggles and data-state attributes
+                        $webToggle
+                            .html(
+                                (isGlobalWebChecked ? "Notify on Web" : "Don't Notify on Web") +
+                                    " " +
+                                    createArrowSpanHtml()
+                            )
+                            .attr("data-state", isGlobalWebChecked ? "on" : "off");
+                        $webDropdown.attr("data-web-state", isGlobalWebChecked ? "Yes" : "No");
+
+                        $emailToggle
+                            .html(
+                                (isGlobalEmailChecked ? "Notify by Email" : "Don't Notify by Email") +
+                                    " " +
+                                    createArrowSpanHtml()
+                            )
+                            .attr("data-state", isGlobalEmailChecked ? "on" : "off");
+                        $emailDropdown.attr("data-email-state", isGlobalEmailChecked ? "Yes" : "No");
+
+                        // Restore the checkboxes
+                        previousCheckboxStates.mainWebChecked.forEach(function (item) {
+                            $(
+                                `.main-checkbox[data-organization-id="${item.orgId}"][data-column="web"]`
+                            ).prop("checked", item.checked);
+                        });
+                        previousCheckboxStates.mainEmailChecked.forEach(function (item) {
+                            $(
+                                `.main-checkbox[data-organization-id="${item.orgId}"][data-column="email"]`
+                            ).prop("checked", item.checked);
+                        });
+                        previousCheckboxStates.webChecked.forEach(function (item) {
+                            $(
+                                `.web-checkbox[data-organization-id="${item.orgId}"][data-pk="${item.id}"]`
+                            ).prop("checked", item.checked);
+                        });
+                        previousCheckboxStates.emailChecked.forEach(function (item) {
+                            $(
+                                `.email-checkbox[data-organization-id="${item.orgId}"][data-pk="${item.id}"]`
+                            ).prop("checked", item.checked);
+                        });
+
+                        $('.module').each(function () {
+                            const organizationId = $(this).find('.main-checkbox').data('organization-id');
+                            updateOrgLevelCheckboxes(organizationId);
+                        });
+                    },
+                    complete: function () {
+                        isUpdateInProgress = false;
+                    },
+                });
             }
+            $modal.hide();
+        });
 
-            const previousCheckboxStates = {
-                mainWebChecked: $('.main-checkbox[data-column="web"]').map(function() {
-                    return { orgId: $(this).data('organization-id'), checked: $(this).is(':checked') };
-                }).get(),
-                mainEmailChecked: $('.main-checkbox[data-column="email"]').map(function() {
-                    return { orgId: $(this).data('organization-id'), checked: $(this).is(':checked') };
-                }).get(),
-                webChecked: $('.web-checkbox').map(function() {
-                    return { id: $(this).data('pk'), orgId: $(this).data('organization-id'), checked: $(this).is(':checked') };
-                }).get(),
-                emailChecked: $('.email-checkbox').map(function() {
-                    return { id: $(this).data('pk'), orgId: $(this).data('organization-id'), checked: $(this).is(':checked') };
-                }).get()
-            };
+        // Update modal content dynamically
+        function updateModalContent() {
+            var $modalIcon = $modal.find('.modal-icon');
+            var $modalHeader = $modal.find('.modal-header h2');
+            var $modalMessage = $modal.find('.modal-message');
 
-            // Email notifications require web notifications to be enabled
-            if (triggeredBy === 'global-email' && isGlobalEmailChecked) {
-                isGlobalWebChecked = true;
+            // Clear previous icon
+            $modalIcon.empty();
+
+            var dropdownType = activeDropdown.is("[data-web-state]") ? "web" : "email";
+
+            var newGlobalWebChecked = selectedOptionText === "Notify on Web";
+            var newGlobalEmailChecked = selectedOptionText === "Notify by Email";
+
+            // Enabling email notifications requires web notifications to be enabled
+            if (newGlobalEmailChecked && !newGlobalWebChecked) {
+                newGlobalWebChecked = true;
             }
 
             // Disabling web notifications also disables email notifications
-            if (triggeredBy === 'global-web' && !isGlobalWebChecked) {
-                isGlobalEmailChecked = false;
+            if (!newGlobalWebChecked) {
+                newGlobalEmailChecked = false;
             }
 
-            isUpdateInProgress = true;
+            // Message to show the settings that will be updated
+            var changes = [];
 
-            // Update the UI
-            $('#global-web').prop('checked', isGlobalWebChecked);
-            $('#global-email').prop('checked', isGlobalEmailChecked);
+            // Case 1: Enabling global web notifications, email remains the same
+            var isOnlyEnablingWeb =
+                newGlobalWebChecked === true &&
+                dropdownType === "web";
 
-            $('.main-checkbox[data-column="web"]').prop('checked', isGlobalWebChecked).change();
-            $('.web-checkbox').prop('checked', isGlobalWebChecked);
-            if ((triggeredBy === 'global-web' && !isGlobalWebChecked) || triggeredBy === 'global-email') {
-                $('.email-checkbox').prop('checked', isGlobalEmailChecked);
-                $('.main-checkbox[data-column="email"]').prop('checked', isGlobalEmailChecked).change();
+            // Case 2: Disabling global email notifications, web remains the same
+            var isOnlyDisablingEmail =
+                newGlobalEmailChecked === false &&
+                dropdownType === "email";
+
+            if (isOnlyEnablingWeb) {
+                // Only web notification is being enabled
+                changes.push('Web notifications will be enabled.');
+            } else if (isOnlyDisablingEmail) {
+                // Only email notification is being disabled
+                changes.push('Email notifications will be disabled.');
+            } else {
+                // For all other cases, display both settings
+                changes.push('Web notifications will be ' + (newGlobalWebChecked ? 'enabled' : 'disabled') + '.');
+                changes.push('Email notifications will be ' + (newGlobalEmailChecked ? 'enabled' : 'disabled') + '.');
             }
 
-            $.ajax({
-                type: 'PATCH',
-                url: getAbsoluteUrl(`/api/v1/notifications/user/${userId}/user-setting/${globalSettingId}/`),
-                headers: { 'X-CSRFToken': $('input[name="csrfmiddlewaretoken"]').val() },
-                contentType: 'application/json',
-                data: JSON.stringify({ web: isGlobalWebChecked, email: isGlobalEmailChecked }),
-                success: function () {
-                    showToast('success', gettext('Global settings updated successfully.'));
-                },
-                error: function () {
-                    showToast('error', gettext('Something went wrong. Please try again.'));
+            // Set the modal icon
+            if (dropdownType === "web") {
+                $modalIcon.html('<div class="icon icon-web"></div>');
+            } else if (dropdownType === "email") {
+                $modalIcon.html('<div class="icon icon-email"></div>');
+            }
 
-                    $('#global-web').prop('checked', previousGlobalWebChecked);
-                    $('#global-email').prop('checked', previousGlobalEmailChecked);
+            // Update the modal header text
+            if (dropdownType === "web") {
+                $modalHeader.text('Apply Global Setting for Web');
+            } else if (dropdownType === "email") {
+                $modalHeader.text('Apply Global Setting for Email');
+            }
 
-                    previousCheckboxStates.mainWebChecked.forEach(function(item) {
-                        $(`.main-checkbox[data-organization-id="${item.orgId}"][data-column="web"]`).prop('checked', item.checked);
-                    });
-                    previousCheckboxStates.mainEmailChecked.forEach(function(item) {
-                        $(`.main-checkbox[data-organization-id="${item.orgId}"][data-column="email"]`).prop('checked', item.checked);
-                    });
-                    previousCheckboxStates.webChecked.forEach(function(item) {
-                        $(`.web-checkbox[data-organization-id="${item.orgId}"][data-pk="${item.id}"]`).prop('checked', item.checked);
-                    });
-                    previousCheckboxStates.emailChecked.forEach(function(item) {
-                        $(`.email-checkbox[data-organization-id="${item.orgId}"][data-pk="${item.id}"]`).prop('checked', item.checked);
-                    });
-                },
-                complete: function () {
-                    isUpdateInProgress = false;
-                }
-            });
-        });
+            // Update the modal message
+            var message = 'The following settings will be applied:<br>' + changes.join('<br>') + '<br>Do you want to continue?';
+            $modalMessage.html(message);
+        }
     }
 
     function showToast(level, message) {
@@ -472,7 +762,7 @@ function getAbsoluteUrl(url) {
         const toast = document.createElement('div');
         toast.className = `toast ${level}`;
         toast.innerHTML = `
-            <div style="display:flex">
+            <div style="display:flex; align-items: center;">
                 <div class="icon ow-notify-${level}"></div>
                 ${message}
             </div>
@@ -505,5 +795,9 @@ function getAbsoluteUrl(url) {
                 document.body.removeChild(toast);
             }
         });
+    }
+
+    function createArrowSpanHtml() {
+        return '<span class="mg-arrow"></span>';
     }
 })(django.jQuery);
