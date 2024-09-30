@@ -24,30 +24,65 @@
   </div>
 {% endblock breadcrumbs %}
 
-
 {% block content %}
   <div class="settings-container" data-user-id="{{ user_id }}">
     <div class="loader"></div>
     <div class="global-settings">
-      <strong>{% trans "Global Settings:" %}</strong>
+      <h2>Global Settings</h2>
       <div class="global-settings-container">
-        <span>{% trans "Web" %}</span>
-        <label class="switch">
-          <input type="checkbox" id="global-web" />
-          <span class="slider round"></span>
-        </label>
-        <span class="tooltip-icon" data-tooltip="{% trans 'Enable or disable web notifications globally' %}">?</span>
-      </div>
-      <div class="global-settings-container">
-        <span>{% trans "Email" %}</span>
-        <label class="switch">
-          <input type="checkbox" id="global-email" />
-          <span class="slider round"></span>
-        </label>
-        <span class="tooltip-icon" data-tooltip="{% trans 'Enable or disable email notifications globally' %}">?</span>
+        <!-- Global Web Setting -->
+        <div class="global-setting">
+          <div class="global-setting-content">
+            <div class="icon icon-web"></div>
+            <div class="global-setting-text">
+              <h2>Web</h2>
+              <p>Enable or Disable all web notifications globally</p>
+              <div class="global-setting-dropdown" data-web-state="No">
+                <button class="global-setting-dropdown-toggle"></button>
+                <ul class="global-setting-dropdown-menu">
+                  <li>Notify on Web</li>
+                  <li>Don't Notify on Web</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="global-setting-divider"></div>
+        <!-- Global Email Setting -->
+        <div class="global-setting">
+          <div class="global-setting-content">
+            <div class="icon icon-email"></div>
+            <div class="global-setting-text">
+              <h2>Email</h2>
+              <p>Enable or Disable all email notifications globally</p>
+              <div class="global-setting-dropdown" data-email-state="No">
+                <button class="global-setting-dropdown-toggle"></button>
+                <ul class="global-setting-dropdown-menu">
+                  <li>Notify by Email</li>
+                  <li>Don't Notify by Email</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
     <div id="org-panels"></div>
+  </div>
+
+  <!-- Confirmation Modal -->
+  <div id="confirmation-modal" class="modal" style="display:none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-icon"></div>
+        <h2></h2>
+      </div>
+      <p class="modal-message"></p>
+      <div class="modal-buttons">
+        <button class="button default" id="go-back">Go Back</button>
+        <button class="button default success-btn" id="confirm">Confirm</button>
+      </div>
+    </div>
   </div>
 {% endblock content %}
 
