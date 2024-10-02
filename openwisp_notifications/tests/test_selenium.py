@@ -5,7 +5,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 
 from openwisp_notifications.signals import notify
 from openwisp_notifications.swapper import load_model, swapper_load_model
-from openwisp_notifications.utils import _get_object_link
+from openwisp_notifications.utils import _get_object_link, generate_unsubscribe_link
 from openwisp_users.tests.utils import TestOrganizationMixin
 from openwisp_utils.test_selenium_mixins import SeleniumTestMixin
 
@@ -95,6 +95,45 @@ class TestSelenium(
         dialog = self.web_driver.find_element(By.CLASS_NAME, 'ow-dialog-notification')
         # This confirms the button is hidden
         dialog.find_element(By.CSS_SELECTOR, '.ow-message-target-redirect.ow-hide')
+
+    def test_email_unsubscribe_page(self):
+        unsubscribe_link = generate_unsubscribe_link(self.admin, False)
+        self.open(unsubscribe_link)
+        WebDriverWait(self.web_driver, 10).until(
+            EC.visibility_of_element_located((By.ID, 'toggle-btn'))
+        )
+        self.assertEqual(
+            self.web_driver.find_element(By.ID, 'toggle-btn').text,
+            'Unsubscribe',
+        )
+
+        # Unsubscribe
+        self.web_driver.find_element(By.ID, 'toggle-btn').click()
+        WebDriverWait(self.web_driver, 10).until(
+            EC.visibility_of_element_located((By.ID, 'confirmation-msg'))
+        )
+        self.assertEqual(
+            self.web_driver.find_element(By.ID, 'confirmation-msg').text,
+            'Successfully unsubscribed',
+        )
+        self.assertEqual(
+            self.web_driver.find_element(By.ID, 'toggle-btn').text,
+            'Subscribe',
+        )
+
+        # Re-subscribe
+        self.web_driver.find_element(By.ID, 'toggle-btn').click()
+        WebDriverWait(self.web_driver, 10).until(
+            EC.visibility_of_element_located((By.ID, 'confirmation-msg'))
+        )
+        self.assertEqual(
+            self.web_driver.find_element(By.ID, 'confirmation-msg').text,
+            'Successfully subscribed',
+        )
+        self.assertEqual(
+            self.web_driver.find_element(By.ID, 'toggle-btn').text,
+            'Unsubscribe',
+        )
 
     def test_notification_preference_page(self):
         self.login()
