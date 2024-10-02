@@ -23,7 +23,7 @@
       class="logo"
     />
     <div class="unsubscribe-content">
-      <div class="icon"></div>
+      <div class="icon email-icon"></div>
       <h1>{% trans 'Manage Notification Preferences' %}</h1>
       {% if valid %}
         <p id="status-message">
@@ -33,7 +33,7 @@
             {% trans 'You are currently unsubscribed from notifications.' %}
           {% endif %}
         </p>
-        <button id="toggle-btn" data-hasSubscribe="{% if is_subscribed %}true{% else %}false{% endif %}">
+        <button id="toggle-btn" class="button default" data-hasSubscribe="{% if is_subscribed %}true{% else %}false{% endif %}">
           {% if is_subscribed %}
             {% trans 'Unsubscribe' %}
           {% else %}

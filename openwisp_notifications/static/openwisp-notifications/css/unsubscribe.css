@@ -1,5 +1,5 @@
 #content, .content {
-    padding: 0 !important;
+  padding: 0 !important;
 }
 .unsubscribe-container {
   display: flex;
@@ -7,10 +7,8 @@
   align-items: center;
   flex-direction: column;
   height: 95vh;
-  overflow: none;
 }
 .unsubscribe-content {
-  background: #ffffff;
   padding: 40px;
   border-radius: 12px;
   text-align: center;
@@ -19,39 +17,18 @@
   width: 100%;
 }
 .unsubscribe-content h1 {
-    padding-top: 20px;
+  padding-top: 10px;
 }
 .logo {
   width: 200px;
   margin-bottom: 80px;
-  background-repeat: no-repeat;
 }
-.icon {
+.email-icon {
   background-image: url('../../openwisp-notifications/images/icons/icon-email.svg');
   width: 50px;
   height: 50px;
   margin: 0 auto;
-}
-h1 {
-  font-size: 24px;
-}
-p {
-  color: #555;
-  margin-bottom: 20px;
-  line-height: 1.5;
-}
-button {
-  background-color: #333;
-  color: white;
-  padding: 10px 20px;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  margin: 5px;
-}
-button:hover {
-  opacity: 0.7;
-  border-color: #333;
+  transform: scale(2) translate(25%, 25%);
 }
 .footer {
   margin-top: 20px;
