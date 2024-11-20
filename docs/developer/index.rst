@@ -8,9 +8,10 @@ Developer Docs
 
     ./installation.rst
     ./utils.rst
+    ./cache.rst
     ./extending.rst
 
 Other useful resources:
 
-    - :doc:`../user/rest-api`
-    - :doc:`../user/settings`
+- :doc:`../user/rest-api`
+- :doc:`../user/settings`
