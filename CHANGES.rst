@@ -1,10 +1,49 @@
 Changelog
 =========
 
-Version 1.1.0 [unreleased]
+Version 1.1.0 [2024-11-20]
 --------------------------
 
-WIP
+Features
+~~~~~~~~
+
+- Added support for `defining related object links in notification
+  configurations
+  <https://github.com/openwisp/openwisp-notifications/pull/250>`_.
+- Introduced a `"generic_message" notification type
+  <https://openwisp.io/docs/dev/notifications/user/notification-types.html#generic-message>`_
+  to deliver custom notifications in the user interface.
+- Enabled filtering of ``NotificationSetting`` using ``organization_slug``
+  in the REST API.
+
+Changes
+~~~~~~~
+
+- `Only users with verified email addresses will receive email
+  notifications
+  <https://github.com/openwisp/openwisp-notifications/issues/270>`_.
+
+Dependencies
+++++++++++++
+
+- Bumped ``django-notifications-hq~=1.8.3``.
+- Bumped ``markdown~=3.6.0``.
+- Bumped ``openwisp-users~=1.1.0``.
+- Bumped ``openwisp-utils[rest,celery]~=1.1.1``.
+- Added support for Python ``3.10``.
+- Dropped support for Python ``3.7``.
+- Added support for Django ``4.2.x``.
+- Dropped support for Django ``4.0.x``.
+
+Bugfixes
+~~~~~~~~
+
+- Fixed `issue where users received multiple identical notifications
+  <https://github.com/openwisp/openwisp-notifications/issues/277>`_ when
+  member of multiple organizations.
+- Increased ``timeoutInterval`` for the ``ReconnectingWebSocket`` to ``7``
+  seconds to prevent termination due to timeout on slow network
+  connections.
 
 Version 1.0.3 [2022-08-03]
 --------------------------
