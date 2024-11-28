@@ -11,7 +11,7 @@ Features
   configurations
   <https://github.com/openwisp/openwisp-notifications/pull/250>`_.
 - Introduced a `"generic_message" notification type
-  <https://openwisp.io/docs/dev/notifications/user/notification-types.html#generic-message>`_
+  <https://openwisp.io/docs/stable/notifications/user/notification-types.html#generic-message>`_
   to deliver custom notifications in the user interface.
 - Enabled filtering of ``NotificationSetting`` using ``organization_slug``
   in the REST API.
