@@ -41,8 +41,8 @@ Its main goal is to allow the other OpenWISP modules to notify users about
 meaningful events that happen in their network.
 
 For a complete overview of features, refer to the `Notifications: Features
-<https://openwisp.io/docs/stable/notifications/user/intro.html>`_ section of
-the OpenWISP documentation.
+<https://openwisp.io/docs/stable/notifications/user/intro.html>`_ section
+of the OpenWISP documentation.
 
 Documentation
 -------------
