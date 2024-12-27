@@ -112,7 +112,8 @@ class TestSelenium(
             EC.visibility_of_element_located(
                 (
                     By.CSS_SELECTOR,
-                    '.global-setting-dropdown[data-web-state] .global-setting-dropdown-menu button:last-child',
+                    '.global-setting-dropdown[data-web-state]'
+                    ' .global-setting-dropdown-menu button:last-child',
                 )
             )
         ).click()
