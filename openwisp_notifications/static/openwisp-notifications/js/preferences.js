@@ -123,8 +123,8 @@ function getAbsoluteUrl(url) {
 
             const orgPanel = $(
                 '<div class="module">' +
-                    '<table class="toggle-header">' +
-                            '<thead>' +
+                    '<table>' +
+                            '<thead class="toggle-header">' +
                                 '<tr>' +
                                     '<th class="org-name"><h2>' + `${gettext('Organization')}: ${orgName}` + '</h2></th>' +
                                     '<th><h2 class="web-count">' + gettext('Web') + ' ' + enabledWebNotifications + '/' + totalNotifications + '</h2></th>' +
@@ -219,7 +219,7 @@ function getAbsoluteUrl(url) {
         // Toggle organization content visibility
         $(document).on('click', '.toggle-header', function () {
             const toggleIcon = $(this).find('.toggle-icon');
-            const orgContent = $(this).find('.org-content');
+            const orgContent = $(this).next('.org-content');
 
             if (orgContent.hasClass('active')) {
                 orgContent.slideUp('fast', function(){
