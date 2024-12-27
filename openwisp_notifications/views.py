@@ -19,7 +19,7 @@ class NotificationPreferencePage(LoginRequiredMixin, UserPassesTestMixin, Templa
 
         if user_id:
             try:
-                user = User.objects.get(pk=user_id)
+                user = User.objects.only('id', 'username').get(pk=user_id)
                 # Only admin should access other users preferences
                 context['username'] = user.username
                 context['title'] += f' ({user.username})'
