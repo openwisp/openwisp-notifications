@@ -6,6 +6,7 @@ on:
       - master
       - dev
       - gsoc24-rebased
+      - notification-preferences-improvments
   pull_request:
     branches:
       - master
