@@ -145,6 +145,7 @@ class TestSelenium(
             By.CSS_SELECTOR, 'input[id^="org-1-web-"]'
         )
         for checkbox in web_checkboxes:
+            self.assertTrue(checkbox.is_displayed())
             self.assertTrue(checkbox.is_selected())
 
         # Check a single email checkbox
