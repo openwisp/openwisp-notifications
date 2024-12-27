@@ -160,7 +160,7 @@ table {
 #org-panels table th {
   padding: 8px;
 }
-table.toggle-header thead,
+thead.toggle-header,
 table tr.org-header,
 #org-panels table tbody tr:nth-child(odd) {
   background: var(--darkened-bg);
