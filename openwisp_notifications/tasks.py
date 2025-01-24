@@ -83,18 +83,6 @@ def create_notification_settings(user, organizations, notification_types):
 
 
 @shared_task(base=OpenwispCeleryTask)
-def update_superuser_notification_settings(instance_id, is_superuser, is_created=False):
-    """
-    NOTE: This task is deprecated and only kept for backward compatibility.
-    It will be removed in 1.2.0 release.
-    """
-    if not is_superuser:
-        superuser_demoted_notification_setting(instance_id)
-    else:
-        create_superuser_notification_settings(instance_id)
-
-
-@shared_task(base=OpenwispCeleryTask)
 def create_superuser_notification_settings(user_id):
     """
     Adds notification setting for all notification types and organizations.
