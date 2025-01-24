@@ -1,6 +1,9 @@
+from unittest.mock import patch
+
 from django.db.models.signals import post_save
 from django.test import TransactionTestCase
 
+from openwisp_notifications import tasks
 from openwisp_notifications.handlers import (
     notification_type_registered_unregistered_handler,
 )
@@ -251,3 +254,37 @@ class TestNotificationSetting(TestOrganizationMixin, TransactionTestCase):
         self.assertEqual(ns_queryset.count(), 1)
         ns.refresh_from_db()
         self.assertEqual(ns.deleted, False)
+
+    @patch.object(tasks, 'superuser_demoted_notification_setting')
+    @patch.object(tasks, 'create_superuser_notification_settings')
+    def test_task_not_called_on_user_login(self, created_mock, demoted_mock):
+        admin = self._create_admin()
+        org_user = self._create_staff_org_admin()
+        created_mock.delay.assert_called_once()
+
+        created_mock.reset_mock()
+        with self.subTest('Test task not called if superuser status is unchanged'):
+            admin.username = 'new_admin'
+            admin.save()
+            created_mock.assert_not_called()
+            demoted_mock.assert_not_called()
+
+        with self.subTest('Test task not called when superuser logs in'):
+            self.client.force_login(admin)
+            created_mock.assert_not_called()
+            demoted_mock.assert_not_called()
+
+        with self.subTest('Test task not called when org user logs in'):
+            self.client.force_login(org_user.user)
+            created_mock.assert_not_called()
+            demoted_mock.assert_not_called()
+
+        with self.subTest('Test task called when superuser status changed'):
+            admin.is_superuser = False
+            admin.save()
+            demoted_mock.assert_called_once()
+            created_mock.assert_not_called()
+
+            admin.is_superuser = True
+            admin.save()
+            created_mock.assert_called_once()
