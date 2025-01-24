@@ -83,29 +83,30 @@ def create_notification_settings(user, organizations, notification_types):
 
 
 @shared_task(base=OpenwispCeleryTask)
-def create_superuser_notification_settings(user_id):
+def update_superuser_notification_settings(instance_id, is_superuser, is_created):
     """
     Adds notification setting for all notification types and organizations.
+    If a superuser gets demoted, flags it's notification settings as deleted.
     """
-    user = User.objects.get(pk=user_id)
+    user = User.objects.get(pk=instance_id)
+
+    # When a user is demoted from superuser status,
+    # only keep notification settings for organization they are member of.
+    if not (is_superuser or is_created):
+        NotificationSetting.objects.filter(user_id=instance_id).exclude(
+            organization__in=user.organizations_managed
+        ).update(deleted=True)
+        return
+
+    if not is_superuser:
+        return
+
     # Create notification settings for superuser
     create_notification_settings(
         user=user,
         organizations=Organization.objects.all(),
         notification_types=types.NOTIFICATION_TYPES.keys(),
     )
-
-
-@shared_task(base=OpenwispCeleryTask)
-def superuser_demoted_notification_setting(user_id):
-    """
-    Flags NotificationSettings as deleted for non-managed organizations
-    when a superuser is demoted to a non-superuser.
-    """
-    user = User.objects.get(pk=user_id)
-    NotificationSetting.objects.filter(user_id=user_id).exclude(
-        organization__in=user.organizations_managed
-    ).update(deleted=True)
 
 
 @shared_task(base=OpenwispCeleryTask)
