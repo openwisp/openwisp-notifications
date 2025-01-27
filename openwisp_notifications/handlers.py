@@ -301,7 +301,7 @@ def notification_setting_delete_org_user(instance, **kwargs):
 
 
 @receiver(pre_save, sender=User, dispatch_uid='superuser_demoted_notification_setting')
-def update_superuser_notification_settings(instance, update_fields, **kwargs):
+def superuser_status_changed_notification_setting(instance, update_fields, **kwargs):
     """
     If user is demoted from superuser status, then
     remove notification settings for non-managed organizations.
@@ -321,15 +321,11 @@ def update_superuser_notification_settings(instance, update_fields, **kwargs):
     # If user is demoted from superuser to non-superuser
     if db_instance.is_superuser and not instance.is_superuser:
         transaction.on_commit(
-            lambda: tasks.update_superuser_notification_settings.delay(
-                instance.pk, is_superuser=False
-            )
+            lambda: tasks.superuser_demoted_notification_setting.delay(instance.pk)
         )
     elif not db_instance.is_superuser and instance.is_superuser:
         transaction.on_commit(
-            lambda: tasks.update_superuser_notification_settings.delay(
-                instance.pk, is_superuser=True
-            )
+            lambda: tasks.create_superuser_notification_settings.delay(instance.pk)
         )
 
 
