@@ -55,7 +55,7 @@ Install development dependencies:
 
     pip install -e .
     pip install -r requirements-test.txt
-    sudo npm install -g jshint stylelint
+    sudo npm install -g prettier
 
 Create database:
 
