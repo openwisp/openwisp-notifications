@@ -1,6 +1,16 @@
 Changelog
 =========
 
+Version 1.1.1 [2025-01-31]
+--------------------------
+
+Bugfixes
+~~~~~~~~
+
+- Fixed `unnecessary triggering of
+  "update_superuser_notification_settings" celery task
+  <https://github.com/openwisp/openwisp-notifications/issues/283>`_.
+
 Version 1.1.0 [2024-11-20]
 --------------------------
 
