@@ -54,7 +54,7 @@ setup(
     packages=find_packages(exclude=['tests*', 'docs*']),
     include_package_data=True,
     zip_safe=False,
-    install_requires=get_install_requires(),
+    install_requires=get_install_requires() + ['channels>=4.0.0,<5.0.0'],
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Environment :: Web Environment',

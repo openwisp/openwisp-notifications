@@ -1,5 +1,5 @@
 from asgiref.sync import async_to_sync
-from channels import layers
+from channels.layers import get_channel_layer
 from django.core.cache import cache
 from django.utils.timezone import now, timedelta
 
@@ -52,14 +52,15 @@ def user_in_notification_storm(user):
     return in_notification_storm
 
 
-def notification_update_handler(reload_widget=False, notification=None, recipient=None):
-    channel_layer = layers.get_channel_layer()
+async def notification_update_handler(reload_widget=False, notification=None, recipient=None):
+    channel_layer = get_channel_layer()
     try:
         assert notification is not None
         notification = NotificationListSerializer(notification).data
     except (NotFound, AssertionError):
         pass
-    async_to_sync(channel_layer.group_send)(
+    
+    await channel_layer.group_send(
         f'ow-notification-{recipient.pk}',
         {
             'type': 'send.updates',
