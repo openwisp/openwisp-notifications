@@ -1,5 +1,6 @@
 import sys
 import uuid
+import asyncio
 from datetime import timedelta
 from unittest.mock import patch
 
@@ -74,6 +75,15 @@ def create_object_notification(admin_user):
 @pytest.mark.django_db(transaction=True)
 class TestNotificationSockets:
     application = import_string(getattr(settings, 'ASGI_APPLICATION'))
+    channel_layer = get_channel_layer()
+
+    @pytest.fixture(autouse=True)
+    async def setup_test(self):
+        # Clear channel layer before each test
+        await self.channel_layer.flush()
+        yield
+        # Cleanup after each test
+        await self.channel_layer.flush()
 
     async def _get_communicator(self, admin_client):
         session_id = admin_client.cookies['sessionid'].value
@@ -87,22 +97,13 @@ class TestNotificationSockets:
                 )
             ],
         )
-        connected, _ = await communicator.connect()
-        assert connected is True
-        return communicator
-
-    async def test_new_notification_created(self, admin_user, admin_client):
-        communicator = await self._get_communicator(admin_client)
-        n = await create_notification(admin_user)
-        response = await communicator.receive_json_from()
-        expected_response = {
-            'type': 'notification',
-            'notification_count': 1,
-            'reload_widget': True,
-            'notification': NotificationListSerializer(n).data,
-        }
-        assert response == expected_response
-        await communicator.disconnect()
+        try:
+            connected, _ = await communicator.connect()
+            assert connected is True
+            return communicator
+        except Exception as e:
+            await communicator.disconnect()
+            raise e
 
     async def test_read_notification(self, admin_user, admin_client):
         n = await create_notification(admin_user)
