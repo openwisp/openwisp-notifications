@@ -3,12 +3,18 @@ import os
 from django.contrib import admin
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.urls import include, path
+from openwisp_notifications.views import resend_verification_email
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('accounts/', include('allauth.urls')),
     path('api/v1/', include('openwisp_utils.api.urls')),
     path('api/v1/', include(('openwisp_users.api.urls', 'users'), namespace='users')),
+    path(
+        'openwisp_notifications/',
+        include(('openwisp_notifications.urls', 'openwisp_notifications'), namespace='openwisp_notifications')
+    ),
+    path('resend-verification-email/', resend_verification_email, name='resend_verification_email'),
 ]
 
 if os.environ.get('SAMPLE_APP', False):
@@ -23,7 +29,8 @@ if os.environ.get('SAMPLE_APP', False):
         path(
             '',
             include((get_urls(api_views), 'notifications'), namespace='notifications'),
-        )
+        ),
+        path('sample/', api_views.sample_view, name='sample_view'),
     ]
 else:
     # Load openwisp_notifications api views:

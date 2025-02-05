@@ -58,7 +58,7 @@ STATICFILES_FINDERS = [
 
 AUTH_USER_MODEL = 'openwisp_users.User'
 SITE_ID = 1
-
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',

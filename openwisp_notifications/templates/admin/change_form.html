@@ -10,6 +10,13 @@
 {% endcomment %}
 
 {% block admin_change_form_document_ready %}
+    {% if not request.user.emailaddress_set.filter(verified=True).exists %}
+        <div class="alert alert-warning">
+            Email notifications are enabled but your email is unverified.
+            <a href="{% url 'resend_verification_email' %}">Resend verification email</a>
+        </div>
+    {% endif %}
+
     {{ block.super }}
     {% if change %}
         <script>
