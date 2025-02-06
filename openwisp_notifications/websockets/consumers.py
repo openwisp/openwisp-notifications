@@ -1,7 +1,7 @@
 import json
 
-from asgiref.sync import async_to_sync
-from channels.generic.websocket import WebsocketConsumer
+from channels.generic.websocket import AsyncWebsocketConsumer
+from asgiref.sync import sync_to_async
 from django.contrib.contenttypes.models import ContentType
 from django.utils.timezone import now, timedelta
 
@@ -14,35 +14,36 @@ Notification = load_model('Notification')
 IgnoreObjectNotification = load_model('IgnoreObjectNotification')
 
 
-class NotificationConsumer(WebsocketConsumer):
+class NotificationConsumer(AsyncWebsocketConsumer):
     _initial_backoff = app_settings.NOTIFICATION_STORM_PREVENTION['initial_backoff']
     _backoff_increment = app_settings.NOTIFICATION_STORM_PREVENTION['backoff_increment']
     _max_allowed_backoff = app_settings.NOTIFICATION_STORM_PREVENTION[
         'max_allowed_backoff'
     ]
 
-    def _is_user_authenticated(self):
+    async def _is_user_authenticated(self):
         try:
             assert self.scope['user'].is_authenticated is True
         except (KeyError, AssertionError):
-            self.close()
+            await self.close()
             return False
         else:
             return True
 
-    def connect(self):
-        if self._is_user_authenticated():
-            async_to_sync(self.channel_layer.group_add)(
-                'ow-notification-{0}'.format(self.scope['user'].pk), self.channel_name
+    async def connect(self):
+        if await self._is_user_authenticated():
+            await self.channel_layer.group_add(
+                f'ow-notification-{self.scope["user"].pk}', self.channel_name
             )
-            self.accept()
+            await self.accept()
             self.scope['last_update_datetime'] = now()
             self.scope['backoff'] = self._initial_backoff
 
-    def disconnect(self, close_code):
-        async_to_sync(self.channel_layer.group_discard)(
-            'ow-notification-{0}'.format(self.scope['user'].pk), self.channel_name
-        )
+    async def disconnect(self, close_code):
+        if hasattr(self, 'scope') and 'user' in self.scope:
+            await self.channel_layer.group_discard(
+                f'ow-notification-{self.scope["user"].pk}', self.channel_name
+            )
 
     def process_event_for_notification_storm(self, event):
         if not event['in_notification_storm']:
@@ -75,9 +76,9 @@ class NotificationConsumer(WebsocketConsumer):
             self.scope['backoff'] = self._initial_backoff
         return event
 
-    def send_updates(self, event):
+    async def send_updates(self, event):
         event = self.process_event_for_notification_storm(event)
-        self.send(
+        await self.send(
             json.dumps(
                 {
                     'type': 'notification',
@@ -88,8 +89,8 @@ class NotificationConsumer(WebsocketConsumer):
             )
         )
 
-    def receive(self, text_data):
-        if self._is_user_authenticated():
+    async def receive(self, text_data):
+        if await self._is_user_authenticated():
             try:
                 json_data = json.loads(text_data)
             except json.JSONDecodeError:
@@ -97,11 +98,11 @@ class NotificationConsumer(WebsocketConsumer):
 
             try:
                 if json_data['type'] == 'notification':
-                    self._notification_handler(
+                    await self._notification_handler(
                         notification_id=json_data['notification_id']
                     )
                 elif json_data['type'] == 'object_notification':
-                    self._object_notification_handler(
+                    await self._object_notification_handler(
                         object_id=json_data['object_id'],
                         app_label=json_data['app_label'],
                         model_name=json_data['model_name'],
@@ -109,6 +110,7 @@ class NotificationConsumer(WebsocketConsumer):
             except KeyError:
                 return
 
+    @sync_to_async
     def _notification_handler(self, notification_id):
         try:
             notification = Notification.objects.get(
@@ -118,18 +120,20 @@ class NotificationConsumer(WebsocketConsumer):
         except Notification.DoesNotExist:
             return
 
-    def _object_notification_handler(self, object_id, app_label, model_name):
+    async def _object_notification_handler(self, object_id, app_label, model_name):
         try:
-            object_notification = IgnoreObjectNotification.objects.get(
+            object_notification = await sync_to_async(IgnoreObjectNotification.objects.get)(
                 user=self.scope['user'],
                 object_id=object_id,
-                object_content_type_id=ContentType.objects.get_by_natural_key(
-                    app_label=app_label,
-                    model=model_name,
+                object_content_type_id=(
+                    await sync_to_async(ContentType.objects.get_by_natural_key)(
+                        app_label=app_label,
+                        model=model_name,
+                    )
                 ).pk,
             )
             serialized_data = IgnoreObjectNotificationSerializer(object_notification)
-            self.send(
+            await self.send(
                 json.dumps(
                     {
                         'type': 'object_notification',
