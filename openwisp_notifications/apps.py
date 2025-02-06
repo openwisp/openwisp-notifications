@@ -11,6 +11,7 @@ class OpenwispNotificationsConfig(AppConfig):
     verbose_name = _('Notifications')
 
     def ready(self):
+        import openwisp_notifications.signals
         from openwisp_notifications.handlers import (
             notification_type_registered_unregistered_handler,
             notify_handler,

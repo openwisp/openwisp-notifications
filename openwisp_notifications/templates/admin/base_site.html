@@ -16,6 +16,14 @@
 {% endblock %}
 
 {% block user-tools %}
+
+  {% if messages %}
+  {% for message in messages %}
+      <div class="alert alert-{{ message.tags }}">
+          {{ message|safe }}
+      </div>
+  {% endfor %}
+  {% endif %}
   {{ block.super }}
   <button class="ow-notifications toggle-btn" id="openwisp_notifications">
     <span id="ow-notification-btn"></span>

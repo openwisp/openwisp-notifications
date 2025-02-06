@@ -1,4 +1,6 @@
 from swapper import swappable_setting
+from django.db import models
+from django.conf import settings
 
 from openwisp_notifications.base.models import (
     AbstractIgnoreObjectNotification,
@@ -26,3 +28,8 @@ class IgnoreObjectNotification(AbstractIgnoreObjectNotification):
         swappable = swappable_setting(
             'openwisp_notifications', 'IgnoreObjectNotification'
         )
+
+
+class UserProfile(models.Model):
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    needs_verification = models.BooleanField(default=False)
