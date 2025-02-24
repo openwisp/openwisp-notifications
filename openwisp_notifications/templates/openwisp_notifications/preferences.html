@@ -28,20 +28,22 @@
   <div class="settings-container" data-user-id="{{ user_id }}">
     <div class="loader"></div>
     <div class="global-settings">
-      <h2>Global Settings</h2>
+      <h2>{% trans 'Global Settings' %}</h2>
       <div class="global-settings-container">
         <!-- Global Web Setting -->
         <div class="global-setting">
           <div class="global-setting-content">
             <div class="icon icon-web"></div>
             <div class="global-setting-text">
-              <h2>Web</h2>
-              <p>Enable or Disable all web notifications globally</p>
+              <h2>{% trans 'Web' %}</h2>
+              <p>
+                {% trans 'Enable or Disable all web notifications globally' %}
+              </p>
               <div class="global-setting-dropdown" data-web-state="No">
                 <button class="global-setting-dropdown-toggle"></button>
                 <div class="global-setting-dropdown-menu">
-                  <button>Notify on Web</button>
-                  <button>Don't Notify on Web</button>
+                  <button>{% trans 'Notify on Web' %}</button>
+                  <button>{% trans "Don't Notify on Web" %}</button>
                 </div>
               </div>
             </div>
@@ -52,13 +54,13 @@
           <div class="global-setting-content">
             <div class="icon icon-email"></div>
             <div class="global-setting-text">
-              <h2>Email</h2>
-              <p>Enable or Disable all email notifications globally</p>
+              <h2>{% trans 'Email' %}</h2>
+              <p>{% trans 'Enable or Disable all email notifications globally' %}</p>
               <div class="global-setting-dropdown" data-email-state="No">
                 <button class="global-setting-dropdown-toggle"></button>
                 <div class="global-setting-dropdown-menu">
-                  <button>Notify by Email</button>
-                  <button>Don't Notify by Email</button>
+                  <button>{% trans 'Notify by Email' %}</button>
+                  <button>{% trans "Don't Notify by Email" %}</button>
                 </div>
               </div>
             </div>
@@ -70,7 +72,7 @@
   </div>
 
   <!-- Confirmation Modal -->
-  <div id="confirmation-modal" class="modal" style="display:none;">
+  <div id="confirmation-modal" class="modal">
     <div class="modal-content">
       <div class="modal-header">
         <div class="modal-icon"></div>
@@ -78,8 +80,12 @@
       </div>
       <p class="modal-message"></p>
       <div class="modal-buttons">
-        <button class="button default" id="go-back">Go Back</button>
-        <button class="button default success-btn" id="confirm">Confirm</button>
+        <button class="button default" id="go-back">
+          {% trans 'Go Back' %}
+        </button>
+        <button class="button default success-btn" id="confirm">
+          {% trans 'Confirm' %}
+        </button>
       </div>
     </div>
   </div>

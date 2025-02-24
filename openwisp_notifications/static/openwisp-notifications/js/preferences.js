@@ -426,8 +426,12 @@ function getAbsoluteUrl(url) {
 
             $toggle.on("click", function (e) {
                 e.stopPropagation();
+                let openClass = "global-setting-dropdown-menu-open";
+                let isMenuOpen = $menu.hasClass(openClass);
                 closeAllDropdowns();
-                $menu.toggleClass("global-setting-dropdown-menu-open");
+                if (!isMenuOpen) {
+                  $menu.addClass(openClass);
+                }
                 adjustDropdownWidth($menu);
             });
 
@@ -776,7 +780,7 @@ function getAbsoluteUrl(url) {
         }, 10);
 
         const progressBar = toast.querySelector('.progress-bar');
-        progressBar.style.transition = `width 3000ms linear`;
+        progressBar.style.transition = 'width 3000ms linear';
         setTimeout(() => {
             progressBar.style.width = '0%';
         }, 10);

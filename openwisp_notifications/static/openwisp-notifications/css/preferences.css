@@ -1,12 +1,17 @@
 /* Global Settings */
 .global-settings {
-  margin: 10px 0 20px;
+  margin: 0 0 30px;
   display: none;
+}
+.global-settings > h2 {
+  font-size: 1.1rem;
+  margin-top: 0.5rem;
+  font-weight: normal;
 }
 .global-settings-container {
   display: flex;
   border: 1px solid var(--hairline-color);
-  border-radius: 8px;
+  border-radius: 4px;
 }
 .global-setting {
   flex: 1;
@@ -31,6 +36,8 @@
   color: #777;
   font-weight: 700;
   font-family: var(--font-family-primary);
+  position: relative;
+  padding-right: 35px;
 }
 .global-setting-dropdown button:hover,
 .global-setting-dropdown button:focus {
@@ -41,7 +48,8 @@
   padding: 10px 16px;
   background-color: inherit;
   border: 1px solid var(--hairline-color);
-  border-radius: 8px;
+  font-size: 0.9em;
+  border-radius: 4px;
   cursor: pointer;
   box-shadow: 0px 1px 2px 0px rgba(16, 24, 40, 0.05);
 }
@@ -51,6 +59,10 @@
 }
 .global-setting-dropdown-toggle .mg-arrow {
   background-color: #777;
+  display: block;
+  position: absolute;
+  top: 7px;
+  right: 10px;
 }
 .global-setting-dropdown-menu {
   z-index: 1;
@@ -63,17 +75,21 @@
   padding: 0;
   margin: 0;
 }
+.global-setting-dropdown-menu-open {
+  display: block;
+  margin-top: -1px;
+}
 .global-setting-dropdown-menu button {
-  padding: 10px 15px;
+  width: 100%;
+  padding: 11px 15px;
   cursor: pointer;
   border: none;
   background: inherit;
-  width: 100%;
   text-align: left;
   display: block;
 }
-.global-setting-dropdown-menu-open {
-  display: block;
+.global-setting-dropdown-menu button:not(:last-child) {
+  border-bottom: 1px solid var(--hairline-color);
 }
 
 /* Icons */
@@ -126,16 +142,12 @@
 }
 
 /* Module */
-.module {
-  border: 1px solid rgba(0, 0, 0, 0.1);
-}
 .module h2 {
-  padding: 15px 10px;
   cursor: pointer;
   font-weight: bold;
   font-size: 14px;
   text-transform: uppercase;
-  padding: 6px;
+  padding: 0;
 }
 
 /* Organization */
@@ -150,20 +162,27 @@
   position: relative;
 }
 .org-content {
-  margin-top: 0;
   padding-top: 0;
   display: none;
 }
 table {
   width: 100%;
 }
-#org-panels table th {
-  padding: 8px;
-}
+
 thead.toggle-header,
 table tr.org-header,
 #org-panels table tbody tr:nth-child(odd) {
   background: var(--darkened-bg);
+}
+#org-panels table thead th,
+#org-panels table tbody td {
+  padding: 15px !important;
+  font-size: 14px !important;
+  vertical-align: middle !important;
+}
+#org-panels th,
+#org-panels td {
+  border: 1px solid var(--hairline-color);
 }
 #org-panels table tbody tr:nth-child(even) {
   background-color: var(--body-bg);
@@ -172,12 +191,6 @@ tr.org-header {
   text-transform: uppercase;
   color: var(--body-quiet-color);
   font-weight: 700;
-  border-top: 1px solid var(--hairline-color);
-  border-bottom: 1px solid var(--hairline-color);
-}
-.org-content td + td,
-.org-content tr + tr {
-  border-left: 1px solid var(--hairline-color);
 }
 #org-panels th:not(:first-child) h2,
 #org-panels td:not(:first-child) {
@@ -205,6 +218,10 @@ tr.org-header {
 }
 .toast .icon {
   background-repeat: no-repeat;
+  margin-right: 0.3rem;
+}
+.toast {
+  padding-bottom: 15px;
 }
 .toast .progress-bar {
   position: absolute;
@@ -214,6 +231,13 @@ tr.org-header {
   background-color: #007bff;
   width: 100%;
   transition: width 3s linear;
+}
+
+.ow-notify-success {
+  filter: invert(48%) sepia(98%) saturate(546%) hue-rotate(95deg) brightness(95%) contrast(90%);
+}
+.ow-notify-error {
+  filter: invert(18%) sepia(99%) saturate(5461%) hue-rotate(-10deg) brightness(85%) contrast(120%);
 }
 
 /* Toggle Icon */
@@ -233,6 +257,7 @@ button.toggle-icon.collapsed {
 }
 button.toggle-icon.expanded {
   background-position: 0px -44px;
+  filter: grayscale(100%) brightness(40%);
 }
 
 /* Tooltip */
@@ -332,6 +357,11 @@ input:checked + .slider:before {
   align-items: center;
   justify-content: center;
   gap: 4px;
+}
+
+/* For readability on narrow screens */
+.settings-container {
+  min-width: 520px;
 }
 
 /* Media Queries */
