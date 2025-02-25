@@ -24,7 +24,7 @@ class NotificationPreferencePage(LoginRequiredMixin, UserPassesTestMixin, Templa
                 context['username'] = user.username
                 context['title'] += f' ({user.username})'
             except User.DoesNotExist:
-                raise Http404('User does not exist')
+                raise Http404(_('User does not exist'))
         else:
             user = self.request.user
 

@@ -12,9 +12,16 @@ organized by notification type and organization, allowing users to tailor
 their notification experience by opting to receive updates only from
 specific organizations or notification types.
 
-Users can access and manage their notification preferences by visiting the
-``/notification/preferences/``. Alternatively, this page can also be
-accessed directly from the notification widget.
+Users can access and manage their notification preferences directly from
+the notification widget by clicking the button highlighted in the
+screenshot below:
+
+.. image:: https://i.imgur.com/16efo2Z.png
+    :target: https://i.imgur.com/16efo2Z.png
+    :align: center
+
+Alternatively, you can also visit ``/notification/preferences/`` to manage
+your settings.
 
 Notification settings are automatically generated for all notification
 types and organizations for every user. Superusers have the ability to
