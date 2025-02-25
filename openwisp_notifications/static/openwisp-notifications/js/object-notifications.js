@@ -88,7 +88,7 @@ function addObjectNotificationHandlers($) {
       $.ajax({
         type: "PUT",
         url: getAbsoluteUrl(
-          `/api/v1/notifications/notification/ignore/${owNotifyAppLabel}/${owNotifyModelName}/${owNotifyObjectId}/`,
+          `/api/v1/notifications/notification/ignore/${owNotifyAppLabel}/${owNotifyModelName}/${owNotifyObjectId}/`
         ),
         headers: {
           "X-CSRFToken": $('input[name="csrfmiddlewaretoken"]').val(),
@@ -98,7 +98,7 @@ function addObjectNotificationHandlers($) {
         },
         beforeSend: function () {
           $(".ow-object-notification-option-container > button").addClass(
-            "ow-hide",
+            "ow-hide"
           );
           $("#ow-object-notification-loader").removeClass("ow-hide");
         },
@@ -114,7 +114,7 @@ function addObjectNotificationHandlers($) {
           throw error;
         },
       });
-    },
+    }
   );
 
   // Click handler for enabling notifications
@@ -123,7 +123,7 @@ function addObjectNotificationHandlers($) {
     $.ajax({
       type: "DELETE",
       url: getAbsoluteUrl(
-        `/api/v1/notifications/notification/ignore/${owNotifyAppLabel}/${owNotifyModelName}/${owNotifyObjectId}/`,
+        `/api/v1/notifications/notification/ignore/${owNotifyAppLabel}/${owNotifyModelName}/${owNotifyObjectId}/`
       ),
       headers: {
         "X-CSRFToken": $('input[name="csrfmiddlewaretoken"]').val(),
@@ -133,31 +133,31 @@ function addObjectNotificationHandlers($) {
       },
       beforeSend: function () {
         $(".ow-object-notification-option-container > button").addClass(
-          "ow-hide",
+          "ow-hide"
         );
         $("#ow-object-notification-loader").removeClass("ow-hide");
       },
       crossDomain: true,
       success: function () {
         $("#ow-object-notify > span.ow-icon").removeClass(
-          "ow-object-notify-slash-bell",
+          "ow-object-notify-slash-bell"
         );
         $("#ow-object-notify > span.ow-icon").addClass("ow-object-notify-bell");
         $("#ow-silence-label").html("Silence notifications");
         $("#ow-object-notify").prop(
           "title",
-          "You are receiving notifications for this object.",
+          "You are receiving notifications for this object."
         );
 
         $("#ow-notification-help-text").html(
-          `Disable notifications for this object`,
+          `Disable notifications for this object`
         );
         $("#ow-object-notification-loader").addClass("ow-hide");
         $(".ow-notification-option.disable-notification").removeClass(
-          "ow-hide",
+          "ow-hide"
         );
         $(
-          ".ow-object-notification-option-container > button:visible:first",
+          ".ow-object-notification-option-container > button:visible:first"
         ).focus();
       },
       error: function (error) {
@@ -200,7 +200,7 @@ function updateObjectNotificationHelpText($, validTill) {
     disabledText = `Disabled permanently`;
   } else {
     let dateTimeString = dateTimeStampToDateTimeLocaleString(
-      new Date(validTill),
+      new Date(validTill)
     );
     disabledText = `Disabled till ${dateTimeString}`;
   }
@@ -215,6 +215,6 @@ function updateObjectNotificationHelpText($, validTill) {
   $("#ow-silence-label").html("Unsilence notifications");
   $("#ow-object-notify").prop(
     "title",
-    "You have disabled notifications for this object.",
+    "You have disabled notifications for this object."
   );
 }

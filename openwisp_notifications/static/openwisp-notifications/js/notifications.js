@@ -147,7 +147,7 @@ function notificationWidget($) {
 
   function appendPage() {
     $("#ow-notifications-loader").before(
-      pageContainer(fetchedPages[lastRenderedPage]),
+      pageContainer(fetchedPages[lastRenderedPage])
     );
     if (lastRenderedPage >= renderedPages) {
       $(".ow-notification-wrapper div:first").remove();
@@ -194,7 +194,7 @@ function notificationWidget($) {
       error: function (error) {
         busy = false;
         showNotificationDropdownError(
-          gettext("Failed to fetch notifications. Try again later."),
+          gettext("Failed to fetch notifications. Try again later.")
         );
         throw error;
       },
@@ -217,7 +217,7 @@ function notificationWidget($) {
     if (lastRenderedPage > renderedPages) {
       $(".ow-notification-wrapper div.page:last").remove();
       var addedDiv = pageContainer(
-        fetchedPages[lastRenderedPage - renderedPages - 1],
+        fetchedPages[lastRenderedPage - renderedPages - 1]
       );
       $(".ow-notification-wrapper").prepend(addedDiv);
       lastRenderedPage -= 1;
@@ -241,7 +241,7 @@ function notificationWidget($) {
   function notificationListItem(elem) {
     let klass;
     const datetime = dateTimeStampToDateTimeLocaleString(
-        new Date(elem.timestamp),
+        new Date(elem.timestamp)
       ),
       // target_url can be null or '#', so we need to handle it without any errors
       target_url = new URL(elem.target_url, window.location.href);
@@ -286,7 +286,7 @@ function notificationWidget($) {
 
   function refreshNotificationWidget(
     e = null,
-    url = "/api/v1/notifications/notification/",
+    url = "/api/v1/notifications/notification/"
   ) {
     $(".ow-notification-wrapper > div").remove(".page");
     fetchedPages.length = 0;
@@ -310,7 +310,7 @@ function notificationWidget($) {
 
   $("#ow-notification-dropdown-error-container").on(
     "click mouseleave focusout",
-    closeNotificationDropdownError,
+    closeNotificationDropdownError
   );
 
   $(".ow-notifications").on("click", initNotificationWidget);
@@ -337,7 +337,7 @@ function notificationWidget($) {
         unreads.addClass("unread");
         $("#ow-notification-count").show();
         showNotificationDropdownError(
-          gettext("Failed to mark notifications as unread. Try again later."),
+          gettext("Failed to mark notifications as unread. Try again later.")
         );
         throw error;
       },
@@ -355,7 +355,7 @@ function notificationWidget($) {
       }
       let elem = $(this);
       notificationHandler($, elem);
-    },
+    }
   );
 
   // Close dialog on click, keypress or esc
@@ -376,11 +376,11 @@ function notificationWidget($) {
       if (elem.hasClass("unread")) {
         markNotificationRead(elem.get(0));
       }
-    },
+    }
   );
   $(".ow-notification-wrapper").bind(
     "refreshNotificationWidget",
-    refreshNotificationWidget,
+    refreshNotificationWidget
   );
 }
 
@@ -398,7 +398,7 @@ function markNotificationRead(elem) {
     JSON.stringify({
       type: "notification",
       notification_id: elemId,
-    }),
+    })
   );
 }
 
@@ -406,7 +406,7 @@ function notificationHandler($, elem) {
   var notification = fetchedPages
       .flat()
       .find(
-        (notification) => notification.id == elem.get(0).id.replace("ow-", ""),
+        (notification) => notification.id == elem.get(0).id.replace("ow-", "")
       ),
     targetUrl = elem.data("location");
 
@@ -423,7 +423,7 @@ function notificationHandler($, elem) {
   // Notification with overlay dialog
   if (notification.description) {
     var datetime = dateTimeStampToDateTimeLocaleString(
-      new Date(notification.timestamp),
+      new Date(notification.timestamp)
     );
 
     $(".ow-dialog-notification-level-wrapper").html(`
@@ -434,7 +434,7 @@ function notificationHandler($, elem) {
             <div class="ow-notification-date">${datetime}</div>
         `);
     $(".ow-message-title").html(
-      convertMessageWithRelativeURL(notification.message),
+      convertMessageWithRelativeURL(notification.message)
     );
     $(".ow-message-description").html(notification.description);
     $(".ow-overlay-notification").removeClass("ow-hide");
@@ -513,7 +513,7 @@ function initWebSockets($) {
       let toast = $(this).parent();
       markNotificationRead(toast.get(0));
       toast.slideUp("slow");
-    },
+    }
   );
 }
 
