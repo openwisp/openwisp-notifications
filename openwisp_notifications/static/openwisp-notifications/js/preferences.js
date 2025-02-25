@@ -1,7 +1,7 @@
 "use strict";
 
 if (typeof gettext === "undefined") {
-  var gettext = function (word) {
+  const gettext = function (word) {
     return word;
   };
 }
@@ -45,13 +45,11 @@ function getAbsoluteUrl(url) {
           }
         },
         error: function () {
-          $("#org-panels").append(
-            '<div class="no-organizations">' +
-              gettext(
-                "Error fetching notification settings. Please try again.",
-              ) +
-              "</div>",
-          );
+          $("#org-panels").append(`
+            <div class="no-organizations">
+              ${gettext("Error fetching notification settings. Please try again.")}
+            </div>
+          `);
           showToast(
             "error",
             gettext("Error fetching notification settings. Please try again."),
@@ -140,11 +138,11 @@ function getAbsoluteUrl(url) {
     const orgPanelsContainer = $("#org-panels").empty();
 
     if (Object.keys(data).length === 0) {
-      orgPanelsContainer.append(
-        '<div class="no-organizations">' +
-          gettext("No organizations available.") +
-          "</div>",
-      );
+      orgPanelsContainer.append(`
+        <div class="no-organizations">
+          ${gettext("No organizations available.")}
+        </div>
+      `);
       return;
     }
 
@@ -162,137 +160,102 @@ function getAbsoluteUrl(url) {
         (setting) => setting.email,
       ).length;
 
-      const orgPanel = $(
-        '<div class="module">' +
-          "<table>" +
-          '<thead class="toggle-header">' +
-          "<tr>" +
-          '<th class="org-name"><h2>' +
-          `${gettext("Organization")}: ${orgName}` +
-          "</h2></th>" +
-          '<th><h2 class="web-count">' +
-          gettext("Web") +
-          " " +
-          enabledWebNotifications +
-          "/" +
-          totalNotifications +
-          "</h2></th>" +
-          '<th class="email-row"><h2 class="email-count">' +
-          gettext("Email") +
-          " " +
-          enabledEmailNotifications +
-          "/" +
-          totalNotifications +
-          '</h2><button class="toggle-icon collapsed"></button></th>' +
-          "</tr>" +
-          "</thead>" +
-          "</table>" +
-          "</div>",
-      );
+      const orgPanel = $(`
+        <div class="module">
+          <table>
+            <thead class="toggle-header">
+              <tr>
+                <th class="org-name">
+                  <h2>${gettext("Organization")}: ${orgName}</h2>
+                </th>
+                <th>
+                  <h2 class="web-count">
+                    ${gettext("Web")} ${enabledWebNotifications}/${totalNotifications}
+                  </h2>
+                </th>
+                <th class="email-row">
+                  <h2 class="email-count">
+                    ${gettext("Email")} ${enabledEmailNotifications}/${totalNotifications}
+                  </h2>
+                  <button class="toggle-icon collapsed"></button>
+                </th>
+              </tr>
+            </thead>
+          </table>
+        </div>
+      `);
 
       if (orgSettings.length > 0) {
-        const tableBody = $(
-          '<tbody class="org-content">' +
-            '<tr class="org-header">' +
-            '<td class="type-col-header">' +
-            gettext("Notification Type") +
-            "</td>" +
-            "<td>" +
-            '<div class="notification-header-container">' +
-            "<span>" +
-            gettext("Web") +
-            "</span>" +
-            '<span class="tooltip-icon" data-tooltip="' +
-            gettext(
-              "Enable or disable web notifications for this organization",
-            ) +
-            '">?</span>' +
-            '<label class="switch" id="org-' +
-            (orgIndex + 1) +
-            '-web">' +
-            '<input type="checkbox" class="org-toggle" data-column="web" data-organization-id="' +
-            orgId +
-            '" />' +
-            '<span class="slider round"></span>' +
-            "</label>" +
-            "</div>" +
-            "</td>" +
-            "<td>" +
-            '<div class="notification-header-container">' +
-            "<span>" +
-            gettext("Email") +
-            "</span>" +
-            '<span class="tooltip-icon" data-tooltip="' +
-            gettext(
-              "Enable or disable email notifications for this organization",
-            ) +
-            '">?</span>' +
-            '<label class="switch" id="org-' +
-            (orgIndex + 1) +
-            '-email">' +
-            '<input type="checkbox" class="org-toggle" data-organization-id="' +
-            orgId +
-            '" data-column="email" />' +
-            '<span class="slider round"></span>' +
-            "</label>" +
-            "</div>" +
-            "</td>" +
-            "</tr>" +
-            "</tbody>",
-        );
+        const tableBody = $(`
+          <tbody class="org-content">
+            <tr class="org-header">
+              <td class="type-col-header">${gettext("Notification Type")}</td>
+              <td>
+                <div class="notification-header-container">
+                  <span>${gettext("Web")}</span>
+                  <span class="tooltip-icon" data-tooltip="${gettext(
+                    "Enable or disable web notifications for this organization",
+                  )}">?</span>
+                  <label class="switch" id="org-${orgIndex + 1}-web">
+                    <input type="checkbox" class="org-toggle" data-column="web" data-organization-id="${orgId}" />
+                    <span class="slider round"></span>
+                  </label>
+                </div>
+              </td>
+              <td>
+                <div class="notification-header-container">
+                  <span>${gettext("Email")}</span>
+                  <span class="tooltip-icon" data-tooltip="${gettext(
+                    "Enable or disable email notifications for this organization",
+                  )}">?</span>
+                  <label class="switch" id="org-${orgIndex + 1}-email">
+                    <input type="checkbox" class="org-toggle" data-organization-id="${orgId}" data-column="email" />
+                    <span class="slider round"></span>
+                  </label>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        `);
 
         // Populate table rows with individual settings
-        orgSettings.forEach(function (setting, settingIndex) {
-          const row = $(
-            "<tr>" +
-              "<td>" +
-              setting.type_label +
-              "</td>" +
-              "<td>" +
-              '<label class="switch" id="org-' +
-              (orgIndex + 1) +
-              "-web-" +
-              (settingIndex + 1) +
-              '">' +
-              '<input type="checkbox" class="web-checkbox" ' +
-              (setting.web ? "checked" : "") +
-              ' data-pk="' +
-              setting.id +
-              '" data-organization-id="' +
-              orgId +
-              '" data-type="web" />' +
-              '<span class="slider round"></span>' +
-              "</label>" +
-              "</td>" +
-              "<td>" +
-              '<label class="switch" id="org-' +
-              (orgIndex + 1) +
-              "-email-" +
-              (settingIndex + 1) +
-              '">' +
-              '<input type="checkbox" class="email-checkbox" ' +
-              (setting.email ? "checked" : "") +
-              ' data-pk="' +
-              setting.id +
-              '" data-organization-id="' +
-              orgId +
-              '" data-type="email" />' +
-              '<span class="slider round"></span>' +
-              "</label>" +
-              "</td>" +
-              "</tr>",
-          );
+        orgSettings.forEach((setting, settingIndex) => {
+          const row = $(`
+            <tr>
+              <td>${setting.type_label}</td>
+              <td>
+                <label class="switch" id="org-${orgIndex + 1}-web-${settingIndex + 1}">
+                  <input type="checkbox" class="web-checkbox"
+                    ${setting.web ? "checked" : ""}
+                    data-pk="${setting.id}"
+                    data-organization-id="${orgId}"
+                    data-type="web" />
+                  <span class="slider round"></span>
+                </label>
+              </td>
+              <td>
+                <label class="switch" id="org-${orgIndex + 1}-email-${settingIndex + 1}">
+                  <input type="checkbox" class="email-checkbox"
+                    ${setting.email ? "checked" : ""}
+                    data-pk="${setting.id}"
+                    data-organization-id="${orgId}"
+                    data-type="email" />
+                  <span class="slider round"></span>
+                </label>
+              </td>
+            </tr>
+          `);
           tableBody.append(row);
         });
 
         updateMainCheckboxes(tableBody);
         orgPanel.find("table").append(tableBody);
       } else {
-        orgPanel.append(
-          '<div class="no-settings">' +
-            gettext("No settings available for this organization") +
-            "</div>",
-        );
+        orgPanel.append(`
+          <div class="no-settings">
+            ${gettext("No settings available for this organization")}
+          </div>
+        `);
       }
       orgPanelsContainer.append(orgPanel);
     });
@@ -986,12 +949,12 @@ function getAbsoluteUrl(url) {
     const toast = document.createElement("div");
     toast.className = `toast ${level}`;
     toast.innerHTML = `
-            <div style="display:flex; align-items: center;">
-                <div class="icon ow-notify-${level}"></div>
-                ${message}
-            </div>
-            <div class="progress-bar"></div>
-        `;
+      <div style="display:flex; align-items: center;">
+        <div class="icon ow-notify-${level}"></div>
+        ${message}
+      </div>
+      <div class="progress-bar"></div>
+    `;
 
     document.body.appendChild(toast);
 
