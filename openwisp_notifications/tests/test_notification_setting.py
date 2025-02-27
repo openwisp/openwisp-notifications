@@ -1,3 +1,4 @@
+from django.core.exceptions import ValidationError
 from django.db.models.signals import post_save
 from django.test import TransactionTestCase
 
@@ -106,6 +107,16 @@ class TestNotificationSetting(TestOrganizationMixin, TransactionTestCase):
 
         base_unregister_notification_type('default')
         base_register_notification_type('test', test_notification_type)
+
+        # Delete existing global notification settings
+        NotificationSetting.objects.filter(
+            user=org_user.user, type=None, organization=None
+        ).delete()
+
+        NotificationSetting.objects.filter(
+            user=admin, type=None, organization=None
+        ).delete()
+
         notification_type_registered_unregistered_handler(sender=self)
 
         # Notification Setting for "default" type are deleted
@@ -120,6 +131,20 @@ class TestNotificationSetting(TestOrganizationMixin, TransactionTestCase):
         )
         self.assertEqual(
             queryset.filter(user=org_user.user).count(), 1 * notification_types_count
+        )
+
+        # Check Global Notification Setting is created
+        self.assertEqual(
+            NotificationSetting.objects.filter(
+                user=admin, type=None, organization=None
+            ).count(),
+            1,
+        )
+        self.assertEqual(
+            NotificationSetting.objects.filter(
+                user=org_user.user, type=None, organization=None
+            ).count(),
+            1,
         )
 
     def test_superuser_demoted_to_user(self):
@@ -251,3 +276,85 @@ class TestNotificationSetting(TestOrganizationMixin, TransactionTestCase):
         self.assertEqual(ns_queryset.count(), 1)
         ns.refresh_from_db()
         self.assertEqual(ns.deleted, False)
+
+    def test_global_notification_setting_update(self):
+        admin = self._get_admin()
+        org = self._get_org('default')
+        global_setting = NotificationSetting.objects.get(
+            user=admin, type=None, organization=None
+        )
+
+        # Update global settings
+        global_setting.email = False
+        global_setting.web = False
+        global_setting.full_clean()
+        global_setting.save()
+
+        with self.subTest(
+            'Test global web to False while ensuring at least one email setting is True'
+        ):
+            # Set the default type notification setting's email to True
+            NotificationSetting.objects.filter(
+                user=admin, organization=org, type='default'
+            ).update(email=True)
+
+            global_setting.web = True
+            global_setting.full_clean()
+            global_setting.save()
+
+            self.assertTrue(
+                NotificationSetting.objects.filter(
+                    user=admin, organization=org, email=True, type='default'
+                ).exists()
+            )
+
+        with self.subTest('Test global web to False'):
+            global_setting.web = False
+            global_setting.full_clean()
+            global_setting.save()
+
+            self.assertFalse(
+                NotificationSetting.objects.filter(
+                    user=admin, organization=org, web=True
+                ).exists()
+            )
+            self.assertFalse(
+                NotificationSetting.objects.filter(
+                    user=admin, organization=org, email=True
+                ).exists()
+            )
+
+    def test_global_notification_setting_delete(self):
+        admin = self._get_admin()
+        global_setting = NotificationSetting.objects.get(
+            user=admin, type=None, organization=None
+        )
+        self.assertEqual(str(global_setting), 'Global Setting')
+        global_setting.delete()
+        self.assertEqual(
+            NotificationSetting.objects.filter(
+                user=admin, type=None, organization=None
+            ).count(),
+            0,
+        )
+
+    def test_validate_global_notification_setting(self):
+        admin = self._get_admin()
+        with self.subTest('Test global notification setting creation'):
+            NotificationSetting.objects.filter(
+                user=admin, organization=None, type=None
+            ).delete()
+            global_setting = NotificationSetting(
+                user=admin, organization=None, type=None, email=True, web=True
+            )
+            global_setting.full_clean()
+            global_setting.save()
+            self.assertIsNotNone(global_setting)
+
+        with self.subTest('Test only one global notification setting per user'):
+            global_setting = NotificationSetting(
+                user=admin, organization=None, type=None, email=True, web=True
+            )
+            with self.assertRaises(ValidationError):
+                global_setting.full_clean()
+                global_setting.save()

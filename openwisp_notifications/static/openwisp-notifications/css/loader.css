@@ -8,7 +8,11 @@
   border-radius: 50%;
   background: #464646;
   background: -moz-linear-gradient(left, #464646 10%, rgba(70, 70, 70, 0) 42%);
-  background: -webkit-linear-gradient(left, #464646 10%, rgba(70, 70, 70, 0) 42%);
+  background: -webkit-linear-gradient(
+    left,
+    #464646 10%,
+    rgba(70, 70, 70, 0) 42%
+  );
   background: -o-linear-gradient(left, #464646 10%, rgba(70, 70, 70, 0) 42%);
   background: -ms-linear-gradient(left, #464646 10%, rgba(70, 70, 70, 0) 42%);
   background: linear-gradient(to right, #464646 10%, rgba(70, 70, 70, 0) 42%);
@@ -27,14 +31,14 @@
   position: absolute;
   top: 0;
   left: 0;
-  content: '';
+  content: "";
 }
 .loader:after {
   background: #ffffff;
   width: 75%;
   height: 75%;
   border-radius: 50%;
-  content: '';
+  content: "";
   margin: auto;
   position: absolute;
   top: 0;

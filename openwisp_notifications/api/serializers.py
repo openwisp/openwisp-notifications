@@ -73,6 +73,11 @@ class NotificationListSerializer(NotificationSerializer):
 
 
 class NotificationSettingSerializer(serializers.ModelSerializer):
+    organization_name = serializers.CharField(
+        source='organization.name', read_only=True
+    )
+    type_label = serializers.CharField(source='get_type_display', read_only=True)
+
     class Meta:
         model = NotificationSetting
         exclude = ['user']
@@ -87,3 +92,14 @@ class IgnoreObjectNotificationSerializer(serializers.ModelSerializer):
             'object_content_type',
             'object_id',
         ]
+
+
+class NotificationSettingUpdateSerializer(serializers.Serializer):
+    email = serializers.BooleanField(required=False)
+    web = serializers.BooleanField(required=False)
+
+    def validate(self, attrs):
+        attrs = super().validate(attrs)
+        if 'email' not in attrs and attrs.get('web') is False:
+            attrs['email'] = False
+        return attrs

@@ -35,12 +35,12 @@
 
 /* Icons */
 .ow-object-notify-bell {
-  mask-image: url('../../openwisp-notifications/images/icons/icon-bell.svg');
-  -webkit-mask-image: url('../../openwisp-notifications/images/icons/icon-bell.svg');
+  mask-image: url("../../openwisp-notifications/images/icons/icon-bell.svg");
+  -webkit-mask-image: url("../../openwisp-notifications/images/icons/icon-bell.svg");
 }
 .ow-object-notify-slash-bell {
-  mask-image: url('../../openwisp-notifications/images/icons/icon-bell-slash.svg');
-  -webkit-mask-image: url('../../openwisp-notifications/images/icons/icon-bell-slash.svg');
+  mask-image: url("../../openwisp-notifications/images/icons/icon-bell-slash.svg");
+  -webkit-mask-image: url("../../openwisp-notifications/images/icons/icon-bell-slash.svg");
 }
 #ow-object-notify .ow-icon {
   display: inline-block;
@@ -55,7 +55,7 @@
   mask-repeat: no-repeat;
   margin-right: 2px;
 }
-#ow-object-notify span{
+#ow-object-notify span {
   pointer-events: none;
 }
 @media screen and (max-width: 768px) {

@@ -9,32 +9,56 @@ def get_api_urls(api_views=None):
     if not api_views:
         api_views = views
     return [
-        path('', views.notifications_list, name='notifications_list'),
-        path('read/', views.notifications_read_all, name='notifications_read_all'),
-        path('<uuid:pk>/', views.notification_detail, name='notification_detail'),
+        path('notification/', views.notifications_list, name='notifications_list'),
         path(
-            '<uuid:pk>/redirect/',
+            'notification/read/',
+            views.notifications_read_all,
+            name='notifications_read_all',
+        ),
+        path(
+            'notification/<uuid:pk>/',
+            views.notification_detail,
+            name='notification_detail',
+        ),
+        path(
+            'notification/<uuid:pk>/redirect/',
             views.notification_read_redirect,
             name='notification_read_redirect',
         ),
         path(
-            'user-setting/',
+            'user/<uuid:user_id>/user-setting/',
             views.notification_setting_list,
-            name='notification_setting_list',
+            name='user_notification_setting_list',
         ),
         path(
-            'user-setting/<uuid:pk>/',
+            'user/<uuid:user_id>/user-setting/<uuid:pk>/',
             views.notification_setting,
-            name='notification_setting',
+            name='user_notification_setting',
         ),
         path(
-            'ignore/',
+            'notification/ignore/',
             views.ignore_object_notification_list,
             name='ignore_object_notification_list',
         ),
         path(
-            'ignore/<str:app_label>/<str:model_name>/<uuid:object_id>/',
+            'notification/ignore/<str:app_label>/<str:model_name>/<uuid:object_id>/',
             views.ignore_object_notification,
             name='ignore_object_notification',
+        ),
+        path(
+            'user/<uuid:user_id>/organization/<uuid:organization_id>/setting/',
+            views.organization_notification_setting,
+            name='organization_notification_setting',
+        ),
+        # DEPRECATED
+        path(
+            'user/user-setting/',
+            views.notification_setting_list,
+            name='notification_setting_list',
+        ),
+        path(
+            'user/user-setting/<uuid:pk>/',
+            views.notification_setting,
+            name='notification_setting',
         ),
     ]

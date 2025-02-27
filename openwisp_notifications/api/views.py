@@ -15,11 +15,13 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
+from openwisp_notifications.api.permissions import PreferencesPermission
 from openwisp_notifications.api.serializers import (
     IgnoreObjectNotificationSerializer,
     NotificationListSerializer,
     NotificationSerializer,
     NotificationSettingSerializer,
+    NotificationSettingUpdateSerializer,
 )
 from openwisp_notifications.swapper import load_model
 from openwisp_users.api.authentication import BearerAuthentication
@@ -114,12 +116,13 @@ class BaseNotificationSettingView(GenericAPIView):
     model = NotificationSetting
     serializer_class = NotificationSettingSerializer
     authentication_classes = [BearerAuthentication, SessionAuthentication]
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, PreferencesPermission]
 
     def get_queryset(self):
         if getattr(self, 'swagger_fake_view', False):
             return NotificationSetting.objects.none()  # pragma: no cover
-        return NotificationSetting.objects.filter(user=self.request.user)
+        user_id = self.kwargs.get('user_id', self.request.user.id)
+        return NotificationSetting.objects.filter(user_id=user_id)
 
 
 class NotificationSettingListView(BaseNotificationSettingView, ListModelMixin):
@@ -198,11 +201,27 @@ class IgnoreObjectNotificationView(
         )
 
 
+class OrganizationNotificationSettingView(GenericAPIView):
+    permission_classes = [IsAuthenticated, PreferencesPermission]
+    serializer_class = NotificationSettingUpdateSerializer
+
+    def post(self, request, user_id, organization_id):
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            validated_data = serializer.validated_data
+            NotificationSetting.objects.filter(
+                organization_id=organization_id, user_id=user_id
+            ).update(**validated_data)
+            return Response(status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
 notifications_list = NotificationListView.as_view()
 notification_detail = NotificationDetailView.as_view()
 notifications_read_all = NotificationReadAllView.as_view()
 notification_read_redirect = NotificationReadRedirect.as_view()
 notification_setting_list = NotificationSettingListView.as_view()
 notification_setting = NotificationSettingView.as_view()
+organization_notification_setting = OrganizationNotificationSettingView.as_view()
 ignore_object_notification_list = IgnoreObjectNotificationListView.as_view()
 ignore_object_notification = IgnoreObjectNotificationView.as_view()
