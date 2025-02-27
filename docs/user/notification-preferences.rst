@@ -1,8 +1,8 @@
 Notification Preferences
 ========================
 
-.. image:: https://i.imgur.com/lIGqry5.png
-    :target: https://i.imgur.com/lIGqry5.png
+.. image:: https://raw.githubusercontent.com/openwisp/openwisp-notifications/docs/docs/images/25/notifications/preference-page.png
+    :target: https://raw.githubusercontent.com/openwisp/openwisp-notifications/docs/docs/images/25/notifications/preference-page.png
     :align: center
 
 OpenWISP Notifications enables users to customize their notification
@@ -16,8 +16,8 @@ Users can access and manage their notification preferences directly from
 the notification widget by clicking the button highlighted in the
 screenshot below:
 
-.. image:: https://i.imgur.com/16efo2Z.png
-    :target: https://i.imgur.com/16efo2Z.png
+.. image:: https://raw.githubusercontent.com/openwisp/openwisp-notifications/docs/docs/images/25/notifications/notification-preferences-button.png
+    :target: https://raw.githubusercontent.com/openwisp/openwisp-notifications/docs/docs/images/25/notifications/notification-preferences-button.png
     :align: center
 
 Alternatively, you can also visit ``/notification/preferences/`` to manage
