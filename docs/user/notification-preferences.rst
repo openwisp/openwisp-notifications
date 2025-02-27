@@ -23,6 +23,16 @@ screenshot below:
 Alternatively, you can also visit ``/notification/preferences/`` to manage
 your settings.
 
+.. note::
+
+    - You can disable notifications globally while still enabling them for
+      specific organizations.
+    - Notification settings are now linked: disabling web notifications
+      will automatically disable email notifications, and enabling email
+      notifications will automatically enable web notifications.
+    - Deleting notification settings is no longer possible via the web
+      interface (please use the REST API if removal is needed).
+
 Notification settings are automatically generated for all notification
 types and organizations for every user. Superusers have the ability to
 manage notification settings for all users, including adding or deleting
