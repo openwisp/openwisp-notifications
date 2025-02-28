@@ -6,12 +6,14 @@ from celery.exceptions import OperationalError
 from django.apps.registry import apps
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
+from django.contrib.messages import get_messages
 from django.core import mail
 from django.core.cache import cache
 from django.core.exceptions import ImproperlyConfigured
 from django.db.models.signals import post_migrate, post_save
 from django.template import TemplateDoesNotExist
-from django.test import TransactionTestCase
+from django.test import TransactionTestCase, TestCase, override_settings
+from django.test.client import Client
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.timesince import timesince
@@ -37,6 +39,7 @@ from openwisp_notifications.types import (
 from openwisp_notifications.utils import _get_absolute_url
 from openwisp_users.tests.utils import TestOrganizationMixin
 from openwisp_utils.tests import capture_any_output
+import logging
 
 User = get_user_model()
 
@@ -999,3 +1002,98 @@ class TestTransactionNotifications(TestOrganizationMixin, TransactionTestCase):
         self.assertEqual(notification.target.username, 'new operator name')
         # Done for populating cache
         self.assertEqual(operator_cache.username, 'new operator name')
+
+
+@override_settings(EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend')
+class TestResendVerificationEmailView(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.user = User.objects.create_user(
+            username='testuser',
+            email='test@example.com',
+            password='testpass123',
+            is_staff=True
+        )
+        self.url = reverse('notifications:resend_verification_email')
+        self.logger = logging.getLogger('openwisp_notifications.views')
+
+    def test_unverified_primary_email_sends_email(self):
+        EmailAddress.objects.create(
+            user=self.user,
+            email=self.user.email,
+            primary=True,
+            verified=False
+        )
+        self.client.login(username='testuser', password='testpass123')
+        response = self.client.get(self.url)
+        self.assertRedirects(response, reverse('admin:index'))
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(mail.outbox[0].to, [self.user.email])
+        messages = list(get_messages(response.wsgi_request))
+        self.assertEqual(str(messages[0]), 'Verification email has been sent.')
+
+    def test_auto_create_email_address(self):
+        self.client.login(username='testuser', password='testpass123')
+        response = self.client.get(self.url)
+        email_address = EmailAddress.objects.get(user=self.user)
+        self.assertRedirects(response, reverse('admin:index'))
+        self.assertTrue(email_address.primary)
+        self.assertFalse(email_address.verified)
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(mail.outbox[0].to, [self.user.email])
+
+    def test_last_non_primary_email_used(self):
+        EmailAddress.objects.create(
+            user=self.user,
+            email='alt1@example.com',
+            primary=False,
+            verified=False
+        )
+        last_email = EmailAddress.objects.create(
+            user=self.user,
+            email='alt2@example.com',
+            primary=False,
+            verified=False
+        )
+        self.client.login(username='testuser', password='testpass123')
+        response = self.client.get(self.url)
+        self.assertRedirects(response, reverse('admin:index'))
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(mail.outbox[0].to, [last_email.email])
+
+    def test_redirect_with_next_param(self):
+        safe_path = '/admin/safe-page/'
+        self.client.login(username='testuser', password='testpass123')
+        response = self.client.get(f'{self.url}?next={safe_path}')
+        self.assertRedirects(response, safe_path)
+
+    def test_log_unsafe_redirect_attempt(self):
+        unsafe_url = 'http://evil.com/admin'
+        self.client.login(username='testuser', password='testpass123')
+        with self.assertLogs(logger=self.logger, level='WARNING') as log:
+            response = self.client.get(f'{self.url}?next={unsafe_url}')
+            self.assertRedirects(response, reverse('admin:index'))
+        self.assertIn('Unsafe redirect attempted', log.output[0])
+
+    def test_verified_email_shows_info(self):
+        EmailAddress.objects.create(
+            user=self.user,
+            email=self.user.email,
+            primary=True,
+            verified=True
+        )
+        self.client.login(username='testuser', password='testpass123')
+        response = self.client.get(self.url)
+        self.assertRedirects(response, reverse('admin:index'))
+        self.assertEqual(len(mail.outbox), 0)
+        messages = list(get_messages(response.wsgi_request))
+        self.assertEqual(str(messages[0]), 'Your email is already verified.')
+
+    def test_no_email_address_shows_message(self):
+        self.user.email = ''
+        self.user.save()
+        self.client.login(username='testuser', password='testpass123')
+        response = self.client.get(self.url)
+        self.assertRedirects(response, reverse('admin:index'))
+        messages = list(get_messages(response.wsgi_request))
+        self.assertEqual(str(messages[0]), 'No email address found for your account.')
