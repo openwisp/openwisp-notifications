@@ -65,7 +65,6 @@ class AbstractNotification(UUIDModel, BaseNotification):
     _actor = BaseNotification.actor
     _action_object = BaseNotification.action_object
     _target = BaseNotification.target
-    verb = models.CharField(max_length=128, null=True)
 
     class Meta(BaseNotification.Meta):
         abstract = True
