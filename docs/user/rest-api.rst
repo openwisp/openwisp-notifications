@@ -116,12 +116,19 @@ Delete a Notification
 
     DELETE /api/v1/notifications/notification/{pk}/
 
+Notification Read Redirect
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code-block:: text
+
+    GET /api/v1/notifications/notification/{pk}/redirect/
+
 List User's Notification Setting
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: text
 
-    GET /api/v1/notifications/notification/user-setting/
+    GET /api/v1/notifications/user/{user_id}/user-setting/
 
 **Available Filters**
 
@@ -130,35 +137,42 @@ You can filter the list of user's notification setting based on their
 
 .. code-block:: text
 
-    GET /api/v1/notifications/notification/user-setting/?organization={organization_id}
+    GET /api/v1/notifications/user/{user_id}/user-setting/?organization={organization_id}
 
 You can filter the list of user's notification setting based on their
 ``organization_slug``.
 
 .. code-block:: text
 
-    GET /api/v1/notifications/notification/user-setting/?organization_slug={organization_slug}
+    GET /api/v1/notifications/user/{user_id}/user-setting/?organization_slug={organization_slug}
 
 You can filter the list of user's notification setting based on their
 ``type``.
 
 .. code-block:: text
 
-    GET /api/v1/notifications/notification/user-setting/?type={type}
+    GET /api/v1/notifications/user/{user_id}/user-setting/?type={type}
 
 Get Notification Setting Details
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: text
 
-    GET /api/v1/notifications/notification/user-setting/{pk}/
+    GET /api/v1/notifications/user/{user_id}/user-setting/{pk}/
 
 Update Notification Setting Details
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: text
 
-    PATCH /api/v1/notifications/notification/user-setting/{pk}/
+    PATCH /api/v1/notifications/user/{user_id}/user-setting/{pk}/
+
+Organization Notification Setting
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code-block:: text
+
+    POST /api/v1/notifications/user/{user_id}/organization/{organization_id}/setting/
 
 List User's Object Notification Setting
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -187,3 +201,14 @@ Delete Object Notification Setting
 .. code-block:: text
 
     DELETE /api/v1/notifications/notification/ignore/{app_label}/{model_name}/{object_id}/
+
+Deprecated Endpoints
+~~~~~~~~~~~~~~~~~~~~
+
+The following endpoints are deprecated and will be removed in future
+releases:
+
+.. code-block:: text
+
+    GET /api/v1/notifications/notification/user-setting/
+    GET /api/v1/notifications/notification/user-setting/{pk}/

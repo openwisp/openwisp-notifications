@@ -1,5 +1,7 @@
 from datetime import datetime, timedelta
+from datetime import timezone as dt_timezone
 from unittest.mock import patch
+from uuid import uuid4
 
 from allauth.account.models import EmailAddress
 from celery.exceptions import OperationalError
@@ -14,7 +16,9 @@ from django.template import TemplateDoesNotExist
 from django.test import TransactionTestCase
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.html import strip_spaces_between_tags
 from django.utils.timesince import timesince
+from freezegun import freeze_time
 
 from openwisp_notifications import settings as app_settings
 from openwisp_notifications import tasks
@@ -37,6 +41,11 @@ from openwisp_notifications.types import (
 from openwisp_notifications.utils import _get_absolute_url
 from openwisp_users.tests.utils import TestOrganizationMixin
 from openwisp_utils.tests import capture_any_output
+
+from . import (
+    _test_batch_email_notification_email_body,
+    _test_batch_email_notification_email_html,
+)
 
 User = get_user_model()
 
@@ -132,10 +141,16 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
             organization_id=target_obj.organization.pk,
             type='default',
         )
+        # Database field is set to None
         self.assertEqual(notification_preference.email, None)
+        # The fallback is taked from notification type
+        self.assertTrue(notification_preference.email_notification)
         notification_preference.web = False
+        notification_preference.full_clean()
         notification_preference.save()
         notification_preference.refresh_from_db()
+        # The database field has been updated to override the default
+        # value in notification type.
         self.assertEqual(notification_preference.email, False)
         self._create_notification()
         self.assertEqual(notification_queryset.count(), 0)
@@ -800,13 +815,18 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
             self.assertEqual(notification_queryset.count(), 0)
 
         with self.subTest('Test user email preference is "True"'):
+            unregister_notification_type('test_type')
+            test_type.update({'web_notification': True})
+            register_notification_type('test_type', test_type)
+            self.notification_options.update({'type': 'test_type'})
+
             notification_setting = NotificationSetting.objects.get(
                 user=self.admin, type='test_type', organization=target_obj.organization
             )
             notification_setting.email = True
             notification_setting.save()
             notification_setting.refresh_from_db()
-            self.assertFalse(notification_setting.email)
+            self.assertTrue(notification_setting.email)
 
         with self.subTest('Test user web preference is "True"'):
             NotificationSetting.objects.filter(
@@ -944,75 +964,101 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
         # we don't send emails to unverified email addresses
         self.assertEqual(len(mail.outbox), 0)
 
-    @patch('openwisp_notifications.tasks.send_batched_email_notifications.apply_async')
-    def test_send_batched_email_notifications_no_instance_id(self, mock_send_email):
-        # Ensure no emails are sent if instance_id is None or empty
+    @patch('logging.Logger.error')
+    def test_send_batched_email_notifications_no_instance_id(self, mocked_logger):
+        # Ensure no emails are sent if instance_id is invalid
         tasks.send_batched_email_notifications(None)
         self.assertEqual(len(mail.outbox), 0)
+        mocked_logger.assert_called_once_with(
+            'Failed to send batched email notifications:'
+            f' User with ID {None} not found in the database.'
+        )
+        mocked_logger.reset_mock()
 
-        tasks.send_batched_email_notifications("")
+        invalid_id = uuid4()
+        tasks.send_batched_email_notifications(str(invalid_id))
         self.assertEqual(len(mail.outbox), 0)
+        mocked_logger.assert_called_once_with(
+            'Failed to send batched email notifications:'
+            f' User with ID {invalid_id} not found in the database.'
+        )
 
     @patch('openwisp_notifications.tasks.send_batched_email_notifications.apply_async')
     def test_send_batched_email_notifications_single_notification(
         self, mock_send_email
     ):
-        # Ensure no batch email template is used for a single batched notification
+        # The first notification will always be sent immediately
         self._create_notification()
-        n = self._create_notification().pop()[1][0]
-
-        tasks.send_batched_email_notifications(self.admin.id)
-
-        self.assertEqual(len(mail.outbox), 2)
-        self.assertIn(n.message, mail.outbox[0].body)
+        mail.outbox.clear()
+        # There's only one notification in the batch, it should
+        # not use summary of batched email.
+        self._create_notification()
+        # The task is mocked to prevent immediate execution in test environment.
+        # In tests, Celery runs in EAGER mode which would execute tasks immediately,
+        # preventing us from testing the batching behavior properly.
+        tasks.send_batched_email_notifications(str(self.admin.id))
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertNotIn('new notifications since', mail.outbox[0].body)
 
     @patch('openwisp_notifications.tasks.send_batched_email_notifications.apply_async')
     def test_batch_email_notification(self, mock_send_email):
-        fixed_datetime = datetime(2024, 7, 26, 11, 40)
+        fixed_datetime = timezone.localtime(
+            datetime(2024, 7, 26, 11, 40, tzinfo=dt_timezone.utc)
+        )
+        datetime_str = fixed_datetime.strftime('%B %-d, %Y, %-I:%M %p %Z')
 
-        with patch.object(timezone, 'now', return_value=fixed_datetime):
-            for _ in range(5):
-                notify.send(recipient=self.admin, **self.notification_options)
+        # Add multiple notifications with slightly different timestamps
+        # to maintain consistent order in generated email text across test runs
+        for _ in range(3):
+            with freeze_time(fixed_datetime):
+                # Create notifications with URL (from self.notification_options)
+                self._create_notification()
+            fixed_datetime += timedelta(
+                microseconds=100
+            )  # Increment time for ordering consistency
+        # Notification without URL
+        self.notification_options.pop('url')
+        with freeze_time(fixed_datetime):
+            self._create_notification()
+        fixed_datetime += timedelta(microseconds=100)
+        # Notification with a type and target object
+        self.notification_options.update(
+            {'type': 'default', 'target': self._get_org_user()}
+        )
+        with freeze_time(fixed_datetime):
+            default = self._create_notification().pop()[1][0]
 
-            # Check if only one mail is sent initially
-            self.assertEqual(len(mail.outbox), 1)
+        # Check if only one mail is sent initially
+        self.assertEqual(len(mail.outbox), 1)
 
-            # Call the task
-            tasks.send_batched_email_notifications(self.admin.id)
+        # Call the task
+        tasks.send_batched_email_notifications(self.admin.id)
 
-            # Check if the rest of the notifications are sent in a batch
-            self.assertEqual(len(mail.outbox), 2)
-
-            expected_subject = (
-                '[example.com] 4 new notifications since july 26, 2024, 11:40 a.m. UTC'
-            )
-            expected_body = """
-[example.com] 4 new notifications since july 26, 2024, 11:40 a.m. UTC
-
-
-- Test Notification
-  Description: Test Notification
-  Date & Time: July 26, 2024, 11:40 a.m.
-  URL: https://localhost:8000/admin
-
-- Test Notification
-  Description: Test Notification
-  Date & Time: July 26, 2024, 11:40 a.m.
-  URL: https://localhost:8000/admin
-
-- Test Notification
-  Description: Test Notification
-  Date & Time: July 26, 2024, 11:40 a.m.
-  URL: https://localhost:8000/admin
-
-- Test Notification
-  Description: Test Notification
-  Date & Time: July 26, 2024, 11:40 a.m.
-  URL: https://localhost:8000/admin
-            """
-
-            self.assertEqual(mail.outbox[1].subject, expected_subject)
-            self.assertEqual(mail.outbox[1].body.strip(), expected_body.strip())
+        # Check if the rest of the notifications are sent in a batch
+        self.assertEqual(len(mail.outbox), 2)
+        email = mail.outbox[1]
+        expected_subject = f'[example.com] 4 new notifications since {datetime_str}'
+        self.assertEqual(email.subject, expected_subject)
+        self.assertEqual(
+            email.body.strip(),
+            _test_batch_email_notification_email_body.format(
+                datetime_str=datetime_str,
+                notification_id=default.id,
+            ).strip(),
+        )
+        html_email = email.alternatives[0][0]
+        self.maxDiff = None
+        self.assertIn(
+            strip_spaces_between_tags(
+                _test_batch_email_notification_email_html.format(
+                    datetime_str=datetime_str,
+                    notification_id=default.id,
+                )
+                .replace('\n', '')
+                .replace('                    ', ' ')
+            ),
+            strip_spaces_between_tags(html_email),
+        )
 
     @patch('openwisp_notifications.tasks.send_batched_email_notifications.apply_async')
     def test_batch_email_notification_with_call_to_action(self, mock_send_email):
@@ -1068,6 +1114,38 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
         )
         self._create_notification()
         self.assertEqual(notification_queryset.count(), 1)
+
+    def test_notification_preference_page(self):
+        preference_page = 'notifications:user_notification_preference'
+        tester = self._create_user(username='tester')
+
+        with self.subTest('Test user is not authenticated'):
+            response = self.client.get(reverse(preference_page, args=(self.admin.pk,)))
+            self.assertEqual(response.status_code, 302)
+
+        with self.subTest('Test with same user'):
+            self.client.force_login(self.admin)
+            response = self.client.get(reverse('notifications:notification_preference'))
+            self.assertEqual(response.status_code, 200)
+
+        with self.subTest('Test user is authenticated'):
+            self.client.force_login(self.admin)
+            response = self.client.get(reverse(preference_page, args=(self.admin.pk,)))
+            self.assertEqual(response.status_code, 200)
+
+        with self.subTest('Test user is authenticated but not superuser'):
+            self.client.force_login(tester)
+            response = self.client.get(reverse(preference_page, args=(self.admin.pk,)))
+            self.assertEqual(response.status_code, 403)
+
+        with self.subTest('Test user is authenticated and superuser'):
+            self.client.force_login(self.admin)
+            response = self.client.get(reverse(preference_page, args=(tester.pk,)))
+            self.assertEqual(response.status_code, 200)
+
+        with self.subTest('Test invalid user ID'):
+            response = self.client.get(reverse(preference_page, args=(uuid4(),)))
+            self.assertEqual(response.status_code, 404)
 
 
 class TestTransactionNotifications(TestOrganizationMixin, TransactionTestCase):

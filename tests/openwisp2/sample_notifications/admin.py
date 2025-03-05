@@ -1,7 +1,3 @@
-# isort:skip_file
-from openwisp_notifications.admin import NotificationSettingInline  # noqa
-
-
 # Used for testing of openwisp-notifications
 from django.contrib import admin
 

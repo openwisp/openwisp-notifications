@@ -3,14 +3,12 @@ from unittest.mock import patch
 
 from django.contrib.admin.sites import AdminSite
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import Permission
 from django.core.cache import cache
 from django.forms.widgets import MediaOrderConflictWarning
 from django.test import TestCase, override_settings, tag
 from django.urls import reverse
 
 from openwisp_notifications import settings as app_settings
-from openwisp_notifications.admin import NotificationSettingInline
 from openwisp_notifications.signals import notify
 from openwisp_notifications.swapper import load_model, swapper_load_model
 from openwisp_notifications.widgets import _add_object_notification_widget
@@ -63,7 +61,6 @@ class BaseTestAdmin(TestMultitenantAdminMixin, TestCase):
             url='localhost:8000/admin',
         )
         self.site = AdminSite()
-        self.ns_inline = NotificationSettingInline(NotificationSetting, self.site)
 
     @property
     def _url(self):
@@ -159,85 +156,33 @@ class TestAdmin(BaseTestAdmin):
             response = self.client.get(self._url)
             self.assertContains(response, 'wss')
 
-    def test_notification_setting_inline_read_only_fields(self):
-        with self.subTest('Test for superuser'):
-            self.assertListEqual(self.ns_inline.get_readonly_fields(su_request), [])
-
-        with self.subTest('Test for non-superuser'):
-            self.assertListEqual(
-                self.ns_inline.get_readonly_fields(op_request),
-                ['type', 'organization'],
-            )
-
-    def test_notification_setting_inline_add_permission(self):
-        with self.subTest('Test for superuser'):
-            self.assertTrue(self.ns_inline.has_add_permission(su_request))
-
-        with self.subTest('Test for non-superuser'):
-            self.assertFalse(
-                self.ns_inline.has_add_permission(op_request),
-            )
-
-    def test_notification_setting_inline_delete_permission(self):
-        with self.subTest('Test for superuser'):
-            self.assertTrue(self.ns_inline.has_delete_permission(su_request))
-
-        with self.subTest('Test for non-superuser'):
-            self.assertFalse(self.ns_inline.has_delete_permission(op_request))
-
-    def test_notification_setting_inline_organization_formfield(self):
-        response = self.client.get(
-            reverse('admin:openwisp_users_user_change', args=(self.admin.pk,))
-        )
-        organization = self._get_org(org_name='default')
-        self.assertContains(
-            response,
-            f'<option value="{organization.id}">{organization.name}</option>',
-        )
-
-    def test_notification_setting_inline_admin_has_change_permission(self):
-        with self.subTest('Test for superuser'):
-            self.assertTrue(
-                self.ns_inline.has_change_permission(su_request),
-            )
-
-        with self.subTest('Test for non-superuser'):
-            self.assertFalse(
-                self.ns_inline.has_change_permission(op_request),
-            )
-            self.assertTrue(
-                self.ns_inline.has_change_permission(op_request, obj=op_request.user),
-            )
-
-    def test_org_admin_view_same_org_user_notification_setting(self):
-        org_owner = self._create_org_user(
-            user=self._get_operator(),
-            is_admin=True,
-        )
-        org_admin = self._create_org_user(
-            user=self._create_user(
-                username='user', email='user@user.com', is_staff=True
-            ),
-            is_admin=True,
-        )
-        permissions = Permission.objects.all()
-        org_owner.user.user_permissions.set(permissions)
-        org_admin.user.user_permissions.set(permissions)
-        self.client.force_login(org_owner.user)
-
-        response = self.client.get(
-            reverse('admin:openwisp_users_user_change', args=(org_admin.user_id,)),
-        )
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'User notification settings')
-        self.assertNotContains(
-            response, '<option value="default" selected>Default Type</option>'
-        )
-
     def test_ignore_notification_widget_add_view(self):
         url = reverse('admin:openwisp_users_organization_add')
         response = self.client.get(url)
         self.assertNotContains(response, 'owIsChangeForm')
+
+    def test_notification_preferences_button_staff_user(self):
+        user = self._create_user(is_staff=True)
+        user_admin_page = reverse('admin:openwisp_users_user_change', args=(user.pk,))
+        expected_url = reverse(
+            "notifications:user_notification_preference", args=(user.pk,)
+        )
+        expected_html = (
+            f'<a class="button" href="{expected_url}">Notification Preferences</a>'
+        )
+
+        # Button appears for staff user
+        with self.subTest("Button should appear for staff user"):
+            response = self.client.get(user_admin_page)
+            self.assertContains(response, expected_html, html=True)
+
+        # Button does not appear for non-staff user
+        with self.subTest("Button should not appear for non-staff user"):
+            user.is_staff = False
+            user.full_clean()
+            user.save()
+            response = self.client.get(user_admin_page)
+            self.assertNotContains(response, expected_html, html=True)
 
 
 @tag('skip_prod')
