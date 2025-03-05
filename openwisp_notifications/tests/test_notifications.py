@@ -16,6 +16,7 @@ from django.test import TransactionTestCase
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.timesince import timesince
+from freezegun import freeze_time
 
 from openwisp_notifications import settings as app_settings
 from openwisp_notifications import tasks
@@ -950,11 +951,15 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
         # we don't send emails to unverified email addresses
         self.assertEqual(len(mail.outbox), 0)
 
+    # @override_settings(TIME_ZONE='UTC')
     @patch('openwisp_notifications.tasks.send_batched_email_notifications.apply_async')
     def test_batch_email_notification(self, mock_send_email):
-        fixed_datetime = datetime(2024, 7, 26, 11, 40)
+        fixed_datetime = timezone.localtime(
+            datetime(2024, 7, 26, 11, 40, tzinfo=timezone.utc)
+        )
+        datetime_str = fixed_datetime.strftime('%B %-d, %Y, %-I:%M %p %Z')
 
-        with patch.object(timezone, 'now', return_value=fixed_datetime):
+        with freeze_time(fixed_datetime):
             for _ in range(5):
                 notify.send(recipient=self.admin, **self.notification_options)
 
@@ -967,31 +972,29 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
             # Check if the rest of the notifications are sent in a batch
             self.assertEqual(len(mail.outbox), 2)
 
-            expected_subject = (
-                '[example.com] 4 new notifications since july 26, 2024, 11:40 a.m. UTC'
-            )
-            expected_body = """
-[example.com] 4 new notifications since july 26, 2024, 11:40 a.m. UTC
+            expected_subject = f'[example.com] 4 new notifications since {datetime_str}'
+            expected_body = f"""
+[example.com] 4 new notifications since {datetime_str}
 
 
 - Test Notification
   Description: Test Notification
-  Date & Time: July 26, 2024, 11:40 a.m.
+  Date & Time: {datetime_str}
   URL: https://localhost:8000/admin
 
 - Test Notification
   Description: Test Notification
-  Date & Time: July 26, 2024, 11:40 a.m.
+  Date & Time: {datetime_str}
   URL: https://localhost:8000/admin
 
 - Test Notification
   Description: Test Notification
-  Date & Time: July 26, 2024, 11:40 a.m.
+  Date & Time: {datetime_str}
   URL: https://localhost:8000/admin
 
 - Test Notification
   Description: Test Notification
-  Date & Time: July 26, 2024, 11:40 a.m.
+  Date & Time: {datetime_str}
   URL: https://localhost:8000/admin
             """
 
