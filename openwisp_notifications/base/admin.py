@@ -26,6 +26,7 @@ class NotificationSettingAdminMixin:
             super()
             .get_queryset(request)
             .filter(deleted=False)
+            .exclude(organization=None)
             .prefetch_related('organization')
         )
 
@@ -33,5 +34,4 @@ class NotificationSettingAdminMixin:
         extends = True
         js = [
             'admin/js/jquery.init.js',
-            'openwisp-notifications/js/notification-settings.js',
         ]
