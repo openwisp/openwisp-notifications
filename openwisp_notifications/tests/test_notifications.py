@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 from unittest.mock import patch
+from uuid import uuid4
 
 from allauth.account.models import EmailAddress
 from celery.exceptions import OperationalError
@@ -15,6 +16,7 @@ from django.test import TransactionTestCase
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.timesince import timesince
+from freezegun import freeze_time
 
 from openwisp_notifications import settings as app_settings
 from openwisp_notifications import tasks
@@ -132,7 +134,7 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
             organization_id=target_obj.organization.pk,
             type='default',
         )
-        self.assertEqual(notification_preference.email, None)
+        self.assertTrue(notification_preference.email)
         notification_preference.web = False
         notification_preference.save()
         notification_preference.refresh_from_db()
@@ -800,13 +802,18 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
             self.assertEqual(notification_queryset.count(), 0)
 
         with self.subTest('Test user email preference is "True"'):
+            unregister_notification_type('test_type')
+            test_type.update({'web_notification': True})
+            register_notification_type('test_type', test_type)
+            self.notification_options.update({'type': 'test_type'})
+
             notification_setting = NotificationSetting.objects.get(
                 user=self.admin, type='test_type', organization=target_obj.organization
             )
             notification_setting.email = True
             notification_setting.save()
             notification_setting.refresh_from_db()
-            self.assertFalse(notification_setting.email)
+            self.assertTrue(notification_setting.email)
 
         with self.subTest('Test user web preference is "True"'):
             NotificationSetting.objects.filter(
@@ -944,11 +951,15 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
         # we don't send emails to unverified email addresses
         self.assertEqual(len(mail.outbox), 0)
 
+    # @override_settings(TIME_ZONE='UTC')
     @patch('openwisp_notifications.tasks.send_batched_email_notifications.apply_async')
     def test_batch_email_notification(self, mock_send_email):
-        fixed_datetime = datetime(2024, 7, 26, 11, 40)
+        fixed_datetime = timezone.localtime(
+            datetime(2024, 7, 26, 11, 40, tzinfo=timezone.utc)
+        )
+        datetime_str = fixed_datetime.strftime('%B %-d, %Y, %-I:%M %p %Z')
 
-        with patch.object(timezone, 'now', return_value=fixed_datetime):
+        with freeze_time(fixed_datetime):
             for _ in range(5):
                 notify.send(recipient=self.admin, **self.notification_options)
 
@@ -961,31 +972,29 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
             # Check if the rest of the notifications are sent in a batch
             self.assertEqual(len(mail.outbox), 2)
 
-            expected_subject = (
-                '[example.com] 4 new notifications since july 26, 2024, 11:40 a.m. UTC'
-            )
-            expected_body = """
-[example.com] 4 new notifications since july 26, 2024, 11:40 a.m. UTC
+            expected_subject = f'[example.com] 4 new notifications since {datetime_str}'
+            expected_body = f"""
+[example.com] 4 new notifications since {datetime_str}
 
 
 - Test Notification
   Description: Test Notification
-  Date & Time: July 26, 2024, 11:40 a.m.
+  Date & Time: {datetime_str}
   URL: https://localhost:8000/admin
 
 - Test Notification
   Description: Test Notification
-  Date & Time: July 26, 2024, 11:40 a.m.
+  Date & Time: {datetime_str}
   URL: https://localhost:8000/admin
 
 - Test Notification
   Description: Test Notification
-  Date & Time: July 26, 2024, 11:40 a.m.
+  Date & Time: {datetime_str}
   URL: https://localhost:8000/admin
 
 - Test Notification
   Description: Test Notification
-  Date & Time: July 26, 2024, 11:40 a.m.
+  Date & Time: {datetime_str}
   URL: https://localhost:8000/admin
             """
 
@@ -1046,6 +1055,38 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
         )
         self._create_notification()
         self.assertEqual(notification_queryset.count(), 1)
+
+    def test_notification_preference_page(self):
+        preference_page = 'notifications:user_notification_preference'
+        tester = self._create_user(username='tester')
+
+        with self.subTest('Test user is not authenticated'):
+            response = self.client.get(reverse(preference_page, args=(self.admin.pk,)))
+            self.assertEqual(response.status_code, 302)
+
+        with self.subTest('Test with same user'):
+            self.client.force_login(self.admin)
+            response = self.client.get(reverse('notifications:notification_preference'))
+            self.assertEqual(response.status_code, 200)
+
+        with self.subTest('Test user is authenticated'):
+            self.client.force_login(self.admin)
+            response = self.client.get(reverse(preference_page, args=(self.admin.pk,)))
+            self.assertEqual(response.status_code, 200)
+
+        with self.subTest('Test user is authenticated but not superuser'):
+            self.client.force_login(tester)
+            response = self.client.get(reverse(preference_page, args=(self.admin.pk,)))
+            self.assertEqual(response.status_code, 403)
+
+        with self.subTest('Test user is authenticated and superuser'):
+            self.client.force_login(self.admin)
+            response = self.client.get(reverse(preference_page, args=(tester.pk,)))
+            self.assertEqual(response.status_code, 200)
+
+        with self.subTest('Test invalid user ID'):
+            response = self.client.get(reverse(preference_page, args=(uuid4(),)))
+            self.assertEqual(response.status_code, 404)
 
 
 class TestTransactionNotifications(TestOrganizationMixin, TransactionTestCase):

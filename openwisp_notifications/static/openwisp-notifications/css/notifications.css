@@ -1,5 +1,5 @@
 .ow-hide {
-  display: none!important;
+  display: none !important;
 }
 .ow-round-bottom-border {
   border-bottom-left-radius: 3px;
@@ -24,7 +24,8 @@
   border: 0px;
   background: #777;
 }
-.ow-notifications.toggle-btn:hover #ow-notification-btn,.ow-notifications:focus #ow-notification-btn{
+.ow-notifications.toggle-btn:hover #ow-notification-btn,
+.ow-notifications:focus #ow-notification-btn {
   background: #df5d43;
 }
 #ow-notification-count {
@@ -113,7 +114,7 @@
   float: right;
   position: relative;
   right: -2px;
-  bottom: -8px;
+  bottom: -3px;
   background-size: 9px;
 }
 .ow-notification-toast.info .icon {
@@ -121,7 +122,7 @@
 }
 .ow-notification-toast.warning .icon {
   filter: invert(20%) sepia(90%) saturate(5000%) hue-rotate(366deg)
-  brightness(92%) contrast(96%);
+    brightness(92%) contrast(96%);
 }
 .ow-notification-toast.error .icon,
 .ow-notification-toast.success .icon {
@@ -144,7 +145,8 @@
   top: 49px;
 }
 .ow-notification-dropdown .toggle-btn {
-  color: #777;
+  color: #777 !important;
+  text-decoration: none !important;
 }
 .ow-notification-dropdown .toggle-btn:active {
   position: relative;
@@ -226,12 +228,12 @@
 .ow-notification-dropdown .toggle-btn:focus {
   outline: 0.5px dotted rgba(0, 0, 0, 0.25);
 }
-#ow-notification-dropdown-error-container{
+#ow-notification-dropdown-error-container {
   color: #c51b25;
-  background-color: #FFD2D2;
+  background-color: #ffd2d2;
   display: none;
 }
-#ow-notification-dropdown-error{
+#ow-notification-dropdown-error {
   margin: auto;
   width: 90%;
   text-align: center;
@@ -265,41 +267,43 @@
   min-width: 15px;
   background-repeat: no-repeat;
   filter: invert(46%) sepia(4%) saturate(139%) hue-rotate(317deg)
-  brightness(99%) contrast(85%);
+    brightness(99%) contrast(85%);
   margin: -1px 1px 0 0;
 }
 .ow-notification-elem:hover .icon {
   filter: invert(20%) sepia(1%) saturate(139%) hue-rotate(317deg)
-  brightness(99%) contrast(85%);
+    brightness(99%) contrast(85%);
 }
 .ow-notification-elem.unread .icon {
   filter: invert(95%) sepia(1%) saturate(139%) hue-rotate(317deg)
-  brightness(99%) contrast(85%);
+    brightness(99%) contrast(85%);
 }
 .ow-notification-elem.unread:hover .icon {
   filter: invert(100%) sepia(0%) saturate(139%) hue-rotate(317deg)
-  brightness(100%) contrast(85%);
+    brightness(100%) contrast(85%);
 }
 .ow-notify-info {
-  background-image: url('../../openwisp-notifications/images/icons/icon-info.svg');
+  background-image: url("../../openwisp-notifications/images/icons/icon-info.svg");
 }
 .ow-notify-warning {
-  background-image: url('../../openwisp-notifications/images/icons/icon-warning.svg');
+  background-image: url("../../openwisp-notifications/images/icons/icon-warning.svg");
 }
 .ow-notify-error {
-  background-image: url('../../openwisp-notifications/images/icons/icon-error.svg');
+  background-image: url("../../openwisp-notifications/images/icons/icon-error.svg");
 }
 .ow-notify-success {
-  background-image: url('../../openwisp-notifications/images/icons/icon-success.svg');
+  background-image: url("../../openwisp-notifications/images/icons/icon-success.svg");
 }
 .ow-notify-close {
-  background-image: url('../../openwisp-notifications/images/icons/icon-close.svg');
+  background-image: url("../../openwisp-notifications/images/icons/icon-close.svg");
 }
 .ow-notification-inner {
   border-bottom: 1px solid rgba(0, 0, 0, 0.1);
   padding: 16px 22px;
 }
-.ow-notification-elem:last-child .ow-notification-inner { border-bottom: none }
+.ow-notification-elem:last-child .ow-notification-inner {
+  border-bottom: none;
+}
 
 /* Generic notification dialog */
 .ow-overlay-notification {

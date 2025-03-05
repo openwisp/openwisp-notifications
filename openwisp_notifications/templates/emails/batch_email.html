@@ -3,8 +3,10 @@
         .alert {
             border: 1px solid #e0e0e0;
             border-radius: 5px;
-            margin-bottom: 10px;
             padding: 10px;
+        }
+        .alert + .alert {
+            margin-top: 10px;
         }
         .alert.error {
             background-color: #ffefef;
@@ -60,22 +62,30 @@
             background-color: #1c8828;
         }
         .badge.warning {
-            background-color: #f0ad4e;
+            background-color: #ec942c;
         }
         .alert a {
             text-decoration: none;
         }
-        .alert.error a, .alert.error h2 {
+        .alert.error a,
+        .alert.error h2,
+        .alert.error p {
             color: #d9534f;
         }
-        .alert.info a, .alert.info h2 {
+        .alert.info a,
+        .alert.info h2,
+        .alert.info p {
             color: #333333;
         }
-        .alert.success a, .alert.success h2 {
+        .alert.success a,
+        .alert.success h2,
+        .alert.success p {
             color: #1c8828;
         }
-        .alert.warning a, .alert.warning h2 {
-            color: #f0ad4e;
+        .alert.warning a,
+        .alert.warning h2,
+        .alert.warning p {
+            color: #ec942c;
         }
         .alert a:hover {
             text-decoration: underline;
@@ -91,13 +101,13 @@
                     <span class="badge {{ notification.level }}">{{ notification.level|upper }}</span>
                     <span class="title">
                         {% if notification.url %}
-                            <a href="{{ notification.url }}" target="_blank">{{ notification.email_message }}</a>
+                            <a href="{{ notification.url }}" target="_blank"><p>{{ notification.email_message|striptags }}</p></a>
                         {% else %}
                             {{ notification.email_message }}
                         {% endif %}
                     </span>
                 </h2>
-                <p>{{ notification.timestamp|date:"F j, Y, g:i a" }}</p>
+                <p>{{ notification.timestamp|date:"F j, Y, g:i A e" }}</p>
                 {% if notification.rendered_description %}
                     <p>{{ notification.rendered_description|safe }}</p>
                 {% endif %}
