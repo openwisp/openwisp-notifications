@@ -1,0 +1,99 @@
+{% extends "admin/base_site.html" %}
+
+{% load i18n %}
+{% load static %}
+
+{% block title %}
+  {% trans "Notification Preferences" %}
+{% endblock title %}
+
+{% block extrastyle %}
+  {{ block.super }}
+  <link rel="stylesheet" type="text/css" href="{% static 'openwisp-notifications/css/preferences.css' %}" />
+{% endblock extrastyle %}
+
+{% block breadcrumbs %}
+  <div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">{% trans 'Home' %}</a> &rsaquo;
+    {% if username %}
+      <a href="{% url 'admin:app_list' app_label='openwisp_users' %}">{% trans 'Users and Organizations' %}</a> &rsaquo;
+      <a href="{% url 'admin:openwisp_users_user_changelist' %}">{% trans 'Users' %}</a> &rsaquo;
+      <a href="{% url 'admin:openwisp_users_user_change' user_id %}">{{ username }}</a> &rsaquo;
+    {% endif %}
+    {% trans 'Notification Preferences' %}
+  </div>
+{% endblock breadcrumbs %}
+
+{% block content %}
+  <div class="settings-container" data-user-id="{{ user_id }}">
+    <div class="loader"></div>
+    <div class="global-settings">
+      <h2>{% trans 'Global Settings' %}</h2>
+      <div class="global-settings-container">
+        <!-- Global Web Setting -->
+        <div class="global-setting">
+          <div class="global-setting-content">
+            <div class="icon icon-web"></div>
+            <div class="global-setting-text">
+              <h2>{% trans 'Web' %}</h2>
+              <p>
+                {% trans 'Enable or Disable all web notifications globally' %}
+              </p>
+              <div class="global-setting-dropdown" data-web-state="No">
+                <button class="global-setting-dropdown-toggle"></button>
+                <div class="global-setting-dropdown-menu">
+                  <button>{% trans 'Notify on Web' %}</button>
+                  <button>{% trans "Don't Notify on Web" %}</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Global Email Setting -->
+        <div class="global-setting">
+          <div class="global-setting-content">
+            <div class="icon icon-email"></div>
+            <div class="global-setting-text">
+              <h2>{% trans 'Email' %}</h2>
+              <p>{% trans 'Enable or Disable all email notifications globally' %}</p>
+              <div class="global-setting-dropdown" data-email-state="No">
+                <button class="global-setting-dropdown-toggle"></button>
+                <div class="global-setting-dropdown-menu">
+                  <button>{% trans 'Notify by Email' %}</button>
+                  <button>{% trans "Don't Notify by Email" %}</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="org-panels"></div>
+  </div>
+
+  <!-- Confirmation Modal -->
+  <div id="confirmation-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-icon"></div>
+        <h2></h2>
+      </div>
+      <p class="modal-message"></p>
+      <div class="modal-buttons">
+        <button class="button default" id="go-back">
+          {% trans 'Go Back' %}
+        </button>
+        <button class="button default success-btn" id="confirm">
+          {% trans 'Confirm' %}
+        </button>
+      </div>
+    </div>
+  </div>
+{% endblock content %}
+
+{% block footer %}
+  {{ block.super }}
+  {% if request.user.is_authenticated %}
+    <script type="text/javascript" src="{% static 'openwisp-notifications/js/preferences.js' %}"></script>
+  {% endif %}
+{% endblock footer %}

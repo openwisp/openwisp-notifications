@@ -200,6 +200,7 @@ class Migration(migrations.Migration):
                         else get_notification_choices,
                         max_length=30,
                         null=True,
+                        blank=True,
                         verbose_name="Notification Type",
                     ),
                 ),
@@ -232,6 +233,8 @@ class Migration(migrations.Migration):
                     'organization',
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
+                        blank=True,
+                        null=True,
                         to=swapper.get_model_name('openwisp_users', 'Organization'),
                     ),
                 ),

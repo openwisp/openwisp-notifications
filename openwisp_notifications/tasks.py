@@ -1,3 +1,4 @@
+import logging
 from datetime import timedelta
 
 from celery import shared_task
@@ -17,6 +18,8 @@ from openwisp_notifications.swapper import load_model, swapper_load_model
 from openwisp_notifications.utils import send_notification_email
 from openwisp_utils.admin_theme.email import send_email
 from openwisp_utils.tasks import OpenwispCeleryTask
+
+logger = logging.getLogger(__name__)
 
 User = get_user_model()
 
@@ -82,10 +85,21 @@ def delete_old_notifications(days):
 # Following tasks updates notification settings in database.
 # 'ns' is short for notification_setting
 def create_notification_settings(user, organizations, notification_types):
+    global_setting, _ = NotificationSetting.objects.get_or_create(
+        user=user, organization=None, type=None, defaults={'email': True, 'web': True}
+    )
+
     for type in notification_types:
         for org in organizations:
             NotificationSetting.objects.update_or_create(
-                defaults={'deleted': False}, user=user, type=type, organization=org
+                defaults={
+                    'deleted': False,
+                    'email': None if global_setting.email else False,
+                    'web': None if global_setting.email else False,
+                },
+                user=user,
+                type=type,
+                organization=org,
             )
 
 
@@ -215,7 +229,11 @@ def send_batched_email_notifications(instance_id):
     """
     Sends a summary of notifications to the specified email address.
     """
-    if not instance_id:
+    if not User.objects.filter(id=instance_id).exists():
+        logger.error(
+            'Failed to send batched email notifications:'
+            f' User with ID {instance_id} not found in the database.'
+        )
         return
 
     cache_key = f'email_batch_{instance_id}'
@@ -250,19 +268,15 @@ def send_batched_email_notifications(instance_id):
 
             unsent_notifications.append(notification)
 
-        starting_time = (
-            cache_data.get('start_time')
-            .strftime('%B %-d, %Y, %-I:%M %p')
-            .lower()
-            .replace('am', 'a.m.')
-            .replace('pm', 'p.m.')
-        ) + ' UTC'
+        start_time = timezone.localtime(cache_data.get('start_time')).strftime(
+            '%B %-d, %Y, %-I:%M %p %Z'
+        )
 
         context = {
             'notifications': unsent_notifications[:display_limit],
             'notifications_count': notifications_count,
             'site_name': current_site.name,
-            'start_time': starting_time,
+            'start_time': start_time,
         }
 
         extra_context = {}
@@ -278,7 +292,7 @@ def send_batched_email_notifications(instance_id):
         notifications_count = min(notifications_count, display_limit)
 
         send_email(
-            subject=f'[{current_site.name}] {notifications_count} new notifications since {starting_time}',
+            subject=f'[{current_site.name}] {notifications_count} new notifications since {start_time}',
             body_text=plain_text_content,
             body_html=html_content,
             recipients=[email_id],

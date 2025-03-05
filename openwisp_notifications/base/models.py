@@ -7,8 +7,8 @@ from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.sites.models import Site
 from django.core.cache import cache
-from django.core.exceptions import ObjectDoesNotExist
-from django.db import models
+from django.core.exceptions import ObjectDoesNotExist, ValidationError
+from django.db import models, transaction
 from django.db.models.constraints import UniqueConstraint
 from django.template.loader import render_to_string
 from django.urls import reverse
@@ -284,6 +284,7 @@ class AbstractNotificationSetting(UUIDModel):
     type = models.CharField(
         max_length=30,
         null=True,
+        blank=True,
         # TODO: Remove when dropping support for Django 4.2
         choices=(
             NOTIFICATION_CHOICES
@@ -299,6 +300,8 @@ class AbstractNotificationSetting(UUIDModel):
     organization = models.ForeignKey(
         get_model_name('openwisp_users', 'Organization'),
         on_delete=models.CASCADE,
+        null=True,
+        blank=True,
     )
     web = models.BooleanField(
         _('web notifications'), null=True, blank=True, help_text=_(_RECEIVE_HELP)
@@ -324,21 +327,64 @@ class AbstractNotificationSetting(UUIDModel):
         ]
 
     def __str__(self):
-        return '{type} - {organization}'.format(
-            type=self.type_config['verbose_name'],
-            organization=self.organization,
-        )
+        type_name = self.type_config.get('verbose_name', 'Global Setting')
+        if self.organization:
+            return '{type} - {organization}'.format(
+                type=type_name,
+                organization=self.organization,
+            )
+        else:
+            return type_name
+
+    def validate_global_setting(self):
+        if self.organization is None and self.type is None:
+            if (
+                self.__class__.objects.filter(
+                    user=self.user,
+                    organization=None,
+                    type=None,
+                )
+                .exclude(pk=self.pk)
+                .exists()
+            ):
+                raise ValidationError("There can only be one global setting per user.")
 
     def save(self, *args, **kwargs):
         if not self.web_notification:
             self.email = self.web_notification
+        with transaction.atomic():
+            if not self.organization and not self.type:
+                try:
+                    previous_state = self.__class__.objects.only('email').get(
+                        pk=self.pk
+                    )
+                    updates = {'web': self.web}
+
+                    # If global web notifiations are disabled, then disable email notifications as well
+                    if not self.web:
+                        updates['email'] = False
+
+                    # Update email notifiations only if it's different from the previous state
+                    # Otherwise, it would overwrite the email notification settings for specific
+                    # setting that were enabled by the user after disabling global email notifications
+                    if self.email != previous_state.email:
+                        updates['email'] = self.email
+
+                    self.user.notificationsetting_set.exclude(pk=self.pk).update(
+                        **updates
+                    )
+                except self.__class__.DoesNotExist:
+                    # Handle case when the object is being created
+                    pass
         return super().save(*args, **kwargs)
 
     def full_clean(self, *args, **kwargs):
-        if self.email == self.type_config['email_notification']:
-            self.email = None
-        if self.web == self.type_config['web_notification']:
-            self.web = None
+        self.validate_global_setting()
+        if self.organization and self.type:
+            if self.email == self.type_config['email_notification']:
+                self.email = None
+            if self.web == self.type_config['web_notification']:
+                self.web = None
         return super().full_clean(*args, **kwargs)
 
     @property
