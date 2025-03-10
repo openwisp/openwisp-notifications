@@ -2,7 +2,7 @@ import sys
 import uuid
 from datetime import timedelta
 from unittest.mock import patch
-from freezegun import freeze_time
+
 import pytest
 from channels.db import database_sync_to_async
 from channels.testing import WebsocketCommunicator
