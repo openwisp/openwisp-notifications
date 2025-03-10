@@ -5,7 +5,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 
 from openwisp_notifications.signals import notify
 from openwisp_notifications.swapper import load_model, swapper_load_model
-from openwisp_notifications.utils import _get_object_link, generate_unsubscribe_link
+from openwisp_notifications.utils import _get_object_link
 from openwisp_users.tests.utils import TestOrganizationMixin
 from openwisp_utils.test_selenium_mixins import SeleniumTestMixin
 
@@ -96,87 +96,33 @@ class TestSelenium(
         # This confirms the button is hidden
         dialog.find_element(By.CSS_SELECTOR, '.ow-message-target-redirect.ow-hide')
 
-    def test_email_unsubscribe_page(self):
-        unsubscribe_link = generate_unsubscribe_link(self.admin, False)
-        self.open(unsubscribe_link)
-        WebDriverWait(self.web_driver, 10).until(
-            EC.visibility_of_element_located((By.ID, 'toggle-btn'))
-        )
-        self.assertEqual(
-            self.web_driver.find_element(By.ID, 'toggle-btn').text,
-            'Unsubscribe',
-        )
-
-        # Unsubscribe
-        self.web_driver.find_element(By.ID, 'toggle-btn').click()
-        WebDriverWait(self.web_driver, 10).until(
-            EC.visibility_of_element_located((By.ID, 'confirmation-msg'))
-        )
-        self.assertEqual(
-            self.web_driver.find_element(By.ID, 'confirmation-msg').text,
-            'Successfully unsubscribed',
-        )
-        self.assertEqual(
-            self.web_driver.find_element(By.ID, 'toggle-btn').text,
-            'Subscribe',
-        )
-
-        # Re-subscribe
-        self.web_driver.find_element(By.ID, 'toggle-btn').click()
-        WebDriverWait(self.web_driver, 10).until(
-            EC.visibility_of_element_located((By.ID, 'confirmation-msg'))
-        )
-        self.assertEqual(
-            self.web_driver.find_element(By.ID, 'confirmation-msg').text,
-            'Successfully subscribed',
-        )
-        self.assertEqual(
-            self.web_driver.find_element(By.ID, 'toggle-btn').text,
-            'Unsubscribe',
-        )
-
     def test_notification_preference_page(self):
         self.login()
         self.open('/notifications/preferences/')
-
-        WebDriverWait(self.web_driver, 30).until(
-            EC.visibility_of_element_located(
-                (By.CLASS_NAME, 'global-settings-container')
-            )
-        )
-
         # Uncheck the global web checkbox
-        global_web_dropdown_toggle = WebDriverWait(self.web_driver, 30).until(
+        WebDriverWait(self.web_driver, 10).until(
             EC.element_to_be_clickable(
                 (
                     By.CSS_SELECTOR,
                     '.global-setting-dropdown[data-web-state] .global-setting-dropdown-toggle',
                 )
             )
-        )
-        global_web_dropdown_toggle.click()
-
-        global_web_dropdown_menu = WebDriverWait(self.web_driver, 10).until(
+        ).click()
+        WebDriverWait(self.web_driver, 10).until(
             EC.visibility_of_element_located(
                 (
                     By.CSS_SELECTOR,
-                    '.global-setting-dropdown[data-web-state] .global-setting-dropdown-menu-open',
+                    '.global-setting-dropdown[data-web-state]'
+                    ' .global-setting-dropdown-menu button:last-child',
                 )
             )
-        )
+        ).click()
 
-        dont_notify_on_web_option = global_web_dropdown_menu.find_element(
-            By.XPATH, './/li[normalize-space()="Don\'t Notify on Web"]'
-        )
-        dont_notify_on_web_option.click()
-
-        confirmation_modal = WebDriverWait(self.web_driver, 10).until(
-            EC.visibility_of_element_located((By.ID, 'confirmation-modal'))
-        )
-
-        confirm_button = confirmation_modal.find_element(By.ID, 'confirm')
-        confirm_button.click()
-
+        WebDriverWait(self.web_driver, 10).until(
+            EC.visibility_of_element_located(
+                (By.CSS_SELECTOR, '#confirmation-modal #confirm')
+            )
+        ).click()
         all_checkboxes = self.web_driver.find_elements(
             By.CSS_SELECTOR, 'input[type="checkbox"]'
         )
@@ -191,7 +137,7 @@ class TestSelenium(
 
         # Check the org-level web checkbox
         org_level_web_checkbox = WebDriverWait(self.web_driver, 10).until(
-            EC.element_to_be_clickable((By.ID, 'org-1-web'))
+            EC.element_to_be_clickable((By.CSS_SELECTOR, '#org-1-web'))
         )
         org_level_web_checkbox.click()
 
@@ -200,6 +146,7 @@ class TestSelenium(
             By.CSS_SELECTOR, 'input[id^="org-1-web-"]'
         )
         for checkbox in web_checkboxes:
+            self.assertTrue(checkbox.is_displayed())
             self.assertTrue(checkbox.is_selected())
 
         # Check a single email checkbox
@@ -218,7 +165,7 @@ class TestSelenium(
         self.login()
         self.open('/notifications/preferences/')
 
-        no_organizations_element = WebDriverWait(self.web_driver, 30).until(
+        no_organizations_element = WebDriverWait(self.web_driver, 10).until(
             EC.visibility_of_element_located((By.CLASS_NAME, 'no-organizations'))
         )
         self.assertEqual(

@@ -1,8 +1,8 @@
 Notification Preferences
 ========================
 
-.. image:: https://i.imgur.com/lIGqry5.png
-    :target: https://i.imgur.com/lIGqry5.png
+.. image:: https://raw.githubusercontent.com/openwisp/openwisp-notifications/docs/docs/images/25/notifications/preference-page.png
+    :target: https://raw.githubusercontent.com/openwisp/openwisp-notifications/docs/docs/images/25/notifications/preference-page.png
     :align: center
 
 OpenWISP Notifications enables users to customize their notification
@@ -12,9 +12,26 @@ organized by notification type and organization, allowing users to tailor
 their notification experience by opting to receive updates only from
 specific organizations or notification types.
 
-Users can access and manage their notification preferences by visiting the
-``/notification/preferences/``. Alternatively, this page can also be
-accessed directly from the notification widget.
+Users can access and manage their notification preferences directly from
+the notification widget by clicking the button highlighted in the
+screenshot below:
+
+.. image:: https://raw.githubusercontent.com/openwisp/openwisp-notifications/docs/docs/images/25/notifications/notification-preferences-button.png
+    :target: https://raw.githubusercontent.com/openwisp/openwisp-notifications/docs/docs/images/25/notifications/notification-preferences-button.png
+    :align: center
+
+Alternatively, you can also visit ``/notification/preferences/`` to manage
+your settings.
+
+.. note::
+
+    - You can disable notifications globally while still enabling them for
+      specific organizations.
+    - Notification settings are now linked: disabling web notifications
+      will automatically disable email notifications, and enabling email
+      notifications will automatically enable web notifications.
+    - Deleting notification settings is no longer possible via the web
+      interface (please use the REST API if removal is needed).
 
 Notification settings are automatically generated for all notification
 types and organizations for every user. Superusers have the ability to

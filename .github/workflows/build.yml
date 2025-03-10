@@ -11,7 +11,6 @@ on:
       - master
       - dev
       - gsoc24-rebased
-      - notification-preferences
 
 jobs:
 
@@ -59,7 +58,7 @@ jobs:
         pip install -U -r requirements-test.txt
         pip install -U -e .
         pip install ${{ matrix.django-version }}
-        sudo npm install -g jshint stylelint
+        sudo npm install -g prettier
 
     - name: QA checks
       run: |

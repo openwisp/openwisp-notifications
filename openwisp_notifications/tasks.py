@@ -9,16 +9,12 @@ from django.db.models import Q
 from django.db.utils import OperationalError
 from django.template.loader import render_to_string
 from django.utils import timezone
-from django.utils.safestring import mark_safe
 from django.utils.translation import gettext as _
 
 from openwisp_notifications import settings as app_settings
 from openwisp_notifications import types
 from openwisp_notifications.swapper import load_model, swapper_load_model
-from openwisp_notifications.utils import (
-    generate_unsubscribe_link,
-    send_notification_email,
-)
+from openwisp_notifications.utils import send_notification_email
 from openwisp_utils.admin_theme.email import send_email
 from openwisp_utils.tasks import OpenwispCeleryTask
 
@@ -269,21 +265,15 @@ def send_batched_email_notifications(instance_id):
 
             unsent_notifications.append(notification)
 
-        starting_time = (
-            cache_data.get('start_time')
-            .strftime('%B %-d, %Y, %-I:%M %p')
-            .lower()
-            .replace('am', 'a.m.')
-            .replace('pm', 'p.m.')
-        ) + ' UTC'
-
-        user = User.objects.get(id=instance_id)
+        start_time = timezone.localtime(cache_data.get('start_time')).strftime(
+            '%B %-d, %Y, %-I:%M %p %Z'
+        )
 
         context = {
             'notifications': unsent_notifications[:display_limit],
             'notifications_count': notifications_count,
             'site_name': current_site.name,
-            'start_time': starting_time,
+            'start_time': start_time,
         }
 
         unsubscribe_link = generate_unsubscribe_link(user)
@@ -296,7 +286,7 @@ def send_batched_email_notifications(instance_id):
         }
         if notifications_count > display_limit:
             extra_context = {
-                'call_to_action_url': f'https://{current_site.domain}/admin/#notifications',
+                'call_to_action_url': f"https://{current_site.domain}/admin/#notifications",
                 'call_to_action_text': _('View all Notifications'),
             }
         context.update(extra_context)
@@ -306,7 +296,7 @@ def send_batched_email_notifications(instance_id):
         notifications_count = min(notifications_count, display_limit)
 
         send_email(
-            subject=f'[{current_site.name}] {notifications_count} new notifications since {starting_time}',
+            subject=f'[{current_site.name}] {notifications_count} new notifications since {start_time}',
             body_text=plain_text_content,
             body_html=html_content,
             recipients=[email_id],
