@@ -1,4 +1,5 @@
-#content, .content {
+#content,
+.content {
   padding: 0 !important;
 }
 .unsubscribe-container {
@@ -24,7 +25,7 @@
   margin-bottom: 80px;
 }
 .email-icon {
-  background-image: url('../../openwisp-notifications/images/icons/icon-email.svg');
+  background-image: url("../../openwisp-notifications/images/icons/icon-email.svg");
   width: 50px;
   height: 50px;
   margin: 0 auto;

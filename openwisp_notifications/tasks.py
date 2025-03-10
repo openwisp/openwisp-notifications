@@ -9,12 +9,16 @@ from django.db.models import Q
 from django.db.utils import OperationalError
 from django.template.loader import render_to_string
 from django.utils import timezone
+from django.utils.safestring import mark_safe
 from django.utils.translation import gettext as _
 
 from openwisp_notifications import settings as app_settings
 from openwisp_notifications import types
 from openwisp_notifications.swapper import load_model, swapper_load_model
-from openwisp_notifications.utils import send_notification_email
+from openwisp_notifications.utils import (
+    generate_unsubscribe_link,
+    send_notification_email,
+)
 from openwisp_utils.admin_theme.email import send_email
 from openwisp_utils.tasks import OpenwispCeleryTask
 
@@ -276,6 +280,7 @@ def send_batched_email_notifications(instance_id):
             'start_time': start_time,
         }
 
+        user = User.objects.get(id=instance_id)
         unsubscribe_link = generate_unsubscribe_link(user)
 
         extra_context = {
