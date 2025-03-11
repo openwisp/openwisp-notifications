@@ -9,7 +9,6 @@
 {% block extrastyle %}
   {{ block.super }}
   <link rel="stylesheet" type="text/css" href="{% static 'openwisp-notifications/css/unsubscribe.css' %}">
-  <script src="{% static 'openwisp-notifications/js/unsubscribe.js' %}"></script>
 {% endblock %}
 
 {% block menu-bar %}
@@ -33,7 +32,7 @@
             {% trans 'You are currently unsubscribed from notifications.' %}
           {% endif %}
         </p>
-        <button id="toggle-btn" class="button default" data-hasSubscribe="{% if is_subscribed %}true{% else %}false{% endif %}">
+        <button id="toggle-btn" class="button" data-hasSubscribe="{% if is_subscribed %}true{% else %}false{% endif %}">
           {% if is_subscribed %}
             {% trans 'Unsubscribe' %}
           {% else %}
@@ -53,3 +52,8 @@
     </div>
   </div>
 {% endblock %}
+
+{% block footer %}
+{{ block.super }}
+<script src="{% static 'openwisp-notifications/js/unsubscribe.js' %}"></script>
+{% endblock footer %}

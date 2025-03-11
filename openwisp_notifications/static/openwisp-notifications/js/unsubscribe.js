@@ -34,7 +34,7 @@ function updateSubscription(subscribe) {
           toggleBtn.setAttribute("data-hasSubscribe", "false");
         }
 
-        confirmationMsg.textContent = data.message;
+        confirmationMsg.textContent = gettext(data.message);
         confirmationMsg.style.display = "block";
       } else {
         window.alert(data.message);

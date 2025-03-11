@@ -313,5 +313,4 @@ def send_batched_email_notifications(instance_id):
         )
 
     unsent_notifications_query.update(emailed=True)
-    Notification.objects.bulk_update(unsent_notifications_query, ['emailed'])
     cache.delete(cache_key)

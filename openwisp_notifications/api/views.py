@@ -122,7 +122,7 @@ class BaseNotificationSettingView(GenericAPIView):
         if getattr(self, 'swagger_fake_view', False):
             return NotificationSetting.objects.none()  # pragma: no cover
         user_id = self.kwargs.get('user_id', self.request.user.id)
-        return NotificationSetting.objects.filter(user=user_id)
+        return NotificationSetting.objects.filter(user_id=user_id)
 
 
 class NotificationSettingListView(BaseNotificationSettingView, ListModelMixin):
