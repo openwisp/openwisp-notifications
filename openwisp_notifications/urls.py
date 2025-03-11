@@ -1,7 +1,8 @@
 from django.urls import include, path
 
-from .api.urls import get_api_urls
 from . import views
+from .api.urls import get_api_urls
+
 app_name = 'notifications'
 
 

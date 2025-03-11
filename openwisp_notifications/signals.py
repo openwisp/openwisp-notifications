@@ -1,11 +1,12 @@
 from django.dispatch import Signal
-from django.contrib.auth.signals import user_logged_in
-from django.dispatch import receiver
+from urllib.parse import quote
+
+from allauth.account.models import EmailAddress
 from django.contrib import messages
+from django.contrib.auth.signals import user_logged_in
+from django.dispatch import Signal, receiver
 from django.urls import reverse
 from django.utils.html import format_html
-from allauth.account.models import EmailAddress
-from urllib.parse import quote
 from django.utils.translation import gettext_lazy as _
 
 

@@ -1,3 +1,4 @@
+import logging
 from datetime import timedelta
 from unittest.mock import patch
 
@@ -12,7 +13,7 @@ from django.core.cache import cache
 from django.core.exceptions import ImproperlyConfigured
 from django.db.models.signals import post_migrate, post_save
 from django.template import TemplateDoesNotExist
-from django.test import TransactionTestCase, TestCase, override_settings
+from django.test import TestCase, TransactionTestCase, override_settings
 from django.test.client import Client
 from django.urls import reverse
 from django.utils import timezone
@@ -39,7 +40,6 @@ from openwisp_notifications.types import (
 from openwisp_notifications.utils import _get_absolute_url
 from openwisp_users.tests.utils import TestOrganizationMixin
 from openwisp_utils.tests import capture_any_output
-import logging
 
 User = get_user_model()
 

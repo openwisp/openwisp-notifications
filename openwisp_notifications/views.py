@@ -1,11 +1,12 @@
+import logging
+
+from allauth.account.models import EmailAddress
+from allauth.account.utils import send_email_confirmation
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import redirect, reverse
-from django.contrib import messages
+from django.utils.http import url_has_allowed_host_and_scheme as is_safe_url
 from django.utils.translation import gettext_lazy as _
-from allauth.account.utils import send_email_confirmation
-from allauth.account.models import EmailAddress
-from django.utils.http import is_safe_url
-import logging
 
 logger = logging.getLogger(__name__)
 
