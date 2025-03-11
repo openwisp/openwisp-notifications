@@ -1,5 +1,5 @@
 django-notifications-hq~=1.8.3
 channels~=3.0.2
 openwisp-users @ https://github.com/openwisp/openwisp-users/tarball/1.2
-openwisp-utils[rest,celery] @ https://github.com/openwisp/openwisp-utils/tarball/1.2
+openwisp-utils[rest,celery] @ https://github.com/openwisp/openwisp-utils/tarball/send-email-configurable-template
 markdown~=3.7.0
