@@ -7,7 +7,7 @@ from django.core.cache import cache
 from django.db import transaction
 from django.db.models import Q
 from django.db.models.query import QuerySet
-from django.db.models.signals import post_delete, post_save
+from django.db.models.signals import post_delete, post_save, pre_save
 from django.dispatch import receiver
 from django.utils import timezone
 from django.utils.translation import gettext as _
@@ -300,13 +300,41 @@ def notification_setting_delete_org_user(instance, **kwargs):
     )
 
 
-@receiver(post_save, sender=User, dispatch_uid='user_notification_setting')
-def update_superuser_notification_settings(instance, created, **kwargs):
-    transaction.on_commit(
-        lambda: tasks.update_superuser_notification_settings.delay(
-            instance.pk, instance.is_superuser, created
+@receiver(pre_save, sender=User, dispatch_uid='superuser_demoted_notification_setting')
+def superuser_status_changed_notification_setting(instance, update_fields, **kwargs):
+    """
+    If user is demoted from superuser status, then
+    remove notification settings for non-managed organizations.
+
+    If user is promoted to superuser, then
+    create notification settings for all organizations.
+    """
+    if update_fields is not None and 'is_superuser' not in update_fields:
+        # No-op if is_superuser field is not being updated.
+        # If update_fields is None, it means any field could be updated.
+        return
+    try:
+        db_instance = User.objects.only('is_superuser').get(pk=instance.pk)
+    except User.DoesNotExist:
+        # User is being created
+        return
+    # If user is demoted from superuser to non-superuser
+    if db_instance.is_superuser and not instance.is_superuser:
+        transaction.on_commit(
+            lambda: tasks.superuser_demoted_notification_setting.delay(instance.pk)
         )
-    )
+    elif not db_instance.is_superuser and instance.is_superuser:
+        transaction.on_commit(
+            lambda: tasks.create_superuser_notification_settings.delay(instance.pk)
+        )
+
+
+@receiver(post_save, sender=User, dispatch_uid='create_superuser_notification_settings')
+def create_superuser_notification_settings(instance, created, **kwargs):
+    if created and instance.is_superuser:
+        transaction.on_commit(
+            lambda: tasks.create_superuser_notification_settings.delay(instance.pk)
+        )
 
 
 @receiver(
