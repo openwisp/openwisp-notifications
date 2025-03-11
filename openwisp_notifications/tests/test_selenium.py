@@ -5,7 +5,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 
 from openwisp_notifications.signals import notify
 from openwisp_notifications.swapper import load_model, swapper_load_model
-from openwisp_notifications.utils import _get_object_link, generate_unsubscribe_link
+from openwisp_notifications.utils import _get_object_link, get_unsubscribe_url_for_user
 from openwisp_users.tests.utils import TestOrganizationMixin
 from openwisp_utils.test_selenium_mixins import SeleniumTestMixin
 
@@ -97,7 +97,7 @@ class TestSelenium(
         dialog.find_element(By.CSS_SELECTOR, '.ow-message-target-redirect.ow-hide')
 
     def test_email_unsubscribe_page(self):
-        unsubscribe_link = generate_unsubscribe_link(self.admin, False)
+        unsubscribe_link = get_unsubscribe_url_for_user(self.admin, False)
         self.open(unsubscribe_link)
         WebDriverWait(self.web_driver, 10).until(
             EC.visibility_of_element_located((By.ID, 'toggle-btn'))

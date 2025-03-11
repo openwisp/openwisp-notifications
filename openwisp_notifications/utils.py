@@ -2,10 +2,10 @@ import json
 
 from django.conf import settings
 from django.contrib.sites.models import Site
+from django.template.loader import render_to_string
 from django.urls import NoReverseMatch, reverse
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
-from django.utils.safestring import mark_safe
 from django.utils.translation import gettext as _
 
 from openwisp_notifications.exceptions import NotificationRenderException
@@ -41,6 +41,24 @@ def normalize_unread_count(unread_count):
         return unread_count
 
 
+def get_unsubscribe_url_for_user(user, full_url=True):
+    token = email_token_generator.make_token(user)
+    data = json.dumps({'user_id': str(user.id), 'token': token})
+    encoded_data = urlsafe_base64_encode(force_bytes(data))
+    unsubscribe_path = reverse('notifications:unsubscribe')
+    if not full_url:
+        return f"{unsubscribe_path}?token={encoded_data}"
+    current_site = Site.objects.get_current()
+    return f"https://{current_site.domain}{unsubscribe_path}?token={encoded_data}"
+
+
+def get_unsubscribe_url_email_footer(url):
+    return render_to_string(
+        'openwisp_notifications/emails/unsubscribe_footer.html',
+        {'unsubscribe_url': url},
+    )
+
+
 def send_notification_email(notification):
     """Send a single email notification"""
     try:
@@ -61,7 +79,7 @@ def send_notification_email(notification):
             'target_url': target_url
         }
 
-    unsubscribe_link = generate_unsubscribe_link(notification.recipient)
+    unsubscribe_url = get_unsubscribe_url_for_user(notification.recipient)
 
     send_email(
         subject,
@@ -71,24 +89,10 @@ def send_notification_email(notification):
         extra_context={
             'call_to_action_url': target_url,
             'call_to_action_text': _('Find out more'),
-            'footer': mark_safe(
-                'To unsubscribe from these notifications, '
-                f'<a href="{unsubscribe_link}">click here</a>.'
-            ),
+            'footer': get_unsubscribe_url_email_footer(unsubscribe_url),
         },
         headers={
             'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
-            'List-Unsubscribe': f'<{unsubscribe_link}>',
+            'List-Unsubscribe': f'<{unsubscribe_url}>',
         },
     )
-
-
-def generate_unsubscribe_link(user, full_url=True):
-    token = email_token_generator.make_token(user)
-    data = json.dumps({'user_id': str(user.id), 'token': token})
-    encoded_data = urlsafe_base64_encode(force_bytes(data))
-    unsubscribe_url = reverse('notifications:unsubscribe')
-    if not full_url:
-        return f"{unsubscribe_url}?token={encoded_data}"
-    current_site = Site.objects.get_current()
-    return f"https://{current_site.domain}{unsubscribe_url}?token={encoded_data}"

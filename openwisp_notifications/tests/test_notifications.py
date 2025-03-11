@@ -38,7 +38,7 @@ from openwisp_notifications.types import (
     _unregister_notification_choice,
     get_notification_configuration,
 )
-from openwisp_notifications.utils import _get_absolute_url, generate_unsubscribe_link
+from openwisp_notifications.utils import _get_absolute_url, get_unsubscribe_url_for_user
 from openwisp_users.tests.utils import TestOrganizationMixin
 from openwisp_utils.tests import capture_any_output
 
@@ -1077,7 +1077,7 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
             self.assertFalse(is_valid)
 
     def test_email_unsubscribe_view(self):
-        unsubscribe_link_generated = generate_unsubscribe_link(self.admin, False)
+        unsubscribe_link_generated = get_unsubscribe_url_for_user(self.admin, False)
         token = unsubscribe_link_generated.split('?token=')[1]
         local_unsubscribe_url = reverse('notifications:unsubscribe')
         unsubscribe_url = f"{local_unsubscribe_url}?token={token}"
@@ -1102,7 +1102,7 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
 
         with self.subTest('Test GET request with invalid user'):
             tester = self._create_user(username='tester')
-            tester_link_generated = generate_unsubscribe_link(tester)
+            tester_link_generated = get_unsubscribe_url_for_user(tester)
             token = tester_link_generated.split('?token=')[1]
             tester_unsubscribe_url = f"{local_unsubscribe_url}?token={token}"
             tester.delete()
@@ -1112,7 +1112,7 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
 
         with self.subTest('Test POST request with invalid user'):
             tester = self._create_user(username='tester')
-            tester_link_generated = generate_unsubscribe_link(tester)
+            tester_link_generated = get_unsubscribe_url_for_user(tester)
             token = tester_link_generated.split('?token=')[1]
             tester_unsubscribe_url = f"{local_unsubscribe_url}?token={token}"
             tester.delete()
