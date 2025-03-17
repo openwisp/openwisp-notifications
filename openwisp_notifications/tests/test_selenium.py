@@ -1,13 +1,12 @@
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
+from django.urls import reverse
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.support.ui import WebDriverWait
 
 from openwisp_notifications.signals import notify
 from openwisp_notifications.swapper import load_model, swapper_load_model
 from openwisp_notifications.utils import _get_object_link, get_unsubscribe_url_for_user
 from openwisp_users.tests.utils import TestOrganizationMixin
-from openwisp_utils.test_selenium_mixins import SeleniumTestMixin
+from openwisp_utils.tests import SeleniumTestMixin
 
 Notification = load_model('Notification')
 Organization = swapper_load_model('openwisp_users', 'Organization')
@@ -20,9 +19,7 @@ class TestSelenium(
     StaticLiveServerTestCase,
 ):
     def setUp(self):
-        self.admin = self._create_admin(
-            username=self.admin_username, password=self.admin_password
-        )
+        super().setUp()
         org = self._create_org()
         OrganizationUser.objects.create(user=self.admin, organization=org)
         self.operator = super()._get_operator()
@@ -42,13 +39,9 @@ class TestSelenium(
     def test_notification_relative_link(self):
         self.login()
         notification = self._create_notification().pop()[1][0]
-        self.web_driver.find_element(By.ID, 'openwisp_notifications').click()
-        WebDriverWait(self.web_driver, 10).until(
-            EC.visibility_of_element_located((By.CLASS_NAME, 'ow-notification-elem'))
-        )
-        notification_elem = self.web_driver.find_element(
-            By.CLASS_NAME, 'ow-notification-elem'
-        )
+        self.find_element(By.ID, 'openwisp_notifications').click()
+        self.wait_for_visibility(By.CLASS_NAME, 'ow-notification-elem')
+        notification_elem = self.find_element(By.CLASS_NAME, 'ow-notification-elem')
         data_location_value = notification_elem.get_attribute('data-location')
         self.assertEqual(
             data_location_value, _get_object_link(notification, 'target', False)
@@ -60,15 +53,11 @@ class TestSelenium(
             {'message': 'Test Message', 'description': 'Test Description'}
         )
         notification = self._create_notification().pop()[1][0]
-        self.web_driver.find_element(By.ID, 'openwisp_notifications').click()
-        WebDriverWait(self.web_driver, 10).until(
-            EC.visibility_of_element_located((By.ID, f'ow-{notification.id}'))
-        )
-        self.web_driver.find_element(By.ID, f'ow-{notification.id}').click()
-        WebDriverWait(self.web_driver, 10).until(
-            EC.visibility_of_element_located((By.CLASS_NAME, 'ow-dialog-notification'))
-        )
-        dialog = self.web_driver.find_element(By.CLASS_NAME, 'ow-dialog-notification')
+        self.find_element(By.ID, 'openwisp_notifications').click()
+        self.wait_for_visibility(By.ID, f'ow-{notification.id}')
+        self.find_element(By.ID, f'ow-{notification.id}').click()
+        self.wait_for_visibility(By.CLASS_NAME, 'ow-dialog-notification')
+        dialog = self.find_element(By.CLASS_NAME, 'ow-dialog-notification')
         self.assertEqual(
             dialog.find_element(By.CLASS_NAME, 'ow-message-title').text, 'Test Message'
         )
@@ -84,114 +73,92 @@ class TestSelenium(
             {'message': 'Test Message', 'description': 'Test Description'}
         )
         notification = self._create_notification().pop()[1][0]
-        self.web_driver.find_element(By.ID, 'openwisp_notifications').click()
-        WebDriverWait(self.web_driver, 10).until(
-            EC.visibility_of_element_located((By.ID, f'ow-{notification.id}'))
-        )
-        self.web_driver.find_element(By.ID, f'ow-{notification.id}').click()
-        WebDriverWait(self.web_driver, 10).until(
-            EC.visibility_of_element_located((By.CLASS_NAME, 'ow-dialog-notification'))
-        )
-        dialog = self.web_driver.find_element(By.CLASS_NAME, 'ow-dialog-notification')
+        self.find_element(By.ID, 'openwisp_notifications').click()
+        self.find_element(By.ID, f'ow-{notification.id}').click()
+        dialog = self.find_element(By.CLASS_NAME, 'ow-dialog-notification')
         # This confirms the button is hidden
         dialog.find_element(By.CSS_SELECTOR, '.ow-message-target-redirect.ow-hide')
 
     def test_email_unsubscribe_page(self):
-        unsubscribe_link = get_unsubscribe_url_for_user(self.admin, False)
-        self.open(unsubscribe_link)
-        WebDriverWait(self.web_driver, 10).until(
-            EC.visibility_of_element_located((By.ID, 'toggle-btn'))
-        )
-        self.assertEqual(
-            self.web_driver.find_element(By.ID, 'toggle-btn').text,
-            'Unsubscribe',
-        )
+        with self.subTest('Token is invalid'):
+            self.open(reverse('notifications:unsubscribe'))
+            self.assertEqual(
+                self.find_element(By.TAG_NAME, 'h2').text, 'Invalid or Expired Link'
+            )
 
-        # Unsubscribe
-        self.web_driver.find_element(By.ID, 'toggle-btn').click()
-        WebDriverWait(self.web_driver, 10).until(
-            EC.visibility_of_element_located((By.ID, 'confirmation-msg'))
-        )
-        self.assertEqual(
-            self.web_driver.find_element(By.ID, 'confirmation-msg').text,
-            'Successfully unsubscribed',
-        )
-        self.assertEqual(
-            self.web_driver.find_element(By.ID, 'toggle-btn').text,
-            'Subscribe',
-        )
+        with self.subTest('User unsubscribe with valid URL'):
+            unsubscribe_link = get_unsubscribe_url_for_user(self.admin, False)
+            self.open(unsubscribe_link)
+            self.wait_for_visibility(By.ID, 'subscribed-message')
+            self.wait_for_invisibility(By.ID, 'unsubscribed-message')
+            toggle_btn = self.find_element(By.ID, 'toggle-btn')
+            self.assertEqual(toggle_btn.text, 'Unsubscribe')
+            toggle_btn.click()
+            self.wait_for_visibility(By.ID, 'confirm-unsubscribed')
+            self.wait_for_invisibility(By.ID, 'confirm-subscribed')
+            self.assertEqual(self.find_element(By.ID, 'toggle-btn').text, 'Subscribe')
 
-        # Re-subscribe
-        self.web_driver.find_element(By.ID, 'toggle-btn').click()
-        WebDriverWait(self.web_driver, 10).until(
-            EC.visibility_of_element_located((By.ID, 'confirmation-msg'))
-        )
-        self.assertEqual(
-            self.web_driver.find_element(By.ID, 'confirmation-msg').text,
-            'Successfully subscribed',
-        )
-        self.assertEqual(
-            self.web_driver.find_element(By.ID, 'toggle-btn').text,
-            'Unsubscribe',
-        )
+        with self.subTest('User subscribe to notifications again'):
+            self.open(unsubscribe_link)
+            self.wait_for_visibility(By.ID, 'unsubscribed-message')
+            self.wait_for_invisibility(By.ID, 'subscribed-message')
+            toggle_btn = self.find_element(By.ID, 'toggle-btn')
+            self.assertEqual(toggle_btn.text, 'Subscribe')
+            toggle_btn.click()
+            self.wait_for_visibility(By.ID, 'confirm-subscribed')
+            self.wait_for_invisibility(By.ID, 'confirm-unsubscribed')
+            self.assertEqual(self.find_element(By.ID, 'toggle-btn').text, 'Unsubscribe')
+
+        with self.subTest('Network request fails'):
+            self.open(unsubscribe_link)
+            self.web_driver.execute_script(
+                """
+                window.fetch = function() {
+                    return Promise.reject(new Error('Simulated fetch failure'));
+                };
+            """
+            )
+            self.web_driver.find_element(By.ID, 'toggle-btn').click()
+            self.wait_for_visibility(By.ID, 'error-msg')
 
     def test_notification_preference_page(self):
         self.login()
-        self.open('/notifications/preferences/')
+        self.open(reverse('notifications:notification_preference'))
         # Uncheck the global web checkbox
-        WebDriverWait(self.web_driver, 10).until(
-            EC.element_to_be_clickable(
-                (
-                    By.CSS_SELECTOR,
-                    '.global-setting-dropdown[data-web-state] .global-setting-dropdown-toggle',
-                )
-            )
+        self.find_element(
+            By.CSS_SELECTOR,
+            '.global-setting-dropdown[data-web-state] .global-setting-dropdown-toggle',
         ).click()
-        WebDriverWait(self.web_driver, 10).until(
-            EC.visibility_of_element_located(
-                (
-                    By.CSS_SELECTOR,
-                    '.global-setting-dropdown[data-web-state]'
-                    ' .global-setting-dropdown-menu button:last-child',
-                )
-            )
+        self.find_element(
+            By.CSS_SELECTOR,
+            '.global-setting-dropdown[data-web-state]'
+            ' .global-setting-dropdown-menu button:last-child',
         ).click()
+        self.find_element(By.CSS_SELECTOR, '#confirmation-modal #confirm').click()
 
-        WebDriverWait(self.web_driver, 10).until(
-            EC.visibility_of_element_located(
-                (By.CSS_SELECTOR, '#confirmation-modal #confirm')
-            )
-        ).click()
-        all_checkboxes = self.web_driver.find_elements(
-            By.CSS_SELECTOR, 'input[type="checkbox"]'
+        # Expand the first organization panel if it's collapsed
+        first_org_toggle = self.find_element(By.CSS_SELECTOR, '.toggle-icon')
+        first_org_toggle.click()
+
+        all_checkboxes = self.find_elements(
+            By.CSS_SELECTOR, 'input[type="checkbox"]', wait_for='presence'
         )
         for checkbox in all_checkboxes:
             self.assertFalse(checkbox.is_selected())
 
-        # Expand the first organization panel if it's collapsed
-        first_org_toggle = WebDriverWait(self.web_driver, 10).until(
-            EC.element_to_be_clickable((By.CSS_SELECTOR, '.module .toggle-header'))
-        )
-        first_org_toggle.click()
-
         # Check the org-level web checkbox
-        org_level_web_checkbox = WebDriverWait(self.web_driver, 10).until(
-            EC.element_to_be_clickable((By.CSS_SELECTOR, '#org-1-web'))
-        )
+        org_level_web_checkbox = self.find_element(By.CSS_SELECTOR, '#org-1-web')
         org_level_web_checkbox.click()
 
         # Verify that all web checkboxes under org-1 are selected
-        web_checkboxes = self.web_driver.find_elements(
-            By.CSS_SELECTOR, 'input[id^="org-1-web-"]'
+        web_checkboxes = self.find_elements(
+            By.CSS_SELECTOR, 'label[id^="org-1-web-"] input', wait_for='presence'
         )
         for checkbox in web_checkboxes:
-            self.assertTrue(checkbox.is_displayed())
             self.assertTrue(checkbox.is_selected())
 
         # Check a single email checkbox
-        first_org_email_checkbox = WebDriverWait(self.web_driver, 10).until(
-            EC.presence_of_element_located((By.ID, 'org-1-email-1'))
-        )
+        first_org_email_checkbox = self.find_element(By.ID, 'org-1-email-1')
         first_org_email_checkbox.click()
         self.assertTrue(
             first_org_email_checkbox.find_element(By.TAG_NAME, 'input').is_selected()
@@ -204,8 +171,8 @@ class TestSelenium(
         self.login()
         self.open('/notifications/preferences/')
 
-        no_organizations_element = WebDriverWait(self.web_driver, 10).until(
-            EC.visibility_of_element_located((By.CLASS_NAME, 'no-organizations'))
+        no_organizations_element = self.wait_for_visibility(
+            By.CLASS_NAME, 'no-organizations'
         )
         self.assertEqual(
             no_organizations_element.text,

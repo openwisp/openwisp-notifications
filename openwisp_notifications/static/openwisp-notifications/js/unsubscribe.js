@@ -1,4 +1,6 @@
 "use strict";
+
+// Ensure `gettext` is defined
 if (typeof gettext === "undefined") {
   var gettext = function (word) {
     return word;
@@ -6,50 +8,63 @@ if (typeof gettext === "undefined") {
 }
 
 function updateSubscription(subscribe) {
+  const toggleBtn = document.querySelector("#toggle-btn");
+  const subscribedMessage = document.querySelector("#subscribed-message");
+  const unsubscribedMessage = document.querySelector("#unsubscribed-message");
+  const confirmationMsg = document.querySelector(".confirmation-msg-container");
+  const confirmSubscribed = document.querySelector("#confirm-subscribed");
+  const confirmUnsubscribed = document.querySelector("#confirm-unsubscribed");
+  const errorMessage = document.querySelector("#error-msg-container");
+  const managePreferences = document.querySelector("#manage-preferences");
+  const footer = document.querySelector(".footer");
+
   fetch(window.location.href, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ subscribe: subscribe }),
+    body: JSON.stringify({ subscribe }),
   })
     .then((response) => response.json())
     .then((data) => {
       if (data.success) {
-        const toggleBtn = document.getElementById("toggle-btn");
-        const statusMessage = document.getElementById("status-message");
-        const confirmationMsg = document.getElementById("confirmation-msg");
+        // Toggle visibility of messages
+        subscribedMessage.classList.toggle("hidden", !subscribe);
+        unsubscribedMessage.classList.toggle("hidden", subscribe);
 
-        if (subscribe) {
-          statusMessage.textContent = gettext(
-            "You are currently subscribed to notifications."
-          );
-          toggleBtn.textContent = gettext("Unsubscribe");
-          toggleBtn.setAttribute("data-hasSubscribe", "true");
-        } else {
-          statusMessage.textContent = gettext(
-            "You are currently unsubscribed from notifications."
-          );
-          toggleBtn.textContent = gettext("Subscribe");
-          toggleBtn.setAttribute("data-hasSubscribe", "false");
-        }
+        // Update button text and attribute
+        toggleBtn.textContent = gettext(
+          subscribe ? "Unsubscribe" : "Subscribe"
+        );
+        toggleBtn.dataset.hasSubscribe = subscribe.toString();
 
-        confirmationMsg.textContent = gettext(data.message);
-        confirmationMsg.style.display = "block";
+        // Show confirmation message
+        confirmSubscribed.classList.toggle("hidden", !subscribe);
+        confirmUnsubscribed.classList.toggle("hidden", subscribe);
+        confirmationMsg.classList.remove("hidden");
       } else {
-        window.alert(data.message);
+        showErrorState();
       }
     })
     .catch((error) => {
-      window.console.error("Error:", error);
+      console.error("Error updating subscription:", error);
+      showErrorState();
     });
+
+  function showErrorState() {
+    managePreferences.classList.add("hidden");
+    footer.classList.add("hidden");
+    errorMessage.classList.remove("hidden");
+  }
 }
 
-document.addEventListener("DOMContentLoaded", function () {
-  const toggleBtn = document.getElementById("toggle-btn");
-  toggleBtn.addEventListener("click", function () {
-    const isSubscribed = toggleBtn.getAttribute("data-hasSubscribe") === "true";
-    const subscribe = !isSubscribed;
-    updateSubscription(subscribe);
-  });
+document.addEventListener("DOMContentLoaded", () => {
+  const toggleBtn = document.querySelector("#toggle-btn");
+
+  if (toggleBtn) {
+    toggleBtn.addEventListener("click", function () {
+      const isSubscribed = toggleBtn.dataset.hasSubscribe === "true";
+      updateSubscription(!isSubscribed);
+    });
+  }
 });

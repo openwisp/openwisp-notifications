@@ -2,17 +2,14 @@
 {% load i18n %}
 {% load static %}
 
-{% block head_title %}
-  <title>{% trans 'Manage Subscription Preferences' %}</title>
-{% endblock %}
+{% block head_title %}{% trans 'Manage Subscription Preferences' %}{% endblock %}
 
 {% block extrastyle %}
   {{ block.super }}
   <link rel="stylesheet" type="text/css" href="{% static 'openwisp-notifications/css/unsubscribe.css' %}">
 {% endblock %}
 
-{% block menu-bar %}
-{% endblock %}
+{% block menu-bar %}{% endblock %}
 
 {% block content %}
   <div class="unsubscribe-container">
@@ -24,29 +21,59 @@
     <div class="unsubscribe-content">
       <div class="icon email-icon"></div>
       <h1>{% trans 'Manage Notification Preferences' %}</h1>
+
       {% if valid %}
-        <p id="status-message">
-          {% if is_subscribed %}
-            {% trans 'You are currently subscribed to notifications.' %}
-          {% else %}
-            {% trans 'You are currently unsubscribed from notifications.' %}
-          {% endif %}
-        </p>
-        <button id="toggle-btn" class="button" data-hasSubscribe="{% if is_subscribed %}true{% else %}false{% endif %}">
-          {% if is_subscribed %}
-            {% trans 'Unsubscribe' %}
-          {% else %}
-            {% trans 'Subscribe' %}
-          {% endif %}
-        </button>
-        <p id="confirmation-msg" style="display:none;"></p>
+        <div id="manage-preferences">
+          <div class="status-msg-container">
+            <p id="subscribed-message" class="{% if not is_subscribed %}hidden{% endif %}">
+              {% trans 'You are currently subscribed to notifications.' %}
+            </p>
+            <p id="unsubscribed-message" class="{% if is_subscribed %}hidden{% endif %}">
+              {% trans 'You are currently unsubscribed from notifications.' %}
+            </p>
+          </div>
+
+          <button
+            id="toggle-btn"
+            class="button"
+            data-has-subscribe="{{ is_subscribed|yesno:'true,false' }}"
+          >
+            {% if is_subscribed %}
+              {% trans "Unsubscribe" %}
+            {% else %}
+              {% trans "Subscribe" %}
+            {% endif %}
+          </button>
+          <div class="confirmation-msg-container hidden">
+            <p id="confirm-subscribed" class="confirmation-msg hidden">
+              {% trans "You have successfully subscribed to all email notifications." %}
+            </p>
+            <p id="confirm-unsubscribed" class="confirmation-msg hidden">
+              {% trans "You have successfully unsubscribed from all email notifications." %}
+            </p>
+          </div>
+        </div>
+        <div id="error-msg-container" class="hidden">
+          <p id="error-msg" class="error-msg">
+            {% trans "An error occurred while updating your notification preferences." %}<br>
+            {% trans "You can update your preferences by " %}
+            <a href="{% url 'notifications:notification_preference' %}">
+              {% trans "logging into your account." %}
+            </a>
+          </p>
+        </div>
+
       {% else %}
-        <h1>{% trans 'Invalid or Expired Link' %}</h1>
+        <h2>{% trans 'Invalid or Expired Link' %}</h2>
         <p>{% trans 'The link you used is invalid or expired.' %}</p>
       {% endif %}
+
       <div class="footer">
         <p>
-          {% trans 'Manage Other Preferences?' %} <a href="{% url 'notifications:notification_preference' %}">{% trans 'Click here' %}</a>
+          {% trans 'Manage other preferences?' %}
+          <a href="{% url 'notifications:notification_preference' %}">
+            {% trans 'Click here' %}
+          </a>
         </p>
       </div>
     </div>
@@ -54,6 +81,6 @@
 {% endblock %}
 
 {% block footer %}
-{{ block.super }}
-<script src="{% static 'openwisp-notifications/js/unsubscribe.js' %}"></script>
-{% endblock footer %}
+  {{ block.super }}
+  <script src="{% static 'openwisp-notifications/js/unsubscribe.js' %}"></script>
+{% endblock %}

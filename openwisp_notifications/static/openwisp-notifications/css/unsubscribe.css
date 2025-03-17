@@ -35,7 +35,7 @@
 .footer {
   margin-top: 20px;
 }
-#confirmation-msg {
+.confirmation-msg {
   color: green;
   margin-top: 20px;
   font-weight: bold;
