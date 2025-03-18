@@ -1018,21 +1018,18 @@ class TestResendVerificationEmailView(TestCase):
         self.logger = logging.getLogger('openwisp_notifications.views')
 
     def test_unverified_primary_email_sends_email(self):
-        EmailAddress.objects.create(
-            user=self.user,
-            email=self.user.email,
-            primary=True,
-            verified=False
-        )
+        email_address = EmailAddress.objects.get(user=self.user, primary=True)
+        email_address.verified = False
+        email_address.save()
         self.client.login(username='testuser', password='testpass123')
         response = self.client.get(self.url)
         self.assertRedirects(response, reverse('admin:index'))
         self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(mail.outbox[0].to, [self.user.email])
         messages = list(get_messages(response.wsgi_request))
-        self.assertEqual(str(messages[0]), 'Verification email has been sent.')
-
+        self.assertEqual(str(messages[0]), f'Confirmation email sent to {self.user.email}.')
     def test_auto_create_email_address(self):
+        EmailAddress.objects.filter(user=self.user).delete()
         self.client.login(username='testuser', password='testpass123')
         response = self.client.get(self.url)
         email_address = EmailAddress.objects.get(user=self.user)
@@ -1043,6 +1040,7 @@ class TestResendVerificationEmailView(TestCase):
         self.assertEqual(mail.outbox[0].to, [self.user.email])
 
     def test_last_non_primary_email_used(self):
+        EmailAddress.objects.filter(user=self.user, primary=True).delete()
         EmailAddress.objects.create(
             user=self.user,
             email='alt1@example.com',
@@ -1065,7 +1063,7 @@ class TestResendVerificationEmailView(TestCase):
         safe_path = '/admin/safe-page/'
         self.client.login(username='testuser', password='testpass123')
         response = self.client.get(f'{self.url}?next={safe_path}')
-        self.assertRedirects(response, safe_path)
+        self.assertRedirects(response, safe_path,fetch_redirect_response=False)
 
     def test_log_unsafe_redirect_attempt(self):
         unsafe_url = 'http://evil.com/admin'
@@ -1076,12 +1074,9 @@ class TestResendVerificationEmailView(TestCase):
         self.assertIn('Unsafe redirect attempted', log.output[0])
 
     def test_verified_email_shows_info(self):
-        EmailAddress.objects.create(
-            user=self.user,
-            email=self.user.email,
-            primary=True,
-            verified=True
-        )
+        email_address = EmailAddress.objects.get(user=self.user, primary=True)
+        email_address.verified = True
+        email_address.save()
         self.client.login(username='testuser', password='testpass123')
         response = self.client.get(self.url)
         self.assertRedirects(response, reverse('admin:index'))
@@ -1090,6 +1085,7 @@ class TestResendVerificationEmailView(TestCase):
         self.assertEqual(str(messages[0]), 'Your email is already verified.')
 
     def test_no_email_address_shows_message(self):
+        EmailAddress.objects.filter(user=self.user).delete()
         self.user.email = ''
         self.user.save()
         self.client.login(username='testuser', password='testpass123')

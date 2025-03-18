@@ -62,7 +62,7 @@ class TestNotificationSetting(TestOrganizationMixin, TransactionTestCase):
 
         self._get_admin()
         self.assertEqual(queryset.count(), 1)
-        self.assertEquals(
+        self.assertEqual(
             queryset.first().__str__(), 'Test Notification Type - default'
         )
 
