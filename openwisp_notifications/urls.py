@@ -14,7 +14,11 @@ def get_urls(api_views=None, social_views=None):
     """
     urls = [
         path('api/v1/notifications/notification/', include(get_api_urls(api_views))),
-        path('resend-verification-email/', views.resend_verification_email, name='resend_verification_email'),
+        path(
+            'resend-verification-email/',
+            views.resend_verification_email,
+            name='resend_verification_email',
+        ),
     ]
     return urls
 

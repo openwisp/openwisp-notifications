@@ -25,10 +25,7 @@ def resend_verification_email(request):
             email_address = last_email
         elif user.email:
             email_address = EmailAddress.objects.create(
-                user=user,
-                email=user.email,
-                primary=True,
-                verified=False
+                user=user, email=user.email, primary=True, verified=False
             )
         else:
             messages.info(request, _("No email address found for your account."))
@@ -41,6 +38,8 @@ def resend_verification_email(request):
             messages.success(request, _("Verification email has been sent."))
     redirect_to = request.GET.get('next', reverse('admin:index'))
     if not is_safe_url(redirect_to, allowed_hosts={request.get_host()}):
-        logger.warning(f"Unsafe redirect attempted to: {redirect_to} for user {user.username}")
+        logger.warning(
+            f"Unsafe redirect attempted to: {redirect_to} for user {user.username}"
+        )
         redirect_to = reverse('admin:index')
     return redirect(redirect_to)

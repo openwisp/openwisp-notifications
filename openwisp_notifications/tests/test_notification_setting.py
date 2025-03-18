@@ -62,9 +62,7 @@ class TestNotificationSetting(TestOrganizationMixin, TransactionTestCase):
 
         self._get_admin()
         self.assertEqual(queryset.count(), 1)
-        self.assertEqual(
-            queryset.first().__str__(), 'Test Notification Type - default'
-        )
+        self.assertEqual(queryset.first().__str__(), 'Test Notification Type - default')
 
     def test_organization_created_no_initial_user(self):
         org = self._get_org()

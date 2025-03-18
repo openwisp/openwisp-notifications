@@ -1012,7 +1012,7 @@ class TestResendVerificationEmailView(TestCase):
             username='testuser',
             email='test@example.com',
             password='testpass123',
-            is_staff=True
+            is_staff=True,
         )
         self.url = reverse('notifications:resend_verification_email')
         self.logger = logging.getLogger('openwisp_notifications.views')
@@ -1027,7 +1027,10 @@ class TestResendVerificationEmailView(TestCase):
         self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(mail.outbox[0].to, [self.user.email])
         messages = list(get_messages(response.wsgi_request))
-        self.assertEqual(str(messages[0]), f'Confirmation email sent to {self.user.email}.')
+        self.assertEqual(
+            str(messages[0]), f'Confirmation email sent to {self.user.email}.'
+        )
+
     def test_auto_create_email_address(self):
         EmailAddress.objects.filter(user=self.user).delete()
         self.client.login(username='testuser', password='testpass123')
@@ -1042,16 +1045,10 @@ class TestResendVerificationEmailView(TestCase):
     def test_last_non_primary_email_used(self):
         EmailAddress.objects.filter(user=self.user, primary=True).delete()
         EmailAddress.objects.create(
-            user=self.user,
-            email='alt1@example.com',
-            primary=False,
-            verified=False
+            user=self.user, email='alt1@example.com', primary=False, verified=False
         )
         last_email = EmailAddress.objects.create(
-            user=self.user,
-            email='alt2@example.com',
-            primary=False,
-            verified=False
+            user=self.user, email='alt2@example.com', primary=False, verified=False
         )
         self.client.login(username='testuser', password='testpass123')
         response = self.client.get(self.url)
@@ -1063,7 +1060,7 @@ class TestResendVerificationEmailView(TestCase):
         safe_path = '/admin/safe-page/'
         self.client.login(username='testuser', password='testpass123')
         response = self.client.get(f'{self.url}?next={safe_path}')
-        self.assertRedirects(response, safe_path,fetch_redirect_response=False)
+        self.assertRedirects(response, safe_path, fetch_redirect_response=False)
 
     def test_log_unsafe_redirect_attempt(self):
         unsafe_url = 'http://evil.com/admin'
