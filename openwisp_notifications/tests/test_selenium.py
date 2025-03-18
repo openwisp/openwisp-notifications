@@ -1,4 +1,5 @@
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
+from django.test import tag
 from selenium.webdriver.common.by import By
 
 from openwisp_notifications.signals import notify
@@ -10,6 +11,7 @@ from openwisp_utils.tests import SeleniumTestMixin
 Notification = load_model('Notification')
 
 
+@tag('selenium_tests')
 class TestNotificationUi(
     SeleniumTestMixin,
     TestOrganizationMixin,
