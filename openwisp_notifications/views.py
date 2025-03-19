@@ -14,32 +14,33 @@ logger = logging.getLogger(__name__)
 @login_required
 def resend_verification_email(request):
     user = request.user
-    email_address = None
-
-    primary_email = EmailAddress.objects.filter(user=user, primary=True).first()
-    if primary_email:
-        email_address = primary_email
-    else:
-        last_email = EmailAddress.objects.filter(user=user).order_by('-id').first()
-        if last_email:
-            email_address = last_email
-        elif user.email:
+    # check if user has a primary email address
+    email_address = EmailAddress.objects.filter(user=user, primary=True).first()
+    if not email_address:
+        # if the user doesn't have a primary email address
+        # get the last email address added
+        email_address = EmailAddress.objects.filter(user=user).order_by('-id').first()
+        # if the user doesn't have any EmailAddress object saved
+        # get the email address from the User model
+        if not email_address and user.email:
             email_address = EmailAddress.objects.create(
                 user=user, email=user.email, primary=True, verified=False
             )
-        else:
-            messages.info(request, _("No email address found for your account."))
-
-    if email_address:
-        if email_address.verified:
-            messages.info(request, _("Your email is already verified."))
-        else:
-            send_email_confirmation(request, user, email=email_address.email)
-            messages.success(request, _("Verification email has been sent."))
+        elif not email_address and not user.email:
+            messages.error(request, _('No email address found for your account.'))
+    # if email is already verified, just display a UX warning
+    if email_address and email_address.verified:
+        messages.warning(request, _('Your email is already verified.'))
+    # if email is not verified, resend verification email
+    elif email_address and not email_address.verified:
+        send_email_confirmation(request, user, email=email_address.email)
+        messages.success(request, _('The verification email has been sent again.'))
+    # block malicious redirect attempts
     redirect_to = request.GET.get('next', reverse('admin:index'))
     if not is_safe_url(redirect_to, allowed_hosts={request.get_host()}):
         logger.warning(
-            f"Unsafe redirect attempted to: {redirect_to} for user {user.username}"
+            f'Unsafe redirect attempted to: {redirect_to} for user {user.username}.'
         )
         redirect_to = reverse('admin:index')
+    # redirect to where the user was headed after logging in
     return redirect(redirect_to)
