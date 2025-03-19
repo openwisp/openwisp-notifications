@@ -1,7 +1,11 @@
 import logging
+from urllib.parse import quote
 
+from allauth.account.models import EmailAddress
 from celery.exceptions import OperationalError
+from django.contrib import messages
 from django.contrib.auth import get_user_model
+from django.contrib.auth.signals import user_logged_in
 from django.contrib.contenttypes.models import ContentType
 from django.core.cache import cache
 from django.db import transaction
@@ -9,7 +13,9 @@ from django.db.models import Q
 from django.db.models.query import QuerySet
 from django.db.models.signals import post_delete, post_save, pre_save
 from django.dispatch import receiver
+from django.urls import reverse
 from django.utils import timezone
+from django.utils.html import format_html
 from django.utils.translation import gettext as _
 
 from openwisp_notifications import settings as app_settings
@@ -373,3 +379,31 @@ def update_notification_cache(sender, instance, **kwargs):
 
     # execute cache invalidation only after changes have been committed to the DB
     transaction.on_commit(invalidate_cache)
+
+
+@receiver(user_logged_in)
+def check_email_verification(sender, user, request, **kwargs):
+    admin_path = reverse('admin:index')
+    # abort if this is not an admin login
+    if not user.is_staff or not request.path.startswith(admin_path):
+        return
+    has_verified_email = EmailAddress.objects.filter(user=user, verified=True).exists()
+    # abort if user already has a verified email
+    # or doesn't have an email at all
+    if has_verified_email or not user.email:
+        return
+    # add a warning UX message encouraging the user
+    # to verify his email address
+    current_path = quote(request.path)
+    resend_path = reverse('notifications:resend_verification_email')
+    resend_url = f'{resend_path}?next={current_path}'
+    message = format_html(
+        _(
+            'Email notifications are enabled, but emails cannot '
+            'be sent because your email address is not verified. '
+            'Please <a href="{}">verify your email address</a> '
+            'to enable email notifications.'
+        ),
+        resend_url,
+    )
+    messages.warning(request, message)
