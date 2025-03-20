@@ -113,3 +113,33 @@ class TestResendVerificationEmailView(TestCase):
         self.assertRedirects(response, reverse('admin:index'))
         messages = list(get_messages(response.wsgi_request))
         self.assertEqual(str(messages[0]), 'No email address found for your account.')
+
+
+class TestCheckEmailVerification(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.user = User.objects.create_user(
+            username='adminuser',
+            email='admin@example.com',
+            password='adminpass123',
+            is_staff=True,
+        )
+        EmailAddress.objects.create(
+            user=self.user,
+            email=self.user.email,
+            primary=True,
+            verified=False,
+        )
+
+    def test_warning_on_admin_login(self):
+        # Log in the user
+        self.client.login(username='adminuser', password='adminpass123')
+        # Access an admin page to trigger the signal
+        response = self.client.get(reverse('admin:index'), follow=True)
+        # Check for the warning message
+        messages_list = list(get_messages(response.wsgi_request))
+        self.assertEqual(len(messages_list), 1)
+        message = str(messages_list[0])
+        self.assertIn('Email notifications are enabled, but emails cannot be sent', message)
+        self.assertIn('verify your email address', message)
+        self.assertIn('notifications/resend_verification_email', message)
