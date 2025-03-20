@@ -1,5 +1,4 @@
 import logging
-from datetime import timedelta
 
 from allauth.account.models import EmailAddress
 from django.apps.registry import apps
@@ -9,7 +8,6 @@ from django.core import mail
 from django.test import TestCase
 from django.test.client import Client
 from django.urls import reverse
-from django.utils import timezone
 
 from openwisp_notifications.swapper import load_model, swapper_load_model
 
@@ -22,10 +20,6 @@ NotificationAppConfig = apps.get_app_config(Notification._meta.app_label)
 
 OrganizationUser = swapper_load_model('openwisp_users', 'OrganizationUser')
 Group = swapper_load_model('openwisp_users', 'Group')
-
-start_time = timezone.now()
-ten_minutes_ago = start_time - timedelta(minutes=10)
-notification_queryset = Notification.objects.order_by('-timestamp')
 
 
 class TestResendVerificationEmailView(TestCase):
