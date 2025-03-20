@@ -34,7 +34,6 @@ def resend_verification_email(request):
     # if email is not verified, resend verification email
     elif email_address and not email_address.verified:
         send_email_confirmation(request, user, email=email_address.email)
-        messages.success(request, _('The verification email has been sent again.'))
     # block malicious redirect attempts
     redirect_to = request.GET.get('next', reverse('admin:index'))
     if not is_safe_url(redirect_to, allowed_hosts={request.get_host()}):
