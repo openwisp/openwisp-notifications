@@ -39,26 +39,26 @@
             data-has-subscribe="{{ is_subscribed|yesno:'true,false' }}"
           >
             {% if is_subscribed %}
-              {% trans "Unsubscribe" %}
+              {% trans 'Unsubscribe' %}
             {% else %}
-              {% trans "Subscribe" %}
+              {% trans 'Subscribe' %}
             {% endif %}
           </button>
           <div class="confirmation-msg-container hidden">
             <p id="confirm-subscribed" class="confirmation-msg hidden">
-              {% trans "You have successfully subscribed to all email notifications." %}
+              {% trans 'You have successfully subscribed to all email notifications.' %}
             </p>
             <p id="confirm-unsubscribed" class="confirmation-msg hidden">
-              {% trans "You have successfully unsubscribed from all email notifications." %}
+              {% trans 'You have successfully unsubscribed from all email notifications.' %}
             </p>
           </div>
         </div>
         <div id="error-msg-container" class="hidden">
           <p id="error-msg" class="error-msg">
-            {% trans "An error occurred while updating your notification preferences." %}<br>
-            {% trans "You can update your preferences by " %}
+            {% trans 'An error occurred while updating your notification preferences.' %}<br>
+            {% trans 'You can update your preferences by ' %}
             <a href="{% url 'notifications:notification_preference' %}">
-              {% trans "logging into your account." %}
+              {% trans 'logging into your account.' %}
             </a>
           </p>
         </div>
