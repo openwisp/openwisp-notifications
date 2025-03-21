@@ -33,9 +33,8 @@ function updateSubscription(subscribe) {
         unsubscribedMessage.classList.toggle("hidden", subscribe);
 
         // Update button text and attribute
-        toggleBtn.textContent = gettext(
-          subscribe ? "Unsubscribe" : "Subscribe"
-        );
+        toggleBtn.textContent =
+          subscribe ? gettext("Unsubscribe") : gettext("Subscribe");
         toggleBtn.dataset.hasSubscribe = subscribe.toString();
 
         // Show confirmation message
