@@ -1,7 +1,6 @@
 import logging
 
 from allauth.account.models import EmailAddress
-from django.apps.registry import apps
 from django.contrib.auth import get_user_model
 from django.contrib.messages import get_messages
 from django.core import mail
@@ -9,13 +8,7 @@ from django.test import TestCase
 from django.test.client import Client
 from django.urls import reverse
 
-from openwisp_notifications.swapper import load_model
-
 User = get_user_model()
-
-Notification = load_model('Notification')
-NotificationSetting = load_model('NotificationSetting')
-NotificationAppConfig = apps.get_app_config(Notification._meta.app_label)
 
 
 class TestResendVerificationEmailView(TestCase):
