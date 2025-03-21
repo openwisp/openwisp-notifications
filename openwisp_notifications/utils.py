@@ -47,9 +47,9 @@ def get_unsubscribe_url_for_user(user, full_url=True):
     encoded_data = urlsafe_base64_encode(force_bytes(data))
     unsubscribe_path = reverse('notifications:unsubscribe')
     if not full_url:
-        return f"{unsubscribe_path}?token={encoded_data}"
+        return f'{unsubscribe_path}?token={encoded_data}'
     current_site = Site.objects.get_current()
-    return f"https://{current_site.domain}{unsubscribe_path}?token={encoded_data}"
+    return f'https://{current_site.domain}{unsubscribe_path}?token={encoded_data}'
 
 
 def get_unsubscribe_url_email_footer(url):

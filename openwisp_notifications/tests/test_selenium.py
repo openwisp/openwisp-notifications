@@ -169,7 +169,7 @@ class TestSelenium(
         Organization.objects.all().delete()
 
         self.login()
-        self.open('/notifications/preferences/')
+        self.open(reverse('notifications:notification_preference'))
 
         no_organizations_element = self.wait_for_visibility(
             By.CLASS_NAME, 'no-organizations'

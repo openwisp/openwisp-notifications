@@ -70,10 +70,10 @@
 
       <div class="footer">
         <p>
-          {% trans 'Manage other preferences?' %}
-          <a href="{% url 'notifications:notification_preference' %}">
-            {% trans 'Click here' %}
-          </a>
+          {% url 'notifications:notification_preference' as notification_preference_url %}
+          {% blocktrans with url=notification_preference_url %}
+            You can manage your notification preferences in your <a href="{{ url }}">account settings</a>.
+          {% endblocktrans %}
         </p>
       </div>
     </div>
