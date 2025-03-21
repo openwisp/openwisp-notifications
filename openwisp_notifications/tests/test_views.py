@@ -137,7 +137,9 @@ class TestCheckEmailVerification(TestCase):
         messages_list = list(get_messages(response.wsgi_request))
         self.assertEqual(len(messages_list), 1)
         message = str(messages_list[0])
-        self.assertIn('Email notifications are enabled, but emails cannot be sent', message)
+        self.assertIn(
+            'Email notifications are enabled, but emails cannot be sent', message
+        )
         self.assertIn('verify your email address', message)
         expected_url = reverse('notifications:resend_verification_email')
         self.assertIn(expected_url, message)

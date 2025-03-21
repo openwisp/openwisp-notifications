@@ -394,7 +394,9 @@ def check_email_verification(sender, user, request, **kwargs):
         return
     # add a warning UX message encouraging the user
     # to verify his email address
-    next_path = request.POST.get('next', request.GET.get('next', reverse('admin:index')))
+    next_path = request.POST.get(
+        'next', request.GET.get('next', reverse('admin:index'))
+    )
     current_path = quote(next_path)
     resend_path = reverse('notifications:resend_verification_email')
     resend_url = f'{resend_path}?next={current_path}'
