@@ -14,7 +14,11 @@ from django.utils.translation import gettext as _
 from openwisp_notifications import settings as app_settings
 from openwisp_notifications import types
 from openwisp_notifications.swapper import load_model, swapper_load_model
-from openwisp_notifications.utils import send_notification_email
+from openwisp_notifications.utils import (
+    get_unsubscribe_url_email_footer,
+    get_unsubscribe_url_for_user,
+    send_notification_email,
+)
 from openwisp_utils.admin_theme.email import send_email
 from openwisp_utils.tasks import OpenwispCeleryTask
 
@@ -268,33 +272,42 @@ def send_batched_email_notifications(instance_id):
             '%B %-d, %Y, %-I:%M %p %Z'
         )
 
-        context = {
+        extra_context = {
             'notifications': unsent_notifications[:display_limit],
             'notifications_count': notifications_count,
             'site_name': current_site.name,
             'start_time': start_time,
         }
 
-        extra_context = {}
-        if notifications_count > display_limit:
-            extra_context = {
-                'call_to_action_url': f"https://{current_site.domain}/admin/#notifications",
-                'call_to_action_text': _('View all Notifications'),
-            }
-        context.update(extra_context)
+        user = User.objects.get(id=instance_id)
+        unsubscribe_url = get_unsubscribe_url_for_user(user)
+        extra_context['footer'] = get_unsubscribe_url_email_footer(unsubscribe_url)
 
-        html_content = render_to_string('emails/batch_email.html', context)
-        plain_text_content = render_to_string('emails/batch_email.txt', context)
+        if notifications_count > display_limit:
+            extra_context.update(
+                {
+                    'call_to_action_url': f"https://{current_site.domain}/admin/#notifications",
+                    'call_to_action_text': _('View all Notifications'),
+                }
+            )
+
+        plain_text_content = render_to_string(
+            'openwisp_notifications/emails/batch_email.txt', extra_context
+        )
         notifications_count = min(notifications_count, display_limit)
 
         send_email(
             subject=f'[{current_site.name}] {notifications_count} new notifications since {start_time}',
             body_text=plain_text_content,
-            body_html=html_content,
+            body_html=True,
             recipients=[email_id],
             extra_context=extra_context,
+            headers={
+                'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+                'List-Unsubscribe': f'<{unsubscribe_url}>',
+            },
+            html_email_template='openwisp_notifications/emails/batch_email.html',
         )
 
     unsent_notifications_query.update(emailed=True)
-    Notification.objects.bulk_update(unsent_notifications_query, ['emailed'])
     cache.delete(cache_key)
