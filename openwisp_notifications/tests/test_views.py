@@ -9,17 +9,13 @@ from django.test import TestCase
 from django.test.client import Client
 from django.urls import reverse
 
-from openwisp_notifications.swapper import load_model, swapper_load_model
+from openwisp_notifications.swapper import load_model
 
 User = get_user_model()
 
 Notification = load_model('Notification')
 NotificationSetting = load_model('NotificationSetting')
 NotificationAppConfig = apps.get_app_config(Notification._meta.app_label)
-
-
-OrganizationUser = swapper_load_model('openwisp_users', 'OrganizationUser')
-Group = swapper_load_model('openwisp_users', 'Group')
 
 
 class TestResendVerificationEmailView(TestCase):
@@ -118,6 +114,7 @@ class TestCheckEmailVerification(TestCase):
             password='adminpass123',
             is_staff=True,
         )
+        EmailAddress.objects.filter(user=self.user).delete()
         EmailAddress.objects.create(
             user=self.user,
             email=self.user.email,
@@ -126,14 +123,21 @@ class TestCheckEmailVerification(TestCase):
         )
 
     def test_warning_on_admin_login(self):
-        # Log in the user
-        self.client.login(username='adminuser', password='adminpass123')
-        # Access an admin page to trigger the signal
-        response = self.client.get(reverse('admin:index'), follow=True)
+        login_url = reverse('admin:login')
+        response = self.client.post(
+            login_url,
+            {
+                'username': 'adminuser',
+                'password': 'adminpass123',
+                'next': reverse('admin:index'),
+            },
+            follow=True,
+        )
         # Check for the warning message
         messages_list = list(get_messages(response.wsgi_request))
         self.assertEqual(len(messages_list), 1)
         message = str(messages_list[0])
         self.assertIn('Email notifications are enabled, but emails cannot be sent', message)
         self.assertIn('verify your email address', message)
-        self.assertIn('notifications/resend_verification_email', message)
+        expected_url = reverse('notifications:resend_verification_email')
+        self.assertIn(expected_url, message)
