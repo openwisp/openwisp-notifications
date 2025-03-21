@@ -28,6 +28,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django.contrib.sites',
     'django_extensions',
+    'openwisp_users.accounts',
     'allauth',
     'allauth.account',
     'allauth.socialaccount',
