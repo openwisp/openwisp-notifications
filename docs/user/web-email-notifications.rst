@@ -47,8 +47,8 @@ notification toast.
 Email Notifications
 -------------------
 
-.. figure:: https://raw.githubusercontent.com/openwisp/openwisp-notifications/docs/docs/images/25/notifications/email-template.png
-    :target: https://raw.githubusercontent.com/openwisp/openwisp-notifications/docs/docs/images/25/notifications/email-template.png
+.. figure:: https://raw.githubusercontent.com/openwisp/openwisp-notifications/docs/docs/images/25/emails/template.png
+    :target: https://raw.githubusercontent.com/openwisp/openwisp-notifications/docs/docs/images/25/emails/template.png
     :align: center
 
 Along with web notifications OpenWISP Notifications also sends email
