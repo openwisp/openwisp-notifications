@@ -1,0 +1,42 @@
+#content,
+.content {
+  padding: 0 !important;
+}
+.unsubscribe-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  height: 95vh;
+}
+.unsubscribe-content {
+  padding: 40px;
+  border-radius: 12px;
+  text-align: center;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+  max-width: 500px;
+  width: 100%;
+}
+.unsubscribe-content h1 {
+  padding-top: 10px;
+}
+.logo {
+  width: 200px;
+  margin-bottom: 80px;
+}
+.email-icon {
+  background-image: url("../../openwisp-notifications/images/icons/icon-email.svg");
+  background-repeat: no-repeat;
+  width: 50px;
+  height: 50px;
+  margin: 0 auto;
+  transform: scale(2) translate(25%, 25%);
+}
+.footer {
+  margin-top: 20px;
+}
+.confirmation-msg {
+  color: green;
+  margin-top: 20px;
+  font-weight: bold;
+}
