@@ -1,3 +1,4 @@
+import json
 from datetime import datetime, timedelta
 from datetime import timezone as dt_timezone
 from unittest.mock import patch
@@ -34,11 +35,12 @@ from openwisp_notifications.tests.test_helpers import (
     register_notification_type,
     unregister_notification_type,
 )
+from openwisp_notifications.tokens import email_token_generator
 from openwisp_notifications.types import (
     _unregister_notification_choice,
     get_notification_configuration,
 )
-from openwisp_notifications.utils import _get_absolute_url
+from openwisp_notifications.utils import _get_absolute_url, get_unsubscribe_url_for_user
 from openwisp_users.tests.utils import TestOrganizationMixin
 from openwisp_utils.tests import capture_any_output
 
@@ -1114,6 +1116,113 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
         )
         self._create_notification()
         self.assertEqual(notification_queryset.count(), 1)
+
+    def test_email_unsubscribe_token(self):
+        token = email_token_generator.make_token(self.admin)
+
+        with self.subTest('Valid token for the user'):
+            is_valid = email_token_generator.check_token(self.admin, token)
+            self.assertTrue(is_valid)
+
+        with self.subTest('Token used with a different user'):
+            test_user = self._create_user(username='test')
+            is_valid = email_token_generator.check_token(test_user, token)
+            self.assertFalse(is_valid)
+
+        with self.subTest('Token invalidated after password change'):
+            self.admin.set_password('new_password')
+            self.admin.save()
+            is_valid = email_token_generator.check_token(self.admin, token)
+            self.assertFalse(is_valid)
+
+    def test_email_unsubscribe_view(self):
+        unsubscribe_link_generated = get_unsubscribe_url_for_user(self.admin, False)
+        token = unsubscribe_link_generated.split('?token=')[1]
+        local_unsubscribe_url = reverse('notifications:unsubscribe')
+        unsubscribe_url = f"{local_unsubscribe_url}?token={token}"
+
+        with self.subTest('Test GET request with valid token'):
+            response = self.client.get(unsubscribe_url)
+            self.assertEqual(response.status_code, 200)
+
+        with self.subTest('Test POST request with valid token'):
+            response = self.client.post(unsubscribe_url)
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.json()['message'], 'Successfully unsubscribed')
+
+        with self.subTest('Test GET request with invalid token'):
+            response = self.client.get(f"{local_unsubscribe_url}?token=invalid_token")
+            self.assertContains(response, 'Invalid or Expired Link')
+            self.assertEqual(response.status_code, 200)
+
+        with self.subTest('Test POST request with invalid token'):
+            response = self.client.post(f"{local_unsubscribe_url}?token=invalid_token")
+            self.assertEqual(response.status_code, 400)
+
+        with self.subTest('Test GET request with invalid user'):
+            tester = self._create_user(username='tester')
+            tester_link_generated = get_unsubscribe_url_for_user(tester)
+            token = tester_link_generated.split('?token=')[1]
+            tester_unsubscribe_url = f"{local_unsubscribe_url}?token={token}"
+            tester.delete()
+            response = self.client.get(tester_unsubscribe_url)
+            self.assertContains(response, 'Invalid or Expired Link')
+            self.assertEqual(response.status_code, 200)
+
+        with self.subTest('Test POST request with invalid user'):
+            tester = self._create_user(username='tester')
+            tester_link_generated = get_unsubscribe_url_for_user(tester)
+            token = tester_link_generated.split('?token=')[1]
+            tester_unsubscribe_url = f"{local_unsubscribe_url}?token={token}"
+            tester.delete()
+            response = self.client.post(tester_unsubscribe_url)
+            self.assertEqual(response.status_code, 400)
+
+        with self.subTest('Test GET request with no token'):
+            response = self.client.get(local_unsubscribe_url)
+            self.assertEqual(response.status_code, 200)
+            self.assertContains(response, 'Invalid or Expired Link')
+            self.assertFalse(response.context['valid'])
+
+        with self.subTest('Test POST request with no token'):
+            response = self.client.post(local_unsubscribe_url)
+            self.assertEqual(response.status_code, 400)
+            self.assertEqual(response.json()['message'], 'No token provided')
+
+        with self.subTest('Test POST request with empty JSON body'):
+            response = self.client.post(
+                unsubscribe_url, content_type='application/json'
+            )
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.json()['message'], 'Successfully unsubscribed')
+
+        with self.subTest('Test POST request with subscribe=True in JSON'):
+            response = self.client.post(
+                unsubscribe_url,
+                data=json.dumps({'subscribe': True}),
+                content_type='application/json',
+            )
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.json()['message'], 'Successfully subscribed')
+
+        with self.subTest('Test POST request with subscribe=False in JSON'):
+            response = self.client.post(
+                unsubscribe_url,
+                data=json.dumps({'subscribe': False}),
+                content_type='application/json',
+            )
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.json()['message'], 'Successfully unsubscribed')
+
+        with self.subTest('Test POST request with invalid JSON'):
+            invalid_json = "{'data: invalid}"
+            response = self.client.post(
+                unsubscribe_url,
+                data=invalid_json,
+                content_type='application/json',
+            )
+            self.assertEqual(response.status_code, 400)
+            self.assertEqual(response.json()['message'], 'Invalid JSON data')
 
     def test_notification_preference_page(self):
         preference_page = 'notifications:user_notification_preference'

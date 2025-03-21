@@ -47,8 +47,8 @@ notification toast.
 Email Notifications
 -------------------
 
-.. figure:: https://raw.githubusercontent.com/openwisp/openwisp-notifications/docs/docs/images/email-template.png
-    :target: https://raw.githubusercontent.com/openwisp/openwisp-notifications/docs/docs/images/email-template.png
+.. figure:: https://raw.githubusercontent.com/openwisp/openwisp-notifications/docs/docs/images/25/emails/template.png
+    :target: https://raw.githubusercontent.com/openwisp/openwisp-notifications/docs/docs/images/25/emails/template.png
     :align: center
 
 Along with web notifications OpenWISP Notifications also sends email
@@ -60,8 +60,8 @@ notifications leveraging the :ref:`send_email feature of OpenWISP Utils
 Email Batches
 ~~~~~~~~~~~~~
 
-.. figure:: https://i.imgur.com/W5P009W.png
-    :target: https://i.imgur.com/W5P009W.png
+.. figure:: https://raw.githubusercontent.com/openwisp/openwisp-notifications/docs/docs/images/25/emails/batch-email.png
+    :target: https://raw.githubusercontent.com/openwisp/openwisp-notifications/docs/docs/images/25/emails/batch-email.png
     :align: center
 
 Batching email notifications helps manage the flow of emails sent to
@@ -89,3 +89,16 @@ following settings:
   <openwisp_notifications_email_batch_interval>`.
 - :ref:`OPENWISP_NOTIFICATIONS_EMAIL_BATCH_DISPLAY_LIMIT
   <openwisp_notifications_email_batch_display_limit>`.
+
+Unsubscribing from Email Notifications
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+In addition to updating notification preferences via the :ref:`preferences
+page <notification-preferences>`, users can opt out of receiving email
+notifications using the unsubscribe link included in every notification
+email.
+
+Furthermore, email notifications include `List-Unsubscribe headers
+<https://www.ietf.org/rfc/rfc2369.txt>`_, enabling modern email clients to
+provide an unsubscribe button directly within their interface, offering a
+seamless opt-out experience.
