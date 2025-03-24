@@ -60,8 +60,8 @@ notifications leveraging the :ref:`send_email feature of OpenWISP Utils
 Email Batches
 ~~~~~~~~~~~~~
 
-.. figure:: https://i.imgur.com/W5P009W.png
-    :target: https://i.imgur.com/W5P009W.png
+.. figure:: https://raw.githubusercontent.com/openwisp/openwisp-notifications/docs/docs/images/25/emails/batch-email.png
+    :target: https://raw.githubusercontent.com/openwisp/openwisp-notifications/docs/docs/images/25/emails/batch-email.png
     :align: center
 
 Batching email notifications helps manage the flow of emails sent to
