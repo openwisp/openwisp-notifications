@@ -156,13 +156,16 @@ class AbstractNotification(UUIDModel, BaseNotification):
         try:
             config = get_notification_configuration(self.type)
             data = self.data or {}
+            # Create a context with notification_verb
+            context = dict(notification=self, **data)
             if 'message' in data:
-                md_text = data['message'].format(notification=self, **data)
+                md_text = data['message'].format(**context)
             elif 'message' in config:
-                md_text = config['message'].format(notification=self, **data)
+                md_text = config['message'].format(**context)
             else:
                 md_text = render_to_string(
-                    config['message_template'], context=dict(notification=self, **data)
+                    config['message_template'], 
+                    context=context
                 ).strip()
         except (AttributeError, KeyError, NotificationRenderException) as exception:
             self._invalid_notification(
@@ -234,6 +237,17 @@ class AbstractNotification(UUIDModel, BaseNotification):
         return _get_absolute_url(
             reverse('notifications:notification_read_redirect', args=(self.pk,))
         )
+
+    @property
+    def notification_verb(self):
+        """
+        Returns notification verb from type configuration if verb is None,
+        otherwise returns the stored verb
+        """
+        if self.verb is None and self.type:
+            config = get_notification_configuration(self.type)
+            return config.get('verb', '')
+        return self.verb or ''
 
 
 class AbstractNotificationSetting(UUIDModel):
