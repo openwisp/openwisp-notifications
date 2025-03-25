@@ -3,5 +3,5 @@ django-cors-headers~=4.4.0
 django-redis~=5.4.0
 channels_redis~=4.2.1
 pytest-asyncio~=0.24.0
-pytest-django~=4.9.0
+pytest-django~=4.10.0
 freezegun~=1.5.1
