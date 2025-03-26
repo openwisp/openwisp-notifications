@@ -963,7 +963,9 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
         self.assertEqual(len(mail.outbox), 0)
 
     @patch('openwisp_notifications.tasks.send_batched_email_notifications.apply_async')
-    def test_send_batched_email_notifications_single_notification(self, mock_send_email):
+    def test_send_batched_email_notifications_single_notification(
+        self, mock_send_email
+    ):
         # Ensure no batch email template is used for a single batched notification
         self._create_notification()
         n = self._create_notification().pop()[1][0]
@@ -972,7 +974,6 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
 
         self.assertEqual(len(mail.outbox), 2)
         self.assertIn(n.message, mail.outbox[0].body)
-
 
     # @override_settings(TIME_ZONE='UTC')
     @patch('openwisp_notifications.tasks.send_batched_email_notifications.apply_async')
