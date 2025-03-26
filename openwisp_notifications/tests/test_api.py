@@ -892,6 +892,35 @@ class TestNotificationApi(
                 ).exists()
             )
 
+        with self.subTest('Test email set to False and email not provided'):
+            url = self._get_path(
+                'organization_notification_setting',
+                self.admin.pk,
+                org.pk,
+            )
+            # Set initial state with email=True and web=True
+            NotificationSetting.objects.filter(
+                user=self.admin, organization_id=org.pk
+            ).update(web=True, email=True)
+
+            # POST data with web=False and omit email
+            response = self.client.post(
+                url, data={'web': False}, content_type='application/json'
+            )
+            self.assertEqual(response.status_code, 200)
+
+            # Check both web and email are updated to False
+            self.assertTrue(
+                NotificationSetting.objects.filter(
+                    user=self.admin, organization_id=org.pk, web=False, email=False
+                ).exists()
+            )
+            self.assertFalse(
+                NotificationSetting.objects.filter(
+                    user=self.admin, organization_id=org.pk, email=True
+                ).exists()
+            )
+
     @patch('openwisp_notifications.tasks.delete_ignore_object_notification.apply_async')
     def test_create_ignore_obj_notification_api(self, mocked_task):
         org_user = self._get_org_user()
