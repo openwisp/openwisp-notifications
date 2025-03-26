@@ -253,7 +253,7 @@ def send_batched_email_notifications(instance_id):
 
     # Send individual email if there is only one notification
     if notifications_count == 1:
-        notification = unsent_notifications.first()
+        notification = unsent_notifications_query.first()
         send_notification_email(notification)
     else:
         # Show the amount of notifications according to configured display limit
