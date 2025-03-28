@@ -3,6 +3,8 @@
 import django.db.models.deletion
 from django.db import migrations, models
 
+from openwisp_notifications.types import NOTIFICATION_CHOICES
+
 
 class Migration(migrations.Migration):
     dependencies = [
@@ -26,11 +28,7 @@ class Migration(migrations.Migration):
             name="type",
             field=models.CharField(
                 blank=True,
-                choices=[
-                    ("default", "Default Type"),
-                    ("generic_message", "Generic Message Type"),
-                    ("object_created", "Object created"),
-                ],
+                choices=NOTIFICATION_CHOICES,
                 max_length=30,
                 null=True,
                 verbose_name="Notification Type",

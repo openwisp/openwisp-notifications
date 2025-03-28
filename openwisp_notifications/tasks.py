@@ -1,3 +1,4 @@
+import logging
 from datetime import timedelta
 
 from celery import shared_task
@@ -21,6 +22,8 @@ from openwisp_notifications.utils import (
 )
 from openwisp_utils.admin_theme.email import send_email
 from openwisp_utils.tasks import OpenwispCeleryTask
+
+logger = logging.getLogger(__name__)
 
 User = get_user_model()
 
@@ -91,15 +94,12 @@ def create_notification_settings(user, organizations, notification_types):
     )
 
     for type in notification_types:
-        notification_config = types.get_notification_configuration(type)
         for org in organizations:
             NotificationSetting.objects.update_or_create(
                 defaults={
                     'deleted': False,
-                    'email': global_setting.email
-                    and notification_config.get('email_notification'),
-                    'web': global_setting.web
-                    and notification_config.get('web_notification'),
+                    'email': None if global_setting.email else False,
+                    'web': None if global_setting.email else False,
                 },
                 user=user,
                 type=type,
@@ -233,7 +233,11 @@ def send_batched_email_notifications(instance_id):
     """
     Sends a summary of notifications to the specified email address.
     """
-    if not instance_id:
+    if not User.objects.filter(id=instance_id).exists():
+        logger.error(
+            'Failed to send batched email notifications:'
+            f' User with ID {instance_id} not found in the database.'
+        )
         return
 
     cache_key = f'email_batch_{instance_id}'

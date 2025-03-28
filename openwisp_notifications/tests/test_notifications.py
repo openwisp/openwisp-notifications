@@ -16,6 +16,7 @@ from django.template import TemplateDoesNotExist
 from django.test import TransactionTestCase
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.html import strip_spaces_between_tags
 from django.utils.timesince import timesince
 from freezegun import freeze_time
 
@@ -41,6 +42,11 @@ from openwisp_notifications.types import (
 from openwisp_notifications.utils import _get_absolute_url, get_unsubscribe_url_for_user
 from openwisp_users.tests.utils import TestOrganizationMixin
 from openwisp_utils.tests import capture_any_output
+
+from . import (
+    _test_batch_email_notification_email_body,
+    _test_batch_email_notification_email_html,
+)
 
 User = get_user_model()
 
@@ -136,10 +142,16 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
             organization_id=target_obj.organization.pk,
             type='default',
         )
-        self.assertTrue(notification_preference.email)
+        # Database field is set to None
+        self.assertEqual(notification_preference.email, None)
+        # The fallback is taked from notification type
+        self.assertTrue(notification_preference.email_notification)
         notification_preference.web = False
+        notification_preference.full_clean()
         notification_preference.save()
         notification_preference.refresh_from_db()
+        # The database field has been updated to override the default
+        # value in notification type.
         self.assertEqual(notification_preference.email, False)
         self._create_notification()
         self.assertEqual(notification_queryset.count(), 0)
@@ -953,29 +965,42 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
         # we don't send emails to unverified email addresses
         self.assertEqual(len(mail.outbox), 0)
 
-    @patch('openwisp_notifications.tasks.send_batched_email_notifications.apply_async')
-    def test_send_batched_email_notifications_no_instance_id(self, mock_send_email):
-        # Ensure no emails are sent if instance_id is None or empty
+    @patch('logging.Logger.error')
+    def test_send_batched_email_notifications_no_instance_id(self, mocked_logger):
+        # Ensure no emails are sent if instance_id is invalid
         tasks.send_batched_email_notifications(None)
         self.assertEqual(len(mail.outbox), 0)
+        mocked_logger.assert_called_once_with(
+            'Failed to send batched email notifications:'
+            f' User with ID {None} not found in the database.'
+        )
+        mocked_logger.reset_mock()
 
-        tasks.send_batched_email_notifications("")
+        invalid_id = uuid4()
+        tasks.send_batched_email_notifications(str(invalid_id))
         self.assertEqual(len(mail.outbox), 0)
+        mocked_logger.assert_called_once_with(
+            'Failed to send batched email notifications:'
+            f' User with ID {invalid_id} not found in the database.'
+        )
 
     @patch('openwisp_notifications.tasks.send_batched_email_notifications.apply_async')
     def test_send_batched_email_notifications_single_notification(
         self, mock_send_email
     ):
-        # Ensure no batch email template is used for a single batched notification
+        # The first notification will always be sent immediately
         self._create_notification()
-        n = self._create_notification().pop()[1][0]
+        mail.outbox.clear()
+        # There's only one notification in the batch, it should
+        # not use summary of batched email.
+        self._create_notification()
+        # The task is mocked to prevent immediate execution in test environment.
+        # In tests, Celery runs in EAGER mode which would execute tasks immediately,
+        # preventing us from testing the batching behavior properly.
+        tasks.send_batched_email_notifications(str(self.admin.id))
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertNotIn('new notifications since', mail.outbox[0].body)
 
-        tasks.send_batched_email_notifications(self.admin.id)
-
-        self.assertEqual(len(mail.outbox), 2)
-        self.assertIn(n.message, mail.outbox[0].body)
-
-    # @override_settings(TIME_ZONE='UTC')
     @patch('openwisp_notifications.tasks.send_batched_email_notifications.apply_async')
     def test_batch_email_notification(self, mock_send_email):
         fixed_datetime = timezone.localtime(
@@ -983,47 +1008,58 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
         )
         datetime_str = fixed_datetime.strftime('%B %-d, %Y, %-I:%M %p %Z')
 
+        # Add multiple notifications with slightly different timestamps
+        # to maintain consistent order in generated email text across test runs
+        for _ in range(3):
+            with freeze_time(fixed_datetime):
+                # Create notifications with URL (from self.notification_options)
+                self._create_notification()
+            fixed_datetime += timedelta(
+                microseconds=100
+            )  # Increment time for ordering consistency
+        # Notification without URL
+        self.notification_options.pop('url')
         with freeze_time(fixed_datetime):
-            for _ in range(5):
-                notify.send(recipient=self.admin, **self.notification_options)
+            self._create_notification()
+        fixed_datetime += timedelta(microseconds=100)
+        # Notification with a type and target object
+        self.notification_options.update(
+            {'type': 'default', 'target': self._get_org_user()}
+        )
+        with freeze_time(fixed_datetime):
+            default = self._create_notification().pop()[1][0]
 
-            # Check if only one mail is sent initially
-            self.assertEqual(len(mail.outbox), 1)
+        # Check if only one mail is sent initially
+        self.assertEqual(len(mail.outbox), 1)
 
-            # Call the task
-            tasks.send_batched_email_notifications(self.admin.id)
+        # Call the task
+        tasks.send_batched_email_notifications(self.admin.id)
 
-            # Check if the rest of the notifications are sent in a batch
-            self.assertEqual(len(mail.outbox), 2)
-
-            expected_subject = f'[example.com] 4 new notifications since {datetime_str}'
-            expected_body = f"""
-[example.com] 4 new notifications since {datetime_str}
-
-
-- Test Notification
-  Description: Test Notification
-  Date & Time: {datetime_str}
-  URL: https://localhost:8000/admin
-
-- Test Notification
-  Description: Test Notification
-  Date & Time: {datetime_str}
-  URL: https://localhost:8000/admin
-
-- Test Notification
-  Description: Test Notification
-  Date & Time: {datetime_str}
-  URL: https://localhost:8000/admin
-
-- Test Notification
-  Description: Test Notification
-  Date & Time: {datetime_str}
-  URL: https://localhost:8000/admin
-            """
-
-            self.assertEqual(mail.outbox[1].subject, expected_subject)
-            self.assertEqual(mail.outbox[1].body.strip(), expected_body.strip())
+        # Check if the rest of the notifications are sent in a batch
+        self.assertEqual(len(mail.outbox), 2)
+        email = mail.outbox[1]
+        expected_subject = f'[example.com] 4 new notifications since {datetime_str}'
+        self.assertEqual(email.subject, expected_subject)
+        self.assertEqual(
+            email.body.strip(),
+            _test_batch_email_notification_email_body.format(
+                datetime_str=datetime_str,
+                notification_id=default.id,
+            ).strip(),
+        )
+        html_email = email.alternatives[0][0]
+        self.maxDiff = None
+        self.assertIn(
+            strip_spaces_between_tags(
+                _test_batch_email_notification_email_html.format(
+                    datetime_str=datetime_str,
+                    notification_id=default.id,
+                )
+                .replace('\n', '')
+                .replace('                    ', ' ')
+            ),
+            strip_spaces_between_tags(html_email),
+        )
 
     @patch('openwisp_notifications.tasks.send_batched_email_notifications.apply_async')
     def test_batch_email_notification_with_call_to_action(self, mock_send_email):
@@ -1082,6 +1118,16 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
 
     def test_email_unsubscribe_token(self):
         token = email_token_generator.make_token(self.admin)
+
+        with self.subTest('Invalid arguments'):
+            is_valid = email_token_generator.check_token(None, None)
+            self.assertFalse(is_valid)
+            # Malformed token
+            is_valid = email_token_generator.check_token(self.admin, 'token')
+            self.assertFalse(is_valid)
+            # Token with invalid length
+            is_valid = email_token_generator.check_token(self.admin, '12345678912345-invalid')
+            self.assertFalse(is_valid)
 
         with self.subTest('Valid token for the user'):
             is_valid = email_token_generator.check_token(self.admin, token)

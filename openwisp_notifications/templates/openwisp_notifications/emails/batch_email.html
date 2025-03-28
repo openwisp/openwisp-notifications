@@ -106,7 +106,7 @@
                         {% if notification.url %}
                             <a href="{{ notification.url }}" target="_blank"><p>{{ notification.email_message|striptags }}</p></a>
                         {% else %}
-                            {{ notification.email_message }}
+                            <p>{{ notification.email_message }}</p>
                         {% endif %}
                     </span>
                 </h2>
