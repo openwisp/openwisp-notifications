@@ -1126,7 +1126,9 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
             is_valid = email_token_generator.check_token(self.admin, 'token')
             self.assertFalse(is_valid)
             # Token with invalid length
-            is_valid = email_token_generator.check_token(self.admin, '12345678912345-invalid')
+            is_valid = email_token_generator.check_token(
+                self.admin, '12345678912345-invalid'
+            )
             self.assertFalse(is_valid)
 
         with self.subTest('Valid token for the user'):
