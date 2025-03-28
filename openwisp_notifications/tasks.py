@@ -1,15 +1,29 @@
+import logging
 from datetime import timedelta
 
 from celery import shared_task
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
+from django.contrib.sites.models import Site
+from django.core.cache import cache
 from django.db.models import Q
 from django.db.utils import OperationalError
+from django.template.loader import render_to_string
 from django.utils import timezone
+from django.utils.translation import gettext as _
 
+from openwisp_notifications import settings as app_settings
 from openwisp_notifications import types
 from openwisp_notifications.swapper import load_model, swapper_load_model
+from openwisp_notifications.utils import (
+    get_unsubscribe_url_email_footer,
+    get_unsubscribe_url_for_user,
+    send_notification_email,
+)
+from openwisp_utils.admin_theme.email import send_email
 from openwisp_utils.tasks import OpenwispCeleryTask
+
+logger = logging.getLogger(__name__)
 
 User = get_user_model()
 
@@ -75,10 +89,21 @@ def delete_old_notifications(days):
 # Following tasks updates notification settings in database.
 # 'ns' is short for notification_setting
 def create_notification_settings(user, organizations, notification_types):
+    global_setting, _ = NotificationSetting.objects.get_or_create(
+        user=user, organization=None, type=None, defaults={'email': True, 'web': True}
+    )
+
     for type in notification_types:
         for org in organizations:
             NotificationSetting.objects.update_or_create(
-                defaults={'deleted': False}, user=user, type=type, organization=org
+                defaults={
+                    'deleted': False,
+                    'email': None if global_setting.email else False,
+                    'web': None if global_setting.email else False,
+                },
+                user=user,
+                type=type,
+                organization=org,
             )
 
 
@@ -201,3 +226,92 @@ def delete_ignore_object_notification(instance_id):
     Deletes IgnoreObjectNotification object post it's expiration.
     """
     IgnoreObjectNotification.objects.filter(id=instance_id).delete()
+
+
+@shared_task(base=OpenwispCeleryTask)
+def send_batched_email_notifications(instance_id):
+    """
+    Sends a summary of notifications to the specified email address.
+    """
+    if not User.objects.filter(id=instance_id).exists():
+        logger.error(
+            'Failed to send batched email notifications:'
+            f' User with ID {instance_id} not found in the database.'
+        )
+        return
+
+    cache_key = f'email_batch_{instance_id}'
+    cache_data = cache.get(cache_key, {'pks': []})
+
+    if not cache_data['pks']:
+        return
+
+    display_limit = app_settings.EMAIL_BATCH_DISPLAY_LIMIT
+    unsent_notifications_query = Notification.objects.filter(
+        id__in=cache_data['pks']
+    ).order_by('-timestamp')
+    notifications_count = unsent_notifications_query.count()
+    current_site = Site.objects.get_current()
+    email_id = cache_data.get('email_id')
+    unsent_notifications = []
+
+    # Send individual email if there is only one notification
+    if notifications_count == 1:
+        notification = unsent_notifications_query.first()
+        send_notification_email(notification)
+    else:
+        # Show the amount of notifications according to configured display limit
+        for notification in unsent_notifications_query[:display_limit]:
+            url = notification.data.get('url', '') if notification.data else None
+            if url:
+                notification.url = url
+            elif notification.target:
+                notification.url = notification.redirect_view_url
+            else:
+                notification.url = None
+
+            unsent_notifications.append(notification)
+
+        start_time = timezone.localtime(cache_data.get('start_time')).strftime(
+            '%B %-d, %Y, %-I:%M %p %Z'
+        )
+
+        extra_context = {
+            'notifications': unsent_notifications[:display_limit],
+            'notifications_count': notifications_count,
+            'site_name': current_site.name,
+            'start_time': start_time,
+        }
+
+        user = User.objects.get(id=instance_id)
+        unsubscribe_url = get_unsubscribe_url_for_user(user)
+        extra_context['footer'] = get_unsubscribe_url_email_footer(unsubscribe_url)
+
+        if notifications_count > display_limit:
+            extra_context.update(
+                {
+                    'call_to_action_url': f"https://{current_site.domain}/admin/#notifications",
+                    'call_to_action_text': _('View all Notifications'),
+                }
+            )
+
+        plain_text_content = render_to_string(
+            'openwisp_notifications/emails/batch_email.txt', extra_context
+        )
+        notifications_count = min(notifications_count, display_limit)
+
+        send_email(
+            subject=f'[{current_site.name}] {notifications_count} new notifications since {start_time}',
+            body_text=plain_text_content,
+            body_html=True,
+            recipients=[email_id],
+            extra_context=extra_context,
+            headers={
+                'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+                'List-Unsubscribe': f'<{unsubscribe_url}>',
+            },
+            html_email_template='openwisp_notifications/emails/batch_email.html',
+        )
+
+    unsent_notifications_query.update(emailed=True)
+    cache.delete(cache_key)

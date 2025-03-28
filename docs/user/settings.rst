@@ -156,3 +156,34 @@ The default configuration is as follows:
         # Maximum interval after which the notification widget should get updated (in seconds)
         "max_allowed_backoff": 15,
     }
+
+.. _openwisp_notifications_email_batch_interval:
+
+``OPENWISP_NOTIFICATIONS_EMAIL_BATCH_INTERVAL``
+-----------------------------------------------
+
+======= =================================
+Type    ``int``
+Default ``1800`` (30 minutes, in seconds)
+======= =================================
+
+This setting determines the :ref:`interval of the email batching feature
+<notifications_batches>`.
+
+The interval is specified in seconds.
+
+To send email notifications immediately without batching, set this value
+to ``0``.
+
+.. _openwisp_notifications_email_batch_display_limit:
+
+``OPENWISP_NOTIFICATIONS_EMAIL_BATCH_DISPLAY_LIMIT``
+----------------------------------------------------
+
+======= =======
+Type    ``int``
+Default ``15``
+======= =======
+
+This setting specifies the maximum number of email notifications that can
+be included in a single :ref:`email batch <notifications_batches>`.

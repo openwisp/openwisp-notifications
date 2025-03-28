@@ -1,5 +1,7 @@
-from datetime import timedelta
+import json
+from datetime import datetime, timedelta
 from unittest.mock import patch
+from uuid import uuid4
 
 from allauth.account.models import EmailAddress
 from celery.exceptions import OperationalError
@@ -14,7 +16,9 @@ from django.template import TemplateDoesNotExist
 from django.test import TransactionTestCase
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.html import strip_spaces_between_tags
 from django.utils.timesince import timesince
+from freezegun import freeze_time
 
 from openwisp_notifications import settings as app_settings
 from openwisp_notifications import tasks
@@ -30,13 +34,19 @@ from openwisp_notifications.tests.test_helpers import (
     register_notification_type,
     unregister_notification_type,
 )
+from openwisp_notifications.tokens import email_token_generator
 from openwisp_notifications.types import (
     _unregister_notification_choice,
     get_notification_configuration,
 )
-from openwisp_notifications.utils import _get_absolute_url
+from openwisp_notifications.utils import _get_absolute_url, get_unsubscribe_url_for_user
 from openwisp_users.tests.utils import TestOrganizationMixin
 from openwisp_utils.tests import capture_any_output
+
+from . import (
+    _test_batch_email_notification_email_body,
+    _test_batch_email_notification_email_html,
+)
 
 User = get_user_model()
 
@@ -132,10 +142,16 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
             organization_id=target_obj.organization.pk,
             type='default',
         )
+        # Database field is set to None
         self.assertEqual(notification_preference.email, None)
+        # The fallback is taked from notification type
+        self.assertTrue(notification_preference.email_notification)
         notification_preference.web = False
+        notification_preference.full_clean()
         notification_preference.save()
         notification_preference.refresh_from_db()
+        # The database field has been updated to override the default
+        # value in notification type.
         self.assertEqual(notification_preference.email, False)
         self._create_notification()
         self.assertEqual(notification_queryset.count(), 0)
@@ -800,13 +816,18 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
             self.assertEqual(notification_queryset.count(), 0)
 
         with self.subTest('Test user email preference is "True"'):
+            unregister_notification_type('test_type')
+            test_type.update({'web_notification': True})
+            register_notification_type('test_type', test_type)
+            self.notification_options.update({'type': 'test_type'})
+
             notification_setting = NotificationSetting.objects.get(
                 user=self.admin, type='test_type', organization=target_obj.organization
             )
             notification_setting.email = True
             notification_setting.save()
             notification_setting.refresh_from_db()
-            self.assertFalse(notification_setting.email)
+            self.assertTrue(notification_setting.email)
 
         with self.subTest('Test user web preference is "True"'):
             NotificationSetting.objects.filter(
@@ -944,6 +965,140 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
         # we don't send emails to unverified email addresses
         self.assertEqual(len(mail.outbox), 0)
 
+    @patch('logging.Logger.error')
+    def test_send_batched_email_notifications_no_instance_id(self, mocked_logger):
+        # Ensure no emails are sent if instance_id is invalid
+        tasks.send_batched_email_notifications(None)
+        self.assertEqual(len(mail.outbox), 0)
+        mocked_logger.assert_called_once_with(
+            'Failed to send batched email notifications:'
+            f' User with ID {None} not found in the database.'
+        )
+        mocked_logger.reset_mock()
+
+        invalid_id = uuid4()
+        tasks.send_batched_email_notifications(str(invalid_id))
+        self.assertEqual(len(mail.outbox), 0)
+        mocked_logger.assert_called_once_with(
+            'Failed to send batched email notifications:'
+            f' User with ID {invalid_id} not found in the database.'
+        )
+
+    @patch('openwisp_notifications.tasks.send_batched_email_notifications.apply_async')
+    def test_send_batched_email_notifications_single_notification(
+        self, mock_send_email
+    ):
+        # The first notification will always be sent immediately
+        self._create_notification()
+        mail.outbox.clear()
+        # There's only one notification in the batch, it should
+        # not use summary of batched email.
+        self._create_notification()
+        # The task is mocked to prevent immediate execution in test environment.
+        # In tests, Celery runs in EAGER mode which would execute tasks immediately,
+        # preventing us from testing the batching behavior properly.
+        tasks.send_batched_email_notifications(str(self.admin.id))
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertNotIn('new notifications since', mail.outbox[0].body)
+
+    @patch('openwisp_notifications.tasks.send_batched_email_notifications.apply_async')
+    def test_batch_email_notification(self, mock_send_email):
+        fixed_datetime = timezone.localtime(
+            datetime(2024, 7, 26, 11, 40, tzinfo=timezone.utc)
+        )
+        datetime_str = fixed_datetime.strftime('%B %-d, %Y, %-I:%M %p %Z')
+
+        # Add multiple notifications with slightly different timestamps
+        # to maintain consistent order in generated email text across test runs
+        for _ in range(3):
+            with freeze_time(fixed_datetime):
+                # Create notifications with URL (from self.notification_options)
+                self._create_notification()
+            fixed_datetime += timedelta(
+                microseconds=100
+            )  # Increment time for ordering consistency
+        # Notification without URL
+        self.notification_options.pop('url')
+        with freeze_time(fixed_datetime):
+            self._create_notification()
+        fixed_datetime += timedelta(microseconds=100)
+        # Notification with a type and target object
+        self.notification_options.update(
+            {'type': 'default', 'target': self._get_org_user()}
+        )
+        with freeze_time(fixed_datetime):
+            default = self._create_notification().pop()[1][0]
+
+        # Check if only one mail is sent initially
+        self.assertEqual(len(mail.outbox), 1)
+
+        # Call the task
+        tasks.send_batched_email_notifications(self.admin.id)
+
+        # Check if the rest of the notifications are sent in a batch
+        self.assertEqual(len(mail.outbox), 2)
+        email = mail.outbox[1]
+        expected_subject = f'[example.com] 4 new notifications since {datetime_str}'
+        self.assertEqual(email.subject, expected_subject)
+        self.assertEqual(
+            email.body.strip(),
+            _test_batch_email_notification_email_body.format(
+                datetime_str=datetime_str,
+                notification_id=default.id,
+            ).strip(),
+        )
+        html_email = email.alternatives[0][0]
+        self.maxDiff = None
+        self.assertIn(
+            strip_spaces_between_tags(
+                _test_batch_email_notification_email_html.format(
+                    datetime_str=datetime_str,
+                    notification_id=default.id,
+                )
+                .replace('\n', '')
+                .replace('                    ', ' ')
+            ),
+            strip_spaces_between_tags(html_email),
+        )
+
+    @patch('openwisp_notifications.tasks.send_batched_email_notifications.apply_async')
+    def test_batch_email_notification_with_call_to_action(self, mock_send_email):
+        self.notification_options.update(
+            {
+                'message': 'Notification title',
+                'type': 'default',
+            }
+        )
+        display_limit = app_settings.EMAIL_BATCH_DISPLAY_LIMIT
+        for _ in range(display_limit + 2):
+            notify.send(recipient=self.admin, **self.notification_options)
+
+        # Check if only one mail is sent initially
+        self.assertEqual(len(mail.outbox), 1)
+
+        # Call the task
+        tasks.send_batched_email_notifications(self.admin.id)
+
+        # Check if the rest of the notifications are sent in a batch
+        self.assertEqual(len(mail.outbox), 2)
+        self.assertIn(
+            f'{display_limit} new notifications since', mail.outbox[1].subject
+        )
+        self.assertIn('View all Notifications', mail.outbox[1].body)
+
+    @patch.object(app_settings, 'EMAIL_BATCH_INTERVAL', 0)
+    def test_without_batch_email_notification(self):
+        self.notification_options.update(
+            {
+                'message': 'Notification title',
+                'type': 'default',
+            }
+        )
+        for _ in range(3):
+            notify.send(recipient=self.admin, **self.notification_options)
+
+        self.assertEqual(len(mail.outbox), 3)
+
     def test_that_the_notification_is_only_sent_once_to_the_user(self):
         first_org = self._create_org()
         first_org.organization_id = first_org.id
@@ -960,6 +1115,157 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
         )
         self._create_notification()
         self.assertEqual(notification_queryset.count(), 1)
+
+    def test_email_unsubscribe_token(self):
+        token = email_token_generator.make_token(self.admin)
+
+        with self.subTest('Invalid arguments'):
+            is_valid = email_token_generator.check_token(None, None)
+            self.assertFalse(is_valid)
+            # Malformed token
+            is_valid = email_token_generator.check_token(self.admin, 'token')
+            self.assertFalse(is_valid)
+            # Token with invalid length
+            is_valid = email_token_generator.check_token(
+                self.admin, '12345678912345-invalid'
+            )
+            self.assertFalse(is_valid)
+
+        with self.subTest('Valid token for the user'):
+            is_valid = email_token_generator.check_token(self.admin, token)
+            self.assertTrue(is_valid)
+
+        with self.subTest('Token used with a different user'):
+            test_user = self._create_user(username='test')
+            is_valid = email_token_generator.check_token(test_user, token)
+            self.assertFalse(is_valid)
+
+        with self.subTest('Token invalidated after password change'):
+            self.admin.set_password('new_password')
+            self.admin.save()
+            is_valid = email_token_generator.check_token(self.admin, token)
+            self.assertFalse(is_valid)
+
+    def test_email_unsubscribe_view(self):
+        unsubscribe_link_generated = get_unsubscribe_url_for_user(self.admin, False)
+        token = unsubscribe_link_generated.split('?token=')[1]
+        local_unsubscribe_url = reverse('notifications:unsubscribe')
+        unsubscribe_url = f"{local_unsubscribe_url}?token={token}"
+
+        with self.subTest('Test GET request with valid token'):
+            response = self.client.get(unsubscribe_url)
+            self.assertEqual(response.status_code, 200)
+
+        with self.subTest('Test POST request with valid token'):
+            response = self.client.post(unsubscribe_url)
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.json()['message'], 'Successfully unsubscribed')
+
+        with self.subTest('Test GET request with invalid token'):
+            response = self.client.get(f"{local_unsubscribe_url}?token=invalid_token")
+            self.assertContains(response, 'Invalid or Expired Link')
+            self.assertEqual(response.status_code, 200)
+
+        with self.subTest('Test POST request with invalid token'):
+            response = self.client.post(f"{local_unsubscribe_url}?token=invalid_token")
+            self.assertEqual(response.status_code, 400)
+
+        with self.subTest('Test GET request with invalid user'):
+            tester = self._create_user(username='tester')
+            tester_link_generated = get_unsubscribe_url_for_user(tester)
+            token = tester_link_generated.split('?token=')[1]
+            tester_unsubscribe_url = f"{local_unsubscribe_url}?token={token}"
+            tester.delete()
+            response = self.client.get(tester_unsubscribe_url)
+            self.assertContains(response, 'Invalid or Expired Link')
+            self.assertEqual(response.status_code, 200)
+
+        with self.subTest('Test POST request with invalid user'):
+            tester = self._create_user(username='tester')
+            tester_link_generated = get_unsubscribe_url_for_user(tester)
+            token = tester_link_generated.split('?token=')[1]
+            tester_unsubscribe_url = f"{local_unsubscribe_url}?token={token}"
+            tester.delete()
+            response = self.client.post(tester_unsubscribe_url)
+            self.assertEqual(response.status_code, 400)
+
+        with self.subTest('Test GET request with no token'):
+            response = self.client.get(local_unsubscribe_url)
+            self.assertEqual(response.status_code, 200)
+            self.assertContains(response, 'Invalid or Expired Link')
+            self.assertFalse(response.context['valid'])
+
+        with self.subTest('Test POST request with no token'):
+            response = self.client.post(local_unsubscribe_url)
+            self.assertEqual(response.status_code, 400)
+            self.assertEqual(response.json()['message'], 'No token provided')
+
+        with self.subTest('Test POST request with empty JSON body'):
+            response = self.client.post(
+                unsubscribe_url, content_type='application/json'
+            )
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.json()['message'], 'Successfully unsubscribed')
+
+        with self.subTest('Test POST request with subscribe=True in JSON'):
+            response = self.client.post(
+                unsubscribe_url,
+                data=json.dumps({'subscribe': True}),
+                content_type='application/json',
+            )
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.json()['message'], 'Successfully subscribed')
+
+        with self.subTest('Test POST request with subscribe=False in JSON'):
+            response = self.client.post(
+                unsubscribe_url,
+                data=json.dumps({'subscribe': False}),
+                content_type='application/json',
+            )
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.json()['message'], 'Successfully unsubscribed')
+
+        with self.subTest('Test POST request with invalid JSON'):
+            invalid_json = "{'data: invalid}"
+            response = self.client.post(
+                unsubscribe_url,
+                data=invalid_json,
+                content_type='application/json',
+            )
+            self.assertEqual(response.status_code, 400)
+            self.assertEqual(response.json()['message'], 'Invalid JSON data')
+
+    def test_notification_preference_page(self):
+        preference_page = 'notifications:user_notification_preference'
+        tester = self._create_user(username='tester')
+
+        with self.subTest('Test user is not authenticated'):
+            response = self.client.get(reverse(preference_page, args=(self.admin.pk,)))
+            self.assertEqual(response.status_code, 302)
+
+        with self.subTest('Test with same user'):
+            self.client.force_login(self.admin)
+            response = self.client.get(reverse('notifications:notification_preference'))
+            self.assertEqual(response.status_code, 200)
+
+        with self.subTest('Test user is authenticated'):
+            self.client.force_login(self.admin)
+            response = self.client.get(reverse(preference_page, args=(self.admin.pk,)))
+            self.assertEqual(response.status_code, 200)
+
+        with self.subTest('Test user is authenticated but not superuser'):
+            self.client.force_login(tester)
+            response = self.client.get(reverse(preference_page, args=(self.admin.pk,)))
+            self.assertEqual(response.status_code, 403)
+
+        with self.subTest('Test user is authenticated and superuser'):
+            self.client.force_login(self.admin)
+            response = self.client.get(reverse(preference_page, args=(tester.pk,)))
+            self.assertEqual(response.status_code, 200)
+
+        with self.subTest('Test invalid user ID'):
+            response = self.client.get(reverse(preference_page, args=(uuid4(),)))
+            self.assertEqual(response.status_code, 404)
 
 
 class TestTransactionNotifications(TestOrganizationMixin, TransactionTestCase):
