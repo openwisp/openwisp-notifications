@@ -111,3 +111,10 @@ def _unregister_notification_choice(notification_type):
             NOTIFICATION_CHOICES.pop(index)
             return
     raise ImproperlyConfigured(f'No such Notification Choice {notification_type}')
+
+
+def get_notification_choices():
+    """
+    Returns the list of notification choices.
+    """
+    return NOTIFICATION_CHOICES

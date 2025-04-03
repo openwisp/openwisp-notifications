@@ -2,6 +2,7 @@
 
 import uuid
 
+import django
 import django.db.models.deletion
 import django.utils.timezone
 import jsonfield.fields
@@ -9,7 +10,7 @@ import swapper
 from django.conf import settings
 from django.db import migrations, models
 
-from openwisp_notifications.types import NOTIFICATION_CHOICES
+from openwisp_notifications.types import NOTIFICATION_CHOICES, get_notification_choices
 
 
 class Migration(migrations.Migration):
@@ -156,9 +157,12 @@ class Migration(migrations.Migration):
                 (
                     'type',
                     models.CharField(
-                        choices=NOTIFICATION_CHOICES,
+                        choices=NOTIFICATION_CHOICES
+                        if django.VERSION < (5, 0)
+                        else get_notification_choices,
                         max_length=30,
                         null=True,
+                        verbose_name="Notification Type",
                     ),
                 ),
                 ('details', models.CharField(blank=True, max_length=64, null=True)),
@@ -166,10 +170,15 @@ class Migration(migrations.Migration):
             options={
                 'ordering': ('-timestamp',),
                 'abstract': False,
-                'index_together': {('recipient', 'unread')},
                 'verbose_name': 'Notification',
                 'verbose_name_plural': 'Notifications',
             },
+        ),
+        migrations.AddIndex(
+            model_name="notification",
+            index=models.Index(
+                fields=["recipient", "unread"], name="sample_noti_recipie_e2f36b_idx"
+            ),
         ),
         migrations.CreateModel(
             name='NotificationSetting',
@@ -186,10 +195,12 @@ class Migration(migrations.Migration):
                 (
                     'type',
                     models.CharField(
-                        choices=NOTIFICATION_CHOICES,
+                        choices=NOTIFICATION_CHOICES
+                        if django.VERSION < (5, 0)
+                        else get_notification_choices,
                         max_length=30,
                         null=True,
-                        verbose_name='Notification Type',
+                        verbose_name="Notification Type",
                     ),
                 ),
                 (
