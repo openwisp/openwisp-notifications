@@ -115,6 +115,8 @@ def _unregister_notification_choice(notification_type):
 
 def get_notification_choices():
     """
-    Returns the list of notification choices.
+    Returns the list of notification choices, which may
+    be dyanmically changed at runtime by other openwisp
+    modules which register new notification types.
     """
     return NOTIFICATION_CHOICES
