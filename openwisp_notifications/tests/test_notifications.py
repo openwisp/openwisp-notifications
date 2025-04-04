@@ -397,7 +397,7 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
             'level': 'info',
             'verb': 'message template verb',
             'verbose_name': 'Message Template Type',
-            'email_subject': '[{site.name}] Messsage Template Subject',
+            'email_subject': '[{site.name}] Message Template Subject',
         }
 
         with self.subTest('Register type with non existent message template'):
@@ -414,7 +414,7 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
             self._create_notification()
             n = notification_queryset.first()
             self.assertEqual(n.type, 'message_template')
-            self.assertEqual(n.email_subject, '[example.com] Messsage Template Subject')
+            self.assertEqual(n.email_subject, '[example.com] Message Template Subject')
 
         with self.subTest('Links in notification message'):
             url = _get_absolute_url(
@@ -633,16 +633,16 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
     def test_related_objects_database_query(self):
         operator = self._get_operator()
         self.notification_options.update(
-            {'action_object': operator, 'target': operator}
+            {'action_object': operator, 'target': operator, 'type': 'default'}
         )
-        self._create_notification()
+        n = self._create_notification().pop()[1][0]
         with self.assertNumQueries(1):
-            # 1 query since all related objects are cached
-            # when rendering the notification
+            # Accessing email_message should access all related objects
+            # (actor, action_object, target) but only execute a single
+            # query since these objects are cached when rendering
+            # the notification, rather than executing separate queries for each one.
             n = notification_queryset.first()
-            self.assertEqual(n.actor, self.admin)
-            self.assertEqual(n.action_object, operator)
-            self.assertEqual(n.target, operator)
+            n.message
 
     @patch.object(app_settings, 'CACHE_TIMEOUT', 0)
     def test_notification_cache_timeout(self):

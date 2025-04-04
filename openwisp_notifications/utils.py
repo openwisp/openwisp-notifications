@@ -3,12 +3,11 @@ from django.contrib.sites.models import Site
 from django.urls import NoReverseMatch, reverse
 
 
-def _get_object_link(obj, field, absolute_url=False, *args, **kwargs):
-    related_obj = getattr(obj, field)
+def _get_object_link(obj, absolute_url=False, *args, **kwargs):
     try:
         url = reverse(
-            f'admin:{related_obj._meta.app_label}_{related_obj._meta.model_name}_change',
-            args=[related_obj.id],
+            f'admin:{obj._meta.app_label}_{obj._meta.model_name}_change',
+            args=[obj.id],
         )
         if absolute_url:
             url = _get_absolute_url(url)
