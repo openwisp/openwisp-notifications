@@ -1,11 +1,13 @@
 import logging
 from contextlib import contextmanager
 
+import django
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.sites.models import Site
 from django.core.cache import cache
+from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 from django.db.models.constraints import UniqueConstraint
 from django.template.loader import render_to_string
@@ -22,6 +24,7 @@ from openwisp_notifications import settings as app_settings
 from openwisp_notifications.exceptions import NotificationRenderException
 from openwisp_notifications.types import (
     NOTIFICATION_CHOICES,
+    get_notification_choices,
     get_notification_configuration,
 )
 from openwisp_notifications.utils import _get_absolute_url, _get_object_link
@@ -53,6 +56,15 @@ def notification_render_attributes(obj, **attrs):
     for target_attr, source_attr in defaults.items():
         setattr(obj, target_attr, getattr(obj, source_attr))
 
+    # In Django 5.1+, GenericForeignKey fields defined in parent models can no longer
+    # be overridden in child models (https://code.djangoproject.com/ticket/36295).
+    # To avoid multiple database queries, we explicitly set these attributes here
+    # using our cached _related_object method instead of relying on the default
+    # GenericForeignKey accessor which would bypass our caching mechanism.
+    setattr(obj, 'actor', obj._related_object('actor'))
+    setattr(obj, 'action_object', obj._related_object('action_object'))
+    setattr(obj, 'target', obj._related_object('target'))
+
     yield obj
 
     for attr in defaults.keys():
@@ -61,7 +73,21 @@ def notification_render_attributes(obj, **attrs):
 
 class AbstractNotification(UUIDModel, BaseNotification):
     CACHE_KEY_PREFIX = 'ow-notifications-'
-    type = models.CharField(max_length=30, null=True, choices=NOTIFICATION_CHOICES)
+    type = models.CharField(
+        max_length=30,
+        null=True,
+        # TODO: Remove when dropping support for Django 4.2
+        choices=(
+            NOTIFICATION_CHOICES
+            if django.VERSION < (5, 0)
+            # In Django 5.0+, choices are normalized at model definition,
+            # creating a static list of tuples that doesn't update when notification
+            # types are dynamically registered or unregistered. Using a callable
+            # ensures we always get the current choices from the registry.
+            else get_notification_choices
+        ),
+        verbose_name=_('Notification Type'),
+    )
     _actor = BaseNotification.actor
     _action_object = BaseNotification.action_object
     _target = BaseNotification.target
@@ -117,7 +143,7 @@ class AbstractNotification(UUIDModel, BaseNotification):
                     return url_callable(self, field=field, absolute_url=True)
                 except ImportError:
                     return url
-        return _get_object_link(self, field=field, absolute_url=True)
+        return _get_object_link(obj=self._related_object(field), absolute_url=True)
 
     @property
     def actor_url(self):
@@ -200,7 +226,19 @@ class AbstractNotification(UUIDModel, BaseNotification):
         cache_key = self._cache_key(obj_content_type_id, obj_id)
         obj = cache.get(cache_key)
         if not obj:
-            obj = getattr(self, f'_{field}')
+            try:
+                obj = getattr(self, f'_{field}')
+            except AttributeError:
+                # Django 5.1+ no longer respects overridden GenericForeignKey fields in model definitions.
+                # Using `_actor = BaseNotification.actor` doesn't work as expected.
+                # We must manually fetch the related object using content type and object ID.
+                # See: https://code.djangoproject.com/ticket/36295
+                try:
+                    obj = ContentType.objects.get_for_id(
+                        obj_content_type_id
+                    ).get_object_for_this_type(pk=obj_id)
+                except ObjectDoesNotExist:
+                    obj = None
             cache.set(
                 cache_key,
                 obj,
@@ -246,8 +284,17 @@ class AbstractNotificationSetting(UUIDModel):
     type = models.CharField(
         max_length=30,
         null=True,
-        choices=NOTIFICATION_CHOICES,
-        verbose_name='Notification Type',
+        # TODO: Remove when dropping support for Django 4.2
+        choices=(
+            NOTIFICATION_CHOICES
+            if django.VERSION < (5, 0)
+            # In Django 5.0+, choices are normalized at model definition,
+            # creating a static list of tuples that doesn't update when notification
+            # types are dynamically registered or unregistered. Using a callable
+            # ensures we always get the current choices from the registry.
+            else get_notification_choices
+        ),
+        verbose_name=_('Notification Type'),
     )
     organization = models.ForeignKey(
         get_model_name('openwisp_users', 'Organization'),

@@ -88,6 +88,9 @@ class TestTransactionNotifications(BaseTestTransactionNotifications):
         test_app.name = 'new test app'
         test_app.save()
         notification = Notification.objects.get(target_content_type=content_type)
+        # Ensure cache is populated, since accessing target directly
+        # will use GenericForeignKey lookup.
+        notification.message
         self.assertEqual(notification.target.name, test_app.name)
         test_app_cache = cache.get(cache_key, None)
         self.assertEqual(test_app_cache.name, test_app.name)

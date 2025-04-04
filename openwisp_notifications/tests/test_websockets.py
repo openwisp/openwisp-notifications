@@ -1,4 +1,3 @@
-import sys
 import uuid
 from datetime import timedelta
 from unittest.mock import patch
@@ -215,10 +214,6 @@ class TestNotificationSockets:
     async def test_long_term_notification_storm_prevention(
         self, admin_user, admin_client
     ):
-        if sys.version_info[:2] == (3, 7):
-            NotificationConsumer._backoff_increment = 60
-            NotificationConsumer._max_allowed_backoff = 5
-
         datetime_now = now()
         freezer = freeze_time(datetime_now).start()
         await bulk_create_notification(admin_user, count=30)
@@ -232,12 +227,8 @@ class TestNotificationSockets:
         # _initial_backoff is mocked since the time is frozen in this test
         # which was leading to initialization case getting skipped.
         with patch.object(NotificationConsumer, '_initial_backoff', 0):
-            if sys.version_info[:2] == (3, 7):
-                NotificationConsumer._initial_backoff = 0
             await create_notification(admin_user)
             response = await communicator.receive_json_from()
-            if sys.version_info[:2] == (3, 7):
-                NotificationConsumer._initial_backoff = 1
 
         # These notifications will increment the backoff time beyond allowed limit.
         for _ in range(2):
@@ -263,7 +254,3 @@ class TestNotificationSockets:
         assert response['reload_widget'] is True
 
         await communicator.disconnect()
-
-        if sys.version_info[:1] == (3, 7):
-            NotificationConsumer._backoff_increment = 1
-            NotificationConsumer._max_allowed_backoff = 15

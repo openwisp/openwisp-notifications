@@ -6,9 +6,10 @@ from django.contrib.messages.storage.fallback import FallbackStorage
 from django.http import HttpRequest
 from django.utils import timezone
 
+from openwisp_notifications.base.models import NOTIFICATION_CHOICES
 from openwisp_notifications.swapper import load_model
 from openwisp_notifications.tasks import ns_register_unregister_notification_type
-from openwisp_notifications.types import NOTIFICATION_CHOICES, NOTIFICATION_TYPES
+from openwisp_notifications.types import NOTIFICATION_TYPES
 from openwisp_notifications.types import (
     register_notification_type as base_register_notification_type,
 )
@@ -41,6 +42,15 @@ def register_notification_type(type_name, type_config, models=[]):
     ns_register_unregister_notification_type.delay(
         notification_type=type_name, delete_unregistered=False
     )
+    # Update choices for model fields directly
+    # Django loads field choices during model initialization, but our mocked
+    # NOTIFICATION_CHOICES don't automatically update field choices.
+    # We need to explicitly update the field choices to ensure the models
+    # use our test environment's notification types.
+    from openwisp_notifications.types import NOTIFICATION_CHOICES
+
+    Notification._meta.get_field('type').choices = NOTIFICATION_CHOICES
+    NotificationSetting._meta.get_field('type').choices = NOTIFICATION_CHOICES
 
 
 def unregister_notification_type(type_name):
@@ -66,24 +76,6 @@ def mock_notification_types(func):
             NOTIFICATION_CHOICES=deepcopy(NOTIFICATION_CHOICES),
             NOTIFICATION_TYPES=deepcopy(NOTIFICATION_TYPES),
         ):
-            from openwisp_notifications import types
-
-            # Here we mock the choices for model fields directly. This is
-            # because the choices for model fields are defined during the
-            # model loading phase, and any changes to the mocked
-            # NOTIFICATION_CHOICES don't affect the model field choices.
-            # So, we mock the choices directly here to ensure that any
-            # changes to the mocked NOTIFICATION_CHOICES reflect in the
-            # model field choices.
-            with patch.object(
-                Notification._meta.get_field('type'),
-                'choices',
-                types.NOTIFICATION_CHOICES,
-            ), patch.object(
-                NotificationSetting._meta.get_field('type'),
-                'choices',
-                types.NOTIFICATION_CHOICES,
-            ):
-                return func(*args, **kwargs)
+            return func(*args, **kwargs)
 
     return wrapper

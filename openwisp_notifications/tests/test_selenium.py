@@ -41,7 +41,7 @@ class TestNotificationUi(
         notification_elem = self.find_element(By.CLASS_NAME, 'ow-notification-elem')
         data_location_value = notification_elem.get_attribute('data-location')
         self.assertEqual(
-            data_location_value, _get_object_link(notification, 'target', False)
+            data_location_value, _get_object_link(notification.target, False)
         )
 
     def test_notification_dialog(self):

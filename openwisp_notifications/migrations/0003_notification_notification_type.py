@@ -1,6 +1,7 @@
+import django
 from django.db import migrations, models
 
-from openwisp_notifications.types import NOTIFICATION_CHOICES
+from openwisp_notifications.types import NOTIFICATION_CHOICES, get_notification_choices
 
 
 class Migration(migrations.Migration):
@@ -13,9 +14,12 @@ class Migration(migrations.Migration):
             model_name='notification',
             name='type',
             field=models.CharField(
-                choices=NOTIFICATION_CHOICES,
+                choices=NOTIFICATION_CHOICES
+                if django.VERSION < (5, 0)
+                else get_notification_choices,
                 max_length=30,
                 null=True,
+                verbose_name="Notification Type",
             ),
         ),
     ]
