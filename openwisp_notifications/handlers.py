@@ -63,10 +63,14 @@ def notify_handler(**kwargs):
     except NotificationRenderException as error:
         logger.error(f'Error encountered while creating notification: {error}')
         return
+
+    verb = kwargs.pop('verb', None)
+    if verb is None and notification_type:
+        verb = None
+    
     level = kwargs.pop(
         'level', notification_template.get('level', Notification.LEVELS.info)
     )
-    verb = notification_template.get('verb', kwargs.pop('verb', None))
     user_app_name = User._meta.app_label
 
     where = Q(is_superuser=True)
@@ -145,7 +149,7 @@ def notify_handler(**kwargs):
         notification = Notification(
             recipient=recipient,
             actor=actor,
-            verb=str(verb),
+            verb=verb,
             public=public,
             description=description,
             timestamp=timestamp,
