@@ -2,14 +2,16 @@
 
 import django
 import django.db.models.deletion
+from django.conf import settings
 from django.db import migrations, models
+from swapper import get_model_name
 
 from openwisp_notifications.types import NOTIFICATION_CHOICES, get_notification_choices
 
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("openwisp_users", "0020_populate_password_updated_field"),
+        migrations.swappable_dependency(settings.AUTH_USER_MODEL),
         (
             "openwisp_notifications",
             "0008_rename_notification_recipient_unread_openwisp_no_recipie_b7c4ef_idx",
@@ -24,7 +26,7 @@ class Migration(migrations.Migration):
                 blank=True,
                 null=True,
                 on_delete=django.db.models.deletion.CASCADE,
-                to="openwisp_users.organization",
+                to=get_model_name("openwisp_users", "Organization"),
             ),
         ),
         migrations.AlterField(
