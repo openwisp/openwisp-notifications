@@ -123,6 +123,8 @@ default ``True``
 This setting allows to disable creating :doc:`notification preferences
 <notification-preferences>` on running migrations.
 
+.. _openwisp_notifications_notification_storm_prevention:
+
 ``OPENWISP_NOTIFICATIONS_NOTIFICATION_STORM_PREVENTION``
 --------------------------------------------------------
 

@@ -14,33 +14,34 @@ OpenWISP Notifications sends web notifications to recipients through
 Django's admin site. The following components facilitate browsing web
 notifications:
 
-Notification Widget
-~~~~~~~~~~~~~~~~~~~
+Widget
+~~~~~~
 
 .. figure:: https://raw.githubusercontent.com/openwisp/openwisp-notifications/docs/docs/images/notification-widget.gif
     :target: https://raw.githubusercontent.com/openwisp/openwisp-notifications/docs/docs/images/notification-widget.gif
     :align: center
 
-A JavaScript widget has been added to make consuming notifications easy
-for users. The notification widget provides the following features:
+The OpenWISP admin includes a notifications widget with the following
+features:
 
-- User Interface to help users complete tasks quickly.
-- Dynamically loads notifications with infinite scrolling to prevent
-  unnecessary network requests.
-- Option to filter unread notifications.
+- Infinite scroll to load notifications dynamically and smoothly.
+- Button to mark all as read.
 - Button to edit :doc:`notification-preferences`.
 
-Notification Toasts
-~~~~~~~~~~~~~~~~~~~
+Toasts
+~~~~~~
 
 .. figure:: https://raw.githubusercontent.com/openwisp/openwisp-notifications/docs/docs/images/notification-toast.gif
     :target: https://raw.githubusercontent.com/openwisp/openwisp-notifications/docs/docs/images/notification-toast.gif
     :align: center
 
-Notification toast delivers notifications in real-time, allowing users to
-read notifications without opening the notification widget. A notification
-bell sound is played each time a notification is displayed through the
-notification toast.
+Notification toasts display messages in real time, so users can read them
+without opening the widget. A bell sound plays each time a toast is shown.
+
+To prevent overload, an anti-storm mechanism temporarily disables toasts
+when many notifications arrive in a short time. Refer to
+:ref:`openwisp_notifications_notification_storm_prevention` for more
+information.
 
 .. _notifications_email_notifications:
 
@@ -65,9 +66,11 @@ Email Batches
     :align: center
 
 Batching email notifications helps manage the flow of emails sent to
-users, especially during periods of increased alert activity. By grouping
-emails into batches, the system minimizes the risk of emails being marked
-as spam and prevents inboxes from rejecting alerts due to high volumes.
+users, especially during periods of increased alert activity.
+
+By grouping emails into batches, the system minimizes the risk of emails
+being marked as spam and prevents inboxes from rejecting alerts due to
+high volumes.
 
 Key aspects of the batch email notification feature include:
 
