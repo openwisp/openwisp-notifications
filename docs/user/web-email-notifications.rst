@@ -28,7 +28,7 @@ for users. The notification widget provides the following features:
 - Dynamically loads notifications with infinite scrolling to prevent
   unnecessary network requests.
 - Option to filter unread notifications.
-- Option to mark all notifications as read with a single click.
+- Button to edit :doc:`notification-preferences`.
 
 Notification Toasts
 ~~~~~~~~~~~~~~~~~~~
