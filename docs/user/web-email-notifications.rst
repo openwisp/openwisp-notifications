@@ -93,7 +93,7 @@ following settings:
 Unsubscribing from Email Notifications
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-In addition to updating notification preferences via the :ref:`preferences
+In addition to updating notification preferences via the :doc:`preferences
 page <notification-preferences>`, users can opt out of receiving email
 notifications using the unsubscribe link included in every notification
 email.
