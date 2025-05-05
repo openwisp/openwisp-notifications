@@ -14,7 +14,7 @@ from django.core.cache import cache
 from django.core.exceptions import ImproperlyConfigured
 from django.db.models.signals import post_migrate, post_save
 from django.template import TemplateDoesNotExist
-from django.test import TransactionTestCase
+from django.test import TransactionTestCase, TestCase
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.html import strip_spaces_between_tags
@@ -39,6 +39,7 @@ from openwisp_notifications.tokens import email_token_generator
 from openwisp_notifications.types import (
     _unregister_notification_choice,
     get_notification_configuration,
+    NOTIFICATION_TYPES,
 )
 from openwisp_notifications.utils import _get_absolute_url, get_unsubscribe_url_for_user
 from openwisp_users.tests.utils import TestOrganizationMixin
@@ -336,7 +337,8 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
         self._create_notification()
         n = notification_queryset.first()
         self.assertEqual(n.level, 'info')
-        self.assertEqual(n.verb, 'default verb')
+        self.assertIsNone(n.verb)
+        self.assertEqual(n.notification_verb, 'default verb')
         self.assertIn(
             'Default notification with default verb and level info by', n.message
         )
@@ -373,7 +375,8 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
         self._create_notification()
         n = notification_queryset.first()
         self.assertEqual(n.level, 'info')
-        self.assertEqual(n.verb, 'generic verb')
+        self.assertIsNone(n.verb)
+        self.assertEqual(n.notification_verb, 'generic verb')
         expected_output = (
             '<p><a href="https://example.com{user_path}">admin</a></p>'
         ).format(
@@ -1294,3 +1297,36 @@ class TestTransactionNotifications(TestOrganizationMixin, TransactionTestCase):
         self.assertEqual(notification.target.username, 'new operator name')
         # Done for populating cache
         self.assertEqual(operator_cache.username, 'new operator name')
+
+
+class TestNotificationVerb(TestCase):
+    def setUp(self):
+        self.admin = User.objects.create_superuser(
+            username='admin',
+            password='admin',
+            email='admin@admin.com'
+        )
+
+    def test_notification_verb_update(self):
+        # Create notification with default type
+        notify.send(
+            sender=self.admin,
+            type='default',
+            recipient=self.admin,
+        )
+        
+        notification = self.admin.notifications.first()
+        # Verify verb is None in database
+        self.assertIsNone(notification.verb)
+        # Verify notification shows verb from configuration
+        self.assertEqual(notification.notification_verb, 'default verb')
+        
+        # Change verb in notification type
+        old_config = NOTIFICATION_TYPES['default'].copy()
+        NOTIFICATION_TYPES['default']['verb'] = 'updated verb'
+        
+        # Verify notification shows updated verb
+        self.assertEqual(notification.notification_verb, 'updated verb')
+        
+        # Restore original configuration
+        NOTIFICATION_TYPES['default'] = old_config
