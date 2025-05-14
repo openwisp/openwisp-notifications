@@ -646,13 +646,14 @@ class TestNotificationApi(
                 'notification_setting',
                 notification_setting.pk,
             )
-            response = self.client.get(url)
+            with self.assertNumQueries(3):
+                response = self.client.get(url)
             self.assertEqual(response.status_code, 200)
             data = response.data
             self.assertEqual(data['id'], str(notification_setting.id))
             self.assertEqual(data['organization'], notification_setting.organization.pk)
-            self.assertEqual(data['web'], notification_setting.web)
-            self.assertEqual(data['email'], notification_setting.email)
+            self.assertEqual(data['web'], notification_setting.web_notification)
+            self.assertEqual(data['email'], notification_setting.email_notification)
 
         with self.subTest(
             'Test retrieving details for existing notification setting as admin'

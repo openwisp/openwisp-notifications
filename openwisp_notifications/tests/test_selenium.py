@@ -126,45 +126,71 @@ class TestSelenium(
     def test_notification_preference_page(self):
         self.login()
         self.open(reverse('notifications:notification_preference'))
-        # Uncheck the global web checkbox
-        self.find_element(
-            By.CSS_SELECTOR,
-            '.global-setting-dropdown[data-web-state] .global-setting-dropdown-toggle',
-        ).click()
-        self.find_element(
-            By.CSS_SELECTOR,
-            '.global-setting-dropdown[data-web-state]'
-            ' .global-setting-dropdown-menu button:last-child',
-        ).click()
-        self.find_element(By.CSS_SELECTOR, '#confirmation-modal #confirm').click()
 
-        # Expand the first organization panel if it's collapsed
-        first_org_toggle = self.find_element(By.CSS_SELECTOR, '.toggle-icon')
-        first_org_toggle.click()
+        with self.subTest('Notifications are enabled'):
+            # Expand the first organization panel
+            self.find_element(By.CSS_SELECTOR, '.toggle-icon').click()
+            # All web notifications are enabled
+            web_checkboxes = self.find_elements(
+                By.CSS_SELECTOR,
+                'input[type="checkbox"][data-column="web"]',
+                wait_for='presence',
+            )
+            for checkbox in web_checkboxes:
+                self.assertEqual(checkbox.is_selected(), True)
+            # Email notification is enabled for default type
+            default_email_checkbox = self.find_element(
+                By.CSS_SELECTOR,
+                'label#org-1-email-1 input',
+                wait_for='presence',
+            )
+            self.assertTrue(default_email_checkbox.is_selected())
+            # Email notification is disabled for generic type
+            generic_email_checkbox = self.find_element(
+                By.CSS_SELECTOR,
+                'label#org-1-email-2 input',
+                wait_for='presence',
+            )
+            self.assertFalse(generic_email_checkbox.is_selected())
 
-        all_checkboxes = self.find_elements(
-            By.CSS_SELECTOR, 'input[type="checkbox"]', wait_for='presence'
-        )
-        for checkbox in all_checkboxes:
-            self.assertFalse(checkbox.is_selected())
+        with self.subTest('Disabling global notification setting'):
+            self.find_element(
+                By.CSS_SELECTOR,
+                '.global-setting-dropdown[data-web-state] .global-setting-dropdown-toggle',
+            ).click()
+            self.find_element(
+                By.CSS_SELECTOR,
+                '.global-setting-dropdown[data-web-state]'
+                ' .global-setting-dropdown-menu button:last-child',
+            ).click()
+            self.find_element(By.CSS_SELECTOR, '#confirmation-modal #confirm').click()
 
-        # Check the org-level web checkbox
-        org_level_web_checkbox = self.find_element(By.CSS_SELECTOR, '#org-1-web')
-        org_level_web_checkbox.click()
+            all_checkboxes = self.find_elements(
+                By.CSS_SELECTOR, 'input[type="checkbox"]', wait_for='presence'
+            )
+            for checkbox in all_checkboxes:
+                self.assertFalse(checkbox.is_selected())
 
-        # Verify that all web checkboxes under org-1 are selected
-        web_checkboxes = self.find_elements(
-            By.CSS_SELECTOR, 'label[id^="org-1-web-"] input', wait_for='presence'
-        )
-        for checkbox in web_checkboxes:
-            self.assertTrue(checkbox.is_selected())
+        with self.subTest('Enabling organization-level web notification'):
+            # Check the org-level web checkbox
+            org_level_web_checkbox = self.find_element(By.CSS_SELECTOR, '#org-1-web')
+            org_level_web_checkbox.click()
 
-        # Check a single email checkbox
-        first_org_email_checkbox = self.find_element(By.ID, 'org-1-email-1')
-        first_org_email_checkbox.click()
-        self.assertTrue(
-            first_org_email_checkbox.find_element(By.TAG_NAME, 'input').is_selected()
-        )
+            # Verify that all web checkboxes under org-1 are selected
+            web_checkboxes = self.find_elements(
+                By.CSS_SELECTOR, 'label[id^="org-1-web-"] input', wait_for='presence'
+            )
+            for checkbox in web_checkboxes:
+                self.assertTrue(checkbox.is_selected())
+
+        with self.subTest('Enabling single email notification'):
+            first_org_email_checkbox = self.find_element(By.ID, 'org-1-email-1')
+            first_org_email_checkbox.click()
+            self.assertTrue(
+                first_org_email_checkbox.find_element(
+                    By.TAG_NAME, 'input'
+                ).is_selected()
+            )
 
     def test_empty_notification_preference_page(self):
         # Delete all organizations

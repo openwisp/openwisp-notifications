@@ -83,6 +83,12 @@ class NotificationSettingSerializer(serializers.ModelSerializer):
         exclude = ['user']
         read_only_fields = ['organization', 'type']
 
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['web'] = instance.web_notification
+        data['email'] = instance.email_notification
+        return data
+
 
 class IgnoreObjectNotificationSerializer(serializers.ModelSerializer):
     class Meta:
