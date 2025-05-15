@@ -60,7 +60,7 @@ def unregister_notification_type(type_name):
 
 def notification_related_object_url(obj, field, *args, **kwargs):
     related_obj = getattr(obj, field)
-    return f'https://{related_obj}.example.com'
+    return f'https://{related_obj}.example.com/index#heading'
 
 
 def mock_notification_types(func):

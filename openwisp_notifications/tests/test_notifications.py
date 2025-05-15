@@ -613,10 +613,15 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
 
             notification = Notification.objects.first()
             self.assertEqual(
-                notification.action_url, 'https://action-object.example.com'
+                notification.action_url,
+                'https://action-object.example.com/index#heading',
             )
-            self.assertEqual(notification.actor_url, 'https://actor.example.com')
-            self.assertEqual(notification.target_url, 'https://target.example.com')
+            self.assertEqual(
+                notification.actor_url, 'https://actor.example.com/index#heading'
+            )
+            self.assertEqual(
+                notification.target_url, 'https://target.example.com/index#heading'
+            )
 
     @capture_any_output()
     @mock_notification_types
