@@ -6,6 +6,7 @@ from rest_framework.exceptions import NotFound
 
 from openwisp_notifications.exceptions import NotificationRenderException
 from openwisp_notifications.swapper import load_model
+from openwisp_utils.api.serializers import ValidatedModelSerializer
 
 logger = logging.getLogger(__name__)
 
@@ -72,7 +73,7 @@ class NotificationListSerializer(NotificationSerializer):
         list_serializer_class = CustomListSerializer
 
 
-class NotificationSettingSerializer(serializers.ModelSerializer):
+class NotificationSettingSerializer(ValidatedModelSerializer):
     organization_name = serializers.CharField(
         source='organization.name', read_only=True
     )
@@ -82,6 +83,12 @@ class NotificationSettingSerializer(serializers.ModelSerializer):
         model = NotificationSetting
         exclude = ['user']
         read_only_fields = ['organization', 'type']
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['web'] = instance.web_notification
+        data['email'] = instance.email_notification
+        return data
 
 
 class IgnoreObjectNotificationSerializer(serializers.ModelSerializer):
