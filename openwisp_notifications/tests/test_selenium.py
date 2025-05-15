@@ -10,6 +10,7 @@ from openwisp_users.tests.utils import TestOrganizationMixin
 from openwisp_utils.tests import SeleniumTestMixin
 
 Notification = load_model('Notification')
+NotificationSetting = load_model('NotificationSetting')
 Organization = swapper_load_model('openwisp_users', 'Organization')
 OrganizationUser = swapper_load_model('openwisp_users', 'OrganizationUser')
 
@@ -170,6 +171,9 @@ class TestSelenium(
             )
             for checkbox in all_checkboxes:
                 self.assertFalse(checkbox.is_selected())
+                # Verify database has NotificationSetting.web set to False
+                if pk := checkbox.get_attribute('data-pk'):
+                    self.assertEqual(NotificationSetting.objects.get(pk=pk).web, False)
 
         with self.subTest('Enabling organization-level web notification'):
             # Check the org-level web checkbox
@@ -182,14 +186,18 @@ class TestSelenium(
             )
             for checkbox in web_checkboxes:
                 self.assertTrue(checkbox.is_selected())
+                self.assertEqual(NotificationSetting.objects.get(pk=pk).web, True)
 
         with self.subTest('Enabling single email notification'):
             first_org_email_checkbox = self.find_element(By.ID, 'org-1-email-1')
             first_org_email_checkbox.click()
-            self.assertTrue(
-                first_org_email_checkbox.find_element(
-                    By.TAG_NAME, 'input'
-                ).is_selected()
+            input = first_org_email_checkbox.find_element(By.TAG_NAME, 'input')
+            self.assertTrue(input.is_selected())
+            self.assertEqual(
+                NotificationSetting.objects.get(
+                    pk=input.get_attribute('data-pk')
+                ).email,
+                True,
             )
 
     def test_empty_notification_preference_page(self):
