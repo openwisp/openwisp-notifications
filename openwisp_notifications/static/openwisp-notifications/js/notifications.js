@@ -114,16 +114,28 @@ function initNotificationDropDown($) {
   }
 }
 
-// Used to convert absolute URLs in notification messages to relative paths
+function convertAbsoluteURLToRelativeURL(urlString) {
+  let url = new URL(urlString, window.location.href);
+  try {
+    if (url.origin) {
+      urlString = urlString.replace(url.origin, "");
+    }
+  } catch (e) {
+    // Invalid URLs (e.g., `javascript:void(0)`) are ignored
+  }
+  return urlString;
+}
+
+// Converts absolute URLs in notification messages to relative URLs
+// (preserving path, query, and hash)
 function convertMessageWithRelativeURL(htmlString) {
   const parser = new DOMParser(),
     doc = parser.parseFromString(htmlString, "text/html"),
     links = doc.querySelectorAll("a");
   links.forEach((link) => {
-    let url = link.getAttribute("href");
-    if (url) {
-      url = new URL(url, window.location.href);
-      link.setAttribute("href", url.pathname);
+    const path = convertAbsoluteURLToRelativeURL(link.getAttribute("href"));
+    if (path) {
+      link.setAttribute("href", path);
     }
   });
   return doc.body.innerHTML;
@@ -241,10 +253,8 @@ function notificationWidget($) {
   function notificationListItem(elem) {
     let klass;
     const datetime = dateTimeStampToDateTimeLocaleString(
-        new Date(elem.timestamp),
-      ),
-      // target_url can be null or '#', so we need to handle it without any errors
-      target_url = new URL(elem.target_url, window.location.href);
+      new Date(elem.timestamp),
+    );
 
     if (!notificationReadStatus.has(elem.id)) {
       if (elem.unread) {
@@ -264,7 +274,7 @@ function notificationWidget($) {
     }
 
     return `<div class="ow-notification-elem ${klass}" id=ow-${elem.id}
-                        data-location="${target_url.pathname}" role="link" tabindex="0">
+                        data-location="${convertAbsoluteURLToRelativeURL(elem.target_url)}" role="link" tabindex="0">
                     <div class="ow-notification-inner">
                         <div class="ow-notification-meta">
                             <div class="ow-notification-level-wrapper">
@@ -416,7 +426,6 @@ function notificationHandler($, elem) {
   }
 
   if (notification.target_url && notification.target_url !== "#") {
-    targetUrl = new URL(notification.target_url).pathname;
     $(".ow-message-target-redirect").removeClass("ow-hide");
   }
 
@@ -477,7 +486,7 @@ function initWebSockets($) {
     if (data.notification) {
       let toast =
         $(`<div class="ow-notification-toast ${data.notification.level}"
-                                data-location="${data.notification.target_url}"
+                                data-location="${convertAbsoluteURLToRelativeURL(target_url)}"
                                 id="ow-${data.notification.id}">
                                 <div class="icon ow-notify-close btn" role="button" tabindex="1"></div>
                                 <div style="display:flex">

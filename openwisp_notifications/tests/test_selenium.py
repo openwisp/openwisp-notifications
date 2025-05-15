@@ -9,6 +9,8 @@ from openwisp_notifications.utils import _get_object_link, get_unsubscribe_url_f
 from openwisp_users.tests.utils import TestOrganizationMixin
 from openwisp_utils.tests import SeleniumTestMixin
 
+from .test_helpers import mock_notification_types, register_notification_type
+
 Notification = load_model('Notification')
 NotificationSetting = load_model('NotificationSetting')
 Organization = swapper_load_model('openwisp_users', 'Organization')
@@ -39,16 +41,41 @@ class TestSelenium(
     def _create_notification(self):
         return notify.send(**self.notification_options)
 
+    @mock_notification_types
     def test_notification_relative_link(self):
+        test_type = {
+            'verbose_name': 'Test Notification Type',
+            'level': 'warning',
+            'verb': 'testing',
+            'message': 'Test notification for {notification.target.pk}',
+            'email_subject': '[{site.name}] {notification.target.pk}',
+            'target_link': (
+                'openwisp_notifications.tests.test_helpers.notification_related_object_url'
+            ),
+        }
+        register_notification_type('test_type', test_type)
         self.login()
-        notification = self._create_notification().pop()[1][0]
-        self.find_element(By.ID, 'openwisp_notifications').click()
-        self.wait_for_visibility(By.CLASS_NAME, 'ow-notification-elem')
-        notification_elem = self.find_element(By.CLASS_NAME, 'ow-notification-elem')
-        data_location_value = notification_elem.get_attribute('data-location')
-        self.assertEqual(
-            data_location_value, _get_object_link(notification.target, False)
-        )
+
+        with self.subTest('Verify URL for default notification type'):
+            default_notification = self._create_notification().pop()[1][0]
+            self.find_element(By.ID, 'openwisp_notifications').click()
+            self.wait_for_visibility(By.CLASS_NAME, 'ow-notification-elem')
+            notification_elem = self.find_element(By.CLASS_NAME, 'ow-notification-elem')
+            data_location_value = notification_elem.get_attribute('data-location')
+            self.assertEqual(
+                data_location_value,
+                _get_object_link(default_notification.target, False),
+            )
+
+        self.open(reverse('admin:index'))
+        with self.subTest('Verify URL for test notification type'):
+            self.notification_options.update({'type': 'test_type'})
+            self._create_notification().pop()[1][0]
+            self.find_element(By.ID, 'openwisp_notifications').click()
+            self.wait_for_visibility(By.CLASS_NAME, 'ow-notification-elem')
+            notification_elem = self.find_element(By.CLASS_NAME, 'ow-notification-elem')
+            data_location_value = notification_elem.get_attribute('data-location')
+            self.assertEqual(data_location_value, '/index#heading')
 
     def test_notification_dialog(self):
         self.login()
