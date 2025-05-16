@@ -394,11 +394,19 @@ def update_notification_cache(sender, instance, **kwargs):
     transaction.on_commit(invalidate_cache)
 
 
+class NotificationUtils:
+    @classmethod
+    def email_notifications_enabled(cls, user):
+        return NotificationSetting.objects.filter(user=user, email=True).exists()
+
+
 @receiver(user_logged_in)
 def check_email_verification(sender, user, request, **kwargs):
     admin_path = reverse('admin:index')
     # abort if this is not an admin login
     if not user.is_staff or not request.path.startswith(admin_path):
+        return
+    if not NotificationUtils.email_notifications_enabled(user):
         return
     has_verified_email = EmailAddress.objects.filter(user=user, verified=True).exists()
     # abort if user already has a verified email
