@@ -403,6 +403,11 @@ class AbstractNotificationSetting(UUIDModel):
             return self.web
         return self.type_config.get('web_notification')
 
+    @classmethod
+    def email_notifications_enabled(cls, user):
+        """Returns ``True`` if ``user`` has at least one email notification setting enabled."""
+        return cls.objects.filter(user=user, email=True).exists()
+
 
 class AbstractIgnoreObjectNotification(UUIDModel):
     """
