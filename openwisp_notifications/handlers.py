@@ -400,6 +400,8 @@ def check_email_verification(sender, user, request, **kwargs):
     # abort if this is not an admin login
     if not user.is_staff or not request.path.startswith(admin_path):
         return
+    if not NotificationSetting.email_notifications_enabled(user):
+        return
     has_verified_email = EmailAddress.objects.filter(user=user, verified=True).exists()
     # abort if user already has a verified email
     # or doesn't have an email at all
