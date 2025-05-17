@@ -8,7 +8,7 @@ from django.test import TestCase
 from django.test.client import Client
 from django.urls import reverse
 
-from openwisp_notifications.swapper import load_model, swapper_load_model
+from openwisp_notifications.swapper import load_model
 
 User = get_user_model()
 
@@ -118,13 +118,14 @@ class TestCheckEmailVerification(TestCase):
             primary=True,
             verified=False,
         )
-
-    def test_warning_on_admin_login(self):
         NotificationSetting.objects.update_or_create(
             user=self.user,
             type='default',
             defaults={'email': True, 'web': True},
         )
+
+    def test_warning_on_admin_login(self):
+        self.assertTrue(NotificationSetting.email_notifications_enabled(self.user))
         login_url = reverse('admin:login')
         response = self.client.post(
             login_url,
@@ -146,10 +147,11 @@ class TestCheckEmailVerification(TestCase):
         expected_url = reverse('notifications:resend_verification_email')
         self.assertIn(expected_url, message)
 
-    def test_warning_disabled(self):
+    def test_email_notifications_disabled_no_warning(self):
         NotificationSetting.objects.update_or_create(
             user=self.user, type='default', defaults={'email': False, 'web': True}
         )
+        self.assertFalse(NotificationSetting.email_notifications_enabled(self.user))
         login_url = reverse('admin:login')
         response = self.client.post(
             login_url,
