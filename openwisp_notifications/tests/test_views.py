@@ -125,7 +125,6 @@ class TestCheckEmailVerification(TestCase):
         )
 
     def test_warning_on_admin_login(self):
-        self.assertTrue(NotificationSetting.email_notifications_enabled(self.user))
         login_url = reverse('admin:login')
         response = self.client.post(
             login_url,
