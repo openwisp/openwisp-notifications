@@ -273,6 +273,16 @@ class AbstractNotification(UUIDModel, BaseNotification):
             reverse('notifications:notification_read_redirect', args=(self.pk,))
         )
 
+    @property
+    def verb(self):
+        stored_verb = self.__dict__.get('verb')
+        if stored_verb:
+            return stored_verb
+        if self.type:
+            config = get_notification_configuration(self.type)
+            return config.get('verb', 'undefined')
+        return 'undefined'
+
 
 class AbstractNotificationSetting(UUIDModel):
     _RECEIVE_HELP = (
