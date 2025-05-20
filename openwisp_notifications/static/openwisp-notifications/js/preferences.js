@@ -23,6 +23,10 @@ function getAbsoluteUrl(url) {
       $.ajax({
         url: url,
         dataType: "json",
+        xhrFields: {
+          withCredentials: true,
+        },
+        crossDomain: true,
         beforeSend: function () {
           $(".loader").show();
           $(".global-settings").hide();
@@ -364,6 +368,10 @@ function getAbsoluteUrl(url) {
           "X-CSRFToken": $('input[name="csrfmiddlewaretoken"]').val(),
         },
         contentType: "application/json",
+        xhrFields: {
+          withCredentials: true,
+        },
+        crossDomain: true,
         data: JSON.stringify({ web: isWebChecked, email: isEmailChecked }),
         success: function () {
           showToast("success", gettext("Settings updated successfully."));
@@ -481,6 +489,10 @@ function getAbsoluteUrl(url) {
           "X-CSRFToken": $('input[name="csrfmiddlewaretoken"]').val(),
         },
         contentType: "application/json",
+        xhrFields: {
+          withCredentials: true,
+        },
+        crossDomain: true,
         data: JSON.stringify(data),
         success: function () {
           showToast(
@@ -765,6 +777,10 @@ function getAbsoluteUrl(url) {
             "X-CSRFToken": $('input[name="csrfmiddlewaretoken"]').val(),
           },
           contentType: "application/json",
+          xhrFields: {
+            withCredentials: true,
+          },
+          crossDomain: true,
           data: data,
           success: function () {
             showToast(
