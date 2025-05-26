@@ -34,9 +34,11 @@ class Migration(migrations.Migration):
             name="type",
             field=models.CharField(
                 blank=True,
-                choices=NOTIFICATION_CHOICES
-                if django.VERSION < (5, 0)
-                else get_notification_choices,
+                choices=(
+                    NOTIFICATION_CHOICES
+                    if django.VERSION < (5, 0)
+                    else get_notification_choices
+                ),
                 max_length=30,
                 null=True,
                 verbose_name="Notification Type",

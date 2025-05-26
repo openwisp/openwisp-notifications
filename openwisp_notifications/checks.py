@@ -13,19 +13,19 @@ def check_cors_configuration(app_configs, **kwargs):
         return errors
 
     if not (
-        'corsheaders' in settings.INSTALLED_APPS
-        and 'corsheaders.middleware.CorsMiddleware' in settings.MIDDLEWARE
+        "corsheaders" in settings.INSTALLED_APPS
+        and "corsheaders.middleware.CorsMiddleware" in settings.MIDDLEWARE
     ):
         errors.append(
             checks.Warning(
-                msg='Improperly Configured',
+                msg="Improperly Configured",
                 hint=(
                     '"django-cors-headers" is either not installed or improperly configured.'
                     ' CORS configuration is required for using "OPENWISP_NOTIFICATIONS_HOST" settings.'
-                    ' Configure equivalent CORS rules on your server if you are not using'
+                    " Configure equivalent CORS rules on your server if you are not using"
                     ' "django-cors-headers".'
                 ),
-                obj='Settings',
+                obj="Settings",
             )
         )
     return errors
@@ -37,12 +37,12 @@ def check_ow_object_notification_widget_setting(app_configs, **kwargs):
     if not isinstance(app_settings.IGNORE_ENABLED_ADMIN, list):
         errors.append(
             checks.Warning(
-                msg='Improperly Configured',
+                msg="Improperly Configured",
                 hint=(
                     '"OPENWISP_NOTIFICATIONS_IGNORE_ENABLED_ADMIN" should be a list, '
-                    f'{type(app_settings.IGNORE_ENABLED_ADMIN)} provided'
+                    f"{type(app_settings.IGNORE_ENABLED_ADMIN)} provided"
                 ),
-                obj='Settings',
+                obj="Settings",
             )
         )
         return errors
@@ -52,12 +52,12 @@ def check_ow_object_notification_widget_setting(app_configs, **kwargs):
         if not isinstance(path, str):
             errors.append(
                 checks.Error(
-                    msg='Improperly Configured',
+                    msg="Improperly Configured",
                     hint=(
                         '"OPENWISP_NOTIFICATIONS_IGNORE_ENABLED_ADMIN" should contain '
-                        f'dotted path string to ModelAdmin, found {type(path)}'
+                        f"dotted path string to ModelAdmin, found {type(path)}"
                     ),
-                    obj='Settings',
+                    obj="Settings",
                 )
             )
             continue
@@ -68,25 +68,25 @@ def check_ow_object_notification_widget_setting(app_configs, **kwargs):
         except ImportError:
             errors.append(
                 checks.Error(
-                    msg='Improperly Configured',
+                    msg="Improperly Configured",
                     hint=(
                         f'Failed to import "{path}" defined in '
                         '"OPENWISP_NOTIFICATIONS_IGNORE_ENABLED_ADMIN". '
-                        'Make sure you have provided a valid dotted path.'
+                        "Make sure you have provided a valid dotted path."
                     ),
-                    obj='Settings',
+                    obj="Settings",
                 )
             )
         except AssertionError:
             errors.append(
                 checks.Error(
-                    msg='Improperly Configured',
+                    msg="Improperly Configured",
                     hint=(
                         f'"{path}" does not subclasses '
                         '"django.contrib.admin.ModelAdmin". Only derivatives '
                         'ModelAdmin can be added in "OPENWISP_NOTIFICATIONS_IGNORE_ENABLED_ADMIN".'
                     ),
-                    obj='Settings',
+                    obj="Settings",
                 )
             )
     return errors

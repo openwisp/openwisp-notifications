@@ -31,7 +31,7 @@ class DetailsModel(models.Model):
 class Notification(DetailsModel, AbstractNotification):
     class Meta(AbstractNotification.Meta):
         abstract = False
-        app_label = 'sample_notifications'
+        app_label = "sample_notifications"
 
 
 class NotificationSetting(DetailsModel, AbstractNotificationSetting):
@@ -47,12 +47,12 @@ class IgnoreObjectNotification(DetailsModel, AbstractIgnoreObjectNotification):
 class TestApp(UUIDModel):
     name = models.CharField(max_length=50)
     organization = models.ForeignKey(
-        get_model_name('openwisp_users', 'Organization'),
+        get_model_name("openwisp_users", "Organization"),
         on_delete=models.CASCADE,
     )
 
     class Meta:
-        verbose_name = _('Test App')
+        verbose_name = _("Test App")
         verbose_name_plural = verbose_name
 
     def __str__(self):
@@ -72,7 +72,7 @@ class TestApp(UUIDModel):
                 test_app_name_changed.send(sender=self.__class__, instance=self)
 
 
-@receiver(post_save, sender=TestApp, dispatch_uid='test_app_object_created')
+@receiver(post_save, sender=TestApp, dispatch_uid="test_app_object_created")
 def test_app_model_notification(sender, instance, created, **kwargs):
     if created:
-        notify.send(sender=instance, type='object_created', target=instance)
+        notify.send(sender=instance, type="object_created", target=instance)

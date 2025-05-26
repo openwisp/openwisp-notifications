@@ -20,34 +20,34 @@ from openwisp_users.tests.test_api import AuthenticationMixin
 from openwisp_users.tests.utils import TestOrganizationMixin
 from openwisp_utils.tests import capture_any_output
 
-Notification = load_model('Notification')
-NotificationSetting = load_model('NotificationSetting')
-IgnoreObjectNotification = load_model('IgnoreObjectNotification')
+Notification = load_model("Notification")
+NotificationSetting = load_model("NotificationSetting")
+IgnoreObjectNotification = load_model("IgnoreObjectNotification")
 
-Organization = swapper_load_model('openwisp_users', 'Organization')
-OrganizationUser = swapper_load_model('openwisp_users', 'OrganizationUser')
+Organization = swapper_load_model("openwisp_users", "Organization")
+OrganizationUser = swapper_load_model("openwisp_users", "OrganizationUser")
 
 
 class TestNotificationApi(
     TransactionTestCase, TestOrganizationMixin, AuthenticationMixin
 ):
-    url_namespace = 'notifications'
+    url_namespace = "notifications"
 
     def setUp(self):
         self.admin = self._get_admin(self)
         if not Organization.objects.first():
-            self._create_org(name='default', slug='default')
+            self._create_org(name="default", slug="default")
         self.client.force_login(self.admin)
 
     def _get_path(self, url_name, *args, **kwargs):
-        path = reverse(f'{self.url_namespace}:{url_name}', args=args)
+        path = reverse(f"{self.url_namespace}:{url_name}", args=args)
         if not kwargs:
             return path
         query_params = []
         for key, value in kwargs.items():
-            query_params.append(f'{key}={value}')
-        query_string = '&'.join(query_params)
-        return f'{path}?{query_string}'
+            query_params.append(f"{key}={value}")
+        query_string = "&".join(query_params)
+        return f"{path}?{query_string}"
 
     def _create_ignore_obj_notification(self):
         org_user = self._get_org_user()
@@ -69,109 +69,109 @@ class TestNotificationApi(
 
     def test_list_notification_api(self):
         number_of_notifications = 21
-        url = reverse(f'{self.url_namespace}:notifications_list')
+        url = reverse(f"{self.url_namespace}:notifications_list")
         for _ in range(number_of_notifications):
-            notify.send(sender=self.admin, type='default', target=self.admin)
+            notify.send(sender=self.admin, type="default", target=self.admin)
 
         with self.subTest('Test "page" query in notification list view'):
             response = self.client.get(url)
             self.assertEqual(response.status_code, 200)
-            self.assertEqual(response.data['count'], number_of_notifications)
+            self.assertEqual(response.data["count"], number_of_notifications)
             self.assertIn(
-                self._get_path('notifications_list', page=2),
-                response.data['next'],
+                self._get_path("notifications_list", page=2),
+                response.data["next"],
             )
-            self.assertEqual(response.data['previous'], None)
-            self.assertEqual(len(response.data['results']), 20)
+            self.assertEqual(response.data["previous"], None)
+            self.assertEqual(len(response.data["results"]), 20)
 
-            next_response = self.client.get(response.data['next'])
+            next_response = self.client.get(response.data["next"])
             self.assertEqual(next_response.status_code, 200)
-            self.assertEqual(next_response.data['count'], number_of_notifications)
+            self.assertEqual(next_response.data["count"], number_of_notifications)
             self.assertEqual(
-                next_response.data['next'],
+                next_response.data["next"],
                 None,
             )
             self.assertIn(
-                self._get_path('notifications_list'),
-                next_response.data['previous'],
+                self._get_path("notifications_list"),
+                next_response.data["previous"],
             )
-            self.assertEqual(len(next_response.data['results']), 1)
+            self.assertEqual(len(next_response.data["results"]), 1)
 
         with self.subTest('Test "page_size" query'):
             page_size = 5
-            url = f'{url}?page_size={page_size}'
+            url = f"{url}?page_size={page_size}"
             response = self.client.get(url)
             self.assertEqual(response.status_code, 200)
-            self.assertEqual(response.data['count'], number_of_notifications)
+            self.assertEqual(response.data["count"], number_of_notifications)
             self.assertIn(
-                self._get_path('notifications_list', page=2, page_size=page_size),
-                response.data['next'],
+                self._get_path("notifications_list", page=2, page_size=page_size),
+                response.data["next"],
             )
-            self.assertEqual(response.data['previous'], None)
-            self.assertEqual(len(response.data['results']), page_size)
+            self.assertEqual(response.data["previous"], None)
+            self.assertEqual(len(response.data["results"]), page_size)
 
-            next_response = self.client.get(response.data['next'])
+            next_response = self.client.get(response.data["next"])
             self.assertEqual(next_response.status_code, 200)
-            self.assertEqual(next_response.data['count'], number_of_notifications)
+            self.assertEqual(next_response.data["count"], number_of_notifications)
             self.assertIn(
-                self._get_path('notifications_list', page=3, page_size=page_size),
-                next_response.data['next'],
+                self._get_path("notifications_list", page=3, page_size=page_size),
+                next_response.data["next"],
             )
             self.assertIn(
-                self._get_path('notifications_list', page_size=page_size),
-                next_response.data['previous'],
+                self._get_path("notifications_list", page_size=page_size),
+                next_response.data["previous"],
             )
-            self.assertEqual(len(next_response.data['results']), page_size)
+            self.assertEqual(len(next_response.data["results"]), page_size)
 
-        with self.subTest('Test individual result object'):
+        with self.subTest("Test individual result object"):
             response = self.client.get(url)
             self.assertEqual(response.status_code, 200)
-            n = response.data['results'][0]
-            self.assertIn('id', n)
-            self.assertIn('message', n)
-            self.assertTrue(n['unread'])
-            self.assertIn('target_url', n)
+            n = response.data["results"][0]
+            self.assertIn("id", n)
+            self.assertIn("message", n)
+            self.assertTrue(n["unread"])
+            self.assertIn("target_url", n)
             self.assertEqual(
-                n['email_subject'], '[example.com] Default Notification Subject'
+                n["email_subject"], "[example.com] Default Notification Subject"
             )
 
     def test_list_notification_filtering(self):
-        url = self._get_path('notifications_list')
-        notify.send(sender=self.admin, type='default', target=self.admin)
-        notify.send(sender=self.admin, type='default', target=self.admin)
+        url = self._get_path("notifications_list")
+        notify.send(sender=self.admin, type="default", target=self.admin)
+        notify.send(sender=self.admin, type="default", target=self.admin)
         # Mark one notification as read
         n_read = Notification.objects.first()
         n_read.mark_as_read()
 
-        with self.subTest('Test listing notifications without filters'):
+        with self.subTest("Test listing notifications without filters"):
             response = self.client.get(url)
             self.assertEqual(response.status_code, 200)
-            self.assertEqual(len(response.data['results']), 2)
+            self.assertEqual(len(response.data["results"]), 2)
 
-        with self.subTest('Test listing read notifications'):
-            read_url = f'{url}?unread=false'
+        with self.subTest("Test listing read notifications"):
+            read_url = f"{url}?unread=false"
             response = self.client.get(read_url)
             self.assertEqual(response.status_code, 200)
-            self.assertEqual(len(response.data['results']), 1)
-            n = response.data['results'].pop()
-            self.assertEqual(n['id'], str(n_read.id))
-            self.assertFalse(n['unread'])
+            self.assertEqual(len(response.data["results"]), 1)
+            n = response.data["results"].pop()
+            self.assertEqual(n["id"], str(n_read.id))
+            self.assertFalse(n["unread"])
 
-        with self.subTest('Test listing unread notifications'):
-            unread_url = f'{url}?unread=true'
+        with self.subTest("Test listing unread notifications"):
+            unread_url = f"{url}?unread=true"
             response = self.client.get(unread_url)
             self.assertEqual(response.status_code, 200)
-            self.assertEqual(len(response.data['results']), 1)
-            n = response.data['results'].pop()
-            self.assertNotEqual(n['id'], str(n_read.id))
-            self.assertTrue(n['unread'])
+            self.assertEqual(len(response.data["results"]), 1)
+            n = response.data["results"].pop()
+            self.assertNotEqual(n["id"], str(n_read.id))
+            self.assertTrue(n["unread"])
 
     def test_notifications_read_all_api(self):
         number_of_notifications = 2
         for _ in range(number_of_notifications):
-            notify.send(sender=self.admin, type='default', target=self.admin)
+            notify.send(sender=self.admin, type="default", target=self.admin)
 
-        url = self._get_path('notifications_read_all')
+        url = self._get_path("notifications_read_all")
         response = self.client.post(url)
         self.assertEqual(response.status_code, 200)
         self.assertIsNone(response.data)
@@ -180,36 +180,36 @@ class TestNotificationApi(
             self.assertFalse(n.unread)
 
     def test_retreive_notification_api(self):
-        notify.send(sender=self.admin, type='default', target=self.admin)
+        notify.send(sender=self.admin, type="default", target=self.admin)
         n = Notification.objects.first()
 
-        with self.subTest('Test for non-existing notification'):
-            url = self._get_path('notification_detail', uuid.uuid4())
+        with self.subTest("Test for non-existing notification"):
+            url = self._get_path("notification_detail", uuid.uuid4())
             response = self.client.get(url)
             self.assertEqual(response.status_code, 404)
 
-        with self.subTest('Test retrieving details for existing notification'):
-            url = self._get_path('notification_detail', n.pk)
+        with self.subTest("Test retrieving details for existing notification"):
+            url = self._get_path("notification_detail", n.pk)
             response = self.client.get(url)
             self.assertEqual(response.status_code, 200)
             data = response.data
-            self.assertEqual(data['id'], str(n.id))
-            self.assertEqual(data['message'], n.message)
-            self.assertEqual(data['email_subject'], n.email_subject)
-            self.assertEqual(data['unread'], n.unread)
+            self.assertEqual(data["id"], str(n.id))
+            self.assertEqual(data["message"], n.message)
+            self.assertEqual(data["email_subject"], n.email_subject)
+            self.assertEqual(data["unread"], n.unread)
 
     def test_read_single_notification_api(self):
-        notify.send(sender=self.admin, type='default', target=self.admin)
+        notify.send(sender=self.admin, type="default", target=self.admin)
         n = Notification.objects.first()
 
-        with self.subTest('Test for non-existing notification'):
-            url = self._get_path('notification_detail', uuid.uuid4())
+        with self.subTest("Test for non-existing notification"):
+            url = self._get_path("notification_detail", uuid.uuid4())
             response = self.client.patch(url)
             self.assertEqual(response.status_code, 404)
 
-        with self.subTest('Test for existing notification'):
+        with self.subTest("Test for existing notification"):
             self.assertTrue(n.unread)
-            url = self._get_path('notification_detail', n.pk)
+            url = self._get_path("notification_detail", n.pk)
             response = self.client.patch(url)
             self.assertEqual(response.status_code, 200)
             self.assertIsNone(response.data)
@@ -217,16 +217,16 @@ class TestNotificationApi(
             self.assertEqual(n.unread, False)
 
     def test_notification_delete_api(self):
-        notify.send(sender=self.admin, type='default', target=self.admin)
+        notify.send(sender=self.admin, type="default", target=self.admin)
         n = Notification.objects.first()
 
-        with self.subTest('Test for non-existing notification'):
-            url = self._get_path('notification_detail', uuid.uuid4())
+        with self.subTest("Test for non-existing notification"):
+            url = self._get_path("notification_detail", uuid.uuid4())
             response = self.client.delete(url)
             self.assertEqual(response.status_code, 404)
 
-        with self.subTest('Test for valid notification'):
-            url = self._get_path('notification_detail', n.pk)
+        with self.subTest("Test for valid notification"):
+            url = self._get_path("notification_detail", n.pk)
             response = self.client.delete(url)
             self.assertEqual(response.status_code, 204)
             self.assertIsNone(response.data)
@@ -234,91 +234,91 @@ class TestNotificationApi(
 
     def test_anonymous_user(self):
         response_data = {
-            'detail': ErrorDetail(
-                string='Authentication credentials were not provided.',
-                code='not_authenticated',
+            "detail": ErrorDetail(
+                string="Authentication credentials were not provided.",
+                code="not_authenticated",
             )
         }
 
         self.client.logout()
 
-        with self.subTest('Test for list notifications API'):
-            url = self._get_path('notifications_list')
+        with self.subTest("Test for list notifications API"):
+            url = self._get_path("notifications_list")
             response = self.client.get(url)
             self.assertEqual(response.status_code, 401)
             self.assertEqual(response.data, response_data)
 
-        with self.subTest('Test for notification detail API'):
-            url = self._get_path('notification_detail', uuid.uuid4())
+        with self.subTest("Test for notification detail API"):
+            url = self._get_path("notification_detail", uuid.uuid4())
             response = self.client.get(url)
             self.assertEqual(response.status_code, 401)
             self.assertEqual(response.data, response_data)
 
-    @patch('openwisp_notifications.tasks.delete_ignore_object_notification.apply_async')
+    @patch("openwisp_notifications.tasks.delete_ignore_object_notification.apply_async")
     def test_bearer_authentication(self, mocked_test):
         self.client.logout()
-        notify.send(sender=self.admin, type='default', target=self._get_org_user())
+        notify.send(sender=self.admin, type="default", target=self._get_org_user())
         n = Notification.objects.first()
         notification_setting = NotificationSetting.objects.exclude(
             organization=None
         ).first()
         notification_setting_count = NotificationSetting.objects.count()
-        token = self._obtain_auth_token(username='admin', password='tester')
+        token = self._obtain_auth_token(username="admin", password="tester")
 
-        with self.subTest('Test listing all notifications'):
-            url = self._get_path('notifications_list')
-            response = self.client.get(url, HTTP_AUTHORIZATION=f'Bearer {token}')
+        with self.subTest("Test listing all notifications"):
+            url = self._get_path("notifications_list")
+            response = self.client.get(url, HTTP_AUTHORIZATION=f"Bearer {token}")
             self.assertEqual(response.status_code, 200)
-            self.assertEqual(len(response.data['results']), 1)
+            self.assertEqual(len(response.data["results"]), 1)
 
-        with self.subTest('Test marking all notifications as read'):
-            url = self._get_path('notifications_read_all')
-            response = self.client.post(url, HTTP_AUTHORIZATION=f'Bearer {token}')
-            self.assertEqual(response.status_code, 200)
-            self.assertIsNone(response.data)
-
-        with self.subTest('Test retrieving notification'):
-            url = self._get_path('notification_detail', n.pk)
-            response = self.client.get(url, HTTP_AUTHORIZATION=f'Bearer {token}')
-            self.assertEqual(response.status_code, 200)
-            self.assertEqual(response.data['id'], str(n.id))
-
-        with self.subTest('Test marking a notification as read'):
-            url = self._get_path('notification_detail', n.pk)
-            response = self.client.patch(url, HTTP_AUTHORIZATION=f'Bearer {token}')
+        with self.subTest("Test marking all notifications as read"):
+            url = self._get_path("notifications_read_all")
+            response = self.client.post(url, HTTP_AUTHORIZATION=f"Bearer {token}")
             self.assertEqual(response.status_code, 200)
             self.assertIsNone(response.data)
 
-        with self.subTest('Test redirect read view'):
-            url = self._get_path('notification_read_redirect', n.pk)
-            response = self.client.get(url, HTTP_AUTHORIZATION=f'Bearer {token}')
+        with self.subTest("Test retrieving notification"):
+            url = self._get_path("notification_detail", n.pk)
+            response = self.client.get(url, HTTP_AUTHORIZATION=f"Bearer {token}")
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.data["id"], str(n.id))
+
+        with self.subTest("Test marking a notification as read"):
+            url = self._get_path("notification_detail", n.pk)
+            response = self.client.patch(url, HTTP_AUTHORIZATION=f"Bearer {token}")
+            self.assertEqual(response.status_code, 200)
+            self.assertIsNone(response.data)
+
+        with self.subTest("Test redirect read view"):
+            url = self._get_path("notification_read_redirect", n.pk)
+            response = self.client.get(url, HTTP_AUTHORIZATION=f"Bearer {token}")
             self.assertEqual(response.status_code, 302)
 
-        with self.subTest('Test deleting notification'):
-            url = self._get_path('notification_detail', n.pk)
-            response = self.client.delete(url, HTTP_AUTHORIZATION=f'Bearer {token}')
+        with self.subTest("Test deleting notification"):
+            url = self._get_path("notification_detail", n.pk)
+            response = self.client.delete(url, HTTP_AUTHORIZATION=f"Bearer {token}")
             self.assertEqual(response.status_code, 204)
             self.assertIsNone(response.data)
 
-        with self.subTest('Test listing notification settings'):
-            url = self._get_path('notification_setting_list')
-            response = self.client.get(url, HTTP_AUTHORIZATION=f'Bearer {token}')
+        with self.subTest("Test listing notification settings"):
+            url = self._get_path("notification_setting_list")
+            response = self.client.get(url, HTTP_AUTHORIZATION=f"Bearer {token}")
             self.assertEqual(response.status_code, 200)
-            self.assertEqual(len(response.data['results']), notification_setting_count)
+            self.assertEqual(len(response.data["results"]), notification_setting_count)
 
-        with self.subTest('Test retrieving notification setting'):
-            url = self._get_path('notification_setting', notification_setting.pk)
-            response = self.client.get(url, HTTP_AUTHORIZATION=f'Bearer {token}')
+        with self.subTest("Test retrieving notification setting"):
+            url = self._get_path("notification_setting", notification_setting.pk)
+            response = self.client.get(url, HTTP_AUTHORIZATION=f"Bearer {token}")
             self.assertEqual(response.status_code, 200)
-            self.assertEqual(response.data['id'], str(notification_setting.id))
+            self.assertEqual(response.data["id"], str(notification_setting.id))
 
-        with self.subTest('Test updating notification setting'):
-            url = self._get_path('notification_setting', notification_setting.pk)
+        with self.subTest("Test updating notification setting"):
+            url = self._get_path("notification_setting", notification_setting.pk)
             response = self.client.put(
                 url,
-                data={'web': False},
-                content_type='application/json',
-                HTTP_AUTHORIZATION=f'Bearer {token}',
+                data={"web": False},
+                content_type="application/json",
+                HTTP_AUTHORIZATION=f"Bearer {token}",
             )
             self.assertEqual(response.status_code, 200)
             self.assertIsNotNone(response.data)
@@ -330,57 +330,57 @@ class TestNotificationApi(
             obj_id,
         ) = self._create_ignore_obj_notification()
 
-        with self.subTest('Test listing object notifications'):
-            url = self._get_path('ignore_object_notification_list')
-            response = self.client.get(url, HTTP_AUTHORIZATION=f'Bearer {token}')
+        with self.subTest("Test listing object notifications"):
+            url = self._get_path("ignore_object_notification_list")
+            response = self.client.get(url, HTTP_AUTHORIZATION=f"Bearer {token}")
             self.assertEqual(response.status_code, 200)
-            self.assertEqual(len(response.data['results']), 1)
+            self.assertEqual(len(response.data["results"]), 1)
 
-        with self.subTest('Test retrieving ignore_obj_notification'):
+        with self.subTest("Test retrieving ignore_obj_notification"):
             url = self._get_path(
-                'ignore_object_notification', obj_app_label, obj_model_name, obj_id
+                "ignore_object_notification", obj_app_label, obj_model_name, obj_id
             )
-            response = self.client.get(url, HTTP_AUTHORIZATION=f'Bearer {token}')
+            response = self.client.get(url, HTTP_AUTHORIZATION=f"Bearer {token}")
             self.assertEqual(response.status_code, 200)
-            self.assertEqual(response.data['object_id'], str(obj_id))
+            self.assertEqual(response.data["object_id"], str(obj_id))
 
-        with self.subTest('Test creating notification setting'):
+        with self.subTest("Test creating notification setting"):
             url = self._get_path(
-                'ignore_object_notification', obj_app_label, obj_model_name, obj_id
+                "ignore_object_notification", obj_app_label, obj_model_name, obj_id
             )
             response = self.client.put(
                 url,
-                HTTP_AUTHORIZATION=f'Bearer {token}',
+                HTTP_AUTHORIZATION=f"Bearer {token}",
             )
             self.assertEqual(response.status_code, 200)
-            self.assertIn('id', response.data)
+            self.assertIn("id", response.data)
 
-        with self.subTest('Test deleting ignore_obj_notification'):
+        with self.subTest("Test deleting ignore_obj_notification"):
             url = self._get_path(
-                'ignore_object_notification', obj_app_label, obj_model_name, obj_id
+                "ignore_object_notification", obj_app_label, obj_model_name, obj_id
             )
-            response = self.client.delete(url, HTTP_AUTHORIZATION=f'Bearer {token}')
+            response = self.client.delete(url, HTTP_AUTHORIZATION=f"Bearer {token}")
             self.assertEqual(response.status_code, 204)
 
     def test_notification_recipients(self):
         # Tests user can only interact with notifications assigned to them
         self.client.logout()
-        joe = self._create_user(username='joe', email='joe@joe.com')
-        karen = self._create_user(username='karen', email='karen@karen.com')
-        notify.send(sender=self.admin, type='default', recipient=karen)
+        joe = self._create_user(username="joe", email="joe@joe.com")
+        karen = self._create_user(username="karen", email="karen@karen.com")
+        notify.send(sender=self.admin, type="default", recipient=karen)
         n = Notification.objects.first()
         self.client.force_login(joe)
 
-        with self.subTest('Test listing all notifications'):
-            url = self._get_path('notifications_list')
+        with self.subTest("Test listing all notifications"):
+            url = self._get_path("notifications_list")
             response = self.client.get(url)
             self.assertEqual(response.status_code, 200)
-            self.assertEqual(response.data['count'], 0)
-            self.assertEqual(len(response.data['results']), 0)
-            self.assertEqual(response.data['next'], None)
+            self.assertEqual(response.data["count"], 0)
+            self.assertEqual(len(response.data["results"]), 0)
+            self.assertEqual(response.data["next"], None)
 
-        with self.subTest('Test marking all notifications as read'):
-            url = self._get_path('notifications_read_all')
+        with self.subTest("Test marking all notifications as read"):
+            url = self._get_path("notifications_read_all")
             response = self.client.post(url)
             self.assertEqual(response.status_code, 200)
             self.assertIsNone(response.data)
@@ -388,21 +388,21 @@ class TestNotificationApi(
             n.refresh_from_db()
             self.assertTrue(n.unread)
 
-        with self.subTest('Test retrieving notification'):
-            url = self._get_path('notification_detail', n.pk)
+        with self.subTest("Test retrieving notification"):
+            url = self._get_path("notification_detail", n.pk)
             response = self.client.get(url)
             self.assertEqual(response.status_code, 404)
 
-        with self.subTest('Test marking a notification as read'):
-            url = self._get_path('notification_detail', n.pk)
+        with self.subTest("Test marking a notification as read"):
+            url = self._get_path("notification_detail", n.pk)
             response = self.client.patch(url)
             self.assertEqual(response.status_code, 404)
             # Check Karen's notification is still unread
             n.refresh_from_db()
             self.assertTrue(n.unread)
 
-        with self.subTest('Test deleting notification'):
-            url = self._get_path('notification_detail', n.pk)
+        with self.subTest("Test deleting notification"):
+            url = self._get_path("notification_detail", n.pk)
             response = self.client.delete(url)
             self.assertEqual(response.status_code, 404)
             # Check Karen's notification is not deleted
@@ -410,53 +410,53 @@ class TestNotificationApi(
 
     def test_list_view_notification_cache(self):
         number_of_notifications = 5
-        url = self._get_path('notifications_list', page_size=number_of_notifications)
+        url = self._get_path("notifications_list", page_size=number_of_notifications)
         operator = self._get_operator()
         for _ in range(number_of_notifications):
-            notify.send(sender=self.admin, type='default', target=operator)
+            notify.send(sender=self.admin, type="default", target=operator)
 
         with self.assertNumQueries(3):
             response = self.client.get(url)
             self.assertEqual(response.status_code, 200)
-            self.assertEqual(response.data['count'], number_of_notifications)
+            self.assertEqual(response.data["count"], number_of_notifications)
 
     @capture_any_output()
     @mock_notification_types
     def test_malformed_notifications(self):
         test_type = {
-            'verbose_name': 'Test Notification Type',
-            'level': 'warning',
-            'verb': 'testing',
-            'message': '{notification.actor.random}',
-            'email_subject': '[{site.name}] {notification.actor.random}',
+            "verbose_name": "Test Notification Type",
+            "level": "warning",
+            "verb": "testing",
+            "message": "{notification.actor.random}",
+            "email_subject": "[{site.name}] {notification.actor.random}",
         }
-        register_notification_type('test_type', test_type)
+        register_notification_type("test_type", test_type)
 
-        with self.subTest('Test list notifications'):
-            notify.send(sender=self.admin, type='default')
-            notify.send(sender=self.admin, type='test_type')
-            url = self._get_path('notifications_list')
+        with self.subTest("Test list notifications"):
+            notify.send(sender=self.admin, type="default")
+            notify.send(sender=self.admin, type="test_type")
+            url = self._get_path("notifications_list")
             response = self.client.get(url)
             self.assertEqual(response.status_code, 200)
-            self.assertEqual(response.data['count'], 1)
+            self.assertEqual(response.data["count"], 1)
             self.assertEqual(
-                response.data['next'],
+                response.data["next"],
                 None,
             )
-            self.assertEqual(response.data['previous'], None)
-            self.assertEqual(len(response.data['results']), 1)
+            self.assertEqual(response.data["previous"], None)
+            self.assertEqual(len(response.data["results"]), 1)
 
-        with self.subTest('Test retrieve notification'):
+        with self.subTest("Test retrieve notification"):
             [(_, [n])] = notify.send(
-                sender=self.admin, type='test_type', target=self._get_org_user()
+                sender=self.admin, type="test_type", target=self._get_org_user()
             )
-            url = self._get_path('notification_detail', n.pk)
+            url = self._get_path("notification_detail", n.pk)
             response = self.client.get(url)
             self.assertEqual(response.status_code, 404)
 
     @capture_any_output()
     @mock_notification_types
-    @patch('openwisp_notifications.tasks.delete_obsolete_objects.delay')
+    @patch("openwisp_notifications.tasks.delete_obsolete_objects.delay")
     def test_obsolete_notifications_busy_worker(self, mocked_task):
         """
         This test simulates deletion of related object when all celery
@@ -464,18 +464,18 @@ class TestNotificationApi(
         """
         operator = self._get_operator()
         test_type = {
-            'verbose_name': 'Test Notification Type',
-            'level': 'warning',
-            'verb': 'testing',
-            'message': 'Test notification for {notification.target.pk}',
-            'email_subject': '[{site.name}] {notification.target.pk}',
+            "verbose_name": "Test Notification Type",
+            "level": "warning",
+            "verb": "testing",
+            "message": "Test notification for {notification.target.pk}",
+            "email_subject": "[{site.name}] {notification.target.pk}",
         }
-        register_notification_type('test_type', test_type)
+        register_notification_type("test_type", test_type)
 
-        notify.send(sender=self.admin, type='test_type', target=operator)
+        notify.send(sender=self.admin, type="test_type", target=operator)
         notification = Notification.objects.first()
         self.assertEqual(
-            notification.message, f'<p>Test notification for {operator.pk}</p>'
+            notification.message, f"<p>Test notification for {operator.pk}</p>"
         )
         operator.delete()
         notification.refresh_from_db()
@@ -487,147 +487,147 @@ class TestNotificationApi(
         cache.delete(cache_key)
         self.assertIsNone(cache.get(cache_key))
 
-        with self.subTest('Test list notifications'):
-            url = self._get_path('notifications_list')
+        with self.subTest("Test list notifications"):
+            url = self._get_path("notifications_list")
             response = self.client.get(url)
             self.assertEqual(response.status_code, 200)
-            self.assertEqual(response.data['count'], 1)
-            self.assertFalse(response.data['results'])
+            self.assertEqual(response.data["count"], 1)
+            self.assertFalse(response.data["results"])
 
-        with self.subTest('Test retrieve notification'):
-            url = self._get_path('notification_read_redirect', notification.pk)
+        with self.subTest("Test retrieve notification"):
+            url = self._get_path("notification_read_redirect", notification.pk)
             response = self.client.get(url)
             self.assertEqual(response.status_code, 404)
 
     def test_notification_setting_list_api(self):
         self._create_org_user(is_admin=True)
         number_of_settings = NotificationSetting.objects.filter(user=self.admin).count()
-        url = self._get_path('notification_setting_list')
+        url = self._get_path("notification_setting_list")
 
-        with self.subTest('Test notification setting list view'):
+        with self.subTest("Test notification setting list view"):
             response = self.client.get(url)
             self.assertEqual(response.status_code, 200)
-            self.assertEqual(response.data['count'], number_of_settings)
+            self.assertEqual(response.data["count"], number_of_settings)
             self.assertEqual(
-                response.data['next'],
+                response.data["next"],
                 None,
             )
-            self.assertEqual(response.data['previous'], None)
-            self.assertEqual(len(response.data['results']), number_of_settings)
+            self.assertEqual(response.data["previous"], None)
+            self.assertEqual(len(response.data["results"]), number_of_settings)
 
         with self.subTest('Test "page_size" query'):
             page_size = 2
-            url = f'{url}?page_size={page_size}'
+            url = f"{url}?page_size={page_size}"
             response = self.client.get(url)
             self.assertEqual(response.status_code, 200)
-            self.assertEqual(response.data['count'], number_of_settings)
+            self.assertEqual(response.data["count"], number_of_settings)
             self.assertIn(
                 self._get_path(
-                    'notification_setting_list', page=2, page_size=page_size
+                    "notification_setting_list", page=2, page_size=page_size
                 ),
-                response.data['next'],
+                response.data["next"],
             )
-            self.assertEqual(response.data['previous'], None)
-            self.assertEqual(len(response.data['results']), page_size)
+            self.assertEqual(response.data["previous"], None)
+            self.assertEqual(len(response.data["results"]), page_size)
 
-            next_response = self.client.get(response.data['next'])
+            next_response = self.client.get(response.data["next"])
             self.assertEqual(next_response.status_code, 200)
-            self.assertEqual(next_response.data['count'], number_of_settings)
+            self.assertEqual(next_response.data["count"], number_of_settings)
             self.assertIn(
-                self._get_path('notification_setting_list', page_size=page_size),
-                next_response.data['previous'],
+                self._get_path("notification_setting_list", page_size=page_size),
+                next_response.data["previous"],
             )
-            self.assertEqual(len(next_response.data['results']), page_size)
-            if NotificationSetting._meta.app_label == 'sample_notifications':
+            self.assertEqual(len(next_response.data["results"]), page_size)
+            if NotificationSetting._meta.app_label == "sample_notifications":
                 self.assertIn(
                     self._get_path(
-                        'notification_setting_list', page=3, page_size=page_size
+                        "notification_setting_list", page=3, page_size=page_size
                     ),
-                    next_response.data['next'],
+                    next_response.data["next"],
                 )
             else:
-                self.assertIsNotNone(next_response.data['next'])
+                self.assertIsNotNone(next_response.data["next"])
 
-        with self.subTest('Test individual result object'):
+        with self.subTest("Test individual result object"):
             response = self.client.get(url)
             self.assertEqual(response.status_code, 200)
-            notification_setting = response.data['results'][0]
-            self.assertIn('id', notification_setting)
-            self.assertTrue(notification_setting['web'])
-            self.assertTrue(notification_setting['email'])
-            self.assertIn('organization', notification_setting)
+            notification_setting = response.data["results"][0]
+            self.assertIn("id", notification_setting)
+            self.assertTrue(notification_setting["web"])
+            self.assertTrue(notification_setting["email"])
+            self.assertIn("organization", notification_setting)
 
     def test_list_notification_setting_filtering(self):
-        url = self._get_path('notification_setting_list')
+        url = self._get_path("notification_setting_list")
         tester = self._create_administrator(
-            organizations=[self._get_org(org_name='default')]
+            organizations=[self._get_org(org_name="default")]
         )
 
-        with self.subTest('Test listing notification setting without filters'):
+        with self.subTest("Test listing notification setting without filters"):
             count = NotificationSetting.objects.filter(user=self.admin).count()
             response = self.client.get(url)
             self.assertEqual(response.status_code, 200)
-            self.assertEqual(len(response.data['results']), count)
+            self.assertEqual(len(response.data["results"]), count)
 
         with self.subTest('Test listing notification setting for "default" org'):
             org = Organization.objects.first()
             count = NotificationSetting.objects.filter(
                 user=self.admin, organization_id=org.id
             ).count()
-            org_url = f'{url}?organization={org.id}'
+            org_url = f"{url}?organization={org.id}"
             response = self.client.get(org_url)
             self.assertEqual(response.status_code, 200)
-            self.assertEqual(len(response.data['results']), count)
-            ns = response.data['results'].pop()
-            self.assertEqual(ns['organization'], org.id)
+            self.assertEqual(len(response.data["results"]), count)
+            ns = response.data["results"].pop()
+            self.assertEqual(ns["organization"], org.id)
 
         with self.subTest('Test listing notification setting for "default" org slug'):
             org = Organization.objects.first()
             count = NotificationSetting.objects.filter(
                 user=self.admin, organization=org
             ).count()
-            org_slug_url = f'{url}?organization_slug={org.slug}'
+            org_slug_url = f"{url}?organization_slug={org.slug}"
             response = self.client.get(org_slug_url)
             self.assertEqual(response.status_code, 200)
-            self.assertEqual(len(response.data['results']), count)
-            ns = response.data['results'].pop()
-            self.assertEqual(ns['organization'], org.id)
+            self.assertEqual(len(response.data["results"]), count)
+            ns = response.data["results"].pop()
+            self.assertEqual(ns["organization"], org.id)
 
         with self.subTest('Test listing notification for "default" type'):
-            type_url = f'{url}?type=default'
+            type_url = f"{url}?type=default"
             response = self.client.get(type_url)
             self.assertEqual(response.status_code, 200)
-            self.assertEqual(len(response.data['results']), 1)
-            ns = response.data['results'].pop()
-            self.assertEqual(ns['type'], 'default')
+            self.assertEqual(len(response.data["results"]), 1)
+            ns = response.data["results"].pop()
+            self.assertEqual(ns["type"], "default")
 
-        with self.subTest('Test without authenticated'):
+        with self.subTest("Test without authenticated"):
             self.client.logout()
-            user_url = self._get_path('user_notification_setting_list', tester.pk)
+            user_url = self._get_path("user_notification_setting_list", tester.pk)
             response = self.client.get(user_url)
             self.assertEqual(response.status_code, 401)
 
-        with self.subTest('Test filtering by user_id as admin'):
+        with self.subTest("Test filtering by user_id as admin"):
             self.client.force_login(self.admin)
-            user_url = self._get_path('user_notification_setting_list', tester.pk)
+            user_url = self._get_path("user_notification_setting_list", tester.pk)
             response = self.client.get(user_url)
             self.assertEqual(response.status_code, 200)
 
-        with self.subTest('Test with user_id by user_id as the same user'):
+        with self.subTest("Test with user_id by user_id as the same user"):
             self.client.force_login(tester)
-            user_url = self._get_path('user_notification_setting_list', tester.pk)
+            user_url = self._get_path("user_notification_setting_list", tester.pk)
             response = self.client.get(user_url)
             self.assertEqual(response.status_code, 200)
 
-        with self.subTest('Test with user_id as a different non-admin user'):
+        with self.subTest("Test with user_id as a different non-admin user"):
             self.client.force_login(tester)
-            user_url = self._get_path('user_notification_setting_list', self.admin.pk)
+            user_url = self._get_path("user_notification_setting_list", self.admin.pk)
             response = self.client.get(user_url)
             self.assertEqual(response.status_code, 403)
 
     def test_retreive_notification_setting_api(self):
         tester = self._create_administrator(
-            organizations=[self._get_org(org_name='default')]
+            organizations=[self._get_org(org_name="default")]
         )
         notification_setting = NotificationSetting.objects.filter(
             user=self.admin, organization__isnull=False
@@ -636,61 +636,61 @@ class TestNotificationApi(
             user=tester, organization__isnull=False
         ).first()
 
-        with self.subTest('Test for non-existing notification setting'):
-            url = self._get_path('notification_setting', uuid.uuid4())
+        with self.subTest("Test for non-existing notification setting"):
+            url = self._get_path("notification_setting", uuid.uuid4())
             response = self.client.get(url)
             self.assertEqual(response.status_code, 404)
 
-        with self.subTest('Test retrieving details for existing notification setting'):
+        with self.subTest("Test retrieving details for existing notification setting"):
             url = self._get_path(
-                'notification_setting',
+                "notification_setting",
                 notification_setting.pk,
             )
             with self.assertNumQueries(3):
                 response = self.client.get(url)
             self.assertEqual(response.status_code, 200)
             data = response.data
-            self.assertEqual(data['id'], str(notification_setting.id))
-            self.assertEqual(data['organization'], notification_setting.organization.pk)
-            self.assertEqual(data['web'], notification_setting.web_notification)
-            self.assertEqual(data['email'], notification_setting.email_notification)
+            self.assertEqual(data["id"], str(notification_setting.id))
+            self.assertEqual(data["organization"], notification_setting.organization.pk)
+            self.assertEqual(data["web"], notification_setting.web_notification)
+            self.assertEqual(data["email"], notification_setting.email_notification)
 
         with self.subTest(
-            'Test retrieving details for existing notification setting as admin'
+            "Test retrieving details for existing notification setting as admin"
         ):
             url = self._get_path(
-                'user_notification_setting', tester.pk, tester_notification_setting.pk
+                "user_notification_setting", tester.pk, tester_notification_setting.pk
             )
             response = self.client.get(url)
             self.assertEqual(response.status_code, 200)
             data = response.data
-            self.assertEqual(data['id'], str(tester_notification_setting.id))
+            self.assertEqual(data["id"], str(tester_notification_setting.id))
 
         with self.subTest(
-            'Test retrieving details for existing notification setting as the same user'
+            "Test retrieving details for existing notification setting as the same user"
         ):
             self.client.force_login(tester)
             url = self._get_path(
-                'user_notification_setting', tester.pk, tester_notification_setting.pk
+                "user_notification_setting", tester.pk, tester_notification_setting.pk
             )
             response = self.client.get(url)
             self.assertEqual(response.status_code, 200)
             data = response.data
-            self.assertEqual(data['id'], str(tester_notification_setting.id))
+            self.assertEqual(data["id"], str(tester_notification_setting.id))
 
         with self.subTest(
-            'Test retrieving details for existing notification setting as different non-admin user'
+            "Test retrieving details for existing notification setting as different non-admin user"
         ):
             self.client.force_login(tester)
             url = self._get_path(
-                'user_notification_setting', self.admin.pk, notification_setting.pk
+                "user_notification_setting", self.admin.pk, notification_setting.pk
             )
             response = self.client.get(url)
             self.assertEqual(response.status_code, 403)
 
     def test_update_notification_setting_api(self):
         tester = self._create_administrator(
-            organizations=[self._get_org(org_name='default')]
+            organizations=[self._get_org(org_name="default")]
         )
         notification_setting = NotificationSetting.objects.filter(
             user=self.admin, organization__isnull=False
@@ -698,77 +698,77 @@ class TestNotificationApi(
         tester_notification_setting = NotificationSetting.objects.filter(
             user=tester, organization__isnull=False
         ).first()
-        update_data = {'web': False}
+        update_data = {"web": False}
 
-        with self.subTest('Test for non-existing notification setting'):
-            url = self._get_path('notification_setting', uuid.uuid4())
+        with self.subTest("Test for non-existing notification setting"):
+            url = self._get_path("notification_setting", uuid.uuid4())
             response = self.client.put(url, data=update_data)
             self.assertEqual(response.status_code, 404)
 
-        with self.subTest('Test updating details for existing notification setting'):
+        with self.subTest("Test updating details for existing notification setting"):
             url = self._get_path(
-                'notification_setting',
+                "notification_setting",
                 notification_setting.pk,
             )
             response = self.client.put(
-                url, update_data, content_type='application/json'
+                url, update_data, content_type="application/json"
             )
             self.assertEqual(response.status_code, 200)
             data = response.data
             notification_setting.refresh_from_db()
-            self.assertEqual(data['id'], str(notification_setting.id))
-            self.assertEqual(data['organization'], notification_setting.organization.pk)
-            self.assertEqual(data['web'], notification_setting.web)
-            self.assertEqual(data['email'], notification_setting.email)
+            self.assertEqual(data["id"], str(notification_setting.id))
+            self.assertEqual(data["organization"], notification_setting.organization.pk)
+            self.assertEqual(data["web"], notification_setting.web)
+            self.assertEqual(data["email"], notification_setting.email)
 
         with self.subTest(
-            'Test updating details for existing notification setting as admin'
+            "Test updating details for existing notification setting as admin"
         ):
             url = self._get_path(
-                'user_notification_setting', tester.pk, tester_notification_setting.pk
+                "user_notification_setting", tester.pk, tester_notification_setting.pk
             )
             response = self.client.put(
-                url, update_data, content_type='application/json'
+                url, update_data, content_type="application/json"
             )
             self.assertEqual(response.status_code, 200)
             data = response.data
             tester_notification_setting.refresh_from_db()
-            self.assertEqual(data['id'], str(tester_notification_setting.id))
+            self.assertEqual(data["id"], str(tester_notification_setting.id))
             self.assertEqual(
-                data['organization'], tester_notification_setting.organization.pk
+                data["organization"], tester_notification_setting.organization.pk
             )
-            self.assertEqual(data['web'], tester_notification_setting.web)
-            self.assertEqual(data['email'], tester_notification_setting.email)
+            self.assertEqual(data["web"], tester_notification_setting.web)
+            self.assertEqual(data["email"], tester_notification_setting.email)
 
         with self.subTest(
-            'Test updating details for existing notification setting as the same user'
+            "Test updating details for existing notification setting as the same user"
         ):
             self.client.force_login(tester)
             url = self._get_path(
-                'user_notification_setting', tester.pk, tester_notification_setting.pk
+                "user_notification_setting", tester.pk, tester_notification_setting.pk
             )
             response = self.client.put(
-                url, update_data, content_type='application/json'
+                url, update_data, content_type="application/json"
             )
             self.assertEqual(response.status_code, 200)
             data = response.data
             tester_notification_setting.refresh_from_db()
-            self.assertEqual(data['id'], str(tester_notification_setting.id))
+            self.assertEqual(data["id"], str(tester_notification_setting.id))
             self.assertEqual(
-                data['organization'], tester_notification_setting.organization.pk
+                data["organization"], tester_notification_setting.organization.pk
             )
-            self.assertEqual(data['web'], tester_notification_setting.web)
-            self.assertEqual(data['email'], tester_notification_setting.email)
+            self.assertEqual(data["web"], tester_notification_setting.web)
+            self.assertEqual(data["email"], tester_notification_setting.email)
 
         with self.subTest(
-            'Test updating details for existing notification setting as a different non-admin user'
+            "Test updating details for existing notification setting as a different non-admin user"
         ):
             self.client.force_login(tester)
             url = self._get_path(
-                'user_notification_setting', self.admin.pk, notification_setting.pk
+                "user_notification_setting", self.admin.pk, notification_setting.pk
             )
             response = self.client.put(
-                url, update_data, content_type='application/json'
+                url, update_data, content_type="application/json"
             )
             self.assertEqual(response.status_code, 403)
 
@@ -777,16 +777,16 @@ class TestNotificationApi(
             notification.unread = True
             notification.save()
 
-        notify.send(sender=self.admin, type='default', target=self.admin)
+        notify.send(sender=self.admin, type="default", target=self.admin)
         notification = Notification.objects.first()
 
-        with self.subTest('Test non-existent notification'):
-            url = self._get_path('notification_read_redirect', uuid.uuid4())
+        with self.subTest("Test non-existent notification"):
+            url = self._get_path("notification_read_redirect", uuid.uuid4())
             response = self.client.get(url)
             self.assertEqual(response.status_code, 404)
 
-        with self.subTest('Test existent notification'):
-            url = self._get_path('notification_read_redirect', notification.pk)
+        with self.subTest("Test existent notification"):
+            url = self._get_path("notification_read_redirect", notification.pk)
             response = self.client.get(url)
             self.assertEqual(response.status_code, 302)
             self.assertEqual(response.url, notification.target_url)
@@ -795,23 +795,23 @@ class TestNotificationApi(
 
         _unread_notification(notification)
 
-        with self.subTest('Test user not logged in'):
+        with self.subTest("Test user not logged in"):
             self.client.logout()
-            url = self._get_path('notification_read_redirect', notification.pk)
+            url = self._get_path("notification_read_redirect", notification.pk)
             response = self.client.get(url)
             self.assertEqual(response.status_code, 302)
             self.assertEqual(
                 response.url,
-                '{view}?next={url}'.format(view=reverse('admin:login'), url=url),
+                "{view}?next={url}".format(view=reverse("admin:login"), url=url),
             )
 
     def test_organization_notification_setting_update(self):
         tester = self._create_user()
         org = Organization.objects.first()
 
-        with self.subTest('Test for current user'):
+        with self.subTest("Test for current user"):
             url = self._get_path(
-                'organization_notification_setting', self.admin.pk, org.pk
+                "organization_notification_setting", self.admin.pk, org.pk
             )
             NotificationSetting.objects.filter(
                 user=self.admin, organization_id=org.pk
@@ -819,7 +819,7 @@ class TestNotificationApi(
             org_setting_count = NotificationSetting.objects.filter(
                 user=self.admin, organization_id=org.pk
             ).count()
-            response = self.client.post(url, data={'web': True, 'email': True})
+            response = self.client.post(url, data={"web": True, "email": True})
             self.assertEqual(response.status_code, 200)
             self.assertEqual(
                 NotificationSetting.objects.filter(
@@ -828,31 +828,31 @@ class TestNotificationApi(
                 org_setting_count,
             )
 
-        with self.subTest('Test for non-admin user'):
+        with self.subTest("Test for non-admin user"):
             self.client.force_login(tester)
             url = self._get_path(
-                'organization_notification_setting',
+                "organization_notification_setting",
                 self.admin.pk,
                 org.pk,
             )
-            response = self.client.post(url, data={'web': True, 'email': True})
+            response = self.client.post(url, data={"web": True, "email": True})
             self.assertEqual(response.status_code, 403)
 
-        with self.subTest('Test with invalid data'):
+        with self.subTest("Test with invalid data"):
             self.client.force_login(self.admin)
             url = self._get_path(
-                'organization_notification_setting',
+                "organization_notification_setting",
                 self.admin.pk,
                 org.pk,
             )
-            response = self.client.post(url, data={'web': 'invalid'})
+            response = self.client.post(url, data={"web": "invalid"})
             self.assertEqual(response.status_code, 400)
 
         with self.subTest(
-            'Test email to False while keeping one of email notification setting to true'
+            "Test email to False while keeping one of email notification setting to true"
         ):
             url = self._get_path(
-                'organization_notification_setting',
+                "organization_notification_setting",
                 self.admin.pk,
                 org.pk,
             )
@@ -863,10 +863,10 @@ class TestNotificationApi(
 
             # Set the default type notification setting's email to True
             NotificationSetting.objects.filter(
-                user=self.admin, organization_id=org.pk, type='default'
+                user=self.admin, organization_id=org.pk, type="default"
             ).update(email=True)
 
-            response = self.client.post(url, data={'web': True, 'email': False})
+            response = self.client.post(url, data={"web": True, "email": False})
 
             self.assertFalse(
                 NotificationSetting.objects.filter(
@@ -874,9 +874,9 @@ class TestNotificationApi(
                 ).exists()
             )
 
-        with self.subTest('Test web to False'):
+        with self.subTest("Test web to False"):
             url = self._get_path(
-                'organization_notification_setting',
+                "organization_notification_setting",
                 self.admin.pk,
                 org.pk,
             )
@@ -885,7 +885,7 @@ class TestNotificationApi(
                 user=self.admin, organization_id=org.pk
             ).update(web=True, email=True)
 
-            response = self.client.post(url, data={'web': False})
+            response = self.client.post(url, data={"web": False})
 
             self.assertFalse(
                 NotificationSetting.objects.filter(
@@ -893,9 +893,9 @@ class TestNotificationApi(
                 ).exists()
             )
 
-        with self.subTest('Test email set to False and email not provided'):
+        with self.subTest("Test email set to False and email not provided"):
             url = self._get_path(
-                'organization_notification_setting',
+                "organization_notification_setting",
                 self.admin.pk,
                 org.pk,
             )
@@ -906,7 +906,7 @@ class TestNotificationApi(
 
             # POST data with web=False and omit email
             response = self.client.post(
-                url, data={'web': False}, content_type='application/json'
+                url, data={"web": False}, content_type="application/json"
             )
             self.assertEqual(response.status_code, 200)
 
@@ -922,21 +922,21 @@ class TestNotificationApi(
                 ).exists()
             )
 
-    @patch('openwisp_notifications.tasks.delete_ignore_object_notification.apply_async')
+    @patch("openwisp_notifications.tasks.delete_ignore_object_notification.apply_async")
     def test_create_ignore_obj_notification_api(self, mocked_task):
         org_user = self._get_org_user()
         org_user_content_type_id = ContentType.objects.get_for_model(
             org_user._meta.model
         ).pk
         url = self._get_path(
-            'ignore_object_notification',
+            "ignore_object_notification",
             org_user._meta.app_label,
             org_user._meta.model_name,
             org_user.pk,
         )
 
         response = self.client.put(
-            url, data={'valid_till': TEST_DATETIME}, content_type='application/json'
+            url, data={"valid_till": TEST_DATETIME}, content_type="application/json"
         )
         self.assertEqual(response.status_code, 201)
         self.assertEqual(IgnoreObjectNotification.objects.count(), 1)
@@ -949,7 +949,7 @@ class TestNotificationApi(
         )
         self.assertEqual(ignore_obj_notification.valid_till, TEST_DATETIME)
 
-    @patch('openwisp_notifications.tasks.delete_ignore_object_notification.apply_async')
+    @patch("openwisp_notifications.tasks.delete_ignore_object_notification.apply_async")
     def test_update_ignore_obj_notification_api(self, mocked_task):
         (
             obj_notification,
@@ -961,18 +961,18 @@ class TestNotificationApi(
 
         valid_till = datetime(2020, 8, 31, 0, 0, 0, 0, timezone.get_default_timezone())
         url = self._get_path(
-            'ignore_object_notification', obj_app_label, obj_model_name, obj_id
+            "ignore_object_notification", obj_app_label, obj_model_name, obj_id
         )
 
         response = self.client.put(
-            url, data={'valid_till': valid_till}, content_type='application/json'
+            url, data={"valid_till": valid_till}, content_type="application/json"
         )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(IgnoreObjectNotification.objects.count(), 1)
         ignore_obj_notification = IgnoreObjectNotification.objects.first()
         self.assertEqual(ignore_obj_notification.valid_till, valid_till)
 
-    @patch('openwisp_notifications.tasks.delete_ignore_object_notification.apply_async')
+    @patch("openwisp_notifications.tasks.delete_ignore_object_notification.apply_async")
     def test_delete_ignore_obj_notification_api(self, mocked_task):
         (
             obj_notification,
@@ -981,9 +981,9 @@ class TestNotificationApi(
             obj_id,
         ) = self._create_ignore_obj_notification()
 
-        with self.subTest('Test for non-existing object notification'):
+        with self.subTest("Test for non-existing object notification"):
             url = self._get_path(
-                'ignore_object_notification',
+                "ignore_object_notification",
                 obj_app_label,
                 obj_model_name,
                 uuid.uuid4(),
@@ -991,16 +991,16 @@ class TestNotificationApi(
             response = self.client.delete(url)
             self.assertEqual(response.status_code, 404)
 
-        with self.subTest('Test for existing object notification'):
+        with self.subTest("Test for existing object notification"):
             url = self._get_path(
-                'ignore_object_notification', obj_app_label, obj_model_name, obj_id
+                "ignore_object_notification", obj_app_label, obj_model_name, obj_id
             )
             response = self.client.delete(url)
             self.assertEqual(response.status_code, 204)
             self.assertIsNone(response.data)
             self.assertEqual(IgnoreObjectNotification.objects.count(), 0)
 
-    @patch('openwisp_notifications.tasks.delete_ignore_object_notification.apply_async')
+    @patch("openwisp_notifications.tasks.delete_ignore_object_notification.apply_async")
     def test_retrieve_ignore_obj_notification_api(self, mocked_task):
         (
             obj_notification,
@@ -1009,9 +1009,9 @@ class TestNotificationApi(
             obj_id,
         ) = self._create_ignore_obj_notification()
 
-        with self.subTest('Test for non-existing object notification'):
+        with self.subTest("Test for non-existing object notification"):
             url = self._get_path(
-                'ignore_object_notification',
+                "ignore_object_notification",
                 obj_app_label,
                 obj_model_name,
                 uuid.uuid4(),
@@ -1019,25 +1019,25 @@ class TestNotificationApi(
             response = self.client.delete(url)
             self.assertEqual(response.status_code, 404)
 
-        with self.subTest('Test for existing object notification'):
+        with self.subTest("Test for existing object notification"):
             url = self._get_path(
-                'ignore_object_notification', obj_app_label, obj_model_name, obj_id
+                "ignore_object_notification", obj_app_label, obj_model_name, obj_id
             )
             response = self.client.get(url)
             self.assertEqual(response.status_code, 200)
-            self.assertNotIn('user', response.data)
-            self.assertIn('id', response.data)
-            self.assertIn('object_id', response.data)
-            self.assertIn('object_content_type', response.data)
-            self.assertIn('valid_till', response.data)
+            self.assertNotIn("user", response.data)
+            self.assertIn("id", response.data)
+            self.assertIn("object_id", response.data)
+            self.assertIn("object_content_type", response.data)
+            self.assertIn("valid_till", response.data)
 
-    @patch('openwisp_notifications.tasks.delete_ignore_object_notification.apply_async')
+    @patch("openwisp_notifications.tasks.delete_ignore_object_notification.apply_async")
     def test_list_ignore_obj_notification_api(self, mocked_task):
         number_of_obj_notifications = 21
-        url = reverse(f'{self.url_namespace}:ignore_object_notification_list')
+        url = reverse(f"{self.url_namespace}:ignore_object_notification_list")
         ignore_obj_notifications = []
         content_type = ContentType.objects.filter(
-            app_label='openwisp_users', model='user'
+            app_label="openwisp_users", model="user"
         ).first()
         for _ in range(number_of_obj_notifications):
             ignore_obj_notifications.append(
@@ -1057,78 +1057,78 @@ class TestNotificationApi(
         with self.subTest('Test "page" query in object notification list view'):
             response = self.client.get(url)
             self.assertEqual(response.status_code, 200)
-            self.assertEqual(response.data['count'], number_of_obj_notifications)
+            self.assertEqual(response.data["count"], number_of_obj_notifications)
             self.assertIn(
-                self._get_path('ignore_object_notification_list', page=2),
-                response.data['next'],
+                self._get_path("ignore_object_notification_list", page=2),
+                response.data["next"],
             )
-            self.assertEqual(response.data['previous'], None)
-            self.assertEqual(len(response.data['results']), 20)
+            self.assertEqual(response.data["previous"], None)
+            self.assertEqual(len(response.data["results"]), 20)
 
-            next_response = self.client.get(response.data['next'])
+            next_response = self.client.get(response.data["next"])
             self.assertEqual(next_response.status_code, 200)
-            self.assertEqual(next_response.data['count'], number_of_obj_notifications)
+            self.assertEqual(next_response.data["count"], number_of_obj_notifications)
             self.assertEqual(
-                next_response.data['next'],
+                next_response.data["next"],
                 None,
             )
             self.assertIn(
-                self._get_path('ignore_object_notification_list'),
-                next_response.data['previous'],
+                self._get_path("ignore_object_notification_list"),
+                next_response.data["previous"],
             )
-            self.assertEqual(len(next_response.data['results']), 1)
+            self.assertEqual(len(next_response.data["results"]), 1)
 
         with self.subTest('Test "page_size" query'):
             page_size = 5
-            url = f'{url}?page_size={page_size}'
+            url = f"{url}?page_size={page_size}"
             response = self.client.get(url)
             self.assertEqual(response.status_code, 200)
-            self.assertEqual(response.data['count'], number_of_obj_notifications)
+            self.assertEqual(response.data["count"], number_of_obj_notifications)
             self.assertIn(
                 self._get_path(
-                    'ignore_object_notification_list', page=2, page_size=page_size
+                    "ignore_object_notification_list", page=2, page_size=page_size
                 ),
-                response.data['next'],
+                response.data["next"],
             )
-            self.assertEqual(response.data['previous'], None)
-            self.assertEqual(len(response.data['results']), page_size)
+            self.assertEqual(response.data["previous"], None)
+            self.assertEqual(len(response.data["results"]), page_size)
 
-            next_response = self.client.get(response.data['next'])
+            next_response = self.client.get(response.data["next"])
             self.assertEqual(next_response.status_code, 200)
-            self.assertEqual(next_response.data['count'], number_of_obj_notifications)
+            self.assertEqual(next_response.data["count"], number_of_obj_notifications)
             self.assertIn(
                 self._get_path(
-                    'ignore_object_notification_list', page=3, page_size=page_size
+                    "ignore_object_notification_list", page=3, page_size=page_size
                 ),
-                next_response.data['next'],
+                next_response.data["next"],
             )
             self.assertIn(
-                self._get_path('ignore_object_notification_list', page_size=page_size),
-                next_response.data['previous'],
+                self._get_path("ignore_object_notification_list", page_size=page_size),
+                next_response.data["previous"],
             )
-            self.assertEqual(len(next_response.data['results']), page_size)
+            self.assertEqual(len(next_response.data["results"]), page_size)
 
-        with self.subTest('Test individual result object'):
+        with self.subTest("Test individual result object"):
             response = self.client.get(url)
             self.assertEqual(response.status_code, 200)
-            ignore_obj_notification = response.data['results'][0]
-            self.assertIn('id', ignore_obj_notification)
-            self.assertIn('object_id', ignore_obj_notification)
-            self.assertIn('object_content_type', ignore_obj_notification)
-            self.assertIsNone(ignore_obj_notification['valid_till'])
+            ignore_obj_notification = response.data["results"][0]
+            self.assertIn("id", ignore_obj_notification)
+            self.assertIn("object_id", ignore_obj_notification)
+            self.assertIn("object_content_type", ignore_obj_notification)
+            self.assertIsNone(ignore_obj_notification["valid_till"])
 
     @capture_any_output()
-    @patch('openwisp_notifications.tasks.delete_notification.delay')
+    @patch("openwisp_notifications.tasks.delete_notification.delay")
     def test_deleted_notification_type(self, *args):
-        notify.send(sender=self.admin, type='default', target=self.admin)
-        with patch('openwisp_notifications.types.NOTIFICATION_TYPES', {}):
-            url = self._get_path('notifications_list')
+        notify.send(sender=self.admin, type="default", target=self.admin)
+        with patch("openwisp_notifications.types.NOTIFICATION_TYPES", {}):
+            url = self._get_path("notifications_list")
             response = self.client.get(url)
             self.assertEqual(response.status_code, 200)
-            self.assertEqual(len(response.data['results']), 0)
+            self.assertEqual(len(response.data["results"]), 0)
             self.assertEqual(Notification.objects.count(), 1)
 
             notification = Notification.objects.first()
-            url = self._get_path('notification_detail', notification.pk)
+            url = self._get_path("notification_detail", notification.pk)
             response = self.client.get(url)
             self.assertEqual(response.status_code, 404)

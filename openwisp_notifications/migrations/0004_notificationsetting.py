@@ -15,31 +15,31 @@ from openwisp_notifications.types import NOTIFICATION_CHOICES, get_notification_
 
 def create_notification_setting_groups_permissions(apps, schema_editor):
     # Populate permissions
-    app_config = apps.get_app_config('openwisp_notifications')
+    app_config = apps.get_app_config("openwisp_notifications")
     app_config.models_module = True
     create_permissions(app_config, apps=apps, verbosity=0)
     app_config.models_module = None
 
-    Group = get_swapped_model(apps, 'openwisp_users', 'Group')
-    Permission = apps.get_model('auth', 'Permission')
+    Group = get_swapped_model(apps, "openwisp_users", "Group")
+    Permission = apps.get_model("auth", "Permission")
 
-    operator = Group.objects.filter(name='Operator')
+    operator = Group.objects.filter(name="Operator")
     if operator.count() == 0:
-        operator = Group.objects.create(name='Operator')
+        operator = Group.objects.create(name="Operator")
     else:
         operator = operator.first()
 
-    admin = Group.objects.filter(name='Administrator')
+    admin = Group.objects.filter(name="Administrator")
     if admin.count() == 0:
-        admin = Group.objects.create(name='Administrator')
+        admin = Group.objects.create(name="Administrator")
     else:
         admin = admin.first()
 
     permissions = [
         Permission.objects.get(
-            content_type__app_label='openwisp_notifications',
-            content_type__model='notificationsetting',
-            codename='change_notificationsetting',
+            content_type__app_label="openwisp_notifications",
+            content_type__model="notificationsetting",
+            codename="change_notificationsetting",
         ).pk,
     ]
 
@@ -51,35 +51,35 @@ def create_notification_setting_groups_permissions(apps, schema_editor):
 
 
 def reverse_notification_setting_groups_permissions(apps, schema_editor):
-    Group = get_swapped_model(apps, 'openwisp_users', 'Group')
-    operator = Group.objects.filter(name='Operator').first()
-    administrator = Group.objects.filter(name='Administrator').first()
+    Group = get_swapped_model(apps, "openwisp_users", "Group")
+    operator = Group.objects.filter(name="Operator").first()
+    administrator = Group.objects.filter(name="Administrator").first()
 
     if operator is not None:
         operator.permissions.filter(
-            content_type__app_label='openwisp_notifications',
-            content_type__model='notificationsetting',
+            content_type__app_label="openwisp_notifications",
+            content_type__model="notificationsetting",
         ).delete()
     if administrator is not None:
         administrator.permissions.filter(
-            content_type__app_label='openwisp_notifications',
-            content_type__model='notificationsetting',
+            content_type__app_label="openwisp_notifications",
+            content_type__model="notificationsetting",
         ).delete()
 
 
 class Migration(migrations.Migration):
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        swapper.dependency('openwisp_users', 'Organization'),
-        ('openwisp_notifications', '0003_notification_notification_type'),
+        swapper.dependency("openwisp_users", "Organization"),
+        ("openwisp_notifications", "0003_notification_notification_type"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='NotificationSetting',
+            name="NotificationSetting",
             fields=[
                 (
-                    'id',
+                    "id",
                     models.UUIDField(
                         default=uuid.uuid4,
                         editable=False,
@@ -88,49 +88,51 @@ class Migration(migrations.Migration):
                     ),
                 ),
                 (
-                    'type',
+                    "type",
                     models.CharField(
-                        choices=NOTIFICATION_CHOICES
-                        if django.VERSION < (5, 0)
-                        else get_notification_choices,
+                        choices=(
+                            NOTIFICATION_CHOICES
+                            if django.VERSION < (5, 0)
+                            else get_notification_choices
+                        ),
                         max_length=30,
                         null=True,
-                        verbose_name='Notification Type',
+                        verbose_name="Notification Type",
                     ),
                 ),
                 (
-                    'web',
+                    "web",
                     models.BooleanField(
                         null=True,
                         blank=True,
                         help_text=(
-                            'Note: Non-superadmin users receive notifications only '
-                            'for organizations of which they are member of.'
+                            "Note: Non-superadmin users receive notifications only "
+                            "for organizations of which they are member of."
                         ),
-                        verbose_name='web notifications',
+                        verbose_name="web notifications",
                     ),
                 ),
                 (
-                    'email',
+                    "email",
                     models.BooleanField(
                         null=True,
                         blank=True,
                         help_text=(
-                            'Note: Non-superadmin users receive notifications only '
-                            'for organizations of which they are member of.'
+                            "Note: Non-superadmin users receive notifications only "
+                            "for organizations of which they are member of."
                         ),
-                        verbose_name='email notifications',
+                        verbose_name="email notifications",
                     ),
                 ),
                 (
-                    'organization',
+                    "organization",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
-                        to=swapper.get_model_name('openwisp_users', 'Organization'),
+                        to=swapper.get_model_name("openwisp_users", "Organization"),
                     ),
                 ),
                 (
-                    'user',
+                    "user",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
                         to=settings.AUTH_USER_MODEL,
@@ -138,24 +140,24 @@ class Migration(migrations.Migration):
                 ),
             ],
             options={
-                'verbose_name': 'user notification settings',
-                'verbose_name_plural': 'user notification settings',
-                'ordering': ['organization', 'type'],
-                'abstract': False,
-                'swappable': 'OPENWISP_NOTIFICATIONS_NOTIFICATIONSETTING_MODEL',
+                "verbose_name": "user notification settings",
+                "verbose_name_plural": "user notification settings",
+                "ordering": ["organization", "type"],
+                "abstract": False,
+                "swappable": "OPENWISP_NOTIFICATIONS_NOTIFICATIONSETTING_MODEL",
             },
         ),
         migrations.AddConstraint(
-            model_name='notificationsetting',
+            model_name="notificationsetting",
             constraint=models.UniqueConstraint(
-                fields=('organization', 'type', 'user'),
-                name='unique_notification_setting',
+                fields=("organization", "type", "user"),
+                name="unique_notification_setting",
             ),
         ),
         migrations.AddIndex(
-            model_name='notificationsetting',
+            model_name="notificationsetting",
             index=models.Index(
-                fields=['type', 'organization'], name='openwisp_no_type_5a6a77_idx'
+                fields=["type", "organization"], name="openwisp_no_type_5a6a77_idx"
             ),
         ),
         migrations.RunPython(

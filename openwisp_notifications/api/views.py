@@ -33,14 +33,14 @@ UNAUTHORIZED_STATUS_CODES = (
     status.HTTP_403_FORBIDDEN,
 )
 
-Notification = load_model('Notification')
-NotificationSetting = load_model('NotificationSetting')
-IgnoreObjectNotification = load_model('IgnoreObjectNotification')
+Notification = load_model("Notification")
+NotificationSetting = load_model("NotificationSetting")
+IgnoreObjectNotification = load_model("IgnoreObjectNotification")
 
 
 class NotificationPaginator(PageNumberPagination):
     page_size = 20
-    page_size_query_param = 'page_size'
+    page_size_query_param = "page_size"
     max_page_size = 100
 
 
@@ -53,7 +53,7 @@ class BaseNotificationView(GenericAPIView):
     serializer_class = serializers.Serializer
 
     def get_queryset(self):
-        if getattr(self, 'swagger_fake_view', False):
+        if getattr(self, "swagger_fake_view", False):
             return self.queryset.none()  # pragma: no cover
         return self.queryset.filter(recipient=self.request.user)
 
@@ -62,7 +62,7 @@ class NotificationListView(BaseNotificationView, ListModelMixin):
     serializer_class = NotificationListSerializer
     pagination_class = NotificationPaginator
     filter_backends = [DjangoFilterBackend]
-    filterset_fields = ['unread']
+    filterset_fields = ["unread"]
 
     def get(self, request, *args, **kwargs):
         return self.list(request, *args, **kwargs)
@@ -70,7 +70,7 @@ class NotificationListView(BaseNotificationView, ListModelMixin):
 
 class NotificationDetailView(BaseNotificationView, RetrieveDestroyAPIView):
     serializer_class = NotificationSerializer
-    lookup_field = 'pk'
+    lookup_field = "pk"
 
     def patch(self, request, *args, **kwargs):
         return self._mark_notification_read()
@@ -84,7 +84,7 @@ class NotificationDetailView(BaseNotificationView, RetrieveDestroyAPIView):
 
 
 class NotificationReadRedirect(BaseNotificationView):
-    lookup_field = 'pk'
+    lookup_field = "pk"
 
     def get(self, request, *args, **kwargs):
         notification = self.get_object()
@@ -96,8 +96,8 @@ class NotificationReadRedirect(BaseNotificationView):
         if response.status_code not in UNAUTHORIZED_STATUS_CODES:
             return response
 
-        redirect_url = '{admin_login}?next={path}'.format(
-            admin_login=reverse('admin:login'), path=self.request.path
+        redirect_url = "{admin_login}?next={path}".format(
+            admin_login=reverse("admin:login"), path=self.request.path
         )
         return HttpResponseRedirect(redirect_url)
 
@@ -119,9 +119,9 @@ class BaseNotificationSettingView(GenericAPIView):
     permission_classes = [IsAuthenticated, PreferencesPermission]
 
     def get_queryset(self):
-        if getattr(self, 'swagger_fake_view', False):
+        if getattr(self, "swagger_fake_view", False):
             return NotificationSetting.objects.none()  # pragma: no cover
-        user_id = self.kwargs.get('user_id', self.request.user.id)
+        user_id = self.kwargs.get("user_id", self.request.user.id)
         return NotificationSetting.objects.filter(user_id=user_id)
 
 
@@ -135,7 +135,7 @@ class NotificationSettingListView(BaseNotificationSettingView, ListModelMixin):
 
 
 class NotificationSettingView(BaseNotificationSettingView, RetrieveUpdateAPIView):
-    lookup_field = 'pk'
+    lookup_field = "pk"
 
 
 class BaseIgnoreObjectNotificationView(GenericAPIView):
@@ -165,7 +165,7 @@ class IgnoreObjectNotificationView(
 ):
     def initial(self, request, *args, **kwargs):
         super().initial(request, *args, *kwargs)
-        self.kwargs['obj_content_type_id'] = self.obj_content_type_id
+        self.kwargs["obj_content_type_id"] = self.obj_content_type_id
 
     def put(self, request, *args, **kwargs):
         return self.create_or_update(request, *args, **kwargs)
@@ -173,14 +173,14 @@ class IgnoreObjectNotificationView(
     @property
     def obj_content_type_id(self):
         return ContentType.objects.get_by_natural_key(
-            self.kwargs['app_label'], self.kwargs['model_name']
+            self.kwargs["app_label"], self.kwargs["model_name"]
         ).pk
 
     def get_object(self):
         queryset = self.filter_queryset(self.get_queryset())
         filter_kwargs = {
-            'object_content_type_id': self.kwargs['obj_content_type_id'],
-            'object_id': self.kwargs['object_id'],
+            "object_content_type_id": self.kwargs["obj_content_type_id"],
+            "object_id": self.kwargs["object_id"],
         }
         obj = get_object_or_404(queryset, **filter_kwargs)
         # May raise a permission denied
@@ -196,8 +196,8 @@ class IgnoreObjectNotificationView(
     def perform_create(self, serializer):
         serializer.save(
             user=self.request.user,
-            object_content_type_id=self.kwargs['obj_content_type_id'],
-            object_id=self.kwargs['object_id'],
+            object_content_type_id=self.kwargs["obj_content_type_id"],
+            object_id=self.kwargs["object_id"],
         )
 
 

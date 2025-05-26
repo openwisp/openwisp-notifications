@@ -30,7 +30,7 @@ class EmailTokenGenerator(PasswordResetTokenGenerator):
             return False
 
         # Check that the timestamp/uid has not been tampered with
-        if hasattr(self, 'secret_fallbacks'):
+        if hasattr(self, "secret_fallbacks"):
             # For newer Django versions
             for secret in [self.secret, *self.secret_fallbacks]:
                 if constant_time_compare(

@@ -23,7 +23,7 @@ from openwisp_notifications.swapper import load_model
 from .tokens import email_token_generator
 
 User = get_user_model()
-NotificationSetting = load_model('NotificationSetting')
+NotificationSetting = load_model("NotificationSetting")
 
 logger = logging.getLogger(__name__)
 
@@ -36,7 +36,7 @@ def resend_verification_email(request):
     if not email_address:
         # if the user doesn't have a primary email address
         # get the last email address added
-        email_address = EmailAddress.objects.filter(user=user).order_by('-id').first()
+        email_address = EmailAddress.objects.filter(user=user).order_by("-id").first()
         # if the user doesn't have any EmailAddress object saved
         # get the email address from the User model
         if not email_address and user.email:
@@ -44,80 +44,80 @@ def resend_verification_email(request):
                 user=user, email=user.email, primary=True, verified=False
             )
         elif not email_address and not user.email:
-            messages.error(request, _('No email address found for your account.'))
+            messages.error(request, _("No email address found for your account."))
     # if email is already verified, just display a UX warning
     if email_address and email_address.verified:
-        messages.warning(request, _('Your email is already verified.'))
+        messages.warning(request, _("Your email is already verified."))
     # if email is not verified, resend verification email
     elif email_address and not email_address.verified:
         send_email_confirmation(request, user, email=email_address.email)
     # block malicious redirect attempts
-    redirect_to = request.GET.get('next', reverse('admin:index'))
+    redirect_to = request.GET.get("next", reverse("admin:index"))
     if not is_safe_url(redirect_to, allowed_hosts={request.get_host()}):
         logger.warning(
-            f'Unsafe redirect attempted to: {redirect_to} for user {user.username}.'
+            f"Unsafe redirect attempted to: {redirect_to} for user {user.username}."
         )
-        redirect_to = reverse('admin:index')
+        redirect_to = reverse("admin:index")
     # redirect to where the user was headed after logging in
     return redirect(redirect_to)
 
 
 class NotificationPreferenceView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
-    template_name = 'openwisp_notifications/preferences.html'
-    login_url = reverse_lazy('admin:login')
+    template_name = "openwisp_notifications/preferences.html"
+    login_url = reverse_lazy("admin:login")
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        user_id = self.kwargs.get('pk')
-        context['title'] = _('Notification Preferences')
+        user_id = self.kwargs.get("pk")
+        context["title"] = _("Notification Preferences")
 
         if user_id:
             try:
                 user = User.objects.get(pk=user_id)
                 # Only admin should access other users preferences
-                context['username'] = user.username
-                context['title'] += f' ({user.username})'
+                context["username"] = user.username
+                context["title"] += f" ({user.username})"
             except User.DoesNotExist:
-                raise Http404('User does not exist')
+                raise Http404("User does not exist")
         else:
             user = self.request.user
 
-        context['user_id'] = user.id
+        context["user_id"] = user.id
         return context
 
     def test_func(self):
         """
         This method ensures that only admins can access the view when a custom user ID is provided.
         """
-        if 'pk' in self.kwargs:
+        if "pk" in self.kwargs:
             return (
                 self.request.user.is_superuser
-                or self.request.user.id == self.kwargs.get('pk')
+                or self.request.user.id == self.kwargs.get("pk")
             )
         return True
 
 
-@method_decorator(csrf_exempt, name='dispatch')
+@method_decorator(csrf_exempt, name="dispatch")
 class UnsubscribeView(TemplateView):
-    template_name = 'openwisp_notifications/unsubscribe.html'
+    template_name = "openwisp_notifications/unsubscribe.html"
 
     def dispatch(self, request, *args, **kwargs):
-        self.encoded_token = request.GET.get('token')
+        self.encoded_token = request.GET.get("token")
         if not self.encoded_token:
-            if request.method == 'POST':
+            if request.method == "POST":
                 return JsonResponse(
-                    {'success': False, 'message': 'No token provided'}, status=400
+                    {"success": False, "message": "No token provided"}, status=400
                 )
-            return render(request, self.template_name, {'valid': False})
+            return render(request, self.template_name, {"valid": False})
 
         self.user, self.valid = self._validate_token(self.encoded_token)
         if not self.valid:
-            if request.method == 'POST':
+            if request.method == "POST":
                 return JsonResponse(
-                    {'success': False, 'message': 'Invalid or expired token'},
+                    {"success": False, "message": "Invalid or expired token"},
                     status=400,
                 )
-            return render(request, self.template_name, {'valid': False})
+            return render(request, self.template_name, {"valid": False})
 
         return super().dispatch(request, *args, **kwargs)
 
@@ -126,37 +126,37 @@ class UnsubscribeView(TemplateView):
         is_subscribed = self.get_user_preference(self.user) if self.valid else False
         context.update(
             {
-                'valid': self.valid,
-                'is_subscribed': is_subscribed,
+                "valid": self.valid,
+                "is_subscribed": is_subscribed,
             }
         )
         return context
 
     def post(self, request, *args, **kwargs):
         try:
-            if request.content_type == 'application/json':
+            if request.content_type == "application/json":
                 data = json.loads(request.body)
-                subscribe = data.get('subscribe', False) is True
+                subscribe = data.get("subscribe", False) is True
             else:
                 # Unsubscribe by default
                 subscribe = False
         except json.JSONDecodeError:
             return JsonResponse(
-                {'success': False, 'message': 'Invalid JSON data'}, status=400
+                {"success": False, "message": "Invalid JSON data"}, status=400
             )
 
         self.update_user_preferences(self.user, subscribe)
-        status_message = 'subscribed' if subscribe else 'unsubscribed'
+        status_message = "subscribed" if subscribe else "unsubscribed"
         return JsonResponse(
-            {'success': True, 'message': f'Successfully {status_message}'}
+            {"success": True, "message": f"Successfully {status_message}"}
         )
 
     def _validate_token(self, encoded_token):
         try:
-            decoded_data = urlsafe_base64_decode(encoded_token).decode('utf-8')
+            decoded_data = urlsafe_base64_decode(encoded_token).decode("utf-8")
             data = json.loads(decoded_data)
-            user_id = data.get('user_id')
-            token = data.get('token')
+            user_id = data.get("user_id")
+            token = data.get("token")
 
             user = User.objects.get(id=user_id)
             if email_token_generator.check_token(user, token):

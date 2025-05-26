@@ -27,12 +27,12 @@ logger = logging.getLogger(__name__)
 
 User = get_user_model()
 
-Notification = load_model('Notification')
-NotificationSetting = load_model('NotificationSetting')
-IgnoreObjectNotification = load_model('IgnoreObjectNotification')
+Notification = load_model("Notification")
+NotificationSetting = load_model("NotificationSetting")
+IgnoreObjectNotification = load_model("IgnoreObjectNotification")
 
-Organization = swapper_load_model('openwisp_users', 'Organization')
-OrganizationUser = swapper_load_model('openwisp_users', 'OrganizationUser')
+Organization = swapper_load_model("openwisp_users", "Organization")
+OrganizationUser = swapper_load_model("openwisp_users", "OrganizationUser")
 
 
 @shared_task(base=OpenwispCeleryTask)
@@ -90,16 +90,16 @@ def delete_old_notifications(days):
 # 'ns' is short for notification_setting
 def create_notification_settings(user, organizations, notification_types):
     global_setting, _ = NotificationSetting.objects.get_or_create(
-        user=user, organization=None, type=None, defaults={'email': True, 'web': True}
+        user=user, organization=None, type=None, defaults={"email": True, "web": True}
     )
 
     for type in notification_types:
         for org in organizations:
             NotificationSetting.objects.update_or_create(
                 defaults={
-                    'deleted': False,
-                    'email': None if global_setting.email else False,
-                    'web': None if global_setting.email else False,
+                    "deleted": False,
+                    "email": None if global_setting.email else False,
+                    "web": None if global_setting.email else False,
                 },
                 user=user,
                 type=type,
@@ -153,7 +153,7 @@ def ns_register_unregister_notification_type(
 
     # Create notification settings for organization admin
     for org_user in OrganizationUser.objects.select_related(
-        'user', 'organization'
+        "user", "organization"
     ).filter(is_admin=True, user__is_superuser=False):
         create_notification_settings(
             org_user.user, [org_user.organization], notification_types
@@ -235,24 +235,24 @@ def send_batched_email_notifications(instance_id):
     """
     if not User.objects.filter(id=instance_id).exists():
         logger.error(
-            'Failed to send batched email notifications:'
-            f' User with ID {instance_id} not found in the database.'
+            "Failed to send batched email notifications:"
+            f" User with ID {instance_id} not found in the database."
         )
         return
 
-    cache_key = f'email_batch_{instance_id}'
-    cache_data = cache.get(cache_key, {'pks': []})
+    cache_key = f"email_batch_{instance_id}"
+    cache_data = cache.get(cache_key, {"pks": []})
 
-    if not cache_data['pks']:
+    if not cache_data["pks"]:
         return
 
     display_limit = app_settings.EMAIL_BATCH_DISPLAY_LIMIT
     unsent_notifications_query = Notification.objects.filter(
-        id__in=cache_data['pks']
-    ).order_by('-timestamp')
+        id__in=cache_data["pks"]
+    ).order_by("-timestamp")
     notifications_count = unsent_notifications_query.count()
     current_site = Site.objects.get_current()
-    email_id = cache_data.get('email_id')
+    email_id = cache_data.get("email_id")
     unsent_notifications = []
 
     # Send individual email if there is only one notification
@@ -262,7 +262,7 @@ def send_batched_email_notifications(instance_id):
     else:
         # Show the amount of notifications according to configured display limit
         for notification in unsent_notifications_query[:display_limit]:
-            url = notification.data.get('url', '') if notification.data else None
+            url = notification.data.get("url", "") if notification.data else None
             if url:
                 notification.url = url
             elif notification.target:
@@ -272,45 +272,45 @@ def send_batched_email_notifications(instance_id):
 
             unsent_notifications.append(notification)
 
-        start_time = timezone.localtime(cache_data.get('start_time')).strftime(
-            '%B %-d, %Y, %-I:%M %p %Z'
+        start_time = timezone.localtime(cache_data.get("start_time")).strftime(
+            "%B %-d, %Y, %-I:%M %p %Z"
         )
 
         extra_context = {
-            'notifications': unsent_notifications[:display_limit],
-            'notifications_count': notifications_count,
-            'site_name': current_site.name,
-            'start_time': start_time,
+            "notifications": unsent_notifications[:display_limit],
+            "notifications_count": notifications_count,
+            "site_name": current_site.name,
+            "start_time": start_time,
         }
 
         user = User.objects.get(id=instance_id)
         unsubscribe_url = get_unsubscribe_url_for_user(user)
-        extra_context['footer'] = get_unsubscribe_url_email_footer(unsubscribe_url)
+        extra_context["footer"] = get_unsubscribe_url_email_footer(unsubscribe_url)
 
         if notifications_count > display_limit:
             extra_context.update(
                 {
-                    'call_to_action_url': f"https://{current_site.domain}/admin/#notifications",
-                    'call_to_action_text': _('View all Notifications'),
+                    "call_to_action_url": f"https://{current_site.domain}/admin/#notifications",
+                    "call_to_action_text": _("View all Notifications"),
                 }
             )
 
         plain_text_content = render_to_string(
-            'openwisp_notifications/emails/batch_email.txt', extra_context
+            "openwisp_notifications/emails/batch_email.txt", extra_context
         )
         notifications_count = min(notifications_count, display_limit)
 
         send_email(
-            subject=f'[{current_site.name}] {notifications_count} new notifications since {start_time}',
+            subject=f"[{current_site.name}] {notifications_count} new notifications since {start_time}",
             body_text=plain_text_content,
             body_html=True,
             recipients=[email_id],
             extra_context=extra_context,
             headers={
-                'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
-                'List-Unsubscribe': f'<{unsubscribe_url}>',
+                "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+                "List-Unsubscribe": f"<{unsubscribe_url}>",
             },
-            html_email_template='openwisp_notifications/emails/batch_email.html',
+            html_email_template="openwisp_notifications/emails/batch_email.html",
         )
 
     unsent_notifications_query.update(emailed=True)

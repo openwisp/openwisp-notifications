@@ -18,95 +18,95 @@ class Migration(migrations.Migration):
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('openwisp_users', '0009_create_organization_owners'),
-        swapper.dependency('openwisp_users', 'Organization'),
+        ("openwisp_users", "0009_create_organization_owners"),
+        swapper.dependency("openwisp_users", "Organization"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Notification',
+            name="Notification",
             fields=[
                 (
-                    'level',
+                    "level",
                     models.CharField(
                         choices=[
-                            ('success', 'success'),
-                            ('info', 'info'),
-                            ('warning', 'warning'),
-                            ('error', 'error'),
+                            ("success", "success"),
+                            ("info", "info"),
+                            ("warning", "warning"),
+                            ("error", "error"),
                         ],
-                        default='info',
+                        default="info",
                         max_length=20,
-                        verbose_name='level',
+                        verbose_name="level",
                     ),
                 ),
                 (
-                    'unread',
+                    "unread",
                     models.BooleanField(
-                        db_index=True, default=True, verbose_name='unread'
+                        db_index=True, default=True, verbose_name="unread"
                     ),
                 ),
                 (
-                    'actor_object_id',
-                    models.CharField(max_length=255, verbose_name='actor object id'),
+                    "actor_object_id",
+                    models.CharField(max_length=255, verbose_name="actor object id"),
                 ),
-                ('verb', models.CharField(max_length=255, verbose_name='verb')),
+                ("verb", models.CharField(max_length=255, verbose_name="verb")),
                 (
-                    'description',
-                    models.TextField(blank=True, null=True, verbose_name='description'),
+                    "description",
+                    models.TextField(blank=True, null=True, verbose_name="description"),
                 ),
                 (
-                    'target_object_id',
+                    "target_object_id",
                     models.CharField(
                         blank=True,
                         max_length=255,
                         null=True,
-                        verbose_name='target object id',
+                        verbose_name="target object id",
                     ),
                 ),
                 (
-                    'action_object_object_id',
+                    "action_object_object_id",
                     models.CharField(
                         blank=True,
                         max_length=255,
                         null=True,
-                        verbose_name='action object object id',
+                        verbose_name="action object object id",
                     ),
                 ),
                 (
-                    'timestamp',
+                    "timestamp",
                     models.DateTimeField(
                         db_index=True,
                         default=django.utils.timezone.now,
-                        verbose_name='timestamp',
+                        verbose_name="timestamp",
                     ),
                 ),
                 (
-                    'public',
+                    "public",
                     models.BooleanField(
-                        db_index=True, default=True, verbose_name='public'
+                        db_index=True, default=True, verbose_name="public"
                     ),
                 ),
                 (
-                    'deleted',
+                    "deleted",
                     models.BooleanField(
-                        db_index=True, default=False, verbose_name='deleted'
+                        db_index=True, default=False, verbose_name="deleted"
                     ),
                 ),
                 (
-                    'emailed',
+                    "emailed",
                     models.BooleanField(
-                        db_index=True, default=False, verbose_name='emailed'
+                        db_index=True, default=False, verbose_name="emailed"
                     ),
                 ),
                 (
-                    'data',
+                    "data",
                     jsonfield.fields.JSONField(
-                        blank=True, null=True, verbose_name='data'
+                        blank=True, null=True, verbose_name="data"
                     ),
                 ),
                 (
-                    'id',
+                    "id",
                     models.UUIDField(
                         default=uuid.uuid4,
                         editable=False,
@@ -115,63 +115,65 @@ class Migration(migrations.Migration):
                     ),
                 ),
                 (
-                    'action_object_content_type',
+                    "action_object_content_type",
                     models.ForeignKey(
                         blank=True,
                         null=True,
                         on_delete=django.db.models.deletion.CASCADE,
-                        related_name='notify_action_object',
-                        to='contenttypes.ContentType',
-                        verbose_name='action object content type',
+                        related_name="notify_action_object",
+                        to="contenttypes.ContentType",
+                        verbose_name="action object content type",
                     ),
                 ),
                 (
-                    'actor_content_type',
+                    "actor_content_type",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
-                        related_name='notify_actor',
-                        to='contenttypes.ContentType',
-                        verbose_name='actor content type',
+                        related_name="notify_actor",
+                        to="contenttypes.ContentType",
+                        verbose_name="actor content type",
                     ),
                 ),
                 (
-                    'recipient',
+                    "recipient",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
-                        related_name='notifications',
+                        related_name="notifications",
                         to=settings.AUTH_USER_MODEL,
-                        verbose_name='recipient',
+                        verbose_name="recipient",
                     ),
                 ),
                 (
-                    'target_content_type',
+                    "target_content_type",
                     models.ForeignKey(
                         blank=True,
                         null=True,
                         on_delete=django.db.models.deletion.CASCADE,
-                        related_name='notify_target',
-                        to='contenttypes.ContentType',
-                        verbose_name='target content type',
+                        related_name="notify_target",
+                        to="contenttypes.ContentType",
+                        verbose_name="target content type",
                     ),
                 ),
                 (
-                    'type',
+                    "type",
                     models.CharField(
-                        choices=NOTIFICATION_CHOICES
-                        if django.VERSION < (5, 0)
-                        else get_notification_choices,
+                        choices=(
+                            NOTIFICATION_CHOICES
+                            if django.VERSION < (5, 0)
+                            else get_notification_choices
+                        ),
                         max_length=30,
                         null=True,
                         verbose_name="Notification Type",
                     ),
                 ),
-                ('details', models.CharField(blank=True, max_length=64, null=True)),
+                ("details", models.CharField(blank=True, max_length=64, null=True)),
             ],
             options={
-                'ordering': ('-timestamp',),
-                'abstract': False,
-                'verbose_name': 'Notification',
-                'verbose_name_plural': 'Notifications',
+                "ordering": ("-timestamp",),
+                "abstract": False,
+                "verbose_name": "Notification",
+                "verbose_name_plural": "Notifications",
             },
         ),
         migrations.AddIndex(
@@ -181,10 +183,10 @@ class Migration(migrations.Migration):
             ),
         ),
         migrations.CreateModel(
-            name='NotificationSetting',
+            name="NotificationSetting",
             fields=[
                 (
-                    'id',
+                    "id",
                     models.UUIDField(
                         default=uuid.uuid4,
                         editable=False,
@@ -193,11 +195,13 @@ class Migration(migrations.Migration):
                     ),
                 ),
                 (
-                    'type',
+                    "type",
                     models.CharField(
-                        choices=NOTIFICATION_CHOICES
-                        if django.VERSION < (5, 0)
-                        else get_notification_choices,
+                        choices=(
+                            NOTIFICATION_CHOICES
+                            if django.VERSION < (5, 0)
+                            else get_notification_choices
+                        ),
                         max_length=30,
                         null=True,
                         blank=True,
@@ -205,78 +209,78 @@ class Migration(migrations.Migration):
                     ),
                 ),
                 (
-                    'web',
+                    "web",
                     models.BooleanField(
                         null=True,
                         blank=True,
                         help_text=(
-                            'Note: Non-superadmin users receive notifications only '
-                            'for organizations of which they are member of.'
+                            "Note: Non-superadmin users receive notifications only "
+                            "for organizations of which they are member of."
                         ),
-                        verbose_name='web notifications',
+                        verbose_name="web notifications",
                     ),
                 ),
                 (
-                    'email',
+                    "email",
                     models.BooleanField(
                         null=True,
                         blank=True,
                         help_text=(
-                            'Note: Non-superadmin users receive notifications only '
-                            'for organizations of which they are member of.'
+                            "Note: Non-superadmin users receive notifications only "
+                            "for organizations of which they are member of."
                         ),
-                        verbose_name='email notifications',
+                        verbose_name="email notifications",
                     ),
                 ),
-                ('details', models.CharField(blank=True, max_length=64, null=True)),
+                ("details", models.CharField(blank=True, max_length=64, null=True)),
                 (
-                    'organization',
+                    "organization",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
                         blank=True,
                         null=True,
-                        to=swapper.get_model_name('openwisp_users', 'Organization'),
+                        to=swapper.get_model_name("openwisp_users", "Organization"),
                     ),
                 ),
                 (
-                    'user',
+                    "user",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
                         to=settings.AUTH_USER_MODEL,
                     ),
                 ),
                 (
-                    'deleted',
+                    "deleted",
                     models.BooleanField(
-                        blank=True, default=False, null=True, verbose_name='Delete'
+                        blank=True, default=False, null=True, verbose_name="Delete"
                     ),
                 ),
             ],
             options={
-                'verbose_name': 'user notification settings',
-                'verbose_name_plural': 'user notification settings',
-                'ordering': ['organization', 'type'],
-                'abstract': False,
+                "verbose_name": "user notification settings",
+                "verbose_name_plural": "user notification settings",
+                "ordering": ["organization", "type"],
+                "abstract": False,
             },
         ),
         migrations.AddConstraint(
-            model_name='notificationsetting',
+            model_name="notificationsetting",
             constraint=models.UniqueConstraint(
-                fields=('organization', 'type', 'user'),
-                name='unique_notification_setting',
+                fields=("organization", "type", "user"),
+                name="unique_notification_setting",
             ),
         ),
         migrations.AddIndex(
-            model_name='notificationsetting',
+            model_name="notificationsetting",
             index=models.Index(
-                fields=['type', 'organization'], name='sample_noti_type_b2cb70_idx'
+                fields=["type", "organization"], name="sample_noti_type_b2cb70_idx"
             ),
         ),
         migrations.CreateModel(
-            name='IgnoreObjectNotification',
+            name="IgnoreObjectNotification",
             fields=[
                 (
-                    'id',
+                    "id",
                     models.UUIDField(
                         default=uuid.uuid4,
                         editable=False,
@@ -284,24 +288,24 @@ class Migration(migrations.Migration):
                         serialize=False,
                     ),
                 ),
-                ('object_id', models.CharField(max_length=255)),
-                ('valid_till', models.DateTimeField(null=True)),
-                ('details', models.CharField(blank=True, max_length=64, null=True)),
+                ("object_id", models.CharField(max_length=255)),
+                ("valid_till", models.DateTimeField(null=True)),
+                ("details", models.CharField(blank=True, max_length=64, null=True)),
                 (
-                    'object_content_type',
+                    "object_content_type",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
-                        to='contenttypes.ContentType',
+                        to="contenttypes.ContentType",
                     ),
                 ),
                 (
-                    'user',
+                    "user",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
                         to=settings.AUTH_USER_MODEL,
                     ),
                 ),
             ],
-            options={'abstract': False, 'ordering': ['valid_till']},
+            options={"abstract": False, "ordering": ["valid_till"]},
         ),
     ]

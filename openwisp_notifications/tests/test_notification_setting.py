@@ -21,23 +21,23 @@ from openwisp_notifications.tests.test_helpers import (
 from openwisp_users.tests.utils import TestOrganizationMixin
 
 test_notification_type = {
-    'verbose_name': 'Test Notification Type',
-    'level': 'test',
-    'verb': 'testing',
-    'message': '{notification.verb} initiated by {notification.actor} since {notification}',
-    'email_subject': '[{site.name}] {notification.verb} reported by {notification.actor}',
+    "verbose_name": "Test Notification Type",
+    "level": "test",
+    "verb": "testing",
+    "message": "{notification.verb} initiated by {notification.actor} since {notification}",
+    "email_subject": "[{site.name}] {notification.verb} reported by {notification.actor}",
 }
 
-NotificationSetting = load_model('NotificationSetting')
-Organization = swapper_load_model('openwisp_users', 'Organization')
-OrganizationUser = swapper_load_model('openwisp_users', 'OrganizationUser')
+NotificationSetting = load_model("NotificationSetting")
+Organization = swapper_load_model("openwisp_users", "Organization")
+OrganizationUser = swapper_load_model("openwisp_users", "OrganizationUser")
 
-ns_queryset = NotificationSetting.objects.filter(type='default')
+ns_queryset = NotificationSetting.objects.filter(type="default")
 
 
 class TestNotificationSetting(TestOrganizationMixin, TransactionTestCase):
     def setUp(self):
-        self.default_org = self._get_org('default')
+        self.default_org = self._get_org("default")
 
     def _create_staff_org_admin(self):
         return self._create_org_user(user=self._create_operator(), is_admin=True)
@@ -55,15 +55,15 @@ class TestNotificationSetting(TestOrganizationMixin, TransactionTestCase):
 
     @mock_notification_types
     def test_notification_type_registered(self):
-        register_notification_type('test', test_notification_type)
-        queryset = NotificationSetting.objects.filter(type='test')
+        register_notification_type("test", test_notification_type)
+        queryset = NotificationSetting.objects.filter(type="test")
 
         self._get_user()
         self.assertEqual(queryset.count(), 0)
 
         self._get_admin()
         self.assertEqual(queryset.count(), 1)
-        self.assertEqual(queryset.first().__str__(), 'Test Notification Type - default')
+        self.assertEqual(queryset.first().__str__(), "Test Notification Type - default")
 
     def test_organization_created_no_initial_user(self):
         org = self._get_org()
@@ -79,7 +79,7 @@ class TestNotificationSetting(TestOrganizationMixin, TransactionTestCase):
 
     def test_organization_user(self):
         karen = self._get_user()
-        ken = self._create_user(username='ken', email='ken@ken.com')
+        ken = self._create_user(username="ken", email="ken@ken.com")
         org = self._get_org()
         OrganizationUser.objects.create(user=karen, organization=org, is_admin=True)
         org_user = OrganizationUser.objects.create(
@@ -95,9 +95,9 @@ class TestNotificationSetting(TestOrganizationMixin, TransactionTestCase):
     def test_register_notification_org_user(self):
         self._create_staff_org_admin()
 
-        queryset = NotificationSetting.objects.filter(type='test')
+        queryset = NotificationSetting.objects.filter(type="test")
         self.assertEqual(queryset.count(), 0)
-        register_notification_type('test', test_notification_type)
+        register_notification_type("test", test_notification_type)
         self.assertEqual(queryset.count(), 1)
 
     @mock_notification_types
@@ -109,8 +109,8 @@ class TestNotificationSetting(TestOrganizationMixin, TransactionTestCase):
         org_user = self._create_staff_org_admin()
         self.assertEqual(ns_queryset.count(), 3)
 
-        base_unregister_notification_type('default')
-        base_register_notification_type('test', test_notification_type)
+        base_unregister_notification_type("default")
+        base_register_notification_type("test", test_notification_type)
 
         # Delete existing global notification settings
         NotificationSetting.objects.filter(
@@ -124,7 +124,7 @@ class TestNotificationSetting(TestOrganizationMixin, TransactionTestCase):
         notification_type_registered_unregistered_handler(sender=self)
 
         # Notification Setting for "default" type are deleted
-        self.assertEqual(ns_queryset.filter(type='default', deleted=True).count(), 3)
+        self.assertEqual(ns_queryset.filter(type="default", deleted=True).count(), 3)
 
         # Notification Settings for "test" type are created
         queryset = NotificationSetting.objects.filter(deleted=False)
@@ -171,7 +171,7 @@ class TestNotificationSetting(TestOrganizationMixin, TransactionTestCase):
         admin = self._get_admin()
         admin.is_superuser = False
         admin.save()
-        org = Organization.objects.get(name='default')
+        org = Organization.objects.get(name="default")
         OrganizationUser.objects.create(user=admin, organization=org, is_admin=True)
 
         self.assertEqual(ns_queryset.count(), 1)
@@ -211,17 +211,17 @@ class TestNotificationSetting(TestOrganizationMixin, TransactionTestCase):
     @mock_notification_types
     def test_notification_setting_full_clean(self):
         test_type = {
-            'verbose_name': 'Test Notification Type',
-            'level': 'info',
-            'verb': 'testing',
-            'message': 'Test message',
-            'email_subject': 'Test Email Subject',
-            'web_notification': False,
-            'email_notification': False,
+            "verbose_name": "Test Notification Type",
+            "level": "info",
+            "verb": "testing",
+            "message": "Test message",
+            "email_subject": "Test Email Subject",
+            "web_notification": False,
+            "email_notification": False,
         }
-        register_notification_type('test_type', test_type)
+        register_notification_type("test_type", test_type)
         self._get_admin()
-        queryset = NotificationSetting.objects.filter(type='test_type')
+        queryset = NotificationSetting.objects.filter(type="test_type")
         queryset.update(email=False, web=False)
         notification_setting = queryset.first()
 
@@ -254,7 +254,7 @@ class TestNotificationSetting(TestOrganizationMixin, TransactionTestCase):
         self.assertEqual(ns.id, update_ns.id)
 
     def test_org_user_promoted_to_org_admin_with_org_change(self):
-        default_org = Organization.objects.get(slug='default')
+        default_org = Organization.objects.get(slug="default")
         org_user = self._create_org_user(user=self._create_operator(), is_admin=False)
         self.assertEqual(ns_queryset.count(), 0)
         org_user.is_admin = True
@@ -281,31 +281,31 @@ class TestNotificationSetting(TestOrganizationMixin, TransactionTestCase):
         ns.refresh_from_db()
         self.assertEqual(ns.deleted, False)
 
-    @patch.object(superuser_demoted_notification_setting, 'delay')
-    @patch.object(create_superuser_notification_settings, 'delay')
+    @patch.object(superuser_demoted_notification_setting, "delay")
+    @patch.object(create_superuser_notification_settings, "delay")
     def test_task_not_called_on_user_login(self, created_mock, demoted_mock):
         admin = self._create_admin()
         org_user = self._create_staff_org_admin()
         created_mock.assert_called_once()
 
         created_mock.reset_mock()
-        with self.subTest('Test task not called if superuser status is unchanged'):
-            admin.username = 'new_admin'
+        with self.subTest("Test task not called if superuser status is unchanged"):
+            admin.username = "new_admin"
             admin.save()
             created_mock.assert_not_called()
             demoted_mock.assert_not_called()
 
-        with self.subTest('Test task not called when superuser logs in'):
+        with self.subTest("Test task not called when superuser logs in"):
             self.client.force_login(admin)
             created_mock.assert_not_called()
             demoted_mock.assert_not_called()
 
-        with self.subTest('Test task not called when org user logs in'):
+        with self.subTest("Test task not called when org user logs in"):
             self.client.force_login(org_user.user)
             created_mock.assert_not_called()
             demoted_mock.assert_not_called()
 
-        with self.subTest('Test task called when superuser status changed'):
+        with self.subTest("Test task called when superuser status changed"):
             admin.is_superuser = False
             admin.save()
             demoted_mock.assert_called_once()
@@ -317,7 +317,7 @@ class TestNotificationSetting(TestOrganizationMixin, TransactionTestCase):
 
     def test_global_notification_setting_update(self):
         admin = self._get_admin()
-        org = self._get_org('default')
+        org = self._get_org("default")
         global_setting = NotificationSetting.objects.get(
             user=admin, type=None, organization=None
         )
@@ -329,11 +329,11 @@ class TestNotificationSetting(TestOrganizationMixin, TransactionTestCase):
         global_setting.save()
 
         with self.subTest(
-            'Test global web to False while ensuring at least one email setting is True'
+            "Test global web to False while ensuring at least one email setting is True"
         ):
             # Set the default type notification setting's email to True
             NotificationSetting.objects.filter(
-                user=admin, organization=org, type='default'
+                user=admin, organization=org, type="default"
             ).update(email=True)
 
             global_setting.web = True
@@ -342,11 +342,11 @@ class TestNotificationSetting(TestOrganizationMixin, TransactionTestCase):
 
             self.assertTrue(
                 NotificationSetting.objects.filter(
-                    user=admin, organization=org, email=True, type='default'
+                    user=admin, organization=org, email=True, type="default"
                 ).exists()
             )
 
-        with self.subTest('Test global web to False'):
+        with self.subTest("Test global web to False"):
             global_setting.web = False
             global_setting.full_clean()
             global_setting.save()
@@ -367,7 +367,7 @@ class TestNotificationSetting(TestOrganizationMixin, TransactionTestCase):
         global_setting = NotificationSetting.objects.get(
             user=admin, type=None, organization=None
         )
-        self.assertEqual(str(global_setting), 'Global Setting')
+        self.assertEqual(str(global_setting), "Global Setting")
         global_setting.delete()
         self.assertEqual(
             NotificationSetting.objects.filter(
@@ -378,7 +378,7 @@ class TestNotificationSetting(TestOrganizationMixin, TransactionTestCase):
 
     def test_validate_global_notification_setting(self):
         admin = self._get_admin()
-        with self.subTest('Test global notification setting creation'):
+        with self.subTest("Test global notification setting creation"):
             NotificationSetting.objects.filter(
                 user=admin, organization=None, type=None
             ).delete()
@@ -389,7 +389,7 @@ class TestNotificationSetting(TestOrganizationMixin, TransactionTestCase):
             global_setting.save()
             self.assertIsNotNone(global_setting)
 
-        with self.subTest('Test only one global notification setting per user'):
+        with self.subTest("Test only one global notification setting per user"):
             global_setting = NotificationSetting(
                 user=admin, organization=None, type=None, email=True, web=True
             )

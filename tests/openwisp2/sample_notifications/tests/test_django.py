@@ -29,12 +29,12 @@ from openwisp_notifications.tests.test_utils import (
 
 from ..models import TestApp
 
-Notification = load_model('Notification')
+Notification = load_model("Notification")
 NotificationAppConfig = apps.get_app_config(Notification._meta.app_label)
 
 
 class TestAdmin(BaseTestAdmin):
-    app_label = 'sample_notifications'
+    app_label = "sample_notifications"
 
 
 class TestAdminMedia(BaseTestAdminMedia):
@@ -44,24 +44,24 @@ class TestAdminMedia(BaseTestAdminMedia):
 class TestNotifications(BaseTestNotifications):
     # Used only for testing openwisp-notifications
     def test_app_object_created_notification(self):
-        OrganizationUser = swapper_load_model('openwisp_users', 'OrganizationUser')
+        OrganizationUser = swapper_load_model("openwisp_users", "OrganizationUser")
 
         org = self._get_org()
         operator = self._get_operator()
         OrganizationUser.objects.create(user=operator, organization=org, is_admin=True)
-        oum_obj = TestApp(organization=org, name='Test')
+        oum_obj = TestApp(organization=org, name="Test")
         oum_obj.save()
 
-        n = Notification.objects.get(type='object_created', recipient=operator)
+        n = Notification.objects.get(type="object_created", recipient=operator)
         n_count = Notification.objects.count()
         self.assertEqual(n_count, 2)
         self.assertEqual(n.actor, oum_obj)
         self.assertEqual(n.target, oum_obj)
-        self.assertEqual(n.message, '<p>Test object created.</p>')
+        self.assertEqual(n.message, "<p>Test object created.</p>")
         n.delete()
 
     @patch.object(
-        NotificationAppConfig, 'register_notification_types', return_value=None
+        NotificationAppConfig, "register_notification_types", return_value=None
     )
     def test_post_migrate_populate_notification_settings(self, *args):
         super().test_post_migrate_populate_notification_settings()
@@ -70,10 +70,10 @@ class TestNotifications(BaseTestNotifications):
 class TestTransactionNotifications(BaseTestTransactionNotifications):
     def _create_test_app(self):
         org = self._get_org()
-        test_app = TestApp.objects.create(name='test_app', organization=org)
+        test_app = TestApp.objects.create(name="test_app", organization=org)
         return test_app
 
-    def _get_test_app(self, test_app_name='test_app'):
+    def _get_test_app(self, test_app_name="test_app"):
         try:
             return TestApp.objects.get(name=test_app_name)
         except TestApp.DoesNotExist:
@@ -85,7 +85,7 @@ class TestTransactionNotifications(BaseTestTransactionNotifications):
         cache_key = Notification._cache_key(content_type.id, test_app.id)
         test_app_cache = cache.get(cache_key, None)
         self.assertEqual(test_app_cache.name, test_app.name)
-        test_app.name = 'new test app'
+        test_app.name = "new test app"
         test_app.save()
         notification = Notification.objects.get(target_content_type=content_type)
         # Ensure cache is populated, since accessing target directly

@@ -6,7 +6,7 @@ from django.core.asgi import get_asgi_application
 
 from openwisp_notifications.websockets.routing import get_routes
 
-if os.environ.get('SAMPLE_APP', False):
+if os.environ.get("SAMPLE_APP", False):
     # Load custom routes:
     # This should be done when you are extending the app and modifying
     # the web socket consumer in your extended app.
@@ -23,7 +23,7 @@ else:
 
 application = ProtocolTypeRouter(
     {
-        'websocket': (AuthMiddlewareStack(URLRouter(routes))),
-        'http': get_asgi_application(),
+        "websocket": (AuthMiddlewareStack(URLRouter(routes))),
+        "http": get_asgi_application(),
     }
 )

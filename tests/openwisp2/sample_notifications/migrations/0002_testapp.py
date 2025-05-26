@@ -9,17 +9,17 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
     dependencies = [
-        ('openwisp_users', '0007_unique_email'),
-        ('sample_notifications', '0001_initial'),
-        swapper.dependency('openwisp_users', 'Organization'),
+        ("openwisp_users", "0007_unique_email"),
+        ("sample_notifications", "0001_initial"),
+        swapper.dependency("openwisp_users", "Organization"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='TestApp',
+            name="TestApp",
             fields=[
                 (
-                    'id',
+                    "id",
                     models.UUIDField(
                         default=uuid.uuid4,
                         editable=False,
@@ -27,15 +27,15 @@ class Migration(migrations.Migration):
                         serialize=False,
                     ),
                 ),
-                ('name', models.CharField(max_length=50)),
+                ("name", models.CharField(max_length=50)),
                 (
-                    'organization',
+                    "organization",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
-                        to=swapper.get_model_name('openwisp_users', 'Organization'),
+                        to=swapper.get_model_name("openwisp_users", "Organization"),
                     ),
                 ),
             ],
-            options={'verbose_name': 'Test App', 'verbose_name_plural': 'Test App'},
+            options={"verbose_name": "Test App", "verbose_name_plural": "Test App"},
         ),
     ]

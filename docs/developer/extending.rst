@@ -163,9 +163,7 @@ Add the following to your ``settings.py``:
 
     # Setting models for swapper module
     OPENWISP_NOTIFICATIONS_NOTIFICATION_MODEL = "mynotifications.Notification"
-    OPENWISP_NOTIFICATIONS_NOTIFICATIONSETTING_MODEL = (
-        "mynotifications.NotificationSetting"
-    )
+    OPENWISP_NOTIFICATIONS_NOTIFICATIONSETTING_MODEL = "mynotifications.NotificationSetting"
     OPENWISP_NOTIFICATIONS_IGNOREOBJECTNOTIFICATION_MODEL = (
         "mynotifications.IgnoreObjectNotification"
     )

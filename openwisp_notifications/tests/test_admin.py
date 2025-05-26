@@ -17,10 +17,10 @@ from openwisp_users.tests.utils import TestMultitenantAdminMixin
 
 from .test_helpers import MessagingRequest
 
-Notification = load_model('Notification')
-NotificationSetting = load_model('NotificationSetting')
-notification_queryset = Notification.objects.order_by('-timestamp')
-Group = swapper_load_model('openwisp_users', 'Group')
+Notification = load_model("Notification")
+NotificationSetting = load_model("NotificationSetting")
+notification_queryset = Notification.objects.order_by("-timestamp")
+Group = swapper_load_model("openwisp_users", "Group")
 
 
 class MockUser:
@@ -46,7 +46,7 @@ op_request.user = MockUser(is_superuser=False)
 
 class BaseTestAdmin(TestMultitenantAdminMixin, TestCase):
     def _login_admin(self):
-        u = User.objects.create_superuser('admin', 'admin', 'test@test.com')
+        u = User.objects.create_superuser("admin", "admin", "test@test.com")
         self.client.force_login(u)
         return u
 
@@ -55,16 +55,16 @@ class BaseTestAdmin(TestMultitenantAdminMixin, TestCase):
         self.notification_options = dict(
             sender=self.admin,
             recipient=self.admin,
-            description='Test Notification',
-            verb='Test Notification',
-            email_subject='Test Email subject',
-            url='localhost:8000/admin',
+            description="Test Notification",
+            verb="Test Notification",
+            email_subject="Test Email subject",
+            url="localhost:8000/admin",
         )
         self.site = AdminSite()
 
     @property
     def _url(self):
-        return reverse('admin:index')
+        return reverse("admin:index")
 
     def _expected_output(self, count=None):
         if count:
@@ -77,25 +77,25 @@ class TestAdmin(BaseTestAdmin):
     Tests notifications in admin
     """
 
-    app_label = 'openwisp_notifications'
+    app_label = "openwisp_notifications"
 
     def test_zero_notifications(self):
         r = self.client.get(self._url)
         self.assertContains(r, self._expected_output())
 
     def test_non_zero_notifications(self):
-        patched_function = 'openwisp_notifications.templatetags.notification_tags._get_user_unread_count'
+        patched_function = "openwisp_notifications.templatetags.notification_tags._get_user_unread_count"
         with self.subTest("Test UI for less than 100 notifications"):
             with patch(patched_function, return_value=10):
                 r = self.client.get(self._url)
-                self.assertContains(r, self._expected_output('10'))
+                self.assertContains(r, self._expected_output("10"))
 
         Notification.invalidate_unread_cache(self.admin)
 
         with self.subTest("Test UI for 99+ notifications"):
             with patch(patched_function, return_value=100):
                 r = self.client.get(self._url)
-                self.assertContains(r, self._expected_output('99+'))
+                self.assertContains(r, self._expected_output("99+"))
 
     def test_cached_value(self):
         self.client.get(self._url)
@@ -110,7 +110,7 @@ class TestAdmin(BaseTestAdmin):
         self.client.get(self._url)
         self.assertEqual(cache.get(cache_key), 1)
 
-    @tag('skip_prod')
+    @tag("skip_prod")
     # This tests depends on the static storage backend of the project.
     # In prod environment, the filenames could get changed due to
     # static minification and cache invalidation. Hence, these tests
@@ -118,52 +118,52 @@ class TestAdmin(BaseTestAdmin):
     def test_default_notification_setting(self):
         res = self.client.get(self._url)
         self.assertContains(
-            res, '/static/openwisp-notifications/audio/notification_bell.mp3'
+            res, "/static/openwisp-notifications/audio/notification_bell.mp3"
         )
-        self.assertContains(res, 'window.location')
+        self.assertContains(res, "window.location")
 
-    @tag('skip_prod')
+    @tag("skip_prod")
     # For more info, look at TestAdmin.test_default_notification_setting
     @patch.object(
         app_settings,
-        'SOUND',
-        '/static/notification.mp3',
+        "SOUND",
+        "/static/notification.mp3",
     )
     def test_notification_sound_setting(self):
         res = self.client.get(self._url)
-        self.assertContains(res, '/static/notification.mp3')
+        self.assertContains(res, "/static/notification.mp3")
         self.assertNotContains(
-            res, '/static/openwisp-notifications/audio/notification_bell.mp3'
+            res, "/static/openwisp-notifications/audio/notification_bell.mp3"
         )
 
     @patch.object(
         app_settings,
-        'HOST',
-        'https://example.com',
+        "HOST",
+        "https://example.com",
     )
     def test_notification_host_setting(self):
         res = self.client.get(self._url)
-        self.assertContains(res, 'https://example.com')
-        self.assertNotContains(res, 'window.location')
+        self.assertContains(res, "https://example.com")
+        self.assertNotContains(res, "window.location")
 
     def test_login_load_javascript(self):
         self.client.logout()
-        response = self.client.get(reverse('admin:login'))
-        self.assertNotContains(response, 'notifications.js')
+        response = self.client.get(reverse("admin:login"))
+        self.assertNotContains(response, "notifications.js")
 
     def test_websocket_protocol(self):
-        with self.subTest('Test in production environment'):
+        with self.subTest("Test in production environment"):
             response = self.client.get(self._url)
-            self.assertContains(response, 'wss')
+            self.assertContains(response, "wss")
 
     def test_ignore_notification_widget_add_view(self):
-        url = reverse('admin:openwisp_users_organization_add')
+        url = reverse("admin:openwisp_users_organization_add")
         response = self.client.get(url)
-        self.assertNotContains(response, 'owIsChangeForm')
+        self.assertNotContains(response, "owIsChangeForm")
 
     def test_notification_preferences_button_staff_user(self):
         user = self._create_user(is_staff=True)
-        user_admin_page = reverse('admin:openwisp_users_user_change', args=(user.pk,))
+        user_admin_page = reverse("admin:openwisp_users_user_change", args=(user.pk,))
         expected_url = reverse(
             "notifications:user_notification_preference", args=(user.pk,)
         )
@@ -185,7 +185,7 @@ class TestAdmin(BaseTestAdmin):
             self.assertNotContains(response, expected_html, html=True)
 
 
-@tag('skip_prod')
+@tag("skip_prod")
 # For more info, look at TestAdmin.test_default_notification_setting
 class TestAdminMedia(BaseTestAdmin):
     """
@@ -205,33 +205,33 @@ class TestAdminMedia(BaseTestAdmin):
             1,
         )
 
-        response = self.client.get(reverse('admin:sites_site_changelist'))
+        response = self.client.get(reverse("admin:sites_site_changelist"))
         self.assertIn(
-            '/static/admin/js/jquery.init.js',
+            "/static/admin/js/jquery.init.js",
             str(response.content),
             1,
         )
         self.assertIn(
-            '/static/admin/js/vendor/jquery/jquery.min.js',
+            "/static/admin/js/vendor/jquery/jquery.min.js",
             str(response.content),
             1,
         )
 
     def test_object_notification_setting_empty(self):
         response = self.client.get(
-            reverse('admin:openwisp_users_user_change', args=(self.admin.pk,))
+            reverse("admin:openwisp_users_user_change", args=(self.admin.pk,))
         )
         self.assertNotContains(
             response, 'src="/static/openwisp-notifications/js/object-notifications.js"'
         )
 
     @override_settings(
-        OPENWISP_NOTIFICATIONS_IGNORE_ENABLED_ADMIN=['openwisp_users.admin.UserAdmin'],
+        OPENWISP_NOTIFICATIONS_IGNORE_ENABLED_ADMIN=["openwisp_users.admin.UserAdmin"],
     )
     def test_object_notification_setting_configured(self):
         _add_object_notification_widget()
         response = self.client.get(
-            reverse('admin:openwisp_users_user_change', args=(self.admin.pk,))
+            reverse("admin:openwisp_users_user_change", args=(self.admin.pk,))
         )
         self.assertContains(
             response,
@@ -243,15 +243,15 @@ class TestAdminMedia(BaseTestAdmin):
         with self.assertWarns(MediaOrderConflictWarning):
             _add_object_notification_widget()
             response = self.client.get(
-                reverse('admin:openwisp_users_user_change', args=(self.admin.pk,))
+                reverse("admin:openwisp_users_user_change", args=(self.admin.pk,))
             )
 
         # If a ModelAdmin has list instances of js and css
-        UserAdmin.Media.css = {'all': list()}
+        UserAdmin.Media.css = {"all": list()}
         UserAdmin.Media.js = list()
         _add_object_notification_widget()
         response = self.client.get(
-            reverse('admin:openwisp_users_user_change', args=(self.admin.pk,))
+            reverse("admin:openwisp_users_user_change", args=(self.admin.pk,))
         )
 
         # If ModelAdmin has empty attributes
@@ -259,6 +259,6 @@ class TestAdminMedia(BaseTestAdmin):
         UserAdmin.Media.css = {}
         _add_object_notification_widget()
         response = self.client.get(
-            reverse('admin:openwisp_users_user_change', args=(self.admin.pk,))
+            reverse("admin:openwisp_users_user_change", args=(self.admin.pk,))
         )
         UserAdmin.Media = None

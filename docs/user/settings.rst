@@ -108,9 +108,7 @@ following:
 
 .. code-block:: python
 
-    OPENWISP_NOTIFICATIONS_IGNORE_ENABLED_ADMIN = [
-        "openwisp_users.admin.UserAdmin"
-    ]
+    OPENWISP_NOTIFICATIONS_IGNORE_ENABLED_ADMIN = ["openwisp_users.admin.UserAdmin"]
 
 ``OPENWISP_NOTIFICATIONS_POPULATE_PREFERENCES_ON_MIGRATE``
 ----------------------------------------------------------

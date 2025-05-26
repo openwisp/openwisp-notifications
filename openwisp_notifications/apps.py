@@ -6,9 +6,9 @@ from . import settings as app_settings
 
 
 class OpenwispNotificationsConfig(AppConfig):
-    name = 'openwisp_notifications'
-    label = 'openwisp_notifications'
-    verbose_name = _('Notifications')
+    name = "openwisp_notifications"
+    label = "openwisp_notifications"
+    verbose_name = _("Notifications")
 
     def ready(self):
         from openwisp_notifications.handlers import (
@@ -18,13 +18,13 @@ class OpenwispNotificationsConfig(AppConfig):
         from openwisp_notifications.signals import notify
 
         notify.connect(
-            notify_handler, dispatch_uid='openwisp_notifications.model.notifications'
+            notify_handler, dispatch_uid="openwisp_notifications.model.notifications"
         )
         if app_settings.POPULATE_PREFERENCES_ON_MIGRATE:
             post_migrate.connect(
                 notification_type_registered_unregistered_handler,
                 sender=self,
-                dispatch_uid='register_unregister_notification_types',
+                dispatch_uid="register_unregister_notification_types",
             )
 
         # Add CORS configuration checks

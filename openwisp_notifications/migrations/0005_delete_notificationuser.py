@@ -5,16 +5,16 @@ from django.db import migrations
 
 
 def delete_notification_user_permissions(apps, schema_editor):
-    Permission = apps.get_model('auth', 'Permission')
+    Permission = apps.get_model("auth", "Permission")
     Permission.objects.filter(
-        content_type__app_label='openwisp_notifications',
-        content_type__model='notificationuser',
+        content_type__app_label="openwisp_notifications",
+        content_type__model="notificationuser",
     ).delete()
 
 
 def populate_notification_user_permissions(apps, schema_editor):
     # Populate Permissions
-    app_config = apps.get_app_config('openwisp_notifications')
+    app_config = apps.get_app_config("openwisp_notifications")
     app_config.models_module = True
     create_permissions(app_config, apps=apps, verbosity=0)
     app_config.models_module = None
@@ -22,7 +22,7 @@ def populate_notification_user_permissions(apps, schema_editor):
 
 class Migration(migrations.Migration):
     dependencies = [
-        ('openwisp_notifications', '0004_notificationsetting'),
+        ("openwisp_notifications", "0004_notificationsetting"),
     ]
 
     operations = [
@@ -30,5 +30,5 @@ class Migration(migrations.Migration):
             delete_notification_user_permissions,
             reverse_code=populate_notification_user_permissions,
         ),
-        migrations.DeleteModel(name='NotificationUser'),
+        migrations.DeleteModel(name="NotificationUser"),
     ]

@@ -9,7 +9,7 @@ from openwisp_notifications.utils import normalize_unread_count
 from .. import settings as app_settings
 from ..swapper import load_model
 
-Notification = load_model('Notification')
+Notification = load_model("Notification")
 
 
 def user_in_notification_storm(user):
@@ -20,7 +20,7 @@ def user_in_notification_storm(user):
     If the user is found to be affected by a notification storm,
     the value of this function is cached for 60 seconds.
     """
-    in_notification_storm = cache.get(f'ow-noti-storm-{user.pk}', False)
+    in_notification_storm = cache.get(f"ow-noti-storm-{user.pk}", False)
     if in_notification_storm:
         return True
     if (
@@ -28,11 +28,11 @@ def user_in_notification_storm(user):
             timestamp__gte=now()
             - timedelta(
                 seconds=app_settings.NOTIFICATION_STORM_PREVENTION[
-                    'short_term_time_period'
+                    "short_term_time_period"
                 ]
             )
         ).count()
-        > app_settings.NOTIFICATION_STORM_PREVENTION['short_term_notification_count']
+        > app_settings.NOTIFICATION_STORM_PREVENTION["short_term_notification_count"]
     ):
         in_notification_storm = True
     elif (
@@ -40,15 +40,15 @@ def user_in_notification_storm(user):
             timestamp__gte=now()
             - timedelta(
                 seconds=app_settings.NOTIFICATION_STORM_PREVENTION[
-                    'long_term_time_period'
+                    "long_term_time_period"
                 ]
             )
         ).count()
-        > app_settings.NOTIFICATION_STORM_PREVENTION['long_term_notification_count']
+        > app_settings.NOTIFICATION_STORM_PREVENTION["long_term_notification_count"]
     ):
         in_notification_storm = True
     if in_notification_storm:
-        cache.set(f'ow-noti-storm-{user.pk}', True, 60)
+        cache.set(f"ow-noti-storm-{user.pk}", True, 60)
     return in_notification_storm
 
 
@@ -60,14 +60,14 @@ def notification_update_handler(reload_widget=False, notification=None, recipien
     except (NotFound, AssertionError):
         pass
     async_to_sync(channel_layer.group_send)(
-        f'ow-notification-{recipient.pk}',
+        f"ow-notification-{recipient.pk}",
         {
-            'type': 'send.updates',
-            'reload_widget': reload_widget,
-            'notification': notification,
-            'recipient': str(recipient.pk),
-            'in_notification_storm': user_in_notification_storm(recipient),
-            'notification_count': normalize_unread_count(
+            "type": "send.updates",
+            "reload_widget": reload_widget,
+            "notification": notification,
+            "recipient": str(recipient.pk),
+            "in_notification_storm": user_in_notification_storm(recipient),
+            "notification_count": normalize_unread_count(
                 recipient.notifications.unread().count()
             ),
         },
