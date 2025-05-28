@@ -62,16 +62,37 @@ The complete syntax for ``notify`` is:
         **kwargs,
     )
 
-Since ``openwisp-notifications`` uses ``django-notifications`` under the
-hood, usage of the ``notify signal`` has been kept unaffected to maintain
-consistency with ``django-notifications``. You can learn more about
-accepted parameters from `django-notifications documentation
-<https://github.com/django-notifications/django-notifications#generating-notifications>`_.
+actor: An object of any type. (Required) Note: Use sender instead of actor
+if you intend to use keyword arguments recipient: A Group or a User
+QuerySet or a list of User. (Required) verb: An string. (Required)
+action_object: An object of any type. (Optional) target: An object of any
+type. (Optional) level: One of Notification.LEVELS ('success', 'info',
+'warning', 'error') (default=info). (Optional) description: An string.
+(Optional) public: An boolean (default=True). (Optional) timestamp: An
+tzinfo (default=timezone.now()). (Optional)
 
-The ``notify`` signal supports the following additional parameters:
+The ``notify`` signal supports the following parameters:
 
-================= ======================================================
+================= ========================================================
 **Parameter**     **Description**
+``actor``         An object of any type that represents the actor
+                  performing the action that triggered the notification.
+
+                  **Note:** Use ``sender`` instead of ``actor`` if you
+                  intend to use keyword arguments.
+``recipient``     The recipient of the notification. This can be a
+                  ``Group``, a list or queryset of ``User`` objects, or a
+                  single ``User`` object.
+
+                  Defaults to ``None``, meaning you need to provide this
+                  argument.
+``action_object`` An object related to the action that triggered the
+                  notification (optional).
+
+                  Defaults to ``None``.
+``target``        The target object of the notification (optional).
+
+                  Defaults to ``None``.
 ``type``          Set values of other parameters based on registered
                   :doc:`notification types <./notification-types>`
 
@@ -86,7 +107,16 @@ The ``notify`` signal supports the following additional parameters:
 
                   Defaults to ``None``, meaning the above message would
                   not be added to the email text.
-================= ======================================================
+``verb``          A string describing the action that triggered the
+                  notification.
+
+                  Defaults to ``None``, meaning you need to provide this
+                  argument.
+``level``         The level of the notification, one of 'success', 'info',
+                  'warning' or 'error'.
+
+                  Defaults to 'info'.
+================= ========================================================
 
 Passing Extra Data to Notifications
 -----------------------------------
