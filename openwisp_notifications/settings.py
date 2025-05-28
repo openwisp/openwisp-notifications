@@ -1,9 +1,14 @@
 import re
 
 from django.conf import settings
-from notifications.settings import CONFIG_DEFAULTS
 
-CONFIG_DEFAULTS.update({"USE_JSONFIELD": True})
+CONFIG_DEFAULTS = {
+    "PAGINATE_BY": 20,
+    "USE_JSONFIELD": True,
+    "SOFT_DELETE": False,
+    "NUM_TO_FETCH": 10,
+    "CACHE_TIMEOUT": 2,
+}
 
 HOST = getattr(settings, "OPENWISP_NOTIFICATIONS_HOST", None)
 

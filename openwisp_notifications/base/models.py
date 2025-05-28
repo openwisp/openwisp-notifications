@@ -17,7 +17,6 @@ from django.utils.html import mark_safe
 from django.utils.module_loading import import_string
 from django.utils.translation import gettext_lazy as _
 from markdown import markdown
-from notifications.base.models import AbstractNotification as BaseNotification
 from swapper import get_model_name
 
 from openwisp_notifications import settings as app_settings
@@ -29,6 +28,8 @@ from openwisp_notifications.types import (
 )
 from openwisp_notifications.utils import _get_absolute_url, _get_object_link
 from openwisp_utils.base import UUIDModel
+
+from .notifications import AbstractNotification as BaseNotification
 
 logger = logging.getLogger(__name__)
 
