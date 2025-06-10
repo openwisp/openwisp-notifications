@@ -486,7 +486,7 @@ function initWebSockets($) {
     if (data.notification) {
       let toast =
         $(`<div class="ow-notification-toast ${data.notification.level}"
-                                data-location="${convertAbsoluteURLToRelativeURL(target_url)}"
+                                data-location="${convertAbsoluteURLToRelativeURL(data.notification.target_url)}"
                                 id="ow-${data.notification.id}">
                                 <div class="icon ow-notify-close btn" role="button" tabindex="1"></div>
                                 <div style="display:flex">
