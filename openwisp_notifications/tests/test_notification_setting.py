@@ -1,6 +1,7 @@
 from unittest.mock import patch
 
 from django.core.exceptions import ValidationError
+from django.db.models import Q
 from django.db.models.signals import post_save
 from django.test import TransactionTestCase
 
@@ -396,3 +397,18 @@ class TestNotificationSetting(TestOrganizationMixin, TransactionTestCase):
             with self.assertRaises(ValidationError):
                 global_setting.full_clean()
                 global_setting.save()
+
+    def test_notification_setting_inactive_organizations(self):
+        user = self._get_user()
+        active_org = Organization.objects.create(name="active-org", is_active=True)
+        inactive_org = Organization.objects.create(name="inactive-org", is_active=False)
+        NotificationSetting.objects.create(user=user, organization=None)
+        NotificationSetting.objects.create(user=user, organization=active_org)
+        NotificationSetting.objects.create(user=user, organization=inactive_org)
+        qs = NotificationSetting.objects.filter(user=user).filter(
+            Q(organization__isnull=True) | Q(organization__is_active=True)
+        )
+        self.assertEqual(qs.count(), 2)
+        for setting in qs:
+            if setting.organization is not None:
+                self.assertTrue(setting.organization.is_active)
