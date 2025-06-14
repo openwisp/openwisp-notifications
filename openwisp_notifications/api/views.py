@@ -1,4 +1,5 @@
 from django.contrib.contenttypes.models import ContentType
+from django.db.models import Q
 from django.http import Http404, HttpResponseRedirect
 from django.urls import reverse
 from django_filters.rest_framework import DjangoFilterBackend
@@ -122,7 +123,9 @@ class BaseNotificationSettingView(GenericAPIView):
         if getattr(self, "swagger_fake_view", False):
             return NotificationSetting.objects.none()  # pragma: no cover
         user_id = self.kwargs.get("user_id", self.request.user.id)
-        return NotificationSetting.objects.filter(user_id=user_id)
+        return NotificationSetting.objects.filter(user_id=user_id).filter(
+            Q(organization__isnull=True) | Q(organization__is_active=True)
+        )
 
 
 class NotificationSettingListView(BaseNotificationSettingView, ListModelMixin):
