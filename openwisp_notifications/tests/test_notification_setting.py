@@ -1,9 +1,9 @@
 from unittest.mock import patch
 
 from django.core.exceptions import ValidationError
-from django.db.models import Q
 from django.db.models.signals import post_save
 from django.test import TransactionTestCase
+from django.urls import reverse
 
 from openwisp_notifications.handlers import (
     notification_type_registered_unregistered_handler,
@@ -398,17 +398,35 @@ class TestNotificationSetting(TestOrganizationMixin, TransactionTestCase):
                 global_setting.full_clean()
                 global_setting.save()
 
-    def test_notification_setting_inactive_organizations(self):
-        user = self._get_user()
-        active_org = Organization.objects.create(name="active-org", is_active=True)
-        inactive_org = Organization.objects.create(name="inactive-org", is_active=False)
-        NotificationSetting.objects.create(user=user, organization=None)
-        NotificationSetting.objects.create(user=user, organization=active_org)
-        NotificationSetting.objects.create(user=user, organization=inactive_org)
-        qs = NotificationSetting.objects.filter(user=user).filter(
-            Q(organization__isnull=True) | Q(organization__is_active=True)
+    @mock_notification_types
+    def test_preferences_api_excludes_disabled_organizations(self):
+        def create_validated_instance(Model, **data):
+            obj = Model(**data)
+            obj.full_clean()
+            obj.save()
+            return obj
+
+        user = self._create_user()
+        active_org = self._get_org("active")
+        inactive_org = create_validated_instance(
+            Organization, name="inactive", slug="inactive", is_active=False
         )
-        self.assertEqual(qs.count(), 2)
-        for setting in qs:
-            if setting.organization is not None:
-                self.assertTrue(setting.organization.is_active)
+        create_validated_instance(NotificationSetting, user=user, organization=None)
+        create_validated_instance(
+            NotificationSetting, user=user, organization=active_org
+        )
+        create_validated_instance(
+            NotificationSetting, user=user, organization=inactive_org
+        )
+        self.client.force_login(user)  # to prevent auth error in test
+        url = reverse(
+            "notifications:user_notification_setting_list",
+            kwargs={"user_id": str(user.id)},
+        )
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        org_ids = [item["organization"] for item in response.data["results"]]
+        self.assertEqual(len(org_ids), 2)
+        self.assertIn(None, org_ids)
+        self.assertIn(str(active_org.id), [str(i) for i in org_ids])
+        self.assertNotIn(str(inactive_org.id), org_ids)
