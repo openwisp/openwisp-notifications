@@ -1105,6 +1105,48 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
 
         self.assertEqual(len(mail.outbox), 3)
 
+    @patch("openwisp_notifications.tasks.send_batched_email_notifications.apply_async")
+    def test_batch_email_conditions(self, mock_send_email):
+        """
+        Batch email should be sent if the last email was
+        sent less than EMAIL_BATCH_INTERVAL seconds ago.
+        """
+        now = timezone.now()
+        past_time = now - timedelta(seconds=app_settings.EMAIL_BATCH_INTERVAL + 1)
+        # Create the initial notification which sets the last email sent time
+        with freeze_time(past_time):
+            self._create_notification()
+        self.assertEqual(len(mail.outbox), 1)
+        mock_send_email.assert_not_called()
+        self.assertEqual(
+            cache.get(f"email_batch_{self.admin.id}")["last_email_sent_time"], past_time
+        )
+
+        # Notification should not be batched because the last email was sent
+        # more than EMAIL_BATCH_INTERVAL seconds ago.
+        with freeze_time(now):
+            self._create_notification()
+        self.assertEqual(len(mail.outbox), 2)
+        mock_send_email.assert_not_called()
+
+        # Notification should be batched because the last email was sent
+        # less than EMAIL_BATCH_INTERVAL seconds ago.
+        with freeze_time(now + timedelta(seconds=1)):
+            self._create_notification()
+        self.assertEqual(len(mail.outbox), 2)
+        mock_send_email.assert_called_once_with(
+            (str(self.admin.id),),
+            countdown=app_settings.EMAIL_BATCH_INTERVAL,
+        )
+
+        mock_send_email.reset_mock()
+        # Subsequent notifications should not trigger a new batch
+        with freeze_time(now + timedelta(seconds=2)):
+            self._create_notification()
+        self.assertEqual(len(mail.outbox), 2)
+        mock_send_email.assert_not_called()
+        self.assertEqual(len(cache.get(f"email_batch_{self.admin.id}")["pks"]), 2)
+
     def test_that_the_notification_is_only_sent_once_to_the_user(self):
         first_org = self._create_org()
         first_org.organization_id = first_org.id
