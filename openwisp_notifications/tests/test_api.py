@@ -1137,9 +1137,7 @@ class TestNotificationApi(
     def test_preferences_api_excludes_disabled_organizations(self):
         user = self._create_user()
         active_org = self._get_org("active")
-        inactive_org = Organization(name="inactive", slug="inactive", is_active=False)
-        inactive_org.full_clean()
-        inactive_org.save()
+        inactive_org = self._create_org(name="inactive", slug="inactive", is_active=False)
         NotificationSetting(user=user, organization=None).full_clean()
         NotificationSetting(user=user, organization=None).save()
         NotificationSetting(user=user, organization=active_org).full_clean()
