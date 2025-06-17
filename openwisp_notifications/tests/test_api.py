@@ -1132,3 +1132,23 @@ class TestNotificationApi(
             url = self._get_path("notification_detail", notification.pk)
             response = self.client.get(url)
             self.assertEqual(response.status_code, 404)
+
+    @mock_notification_types
+    def test_preferences_api_excludes_disabled_organizations(self):
+        user = self._create_user()
+        active_org = self._get_org("active")
+        inactive_org = Organization(name="inactive", slug="inactive", is_active=False)
+        inactive_org.full_clean()
+        inactive_org.save()
+        NotificationSetting(user=user, organization=None).full_clean(); NotificationSetting(user=user, organization=None).save()
+        NotificationSetting(user=user, organization=active_org).full_clean(); NotificationSetting(user=user, organization=active_org).save()
+        NotificationSetting(user=user, organization=inactive_org).full_clean(); NotificationSetting(user=user, organization=inactive_org).save()
+        self.client.force_login(user)
+        url = reverse("notifications:user_notification_setting_list", kwargs={"user_id": str(user.id)})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        org_ids = [item["organization"] for item in response.data["results"]]
+        self.assertEqual(len(org_ids), 2)
+        self.assertIn(None, org_ids)
+        self.assertIn(str(active_org.id), [str(i) for i in org_ids])
+        self.assertNotIn(str(inactive_org.id), org_ids)
