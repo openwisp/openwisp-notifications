@@ -1140,11 +1140,17 @@ class TestNotificationApi(
         inactive_org = Organization(name="inactive", slug="inactive", is_active=False)
         inactive_org.full_clean()
         inactive_org.save()
-        NotificationSetting(user=user, organization=None).full_clean(); NotificationSetting(user=user, organization=None).save()
-        NotificationSetting(user=user, organization=active_org).full_clean(); NotificationSetting(user=user, organization=active_org).save()
-        NotificationSetting(user=user, organization=inactive_org).full_clean(); NotificationSetting(user=user, organization=inactive_org).save()
+        NotificationSetting(user=user, organization=None).full_clean()
+        NotificationSetting(user=user, organization=None).save()
+        NotificationSetting(user=user, organization=active_org).full_clean()
+        NotificationSetting(user=user, organization=active_org).save()
+        NotificationSetting(user=user, organization=inactive_org).full_clean()
+        NotificationSetting(user=user, organization=inactive_org).save()
         self.client.force_login(user)
-        url = reverse("notifications:user_notification_setting_list", kwargs={"user_id": str(user.id)})
+        url = reverse(
+            "notifications:user_notification_setting_list",
+            kwargs={"user_id": str(user.id)},
+        )
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
         org_ids = [item["organization"] for item in response.data["results"]]
