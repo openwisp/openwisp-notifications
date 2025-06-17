@@ -1132,3 +1132,23 @@ class TestNotificationApi(
             url = self._get_path("notification_detail", notification.pk)
             response = self.client.get(url)
             self.assertEqual(response.status_code, 404)
+
+    @mock_notification_types
+    def test_preferences_api_excludes_disabled_organizations(self):
+        user = self._create_user()
+        active_org = self._get_org("active")
+        inactive_org = self._create_org(
+            name="inactive", slug="inactive", is_active=False
+        )
+        self._create_org_user(user=user, organization=active_org)
+        self._create_org_user(user=user, organization=inactive_org)
+        self.client.force_login(user)
+        url = reverse(
+            "notifications:user_notification_setting_list",
+            kwargs={"user_id": str(user.id)},
+        )
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        # ensure preferences from disabled orgs are not shown
+        for obj in response.data["results"]:
+            self.assertNotEqual(obj["organization_id"], str(inactive_org.id))
