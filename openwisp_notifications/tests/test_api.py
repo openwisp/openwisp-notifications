@@ -1138,12 +1138,8 @@ class TestNotificationApi(
         user = self._create_user()
         active_org = self._get_org("active")
         inactive_org = self._create_org(name="inactive", slug="inactive", is_active=False)
-        NotificationSetting(user=user, organization=None).full_clean()
-        NotificationSetting(user=user, organization=None).save()
-        NotificationSetting(user=user, organization=active_org).full_clean()
-        NotificationSetting(user=user, organization=active_org).save()
-        NotificationSetting(user=user, organization=inactive_org).full_clean()
-        NotificationSetting(user=user, organization=inactive_org).save()
+        self._create_org_user(user=user, org=active)
+        self._create_org_user(user=user, org=inactive)
         self.client.force_login(user)
         url = reverse(
             "notifications:user_notification_setting_list",
