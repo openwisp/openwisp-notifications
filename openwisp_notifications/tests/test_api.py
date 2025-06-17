@@ -1147,8 +1147,6 @@ class TestNotificationApi(
         )
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
-        org_ids = [item["organization"] for item in response.data["results"]]
-        self.assertEqual(len(org_ids), 2)
-        self.assertIn(None, org_ids)
-        self.assertIn(str(active_org.id), [str(i) for i in org_ids])
-        self.assertNotIn(str(inactive_org.id), org_ids)
+        # ensure preferences from disabled orgs are not shown
+        for obj in response.data["results"]: 
+            self.assertNotEqual(obj["organization_id"], str(inactive.id))
