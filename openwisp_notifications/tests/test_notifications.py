@@ -66,6 +66,7 @@ notification_queryset = Notification.objects.order_by("-timestamp")
 
 class TestNotifications(TestOrganizationMixin, TransactionTestCase):
     app_label = "openwisp_notifications"
+    users_app_label = "openwisp_users"
 
     def setUp(self):
         self.admin = self._create_admin()
@@ -377,7 +378,9 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
         expected_output = (
             '<p><a href="https://example.com{user_path}">admin</a></p>'
         ).format(
-            user_path=reverse("admin:openwisp_users_user_change", args=[self.admin.pk])
+            user_path=reverse(
+                f"admin:{self.users_app_label}_user_change", args=[self.admin.pk]
+            )
         )
         self.assertEqual(n.message, expected_output)
         self.assertEqual(n.rendered_description, expected_output)
@@ -435,7 +438,9 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
 
         with self.subTest("Links in notification message"):
             url = _get_absolute_url(
-                reverse("admin:openwisp_users_user_change", args=(self.admin.pk,))
+                reverse(
+                    f"admin:{self.users_app_label}_user_change", args=(self.admin.pk,)
+                )
             )
             message = (
                 "<p>info : None message template verb </p>\n"

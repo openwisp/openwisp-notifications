@@ -78,6 +78,7 @@ class TestAdmin(BaseTestAdmin):
     """
 
     app_label = "openwisp_notifications"
+    users_app_label = "openwisp_users"
 
     def test_zero_notifications(self):
         r = self.client.get(self._url)
@@ -157,13 +158,15 @@ class TestAdmin(BaseTestAdmin):
             self.assertContains(response, "wss")
 
     def test_ignore_notification_widget_add_view(self):
-        url = reverse("admin:openwisp_users_organization_add")
+        url = reverse(f"admin:{self.users_app_label}_organization_add")
         response = self.client.get(url)
         self.assertNotContains(response, "owIsChangeForm")
 
     def test_notification_preferences_button_staff_user(self):
         user = self._create_user(is_staff=True)
-        user_admin_page = reverse("admin:openwisp_users_user_change", args=(user.pk,))
+        user_admin_page = reverse(
+            f"admin:{self.users_app_label}_user_change", args=(user.pk,)
+        )
         expected_url = reverse(
             "notifications:user_notification_preference", args=(user.pk,)
         )
@@ -192,6 +195,8 @@ class TestAdminMedia(BaseTestAdmin):
     Tests notifications admin media
     """
 
+    users_app_label = "openwisp_users"
+
     def test_jquery_import(self):
         response = self.client.get(self._url)
         self.assertInHTML(
@@ -219,7 +224,7 @@ class TestAdminMedia(BaseTestAdmin):
 
     def test_object_notification_setting_empty(self):
         response = self.client.get(
-            reverse("admin:openwisp_users_user_change", args=(self.admin.pk,))
+            reverse(f"admin:{self.users_app_label}_user_change", args=(self.admin.pk,))
         )
         self.assertNotContains(
             response, 'src="/static/openwisp-notifications/js/object-notifications.js"'
@@ -231,7 +236,7 @@ class TestAdminMedia(BaseTestAdmin):
     def test_object_notification_setting_configured(self):
         _add_object_notification_widget()
         response = self.client.get(
-            reverse("admin:openwisp_users_user_change", args=(self.admin.pk,))
+            reverse(f"admin:{self.users_app_label}_user_change", args=(self.admin.pk,))
         )
         self.assertContains(
             response,
@@ -243,7 +248,9 @@ class TestAdminMedia(BaseTestAdmin):
         with self.assertWarns(MediaOrderConflictWarning):
             _add_object_notification_widget()
             response = self.client.get(
-                reverse("admin:openwisp_users_user_change", args=(self.admin.pk,))
+                reverse(
+                    f"admin:{self.users_app_label}_user_change", args=(self.admin.pk,)
+                )
             )
 
         # If a ModelAdmin has list instances of js and css
@@ -251,7 +258,7 @@ class TestAdminMedia(BaseTestAdmin):
         UserAdmin.Media.js = list()
         _add_object_notification_widget()
         response = self.client.get(
-            reverse("admin:openwisp_users_user_change", args=(self.admin.pk,))
+            reverse(f"admin:{self.users_app_label}_user_change", args=(self.admin.pk,))
         )
 
         # If ModelAdmin has empty attributes
@@ -259,6 +266,6 @@ class TestAdminMedia(BaseTestAdmin):
         UserAdmin.Media.css = {}
         _add_object_notification_widget()
         response = self.client.get(
-            reverse("admin:openwisp_users_user_change", args=(self.admin.pk,))
+            reverse(f"admin:{self.users_app_label}_user_change", args=(self.admin.pk,))
         )
         UserAdmin.Media = None
