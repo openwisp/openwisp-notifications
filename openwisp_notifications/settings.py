@@ -43,7 +43,7 @@ SOUND = getattr(
 )
 
 EMAIL_BATCH_INTERVAL = getattr(
-    settings, "OPENWISP_NOTIFICATIONS_EMAIL_BATCH_INTERVAL", 30 * 60  # 30 minutes
+    settings, "OPENWISP_NOTIFICATIONS_EMAIL_BATCH_INTERVAL", 180 * 60  # 3 hours
 )
 
 EMAIL_BATCH_DISPLAY_LIMIT = getattr(

@@ -162,10 +162,10 @@ The default configuration is as follows:
 ``OPENWISP_NOTIFICATIONS_EMAIL_BATCH_INTERVAL``
 -----------------------------------------------
 
-======= =================================
+======= ===============================
 Type    ``int``
-Default ``1800`` (30 minutes, in seconds)
-======= =================================
+Default ``10800`` (3 hours, in seconds)
+======= ===============================
 
 This setting determines the :ref:`interval of the email batching feature
 <notifications_batches>`.
