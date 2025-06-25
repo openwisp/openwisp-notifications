@@ -3,6 +3,7 @@ from contextlib import contextmanager
 
 import django
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.sites.models import Site
@@ -12,6 +13,7 @@ from django.db import models, transaction
 from django.db.models.constraints import UniqueConstraint
 from django.template.loader import render_to_string
 from django.urls import reverse
+from django.utils import timezone
 from django.utils.functional import cached_property
 from django.utils.html import mark_safe
 from django.utils.module_loading import import_string
@@ -26,7 +28,11 @@ from openwisp_notifications.types import (
     get_notification_choices,
     get_notification_configuration,
 )
-from openwisp_notifications.utils import _get_absolute_url, _get_object_link
+from openwisp_notifications.utils import (
+    _get_absolute_url,
+    _get_object_link,
+    send_notification_email,
+)
 from openwisp_utils.base import UUIDModel
 
 from .notifications import AbstractNotification as BaseNotification
@@ -129,6 +135,80 @@ class AbstractNotification(UUIDModel, BaseNotification):
         Invalidate unread cache for user.
         """
         cache.delete(cls.count_cache_key(user.pk))
+
+    @classmethod
+    def get_user_batched_notifications_cache_key(cls, user):
+        if isinstance(user, get_user_model()):
+            user = str(user.pk)
+        return f"email_batch_{user}"
+
+    @classmethod
+    def get_user_batch_email_data(cls, user, pop=False):
+        """
+        Retrieve batch email notification data for a given user from the cache.
+
+        Args:
+            user (User): The user for whom to retrieve batch email data.
+            pop (bool, optional): If True, delete the cached data after retrieval. Defaults to False.
+
+        Returns:
+            tuple: A tuple containing:
+                - last_email_sent_time (datetime or None): The timestamp of the last sent email,
+                    or None if not available.
+                - start_time (datetime or None): The start time of the batch,
+                    or None if not available.
+                - pks (list): A list of primary keys associated with the batch,
+                    or an empty list if not available.
+        """
+        key = cls.get_user_batched_notifications_cache_key(user)
+        data = cache.get(key, {})
+        if pop:
+            cache.delete(key)
+        return (
+            data.get("last_email_sent_time", None),
+            data.get("start_time", None),
+            data.get("pks", []),
+        )
+
+    @classmethod
+    def set_user_batch_email_data(cls, user, overwrite=True, **kwargs):
+        """
+        Set or update the batch email data for a specific user in the cache.
+
+        This method stores or updates notification data associated with a user,
+        which is used for batching email notifications. If `overwrite` is True,
+        the existing data is replaced with the provided keyword arguments. If
+        `overwrite` is False, the existing cached data is updated with the new
+        keyword arguments.
+
+        Args:
+            user (User): The user for whom the batch email data is being set.
+            overwrite (bool, optional): If True, overwrite existing data. If False,
+                update existing data with new values. Defaults to True.
+            **kwargs: Keyword arguments representing the data to be stored in the cache.
+                (last_email_sent_time, start_time, pks)
+        Returns:
+            None
+        """
+        if overwrite:
+            data = kwargs
+        else:
+            data = cache.get(cls.get_user_batched_notifications_cache_key(user), {})
+            data.update(kwargs)
+        cache.set(
+            cls.get_user_batched_notifications_cache_key(user),
+            data,
+            timeout=None,
+        )
+
+    @classmethod
+    def set_last_email_sent_time_for_user(cls, user, timestamp=None):
+        timestamp = timestamp or timezone.now()
+        cls.set_user_batch_email_data(
+            user,
+            last_email_sent_time=timestamp,
+            overwrite=False,
+        )
 
     def _get_related_object_url(self, field):
         """
@@ -273,6 +353,18 @@ class AbstractNotification(UUIDModel, BaseNotification):
         return _get_absolute_url(
             reverse("notifications:notification_read_redirect", args=(self.pk,))
         )
+
+    def send_email(self, force=False):
+        """
+        Send email notification to the user.
+        """
+        if self.emailed and not force:
+            # If the notification is already emailed, do not send it again.
+            return
+        send_notification_email(self)
+        self.emailed = True
+        # bulk_update is used to prevent emitting post_save signal
+        self._meta.model.objects.bulk_update([self], fields=["emailed"])
 
 
 class AbstractNotificationSetting(UUIDModel):
