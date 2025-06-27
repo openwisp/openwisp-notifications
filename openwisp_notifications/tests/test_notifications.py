@@ -386,6 +386,26 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
         self.assertEqual(n.rendered_description, expected_output)
         self.assertEqual(n.email_subject, "[example.com] Generic Notification Subject")
 
+    def test_generic_notification_type_global_notifications_disabled(self):
+        org_user = self._get_org_user()
+        self.notification_options.pop("verb")
+        self.notification_options.update(
+            {
+                "message": "[{notification.target}]({notification.target_link})",
+                "type": "generic_message",
+                "description": "[{notification.target}]({notification.target_link})",
+                "target": org_user,
+            }
+        )
+        global_setting = self.admin.notificationsetting_set.get(
+            type=None, organization=None
+        )
+        global_setting.web = False
+        global_setting.full_clean()
+        global_setting.save()
+        self._create_notification()
+        self.assertEqual(notification_queryset.count(), 0)
+
     def test_notification_level_kwarg_precedence(self):
         # Create a notification with level kwarg set to 'warning'
         self.notification_options.update({"level": "warning"})

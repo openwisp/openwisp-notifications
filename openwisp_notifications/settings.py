@@ -9,6 +9,7 @@ CONFIG_DEFAULTS = {
     "NUM_TO_FETCH": 10,
     "CACHE_TIMEOUT": 2,
 }
+DISALLOW_PREFERENCES_CHANGE_TYPE = ["generic_message"]
 
 HOST = getattr(settings, "OPENWISP_NOTIFICATIONS_HOST", None)
 

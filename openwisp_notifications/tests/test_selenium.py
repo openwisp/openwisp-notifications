@@ -154,10 +154,14 @@ class TestSelenium(
     def test_notification_preference_page(self):
         self.login()
         self.open(reverse("notifications:notification_preference"))
+        # Expand the first organization panel
+        self.find_element(By.CSS_SELECTOR, ".toggle-icon").click()
+
+        with self.subTest("Generic message type is not present"):
+            # Verify that the generic message type is not present
+            self.wait_for_invisibility(By.XPATH, '//td[text()="Generic Message Type"]')
 
         with self.subTest("Notifications are enabled"):
-            # Expand the first organization panel
-            self.find_element(By.CSS_SELECTOR, ".toggle-icon").click()
             # All web notifications are enabled
             web_checkboxes = self.find_elements(
                 By.CSS_SELECTOR,
@@ -173,13 +177,6 @@ class TestSelenium(
                 wait_for="presence",
             )
             self.assertTrue(default_email_checkbox.is_selected())
-            # Email notification is disabled for generic type
-            generic_email_checkbox = self.find_element(
-                By.CSS_SELECTOR,
-                "label#org-1-email-2 input",
-                wait_for="presence",
-            )
-            self.assertFalse(generic_email_checkbox.is_selected())
 
         with self.subTest("Disabling global notification setting"):
             self.find_element(
