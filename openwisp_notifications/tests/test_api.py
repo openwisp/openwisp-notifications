@@ -9,6 +9,7 @@ from django.urls import reverse
 from django.utils import timezone
 from rest_framework.exceptions import ErrorDetail
 
+from openwisp_notifications import settings as app_settings
 from openwisp_notifications.signals import notify
 from openwisp_notifications.swapper import load_model, swapper_load_model
 from openwisp_notifications.tests.test_helpers import (
@@ -262,7 +263,9 @@ class TestNotificationApi(
         notification_setting = NotificationSetting.objects.exclude(
             organization=None
         ).first()
-        notification_setting_count = NotificationSetting.objects.count()
+        notification_setting_count = NotificationSetting.objects.exclude(
+            type__in=app_settings.DISALLOW_PREFERENCES_CHANGE_TYPE
+        ).count()
         token = self._obtain_auth_token(username="admin", password="tester")
 
         with self.subTest("Test listing all notifications"):
@@ -501,7 +504,13 @@ class TestNotificationApi(
 
     def test_notification_setting_list_api(self):
         self._create_org_user(is_admin=True)
-        number_of_settings = NotificationSetting.objects.filter(user=self.admin).count()
+        number_of_settings = (
+            NotificationSetting.objects.exclude(
+                type__in=app_settings.DISALLOW_PREFERENCES_CHANGE_TYPE
+            )
+            .filter(user=self.admin)
+            .count()
+        )
         url = self._get_path("notification_setting_list")
 
         with self.subTest("Test notification setting list view"):
@@ -516,7 +525,7 @@ class TestNotificationApi(
             self.assertEqual(len(response.data["results"]), number_of_settings)
 
         with self.subTest('Test "page_size" query'):
-            page_size = 2
+            page_size = 1
             url = f"{url}?page_size={page_size}"
             response = self.client.get(url)
             self.assertEqual(response.status_code, 200)
@@ -562,18 +571,19 @@ class TestNotificationApi(
         tester = self._create_administrator(
             organizations=[self._get_org(org_name="default")]
         )
+        ns_query = NotificationSetting.objects.exclude(
+            type__in=app_settings.DISALLOW_PREFERENCES_CHANGE_TYPE
+        )
 
         with self.subTest("Test listing notification setting without filters"):
-            count = NotificationSetting.objects.filter(user=self.admin).count()
+            count = ns_query.filter(user=self.admin).count()
             response = self.client.get(url)
             self.assertEqual(response.status_code, 200)
             self.assertEqual(len(response.data["results"]), count)
 
         with self.subTest('Test listing notification setting for "default" org'):
             org = Organization.objects.first()
-            count = NotificationSetting.objects.filter(
-                user=self.admin, organization_id=org.id
-            ).count()
+            count = ns_query.filter(user=self.admin, organization_id=org.id).count()
             org_url = f"{url}?organization={org.id}"
             response = self.client.get(org_url)
             self.assertEqual(response.status_code, 200)
@@ -583,9 +593,7 @@ class TestNotificationApi(
 
         with self.subTest('Test listing notification setting for "default" org slug'):
             org = Organization.objects.first()
-            count = NotificationSetting.objects.filter(
-                user=self.admin, organization=org
-            ).count()
+            count = ns_query.filter(user=self.admin, organization=org).count()
             org_slug_url = f"{url}?organization_slug={org.slug}"
             response = self.client.get(org_slug_url)
             self.assertEqual(response.status_code, 200)
@@ -771,6 +779,31 @@ class TestNotificationApi(
                 url, update_data, content_type="application/json"
             )
             self.assertEqual(response.status_code, 403)
+
+    def test_disallowed_change_types_absent_in_notification_setting_api(self):
+        with self.subTest("disallowed type setting not present in list"):
+            path = self._get_path("notification_setting_list")
+            response = self.client.get(path)
+            self.assertEqual(response.status_code, 200)
+            for setting in response.data["results"]:
+                self.assertNotIn(
+                    setting["type"], app_settings.DISALLOW_PREFERENCES_CHANGE_TYPE
+                )
+
+        generic_message_setting = self.admin.notificationsetting_set.get(
+            type="generic_message"
+        )
+        with self.subTest("disallowed type setting not present in detail"):
+            path = self._get_path("notification_setting", generic_message_setting.pk)
+            response = self.client.get(path)
+            self.assertEqual(response.status_code, 404)
+
+        with self.subTest("disallowed type setting absent in update"):
+            path = self._get_path("notification_setting", generic_message_setting.pk)
+            response = self.client.put(
+                path, data={"web": False}, content_type="application/json"
+            )
+            self.assertEqual(response.status_code, 404)
 
     def test_notification_redirect_api(self):
         def _unread_notification(notification):

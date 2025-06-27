@@ -1,4 +1,5 @@
 from django.contrib.contenttypes.models import ContentType
+from django.db.models import Q
 from django.http import Http404, HttpResponseRedirect
 from django.urls import reverse
 from django_filters.rest_framework import DjangoFilterBackend
@@ -15,6 +16,7 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
+from openwisp_notifications import settings as app_settings
 from openwisp_notifications.api.permissions import PreferencesPermission
 from openwisp_notifications.api.serializers import (
     IgnoreObjectNotificationSerializer,
@@ -123,7 +125,8 @@ class BaseNotificationSettingView(GenericAPIView):
             return NotificationSetting.objects.none()  # pragma: no cover
         user_id = self.kwargs.get("user_id", self.request.user.id)
         return NotificationSetting.objects.exclude(
-            organization__is_active=False
+            Q(organization__is_active=False)
+            | Q(type__in=app_settings.DISALLOW_PREFERENCES_CHANGE_TYPE)
         ).filter(user_id=user_id)
 
 
