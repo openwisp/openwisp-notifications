@@ -62,15 +62,6 @@ The complete syntax for ``notify`` is:
         **kwargs,
     )
 
-actor: An object of any type. (Required) Note: Use sender instead of actor
-if you intend to use keyword arguments recipient: A Group or a User
-QuerySet or a list of User. (Required) verb: An string. (Required)
-action_object: An object of any type. (Optional) target: An object of any
-type. (Optional) level: One of Notification.LEVELS ('success', 'info',
-'warning', 'error') (default=info). (Optional) description: An string.
-(Optional) public: An boolean (default=True). (Optional) timestamp: An
-tzinfo (default=timezone.now()). (Optional)
-
 The ``notify`` signal supports the following parameters:
 
 ================= ========================================================
@@ -116,6 +107,14 @@ The ``notify`` signal supports the following parameters:
                   'warning' or 'error'.
 
                   Defaults to 'info'.
+``description``   Additional information to be included in the
+                  notification (optional).
+
+                  Defaults to ``''``.
+``timestamp``     A timestamp (``datetime`` object) for the notification
+                  (optional).
+
+                  Defaults to the current time.
 ================= ========================================================
 
 Passing Extra Data to Notifications
