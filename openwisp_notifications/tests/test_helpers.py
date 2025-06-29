@@ -22,6 +22,14 @@ NotificationSetting = load_model("NotificationSetting")
 
 TEST_DATETIME = datetime(2020, 5, 4, 0, 0, 0, 0, timezone.get_default_timezone())
 
+test_notification_type = {
+    "verbose_name": "Test Notification Type",
+    "level": "test",
+    "verb": "testing",
+    "message": "{notification.verb} initiated by {notification.actor} since {notification}",
+    "email_subject": "[{site.name}] {notification.verb} reported by {notification.actor}",
+}
+
 
 class MessagingRequest(HttpRequest):
     session = "session"
