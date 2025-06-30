@@ -1,120 +1,142 @@
 {% extends "openwisp_utils/email_template.html" %}
+{% load static %}
 
 {% block styles %}
     {{ block.super }}
     <style type="text/css">
         .alert {
-            border: 1px solid #e0e0e0;
-            border-radius: 5px;
-            padding: 10px;
-        }
-        .alert + .alert {
-            margin-top: 10px;
-        }
-        .alert.error {
-            background-color: #ffefef;
-        }
-        .alert.info {
-            background-color: #f0f0f0;
-        }
-        .alert.success {
-            background-color: #e6f9e8;
-        }
-        .alert.warning {
-            background-color: #fff8e1;
-        }
-        .alert h2 {
-            margin: 0 0 5px 0;
-            font-size: 16px;
-        }
-        .alert h2 .title {
-            display: inline-block;
-            max-width: 80%;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            vertical-align: middle;
-        }
-        .alert p {
-            margin: 0;
-            font-size: 14px;
-            color: #666;
-        }
-        .alert .title p {
-            display: inline;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        .badge {
-            display: inline-block;
-            padding: 2px 8px;
-            border-radius: 3px;
+            box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.25);
+            border-radius: 0.5em;
+            border: outset 1px #eee;
+            padding: 1.5em 1.2em;
             font-size: 12px;
-            font-weight: bold;
-            text-transform: uppercase;
-            margin-right: 5px;
-            color: white;
+            width: 100%;
+            color: #475467;
         }
-        .badge.error {
-            background-color: #d9534f;
+
+        .alert+.alert {
+            margin-top: 1em;
         }
-        .badge.info {
-            background-color: #333333;
+
+        .alert div+div {
+            margin-top: 0.2em;
         }
-        .badge.success {
-            background-color: #1c8828;
+
+        .alert .timestamp {
+            font-weight: 400;
+            line-height: 20px;
         }
-        .badge.warning {
-            background-color: #ec942c;
+
+        .alert .badge {
+            background-color: #F2F4F7;
+            border: solid #D0D5DD 1px;
+            color: #333;
+            border-radius: 1em;
+            padding: 0.1em;
+            line-height: 18px;
+            text-transform: capitalize;
+            display: inline-block;
+            text-align: center;
+            min-width: 5em;
         }
-        .alert a {
+
+        .alert .badge.warning {
+            color: #DC6803;
+            border-color: #FEC84B;
+            background-color: #FFFAEB;
+        }
+
+        .alert .badge.warning {
+            color: #DC6803;
+            border-color: #FEC84B;
+            background-color: #FFFAEB;
+        }
+
+        .alert .badge.error {
+            color: #D92D20;
+            border-color: #FDA29B;
+            background-color: #FEE4E2;
+        }
+
+        .alert .badge.success {
+            color: #067647;
+            border-color: #75E0A7;
+            background-color: #DCFAE6;
+        }
+
+        a {
             text-decoration: none;
         }
-        .alert.error a,
-        .alert.error h2,
-        .alert.error p {
-            color: #d9534f;
+
+        a:link:hover .alert,
+        a:link:focus .alert {
+            background-color: #fff9c466
         }
-        .alert.info a,
-        .alert.info h2,
-        .alert.info p {
-            color: #333333;
+
+        .alert .title p {
+            line-height: 20px;
+            font-size: 14px;
+            display: inline-block;
+            vertical-align: middle;
+            margin: 0 auto;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            color: #0F1729;
+            max-width: 550px;
+            width: 100%;
+            white-space: nowrap;
         }
-        .alert.success a,
-        .alert.success h2,
-        .alert.success p {
-            color: #1c8828;
+
+        .alert .title {
+            display: inline-block;
+            width: 80%;
         }
-        .alert.warning a,
-        .alert.warning h2,
-        .alert.warning p {
-            color: #ec942c;
+
+        table.alert tr td:last-child {
+            width: 6%;
         }
-        .alert a:hover {
-            text-decoration: underline;
+
+        @media screen and (max-width: 576px) {
+            .alert .title {
+                width: 62vw;
+            }
         }
-    </style>
+
+        @media screen and (max-width: 425px) {
+            .alert .title {
+                width: 50vw;
+            }
+        }
+
+        @media screen and (max-width: 320px) {
+            .alert .title {
+                width: 35vw;
+            }
+        }
+  </style>
 {% endblock styles %}
 
 {% block mail_body %}
     <div>
         {% for notification in notifications %}
-            <div class="alert {{ notification.level }}">
-                <h2>
-                    <span class="badge {{ notification.level }}">{{ notification.level|upper }}</span>
-                    <span class="title">
-                        {% if notification.url %}
-                            <a href="{{ notification.url }}" target="_blank"><p>{{ notification.email_message|striptags }}</p></a>
-                        {% else %}
-                            <p>{{ notification.email_message }}</p>
-                        {% endif %}
-                    </span>
-                </h2>
-                <p>{{ notification.timestamp|date:"F j, Y, g:i A e" }}</p>
-                {% if notification.rendered_description %}
-                    <p>{{ notification.rendered_description|safe }}</p>
-                {% endif %}
-            </div>
+                {% if notification.url %}<a href="{{ notification.url }}" target="_blank">{% endif %}
+                    <table class="alert">
+                        <tr>
+                        <td>
+                            <div>
+                                <p class="timestamp">{{ notification.timestamp|date:"F j, Y, g:i A e" }}</p>
+                            </div>
+                            <div>
+                                <span class="badge {{ notification.level }}">{{ notification.level }}</span>
+                                <span class="title"><p>{{ notification.email_message|striptags }}</p></span>
+                            </div>
+                        </td>
+                        <td>
+                            <img src="{{ site_url }}{% static 'ui/openwisp/images/right-arrow.png' %}" alt="right-arrow">
+                        </td>
+                        </tr>
+                    </table>
+                {% if notification.url %}</a>{% endif %}
         {% endfor %}
     </div>
 {% endblock mail_body %}

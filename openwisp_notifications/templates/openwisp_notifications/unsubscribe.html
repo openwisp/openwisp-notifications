@@ -13,14 +13,13 @@
 
 {% block content %}
   <div class="unsubscribe-container">
-    <img
-      src="{% static 'ui/openwisp/images/openwisp-logo-black.svg' %}"
-      alt="{% trans 'OpenWISP Logo' %}"
-      class="logo"
-    />
+    {% comment %} Workaround to use the same logo as webapp to make overriding easier. {% endcomment %}
+    <div class="login"><div id="site-name"><a class="logo"></a></div></div>
     <div class="unsubscribe-content">
-      <div class="icon email-icon"></div>
-      <h1>{% trans 'Manage Notification Preferences' %}</h1>
+      <div class="email-icon-container">
+        <img class="email-icon" src="{% static "ui/openwisp/images/email.png" %}" alt="{% trans 'Email Icon' %}">
+      </div>
+      <h1>{% trans 'Notification Preferences' %}</h1>
 
       {% if valid %}
         <div id="manage-preferences">
@@ -72,7 +71,7 @@
         <p>
           {% url 'notifications:notification_preference' as notification_preference_url %}
           {% blocktrans with url=notification_preference_url %}
-            You can manage your notification preferences in your <a href="{{ url }}">account settings</a>.
+            Customize your alerts by adjusting your <a href="{{ url }}">notification preferences</a>.
           {% endblocktrans %}
         </p>
       </div>

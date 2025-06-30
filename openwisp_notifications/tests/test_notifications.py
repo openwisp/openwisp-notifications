@@ -22,7 +22,7 @@ from django.utils.timesince import timesince
 from freezegun import freeze_time
 
 from openwisp_notifications import settings as app_settings
-from openwisp_notifications import tasks
+from openwisp_notifications import tasks, utils
 from openwisp_notifications.exceptions import NotificationRenderException
 from openwisp_notifications.handlers import (
     notify_handler,
@@ -225,7 +225,10 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
         self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(mail.outbox[0].to, [self.admin.email])
         n = notification_queryset.first()
-        self.assertEqual(mail.outbox[0].subject, n.data.get("email_subject"))
+        self.assertIn(
+            "[example.com] 1 unread notification since",
+            mail.outbox[0].subject,
+        )
         self.assertIn(n.message, mail.outbox[0].body)
         self.assertIn(n.data.get("url"), mail.outbox[0].body)
         self.assertIn("https://", n.data.get("url"))
@@ -330,7 +333,10 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
         self.notification_options.pop("email_subject")
         self._create_notification()
         n = notification_queryset.first()
-        self.assertEqual(mail.outbox[0].subject, n.message[0:24])
+        self.assertIn(
+            "[example.com] 1 unread notification since",
+            mail.outbox[0].subject,
+        )
 
     def test_handler_optional_tag(self):
         operator = self._create_operator()
@@ -406,20 +412,29 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
         self.assertEqual(n.email_subject, "[example.com] Default Notification Subject")
         email = mail.outbox.pop()
         html_email = email.alternatives[0][0]
+        timestamp = timezone.localtime(n.timestamp).strftime("%B %-d, %Y, %-I:%M %p %Z")
         self.assertEqual(
             email.body,
             (
-                "Default notification with default verb and"
-                " level info by Tester Tester (test org)\n\n"
-                f"For more information see {n.redirect_view_url}."
+                f"\n\n[example.com] 1 unread notifications since {timestamp}"
+                "\n\n\n- Default notification with default verb and level info by Tester Tester (test org)"
+                "\n  Description: Test Notification"
+                f"\n  Date & Time: {timestamp}"
+                f"\n  URL: {n.redirect_view_url}\n\n\n\n"
             ),
         )
-        self.assertIn(
+        self.assertInHTML(
             (
-                '<div class="msg"><p>Default notification with'
-                " default verb and level info by"
-                f' <a href="{n.redirect_view_url}">'
-                "Tester Tester (test org)</a></p></div>"
+                f'<a href="{n.redirect_view_url}" target="_blank">'
+                '<table class="alert">'
+                "<tr><td><div>"
+                f'<p class="timestamp">{timestamp}</p>'
+                '</div><div><span class="badge info">info</span>'
+                '<span class="title">'
+                "<p>Default notification with default verb and level info by Tester Tester (test org)"
+                "</p></span></div></td><td>"
+                '<img src="https://example.com/static/ui/openwisp/images/right-arrow.png" alt="right-arrow">'
+                "</td></tr></table></a>"
             ),
             html_email,
         )
@@ -1060,7 +1075,7 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
 
     @patch("openwisp_notifications.tasks.send_batched_email_notifications.apply_async")
     @patch("logging.Logger.error")
-    @patch.object(tasks, "send_email")
+    @patch.object(utils, "send_email")
     def test_send_batched_email_notifications_no_instance_id(
         self, mocked_send_email, mocked_logger, *args
     ):
@@ -1073,6 +1088,7 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
             self._create_notification()
         admin_id = self.admin.id
         User.objects.filter(id=admin_id).delete()
+        mocked_send_email.reset_mock()
         tasks.send_batched_email_notifications(admin_id)
         mocked_logger.assert_called_once_with(
             "Failed to send batched email notifications:"
@@ -1095,7 +1111,7 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
         # preventing us from testing the batching behavior properly.
         tasks.send_batched_email_notifications(str(self.admin.id))
         self.assertEqual(len(mail.outbox), 1)
-        self.assertNotIn("unread notifications since", mail.outbox[0].body)
+        self.assertIn("1 unread notifications since", mail.outbox[0].body)
 
     @patch("openwisp_notifications.tasks.send_batched_email_notifications.apply_async")
     def test_batch_email_notification(self, mock_send_email):
@@ -1148,17 +1164,13 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
             ).strip(),
         )
         html_email = email.alternatives[0][0]
-        self.maxDiff = None
-        self.assertIn(
-            strip_spaces_between_tags(
-                _test_batch_email_notification_email_html.format(
-                    datetime_str=datetime_str,
-                    notification_id=default.id,
-                )
-                .replace("\n", "")
-                .replace("                    ", " ")
+        self.assertInHTML(
+            _test_batch_email_notification_email_html.format(
+                datetime_str=datetime_str,
+                notification_id=default.id,
+                unsubscribe_url=utils.get_unsubscribe_url_for_user(self.admin),
             ),
-            strip_spaces_between_tags(html_email),
+            html_email,
         )
 
     @patch("openwisp_notifications.tasks.send_batched_email_notifications.apply_async")

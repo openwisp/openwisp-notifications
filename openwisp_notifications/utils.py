@@ -5,11 +5,15 @@ from django.contrib.sites.models import Site
 from django.core.exceptions import ObjectDoesNotExist
 from django.template.loader import render_to_string
 from django.urls import NoReverseMatch, reverse
+from django.utils import timezone
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
 from django.utils.translation import gettext as _
+from django.utils.translation import ngettext_lazy
 
+from openwisp_notifications import settings as app_settings
 from openwisp_notifications.exceptions import NotificationRenderException
+from openwisp_notifications.swapper import load_model
 from openwisp_utils.admin_theme.email import send_email
 
 from .tokens import email_token_generator
@@ -59,42 +63,93 @@ def get_unsubscribe_url_email_footer(url):
     )
 
 
-def send_notification_email(notification):
-    """Send a single email notification"""
-    try:
-        subject = notification.email_subject
-    except NotificationRenderException:
-        # Do not send email if notification is malformed.
+def send_notification_email(
+    notifications,
+    since=None,
+    notifications_count=0,
+    user=None,
+):
+
+    extra_context = {}
+    current_site = Site.objects.get_current()
+    if isinstance(notifications, load_model("Notification")):
+        user = notifications.recipient
+        since = notifications.timestamp
+        notifications_count = 1
+        notifications = [notifications]
+    unsent_notifications = []
+    for notification in notifications[: app_settings.EMAIL_BATCH_DISPLAY_LIMIT]:
+        url = notification.data.get("url", "") if notification.data else None
+        if url:
+            notification.url = url
+        elif notification.target:
+            notification.url = notification.redirect_view_url
+        else:
+            notification.url = None
+        try:
+            notification.email_message
+        except NotificationRenderException:
+            continue
+        else:
+            unsent_notifications.append(notification)
+    if not unsent_notifications:
         return
-    url = notification.data.get("url", "") if notification.data else None
-    description = notification.message
-    if url:
-        target_url = url
-    elif notification.target:
-        target_url = notification.redirect_view_url
-    else:
-        target_url = None
-    if target_url:
-        description += _("\n\nFor more information see %(target_url)s.") % {
-            "target_url": target_url
-        }
+    unsubscribe_url = get_unsubscribe_url_for_user(user)
+    pluralize_notification = ngettext_lazy(
+        "notification", "notifications", notifications_count
+    )
+    since = timezone.localtime(since).strftime("%B %-d, %Y, %-I:%M %p %Z")
+    extra_context = {
+        "notifications": unsent_notifications,
+        "notifications_count": notifications_count,
+        "site_name": current_site.name,
+        "footer": get_unsubscribe_url_email_footer(unsubscribe_url),
+        "title": _("{notifications_count} new {pluralize_notification}").format(
+            notifications_count=notifications_count,
+            pluralize_notification=pluralize_notification,
+        ),
+        "subtitle": _("Since {since}").format(since=since),
+        "since": since,
+    }
+    if notifications_count == 1:
+        extra_context.update(
+            {
+                "call_to_action_url": notification.url,
+                "call_to_action_text": _("View Details"),
+            }
+        )
+    elif notifications_count > app_settings.EMAIL_BATCH_DISPLAY_LIMIT:
+        extra_context.update(
+            {
+                "call_to_action_url": f"https://{current_site.domain}/admin/#notifications",
+                "call_to_action_text": _("View all Notifications"),
+            }
+        )
 
-    unsubscribe_url = get_unsubscribe_url_for_user(notification.recipient)
-
+    plain_text_content = render_to_string(
+        "openwisp_notifications/emails/batch_email.txt", extra_context
+    )
+    notifications_count = min(
+        notifications_count, app_settings.EMAIL_BATCH_DISPLAY_LIMIT
+    )
     send_email(
-        subject,
-        description,
-        notification.email_message,
-        recipients=[notification.recipient.email],
-        extra_context={
-            "call_to_action_url": target_url,
-            "call_to_action_text": _("Find out more"),
-            "footer": get_unsubscribe_url_email_footer(unsubscribe_url),
-        },
+        subject=_(
+            "[{site_name}] {notifications_count} unread {pluralize_notification} since {since}"
+        ).format(
+            site_name=current_site.name,
+            notifications_count=notifications_count,
+            since=since,
+            pluralize_notification=pluralize_notification,
+        ),
+        body_text=plain_text_content,
+        body_html=True,
+        recipients=[user.email],
+        extra_context=extra_context,
         headers={
             "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
             "List-Unsubscribe": f"<{unsubscribe_url}>",
         },
+        html_email_template="openwisp_notifications/emails/batch_email.html",
     )
 
 
