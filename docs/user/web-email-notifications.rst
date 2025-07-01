@@ -72,12 +72,19 @@ By grouping emails into batches, the system minimizes the risk of emails
 being marked as spam and prevents inboxes from rejecting alerts due to
 high volumes.
 
-Key aspects of the batch email notification feature include:
-
 - When multiple emails are triggered for the same user within a short time
   frame, subsequent emails are grouped into a summary.
-- The sending of individual emails is paused for a specified batch
-  interval when batching is enabled.
+- When batching is active, the system temporarily pauses sending
+  individual notification emails and instead queues them for the next
+  batch.
+- After sending the batch email, the system starts queuing new
+  notifications for the next batch.
+- Only unread notifications are included in the batch. This check is
+  performed at the time the batch is sent, ensuring that users don't
+  receive emails for alerts they've already seen.
+- If the user stays on top of their notifications, i.e. all notifications
+  are read before the next batch is sent, the system will resume sending
+  individual emails until the batching logic is triggered again.
 
 .. note::
 
