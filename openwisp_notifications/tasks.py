@@ -7,9 +7,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.db.models import Q
 from django.db.utils import OperationalError
 from django.utils import timezone
-from django.utils.translation import gettext as _
 
-from openwisp_notifications import settings as app_settings
 from openwisp_notifications import types
 from openwisp_notifications.swapper import load_model, swapper_load_model
 from openwisp_notifications.utils import send_notification_email

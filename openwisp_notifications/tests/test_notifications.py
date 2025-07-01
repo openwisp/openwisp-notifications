@@ -17,7 +17,6 @@ from django.template import TemplateDoesNotExist
 from django.test import TransactionTestCase
 from django.urls import reverse
 from django.utils import timezone
-from django.utils.html import strip_spaces_between_tags
 from django.utils.timesince import timesince
 from freezegun import freeze_time
 
@@ -332,7 +331,6 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
     def test_description_in_email_subject(self):
         self.notification_options.pop("email_subject")
         self._create_notification()
-        n = notification_queryset.first()
         self.assertIn(
             "[example.com] 1 unread notification since",
             mail.outbox[0].subject,
