@@ -188,6 +188,115 @@ class TestAdmin(BaseTestAdmin):
             self.assertNotContains(response, expected_html, html=True)
 
 
+class TestOrganizationNotificationsSettingsAdmin(BaseTestAdmin):
+    app_label = "openwisp_notifications"
+    users_app_label = "openwisp_users"
+
+    def test_organization_notifications_settings_admin(self):
+        org = self._get_org()
+        path = reverse(
+            f"admin:{self.users_app_label}_organization_change", args=(org.pk,)
+        )
+        response = self.client.get(path)
+        self.assertContains(response, "Notification Settings")
+        self.assertContains(
+            response,
+            "<h3><b>Notification Settings:</b>"
+            '<span class="inline_label">'
+            f"OrganizationNotificationSettings object ({org.notification_settings.pk})"
+            "</span></h3>",
+            html=True,
+        )
+        self.assertNotContains(
+            response,
+            '<a href="#">Add another Notification Settings</a>',
+            html=True,
+        )
+
+    def test_permissions(self):
+        org = self._get_org()
+        org_settings = org.notification_settings
+        org_settings.web = True
+        org_settings.email = True
+        org_settings.full_clean()
+        org_settings.save()
+        path = reverse(
+            f"admin:{self.users_app_label}_organization_change", args=(org.pk,)
+        )
+        response = self.client.get(path)
+        with self.subTest("Operator has read only permissions"):
+            operator = self._create_operator(organizations=[org])
+            self.client.force_login(operator)
+            response = self.client.get(path)
+            self.assertContains(response, "Notification Settings")
+            self.assertNotContains(
+                response,
+                '<select name="notification_settings-0-web" id="id_notification_settings-0-web">',
+            )
+            self.assertNotContains(
+                response,
+                '<select name="notification_settings-0-email" id="id_notification_settings-0-email">',
+            )
+            self.assertNotContains(
+                response,
+                '<input type="number" name="notification_settings-0-email_batch_interval" value="10800"'
+                ' class="vIntegerField" min="0" id="id_notification_settings-0-email_batch_interval">',
+            )
+            self.assertNotContains(
+                response,
+                '<input type="number" name="notification_settings-0-email_batch_display_limit" value="15"'
+                ' class="vIntegerField" min="0" id="id_notification_settings-0-email_batch_display_limit">',
+            )
+            self.assertContains(
+                response,
+                "<label>Web notifications enabled:</label>"
+                '<div class="readonly"><img src="/static/admin/img/icon-yes.svg" alt="True"></div>',
+                html=True,
+            )
+            self.assertContains(
+                response,
+                "<label>Email notifications enabled:</label>"
+                '<div class="readonly"><img src="/static/admin/img/icon-yes.svg" alt="True"></div>',
+                html=True,
+            )
+            self.assertContains(
+                response,
+                "<label>Email batch interval:</label>"
+                f'<div class="readonly">{app_settings.EMAIL_BATCH_INTERVAL}</div>',
+                html=True,
+            )
+            self.assertContains(
+                response,
+                "<label>Batch email display limit:</label>"
+                f'<div class="readonly">{app_settings.EMAIL_BATCH_DISPLAY_LIMIT}</div>',
+                html=True,
+            )
+
+        with self.subTest("Administrator has change permissions"):
+            admin = self._create_administrator(organizations=[org])
+            self.client.force_login(admin)
+            response = self.client.get(path)
+            self.assertContains(response, "Notification Settings")
+            self.assertContains(
+                response,
+                '<select name="notification_settings-0-web" id="id_notification_settings-0-web">',
+            )
+            self.assertContains(
+                response,
+                '<select name="notification_settings-0-email" id="id_notification_settings-0-email">',
+            )
+            self.assertContains(
+                response,
+                '<input type="number" name="notification_settings-0-email_batch_interval" value="10800"'
+                ' class="vIntegerField" min="0" id="id_notification_settings-0-email_batch_interval">',
+            )
+            self.assertContains(
+                response,
+                '<input type="number" name="notification_settings-0-email_batch_display_limit" value="15"'
+                ' class="vIntegerField" min="0" id="id_notification_settings-0-email_batch_display_limit">',
+            )
+
+
 @tag("skip_prod")
 # For more info, look at TestAdmin.test_default_notification_setting
 class TestAdminMedia(BaseTestAdmin):
