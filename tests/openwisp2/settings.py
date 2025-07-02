@@ -207,14 +207,6 @@ if os.environ.get("SAMPLE_APP", False):
     OPENWISP_NOTIFICATIONS_NOTIFICATIONSETTING_MODEL = (
         "sample_notifications.NotificationSetting"
     )
-    TEMPLATES[0]["DIRS"] = [
-        os.path.join(BASE_DIR, "sample_notifications", "templates"),
-        os.path.join(
-            os.path.dirname(os.path.dirname(BASE_DIR)),
-            "openwisp_notifications",
-            "templates",
-        ),
-    ]
     OPENWISP_NOTIFICATIONS_IGNOREOBJECTNOTIFICATION_MODEL = (
         "sample_notifications.IgnoreObjectNotification"
     )
