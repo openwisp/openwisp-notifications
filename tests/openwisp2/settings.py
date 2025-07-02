@@ -94,8 +94,8 @@ TEMPLATES = [
         "OPTIONS": {
             "loaders": [
                 "django.template.loaders.filesystem.Loader",
-                "django.template.loaders.app_directories.Loader",
                 "openwisp_utils.loaders.DependencyLoader",
+                "django.template.loaders.app_directories.Loader",
             ],
             "context_processors": [
                 "django.template.context_processors.debug",
@@ -207,14 +207,6 @@ if os.environ.get("SAMPLE_APP", False):
     OPENWISP_NOTIFICATIONS_NOTIFICATIONSETTING_MODEL = (
         "sample_notifications.NotificationSetting"
     )
-    TEMPLATES[0]["DIRS"] = [
-        os.path.join(BASE_DIR, "sample_notifications", "templates"),
-        os.path.join(
-            os.path.dirname(os.path.dirname(BASE_DIR)),
-            "openwisp_notifications",
-            "templates",
-        ),
-    ]
     OPENWISP_NOTIFICATIONS_IGNOREOBJECTNOTIFICATION_MODEL = (
         "sample_notifications.IgnoreObjectNotification"
     )
