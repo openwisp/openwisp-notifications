@@ -2,6 +2,7 @@ import json
 
 from django.conf import settings
 from django.contrib.sites.models import Site
+from django.core.exceptions import ObjectDoesNotExist
 from django.template.loader import render_to_string
 from django.urls import NoReverseMatch, reverse
 from django.utils.encoding import force_bytes
@@ -95,3 +96,22 @@ def send_notification_email(notification):
             "List-Unsubscribe": f"<{unsubscribe_url}>",
         },
     )
+
+
+def get_user_email_preference(notification):
+    """
+    Returns the user's email preference for notifications.
+    If the user has no preference set, it defaults to True.
+    """
+    target_org = getattr(getattr(notification, "target", None), "organization_id", None)
+    if not (notification.type and target_org):
+        # We can not check email preference if notification type is absent,
+        # or if target_org is not present
+        # therefore send email anyway.
+        return True
+    try:
+        return notification.recipient.notificationsetting_set.get(
+            organization=target_org, type=notification.type
+        ).email_notification
+    except ObjectDoesNotExist:
+        return False

@@ -1,5 +1,5 @@
 _test_batch_email_notification_email_body = """
-[example.com] 4 new notifications since {datetime_str}
+[example.com] 4 unread notifications since {datetime_str}
 
 
 - Default notification with default verb and level info by Tester Tester (test org)
@@ -23,7 +23,7 @@ _test_batch_email_notification_email_body = """
 """
 
 _test_batch_email_notification_email_html = """
-<div class="subject">[example.com] 4 new notifications since {datetime_str}</div>
+<div class="subject">[example.com] 4 unread notifications since {datetime_str}</div>
 <div>
     <div class="alert info">
         <h2><span class="badge info">INFO</span><span class="title"><a

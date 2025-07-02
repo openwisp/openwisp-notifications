@@ -5,7 +5,6 @@ from celery import shared_task
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.sites.models import Site
-from django.core.cache import cache
 from django.db.models import Q
 from django.db.utils import OperationalError
 from django.template.loader import render_to_string
@@ -18,7 +17,6 @@ from openwisp_notifications.swapper import load_model, swapper_load_model
 from openwisp_notifications.utils import (
     get_unsubscribe_url_email_footer,
     get_unsubscribe_url_for_user,
-    send_notification_email,
 )
 from openwisp_utils.admin_theme.email import send_email
 from openwisp_utils.tasks import OpenwispCeleryTask
@@ -229,36 +227,42 @@ def delete_ignore_object_notification(instance_id):
 
 
 @shared_task(base=OpenwispCeleryTask)
-def send_batched_email_notifications(instance_id):
+def send_batched_email_notifications(user_id):
     """
     Sends a summary of notifications to the specified email address.
     """
-    if not User.objects.filter(id=instance_id).exists():
-        logger.error(
-            "Failed to send batched email notifications:"
-            f" User with ID {instance_id} not found in the database."
-        )
+    __, batch_start_time, batched_notifications = (
+        Notification.get_user_batch_email_data(user_id, pop=True)
+    )
+
+    if not batched_notifications:
         return
 
-    cache_key = f"email_batch_{instance_id}"
-    cache_data = cache.get(cache_key, {"pks": []})
-
-    if not cache_data["pks"]:
+    try:
+        user = User.objects.get(id=user_id)
+    except User.DoesNotExist:
+        logger.error(
+            "Failed to send batched email notifications:"
+            f" User with ID {user_id} not found in the database."
+        )
         return
 
     display_limit = app_settings.EMAIL_BATCH_DISPLAY_LIMIT
     unsent_notifications_query = Notification.objects.filter(
-        id__in=cache_data["pks"]
+        unread=True, id__in=batched_notifications
     ).order_by("-timestamp")
     notifications_count = unsent_notifications_query.count()
-    current_site = Site.objects.get_current()
-    email_id = cache_data.get("email_id")
-    unsent_notifications = []
+    if notifications_count == 0:
+        # The user have already read all the notifications.
+        # Don't send batch summary.
+        return
 
+    current_site = Site.objects.get_current()
+    unsent_notifications = []
     # Send individual email if there is only one notification
     if notifications_count == 1:
         notification = unsent_notifications_query.first()
-        send_notification_email(notification)
+        notification.send_email()
     else:
         # Show the amount of notifications according to configured display limit
         for notification in unsent_notifications_query[:display_limit]:
@@ -269,24 +273,19 @@ def send_batched_email_notifications(instance_id):
                 notification.url = notification.redirect_view_url
             else:
                 notification.url = None
-
             unsent_notifications.append(notification)
 
-        start_time = timezone.localtime(cache_data.get("start_time")).strftime(
+        start_time = timezone.localtime(batch_start_time).strftime(
             "%B %-d, %Y, %-I:%M %p %Z"
         )
-
+        unsubscribe_url = get_unsubscribe_url_for_user(user)
         extra_context = {
             "notifications": unsent_notifications[:display_limit],
             "notifications_count": notifications_count,
             "site_name": current_site.name,
             "start_time": start_time,
+            "footer": get_unsubscribe_url_email_footer(unsubscribe_url),
         }
-
-        user = User.objects.get(id=instance_id)
-        unsubscribe_url = get_unsubscribe_url_for_user(user)
-        extra_context["footer"] = get_unsubscribe_url_email_footer(unsubscribe_url)
-
         if notifications_count > display_limit:
             extra_context.update(
                 {
@@ -294,17 +293,15 @@ def send_batched_email_notifications(instance_id):
                     "call_to_action_text": _("View all Notifications"),
                 }
             )
-
         plain_text_content = render_to_string(
             "openwisp_notifications/emails/batch_email.txt", extra_context
         )
         notifications_count = min(notifications_count, display_limit)
-
         send_email(
-            subject=f"[{current_site.name}] {notifications_count} new notifications since {start_time}",
+            subject=f"[{current_site.name}] {notifications_count} unread notifications since {start_time}",
             body_text=plain_text_content,
             body_html=True,
-            recipients=[email_id],
+            recipients=[user.email],
             extra_context=extra_context,
             headers={
                 "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
@@ -312,6 +309,5 @@ def send_batched_email_notifications(instance_id):
             },
             html_email_template="openwisp_notifications/emails/batch_email.html",
         )
-
     unsent_notifications_query.update(emailed=True)
-    cache.delete(cache_key)
+    Notification.set_last_email_sent_time_for_user(user)

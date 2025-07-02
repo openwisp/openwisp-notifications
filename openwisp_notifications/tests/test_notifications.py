@@ -33,6 +33,7 @@ from openwisp_notifications.swapper import load_model, swapper_load_model
 from openwisp_notifications.tests.test_helpers import (
     mock_notification_types,
     register_notification_type,
+    test_notification_type,
     unregister_notification_type,
 )
 from openwisp_notifications.tokens import email_token_generator
@@ -78,8 +79,8 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
             url="https://localhost:8000/admin",
         )
 
-    def _create_notification(self):
-        return notify.send(**self.notification_options)
+    def _create_notification(self, **kwargs):
+        return notify.send(**self.notification_options, **kwargs)
 
     def test_create_notification(self):
         operator = super()._create_operator()
@@ -135,6 +136,67 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
         n = notification_queryset.first()
         self.assertIn(f"Error: {error}", n.message)
         self.assertEqual(n.email_subject, f"Error subject: {error}")
+
+    def test_batch_email_helpers(self):
+        with self.subTest("get_user_batched_notifications_cache_key()"):
+            cache_key = Notification.get_user_batched_notifications_cache_key(
+                self.admin.pk
+            )
+            self.assertEqual(
+                cache_key,
+                f"email_batch_{self.admin.pk}",
+            )
+
+        with self.subTest("set_user_batch_email_data()"):
+            last_email_sent_time = ten_minutes_ago
+            now = timezone.now()
+            Notification.set_user_batch_email_data(
+                self.admin.pk,
+                last_email_sent_time=last_email_sent_time,
+                start_time=now,
+                pks=[1],
+            )
+            cached_data = cache.get(cache_key)
+            self.assertEqual(cached_data["last_email_sent_time"], last_email_sent_time)
+            self.assertEqual(cached_data["start_time"], now)
+            self.assertEqual(cached_data["pks"], [1])
+
+            # Test overwriting existing cache data
+            Notification.set_user_batch_email_data(
+                self.admin.pk, last_email_sent_time=now, overwrite=True
+            )
+            cached_data = cache.get(cache_key)
+            self.assertEqual(cached_data["last_email_sent_time"], now)
+            self.assertNotIn("start_time", cached_data)
+            self.assertNotIn("pks", cached_data)
+
+        with self.subTest("get_user_batch_email_data()"):
+            print(cache.get(cache_key))
+            # pop = True means it will remove the data from cache
+            last_email_sent_time, start_time, pks = (
+                Notification.get_user_batch_email_data(self.admin.pk, pop=True)
+            )
+            self.assertEqual(last_email_sent_time, now)
+            self.assertEqual(start_time, None)
+            self.assertEqual(pks, [])
+            self.assertEqual(cache.get(cache_key), None)
+
+    @patch("openwisp_notifications.base.models.send_notification_email")
+    def test_send_email(self, mocked_send_email):
+        self.admin.emailaddress_set.update(verified=True)
+        notification = self._create_notification().pop()[1][0]
+        mocked_send_email.assert_called_once()
+        notification.refresh_from_db()
+        self.assertEqual(notification.emailed, True)
+
+        mocked_send_email.reset_mock()
+        with self.subTest("Calling send_email does not send duplicate email"):
+            notification.send_email()
+            mocked_send_email.assert_not_called()
+
+        with self.subTest("Calling send_email with force=True sends email again"):
+            notification.send_email(force=True)
+            mocked_send_email.assert_called_once()
 
     def test_superuser_notifications_disabled(self):
         target_obj = self._get_org_user()
@@ -996,24 +1058,27 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
         # we don't send emails to unverified email addresses
         self.assertEqual(len(mail.outbox), 0)
 
+    @patch("openwisp_notifications.tasks.send_batched_email_notifications.apply_async")
     @patch("logging.Logger.error")
-    def test_send_batched_email_notifications_no_instance_id(self, mocked_logger):
-        # Ensure no emails are sent if instance_id is invalid
+    @patch.object(tasks, "send_email")
+    def test_send_batched_email_notifications_no_instance_id(
+        self, mocked_send_email, mocked_logger, *args
+    ):
+        # No cache key is set for "None", thus user lookup is not performed
         tasks.send_batched_email_notifications(None)
-        self.assertEqual(len(mail.outbox), 0)
-        mocked_logger.assert_called_once_with(
-            "Failed to send batched email notifications:"
-            f" User with ID {None} not found in the database."
-        )
-        mocked_logger.reset_mock()
+        mocked_logger.assert_not_called()
+        mocked_send_email.assert_not_called()
 
-        invalid_id = uuid4()
-        tasks.send_batched_email_notifications(str(invalid_id))
-        self.assertEqual(len(mail.outbox), 0)
+        for _ in range(3):
+            self._create_notification()
+        admin_id = self.admin.id
+        User.objects.filter(id=admin_id).delete()
+        tasks.send_batched_email_notifications(admin_id)
         mocked_logger.assert_called_once_with(
             "Failed to send batched email notifications:"
-            f" User with ID {invalid_id} not found in the database."
+            f" User with ID {admin_id} not found in the database."
         )
+        mocked_send_email.assert_not_called()
 
     @patch("openwisp_notifications.tasks.send_batched_email_notifications.apply_async")
     def test_send_batched_email_notifications_single_notification(
@@ -1030,7 +1095,7 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
         # preventing us from testing the batching behavior properly.
         tasks.send_batched_email_notifications(str(self.admin.id))
         self.assertEqual(len(mail.outbox), 1)
-        self.assertNotIn("new notifications since", mail.outbox[0].body)
+        self.assertNotIn("unread notifications since", mail.outbox[0].body)
 
     @patch("openwisp_notifications.tasks.send_batched_email_notifications.apply_async")
     def test_batch_email_notification(self, mock_send_email):
@@ -1045,9 +1110,8 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
             with freeze_time(fixed_datetime):
                 # Create notifications with URL (from self.notification_options)
                 self._create_notification()
-            fixed_datetime += timedelta(
-                microseconds=100
-            )  # Increment time for ordering consistency
+            # Increment time for ordering consistency
+            fixed_datetime += timedelta(microseconds=100)
         # Notification without URL
         self.notification_options.pop("url")
         with freeze_time(fixed_datetime):
@@ -1057,6 +1121,11 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
         self.notification_options.update(
             {"type": "default", "target": self._get_org_user()}
         )
+        with freeze_time(fixed_datetime):
+            read_notification = self._create_notification().pop()[1][0]
+        notification_queryset.filter(id=read_notification.id).update(unread=False)
+
+        fixed_datetime += timedelta(microseconds=100)
         with freeze_time(fixed_datetime):
             default = self._create_notification().pop()[1][0]
 
@@ -1069,7 +1138,7 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
         # Check if the rest of the notifications are sent in a batch
         self.assertEqual(len(mail.outbox), 2)
         email = mail.outbox[1]
-        expected_subject = f"[example.com] 4 new notifications since {datetime_str}"
+        expected_subject = f"[example.com] 4 unread notifications since {datetime_str}"
         self.assertEqual(email.subject, expected_subject)
         self.assertEqual(
             email.body.strip(),
@@ -1113,7 +1182,7 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
         # Check if the rest of the notifications are sent in a batch
         self.assertEqual(len(mail.outbox), 2)
         self.assertIn(
-            f"{display_limit} new notifications since", mail.outbox[1].subject
+            f"{display_limit} unread notifications since", mail.outbox[1].subject
         )
         self.assertIn("View all Notifications", mail.outbox[1].body)
 
@@ -1144,7 +1213,7 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
         self.assertEqual(len(mail.outbox), 1)
         mock_send_email.assert_not_called()
         self.assertEqual(
-            cache.get(f"email_batch_{self.admin.id}")["last_email_sent_time"], past_time
+            Notification.get_user_batch_email_data(self.admin)[0], past_time
         )
 
         # Notification should not be batched because the last email was sent
@@ -1170,7 +1239,28 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
             self._create_notification()
         self.assertEqual(len(mail.outbox), 2)
         mock_send_email.assert_not_called()
-        self.assertEqual(len(cache.get(f"email_batch_{self.admin.id}")["pks"]), 2)
+        self.assertEqual(len(Notification.get_user_batch_email_data(self.admin)[2]), 2)
+
+        batch_end_time = now + timedelta(seconds=app_settings.EMAIL_BATCH_INTERVAL)
+        # Subsequent notifications will be batched until the ETA of celery task
+        with freeze_time(batch_end_time):
+            self._create_notification()
+        self.assertEqual(len(mail.outbox), 2)
+        mock_send_email.assert_not_called()
+        self.assertEqual(len(Notification.get_user_batch_email_data(self.admin)[2]), 3)
+
+        # Celery task failed to execute (celery worker overloaded).
+        # The email would be sent synchronously.
+        with freeze_time(
+            batch_end_time + timedelta(seconds=app_settings.EMAIL_BATCH_INTERVAL * 0.26)
+        ):
+            self._create_notification()
+        mock_send_email.assert_not_called()
+        self.assertEqual(len(mail.outbox), 3)
+        self.assertIn(
+            "[example.com] 4 unread notifications since",
+            mail.outbox.pop().subject,
+        )
 
     def test_that_the_notification_is_only_sent_once_to_the_user(self):
         first_org = self._create_org()
@@ -1188,6 +1278,55 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
         )
         self._create_notification()
         self.assertEqual(notification_queryset.count(), 1)
+
+    @patch("openwisp_notifications.tasks.send_batched_email_notifications.apply_async")
+    def test_marking_notification_read_skips_batching(self, *args):
+        """
+        When a notification is read, it should not be included in the batch email.
+        """
+        self._create_notification()
+        self.assertEqual(len(mail.outbox), 1)
+        # Second notification will schedule a batch summary
+        notification = self._create_notification().pop()[1][0]
+        notification_queryset.filter(id=notification.id).update(unread=False)
+
+        # Execute task to send batched email notifications
+        tasks.send_batched_email_notifications(str(self.admin.id))
+        # Batched email is not sent because the notification was marked as read
+        self.assertEqual(len(mail.outbox), 1)
+        # Task has cleared the batching
+        self.assertEqual(Notification.get_user_batch_email_data(self.admin)[0], None)
+
+        # Send email for a new notification
+        self._create_notification()
+        self.assertEqual(len(mail.outbox), 2)
+        self.assertNotEqual(Notification.get_user_batch_email_data(self.admin)[0], None)
+
+    @mock_notification_types
+    @patch("openwisp_notifications.tasks.send_batched_email_notifications.apply_async")
+    def test_batch_notification_does_not_include_disabled_notification_type(
+        self, *args
+    ):
+        register_notification_type("test", test_notification_type)
+        target_obj = self._create_org_user()
+        self.admin.notificationsetting_set.filter(type="test").update(email=False)
+        self.notification_options.update({"type": "default", "target": target_obj})
+
+        # Email for first notification is sent immediately.
+        self._create_notification()
+        self.assertEqual(len(mail.outbox), 1)
+
+        # Batching of notifications begins
+        for _ in range(2):
+            self._create_notification()
+        self.notification_options.update({"type": "test"})
+        self._create_notification()
+        tasks.send_batched_email_notifications(str(self.admin.id))
+        self.assertEqual(len(mail.outbox), 2)
+        email = mail.outbox.pop()
+        # Batch should not contain "test" notification type
+        self.assertIn("[example.com] 2 unread notifications since", email.subject)
+        self.assertNotIn("testing initiated by admin", email.body)
 
     def test_email_unsubscribe_token(self):
         token = email_token_generator.make_token(self.admin)

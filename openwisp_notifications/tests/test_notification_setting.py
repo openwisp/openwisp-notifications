@@ -17,16 +17,9 @@ from openwisp_notifications.tests.test_helpers import (
     base_unregister_notification_type,
     mock_notification_types,
     register_notification_type,
+    test_notification_type,
 )
 from openwisp_users.tests.utils import TestOrganizationMixin
-
-test_notification_type = {
-    "verbose_name": "Test Notification Type",
-    "level": "test",
-    "verb": "testing",
-    "message": "{notification.verb} initiated by {notification.actor} since {notification}",
-    "email_subject": "[{site.name}] {notification.verb} reported by {notification.actor}",
-}
 
 NotificationSetting = load_model("NotificationSetting")
 Organization = swapper_load_model("openwisp_users", "Organization")

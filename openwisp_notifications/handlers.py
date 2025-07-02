@@ -26,7 +26,7 @@ from openwisp_notifications.types import (
     NOTIFICATION_ASSOCIATED_MODELS,
     get_notification_configuration,
 )
-from openwisp_notifications.utils import send_notification_email
+from openwisp_notifications.utils import get_user_email_preference
 from openwisp_notifications.websockets import handlers as ws_handlers
 
 logger = logging.getLogger(__name__)
@@ -175,83 +175,61 @@ def send_email_notification(sender, instance, created, **kwargs):
     # Abort if a new notification is not created
     if not created:
         return
-    # Get email preference of user for this type of notification.
-    target_org = getattr(getattr(instance, "target", None), "organization_id", None)
-
-    if instance.type and target_org:
-        try:
-            notification_setting = instance.recipient.notificationsetting_set.get(
-                organization=target_org, type=instance.type
-            )
-        except NotificationSetting.DoesNotExist:
-            return
-        email_preference = notification_setting.email_notification
-    else:
-        # We can not check email preference if notification type is absent,
-        # or if target_org is not present
-        # therefore send email anyway.
-        email_preference = True
 
     email_verified = instance.recipient.emailaddress_set.filter(
         verified=True, email=instance.recipient.email
     ).exists()
-
-    if not (email_preference and instance.recipient.email and email_verified):
+    if not email_verified or not get_user_email_preference(instance):
         return
-
-    recipient_id = str(instance.recipient.id)
-    cache_key = f"email_batch_{recipient_id}"
-
-    cache_data = cache.get(
-        cache_key,
-        {
-            "last_email_sent_time": None,
-            "batch_scheduled": False,
-            "pks": [],
-            "start_time": None,
-            "email_id": instance.recipient.email,
-        },
+    if not app_settings.EMAIL_BATCH_INTERVAL:
+        instance.send_email()
+        return
+    last_email_sent_time, batch_start_time, batched_notifications = (
+        Notification.get_user_batch_email_data(instance.recipient)
     )
-    EMAIL_BATCH_INTERVAL = app_settings.EMAIL_BATCH_INTERVAL
-
-    # Batch only if the last email was sent within the batch interval
-    if (
-        cache_data["last_email_sent_time"]
-        and EMAIL_BATCH_INTERVAL > 0
+    # Send a single email if:
+    # 1. The user has not received any email yet
+    # 2. The last email was sent more than EMAIL_BATCH_INTERVAL seconds ago and
+    #    no batch is scheduled
+    if not last_email_sent_time or (
+        not batch_start_time
         and (
-            cache_data["last_email_sent_time"]
-            > (timezone.now() - timezone.timedelta(seconds=EMAIL_BATCH_INTERVAL))
+            # More than EMAIL_BATCH_INTERVAL seconds have passed since the last email was sent
+            last_email_sent_time
+            < (
+                timezone.now()
+                - timezone.timedelta(seconds=app_settings.EMAIL_BATCH_INTERVAL)
+            )
         )
     ):
-        # Case 1: Batch email sending logic
-        if not cache_data["batch_scheduled"]:
-            # Schedule batch email notification task if not already scheduled
-            tasks.send_batched_email_notifications.apply_async(
-                (recipient_id,), countdown=EMAIL_BATCH_INTERVAL
-            )
-            # Mark batch as scheduled to prevent duplicate scheduling
-            cache_data["batch_scheduled"] = True
-            cache_data["pks"] = [instance.id]
-            cache_data["start_time"] = timezone.now()
-            cache.set(cache_key, cache_data, timeout=None)
-        else:
-            # Add current instance ID to the list of IDs for batch
-            cache_data["pks"].append(instance.id)
-            cache.set(cache_key, cache_data, timeout=None)
+        instance.send_email()
+        Notification.set_last_email_sent_time_for_user(
+            instance.recipient, instance.timestamp
+        )
         return
-
-    # Case 2: Single email sending logic
-    # Update the last email sent time and cache the data
-    if EMAIL_BATCH_INTERVAL > 0:
-        cache_data["last_email_sent_time"] = timezone.now()
-        cache.set(cache_key, cache_data, timeout=None)
-
-    send_notification_email(instance)
-
-    # flag as emailed
-    instance.emailed = True
-    # bulk_update is used to prevent emitting post_save signal
-    Notification.objects.bulk_update([instance], ["emailed"])
+    batched_notifications.append(instance.id)
+    Notification.set_user_batch_email_data(
+        instance.recipient,
+        last_email_sent_time=last_email_sent_time,
+        start_time=batch_start_time or instance.timestamp,
+        pks=batched_notifications,
+    )
+    # If no batch was scheduled, schedule a new one
+    if not batch_start_time:
+        tasks.send_batched_email_notifications.apply_async(
+            (str(instance.recipient.pk),),
+            countdown=app_settings.EMAIL_BATCH_INTERVAL,
+        )
+    elif (
+        batch_start_time
+        + timezone.timedelta(seconds=app_settings.EMAIL_BATCH_INTERVAL * 1.25)
+    ) < timezone.now():
+        # The celery task failed to execute in the expected time.
+        # This could happen when the celery worker is overloaded.
+        # Send the email immediately.
+        tasks.send_batched_email_notifications(
+            instance.recipient.pk,
+        )
 
 
 @receiver(post_save, sender=Notification, dispatch_uid="clear_notification_cache_saved")

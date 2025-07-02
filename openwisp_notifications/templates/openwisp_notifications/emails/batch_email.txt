@@ -1,6 +1,6 @@
 {% load i18n %}
 
-[{{ site_name }}] {{ notifications_count }} {% translate "new notifications since" %} {{ start_time }}
+[{{ site_name }}] {{ notifications_count }} {% translate "unread notifications since" %} {{ start_time }}
 
 {% for notification in notifications %}
 - {{ notification.email_message }}{% if notification.rendered_description %}
