@@ -12,6 +12,7 @@ logger = logging.getLogger(__name__)
 
 Notification = load_model("Notification")
 NotificationSetting = load_model("NotificationSetting")
+OrganizationNotificationSettings = load_model("OrganizationNotificationSettings")
 IgnoreObjectNotification = load_model("IgnoreObjectNotification")
 
 
@@ -110,3 +111,16 @@ class NotificationSettingUpdateSerializer(serializers.Serializer):
         if "email" not in attrs and attrs.get("web") is False:
             attrs["email"] = False
         return attrs
+
+
+class OrganizationNotificationSettingsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OrganizationNotificationSettings
+        fields = [
+            "organization",
+            "web",
+            "email",
+            "email_batch_interval",
+            "email_batch_display_limit",
+        ]
+        read_only_fields = ["organization"]

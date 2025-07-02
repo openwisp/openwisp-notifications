@@ -24,9 +24,11 @@ from openwisp_notifications.api.serializers import (
     NotificationSerializer,
     NotificationSettingSerializer,
     NotificationSettingUpdateSerializer,
+    OrganizationNotificationSettingsSerializer,
 )
 from openwisp_notifications.swapper import load_model
 from openwisp_users.api.authentication import BearerAuthentication
+from openwisp_users.api.mixins import ProtectedAPIMixin
 
 from .filters import NotificationSettingFilter
 
@@ -37,6 +39,7 @@ UNAUTHORIZED_STATUS_CODES = (
 
 Notification = load_model("Notification")
 NotificationSetting = load_model("NotificationSetting")
+OrganizationNotificationSettings = load_model("OrganizationNotificationSettings")
 IgnoreObjectNotification = load_model("IgnoreObjectNotification")
 
 
@@ -221,6 +224,21 @@ class OrganizationNotificationSettingView(GenericAPIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+class OrganizationSettingView(ProtectedAPIMixin, RetrieveUpdateAPIView):
+    serializer_class = OrganizationNotificationSettingsSerializer
+    queryset = OrganizationNotificationSettings.objects.filter(
+        organization__is_active=True
+    )
+    lookup_field = "organization_id"
+    lookup_url_kwarg = "id"
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        if self.request.user.is_superuser:
+            return qs
+        return qs.filter(organization_id__in=self.request.user.organizations_managed)
+
+
 notifications_list = NotificationListView.as_view()
 notification_detail = NotificationDetailView.as_view()
 notifications_read_all = NotificationReadAllView.as_view()
@@ -230,3 +248,4 @@ notification_setting = NotificationSettingView.as_view()
 organization_notification_setting = OrganizationNotificationSettingView.as_view()
 ignore_object_notification_list = IgnoreObjectNotificationListView.as_view()
 ignore_object_notification = IgnoreObjectNotificationView.as_view()
+organization_setting = OrganizationSettingView.as_view()

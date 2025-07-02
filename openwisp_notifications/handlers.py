@@ -37,6 +37,7 @@ User = get_user_model()
 
 Notification = load_model("Notification")
 NotificationSetting = load_model("NotificationSetting")
+OrganizationNotificationSettings = load_model("OrganizationNotificationSettings")
 IgnoreObjectNotification = load_model("IgnoreObjectNotification")
 
 Group = swapper_load_model("openwisp_users", "Group")
@@ -262,6 +263,17 @@ def related_object_deleted(sender, instance, **kwargs):
         tasks.delete_obsolete_objects.delay(
             instance_app_label, instance_model, instance_id
         )
+
+
+@receiver(
+    post_save, sender=Organization, dispatch_uid="create_org_notification_settings"
+)
+def create_org_notification_settings(created, instance, **kwargs):
+    if not created:
+        return
+    org_setting = OrganizationNotificationSettings(organization=instance)
+    org_setting.full_clean()
+    org_setting.save()
 
 
 def notification_type_registered_unregistered_handler(sender, **kwargs):

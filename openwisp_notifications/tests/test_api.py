@@ -29,16 +29,8 @@ Organization = swapper_load_model("openwisp_users", "Organization")
 OrganizationUser = swapper_load_model("openwisp_users", "OrganizationUser")
 
 
-class TestNotificationApi(
-    TransactionTestCase, TestOrganizationMixin, AuthenticationMixin
-):
+class TestNotificationMixin:
     url_namespace = "notifications"
-
-    def setUp(self):
-        self.admin = self._get_admin(self)
-        if not Organization.objects.first():
-            self._create_org(name="default", slug="default")
-        self.client.force_login(self.admin)
 
     def _get_path(self, url_name, *args, **kwargs):
         path = reverse(f"{self.url_namespace}:{url_name}", args=args)
@@ -67,6 +59,35 @@ class TestNotificationApi(
             org_user._meta.model_name,
             org_user.pk,
         )
+
+    def _assert_org_setting_response(self, response, org_setting):
+        """Helper method to assert organization setting response structure."""
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("web", response.data)
+        self.assertIn("email", response.data)
+        self.assertEqual(response.data["web"], org_setting.web)
+        self.assertEqual(response.data["email"], org_setting.email)
+        self.assertEqual(
+            response.data["email_batch_interval"], org_setting.email_batch_interval
+        )
+        self.assertEqual(
+            response.data["email_batch_display_limit"],
+            org_setting.email_batch_display_limit,
+        )
+
+
+class TestNotificationApi(
+    TestNotificationMixin,
+    TestOrganizationMixin,
+    AuthenticationMixin,
+    TransactionTestCase,
+):
+
+    def setUp(self):
+        self.admin = self._get_admin(self)
+        if not Organization.objects.first():
+            self._create_org(name="default", slug="default")
+        self.client.force_login(self.admin)
 
     def test_list_notification_api(self):
         number_of_notifications = 21
@@ -1185,3 +1206,155 @@ class TestNotificationApi(
         # ensure preferences from disabled orgs are not shown
         for obj in response.data["results"]:
             self.assertNotEqual(obj["organization_id"], str(inactive_org.id))
+
+    def test_organization_setting_superuser_access(self):
+        """Test superuser can retrieve and update organization notification settings"""
+        # Create superuser
+        self.client.force_login(self.admin)
+
+        # Create organizations
+        org1 = self._create_org(name="test-org-1", slug="test-org-1")
+        org2 = self._create_org(name="test-org-2", slug="test-org-2")
+
+        with self.subTest("Superuser can retrieve organization notification settings"):
+            org1_settings = org1.notification_settings
+            url = self._get_path("organization_setting", org1.pk)
+            response = self.client.get(url)
+            self._assert_org_setting_response(response, org1_settings)
+
+        with self.subTest("Superuser can update organization notification settings"):
+            url = self._get_path("organization_setting", org1.pk)
+            data = {"web": False, "email": False}
+            response = self.client.patch(
+                url, data=data, content_type="application/json"
+            )
+            org1_settings.refresh_from_db()
+            self._assert_org_setting_response(response, org1_settings)
+
+        with self.subTest("Superuser can access settings for any organization"):
+            url = self._get_path("organization_setting", org2.pk)
+            response = self.client.get(url)
+            self.assertEqual(response.status_code, 200)
+
+    def test_organization_setting_unauthenticated_access(self):
+        """Test unauthenticated users cannot access organization notification settings"""
+        org = self._create_org(name="test-org", slug="test-org")
+
+        # Logout current user
+        self.client.logout()
+
+        with self.subTest(
+            "Unauthenticated user cannot retrieve organization notification settings"
+        ):
+            url = self._get_path("organization_setting", org.pk)
+            response = self.client.get(url)
+            self.assertEqual(response.status_code, 401)
+
+        with self.subTest(
+            "Unauthenticated user cannot update organization notification settings"
+        ):
+            url = self._get_path("organization_setting", org.pk)
+            data = {"web": False, "email": False}
+            response = self.client.patch(
+                url, data=data, content_type="application/json"
+            )
+            self.assertEqual(response.status_code, 401)
+
+    def test_organization_setting_user_with_no_org_access(self):
+        """Test regular user with cannot access organization notification settings"""
+        # Create regular user with no organization membership
+        regular_user = self._create_user()
+        org = self._create_org(name="test-org", slug="test-org")
+        self.client.force_login(regular_user)
+
+        with self.subTest(
+            "Regular user cannot retrieve organization notification settings"
+        ):
+            url = self._get_path("organization_setting", org.pk)
+            response = self.client.get(url)
+            self.assertEqual(response.status_code, 403)
+
+        with self.subTest(
+            "Regular user cannot update organization notification settings"
+        ):
+            url = self._get_path("organization_setting", org.pk)
+            data = {"web": False, "email": False}
+            response = self.client.patch(
+                url, data=data, content_type="application/json"
+            )
+            self.assertEqual(response.status_code, 403)
+
+    def test_organization_setting_inactive_organization(self):
+        """Test that inactive organizations are not accessible"""
+        inactive_org = self._create_org(
+            name="inactive-org", slug="inactive-org", is_active=False
+        )
+        self.client.force_login(self.admin)
+
+        with self.subTest("Cannot access settings for inactive organization"):
+            url = self._get_path("organization_setting", inactive_org.pk)
+            response = self.client.get(url)
+            self.assertEqual(response.status_code, 404)
+
+
+class TestMultitenancyApi(
+    TestNotificationMixin,
+    TestOrganizationMixin,
+    AuthenticationMixin,
+    TransactionTestCase,
+):
+    # TransactionTestCase resets the database after each test which deletes
+    # Groups and their permissions.
+    # We use fixtures to set up the initial state for each test.
+    fixtures = [
+        "openwisp_notifications/tests/fixtures/initial_data.json",
+    ]
+
+    def test_organization_setting_multitenancy(self):
+        """Test operator and administrator access in multitenant scenarios"""
+        org1 = self._create_org(name="test-org-1", slug="test-org-1")
+        org1_settings = org1.notification_settings
+        org2 = self._create_org(name="test-org-2", slug="test-org-2")
+        operator = self._create_operator(organizations=[org1])
+        administrator = self._create_administrator(organizations=[org1])
+        org1_setting_path = self._get_path("organization_setting", org1.pk)
+
+        # Test operator permissions
+        self.client.force_login(operator)
+        with self.subTest("Operator can retrieve organization notification settings"):
+            response = self.client.get(org1_setting_path)
+            self._assert_org_setting_response(response, org1_settings)
+
+        with self.subTest("Operator cannot update organization notification settings"):
+            data = {"web": False, "email": False}
+            response = self.client.patch(
+                org1_setting_path, data=data, content_type="application/json"
+            )
+            self.assertEqual(response.status_code, 403)
+
+        # Test administrator permissions
+        self.client.force_login(administrator)
+
+        with self.subTest(
+            "Administrator can retrieve organization notification settings"
+        ):
+            response = self.client.get(org1_setting_path)
+            self._assert_org_setting_response(response, org1_settings)
+
+        with self.subTest(
+            "Administrator can update organization notification settings"
+        ):
+            data = {"web": False, "email": False}
+            response = self.client.patch(
+                org1_setting_path, data=data, content_type="application/json"
+            )
+            org1_settings.refresh_from_db()
+            self.assertEqual(org1_settings.web, False)
+            self.assertEqual(org1_settings.email, False)
+
+        with self.subTest(
+            "Administrator cannot retrieve organization notification settings of other organizations"
+        ):
+            path = self._get_path("organization_setting", org2.pk)
+            response = self.client.get(path)
+            self.assertEqual(response.status_code, 404)

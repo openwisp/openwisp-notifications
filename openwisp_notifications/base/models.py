@@ -2,6 +2,7 @@ import logging
 from contextlib import contextmanager
 
 import django
+import swapper
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.fields import GenericForeignKey
@@ -34,6 +35,10 @@ from openwisp_notifications.utils import (
     send_notification_email,
 )
 from openwisp_utils.base import UUIDModel
+from openwisp_utils.fields import (
+    FallbackBooleanChoiceField,
+    FallbackPositiveIntegerField,
+)
 
 from .notifications import AbstractNotification as BaseNotification
 
@@ -453,7 +458,7 @@ class AbstractNotificationSetting(UUIDModel):
                     )
                     updates = {"web": self.web}
 
-                    # If global web notifiations are disabled, then disable email notifications as well
+                    # If global web notifications are disabled, then disable email notifications as well
                     if not self.web:
                         updates["email"] = False
 
@@ -518,3 +523,64 @@ class AbstractIgnoreObjectNotification(UUIDModel):
     class Meta:
         abstract = True
         ordering = ["valid_till"]
+
+
+class AbstractOrganizationNotificationSettings(models.Model):
+    organization = models.OneToOneField(
+        swapper.get_model_name("openwisp_users", "Organization"),
+        verbose_name=_("organization"),
+        related_name="notification_settings",
+        on_delete=models.CASCADE,
+        primary_key=True,
+    )
+    web = FallbackBooleanChoiceField(
+        fallback=app_settings.WEB_ENABLED,
+        help_text=_("Whether the web notifications are enabled"),
+        verbose_name=_("Web notifications enabled"),
+    )
+    email = FallbackBooleanChoiceField(
+        fallback=app_settings.EMAIL_ENABLED,
+        help_text=_("Whether the email notifications are enabled"),
+        verbose_name=_("Email notifications enabled"),
+    )
+    email_batch_interval = FallbackPositiveIntegerField(
+        fallback=app_settings.EMAIL_BATCH_INTERVAL,
+        help_text=_("Email batch interval in seconds"),
+        verbose_name=_("Email batch interval"),
+    )
+    email_batch_display_limit = FallbackPositiveIntegerField(
+        fallback=app_settings.EMAIL_BATCH_DISPLAY_LIMIT,
+        help_text=_("Maximum number of notifications to display in batch email"),
+        verbose_name=_("Batch email display limit"),
+    )
+
+    class Meta:
+        abstract = True
+
+    def save(self, *args, **kwargs):
+        if not self.web:
+            self.email = False
+        if not self._state.adding:
+            self._update_organizationuser_settings()
+        return super().save(*args, **kwargs)
+
+    def _update_organizationuser_settings(self):
+        try:
+            db_instance = self.__class__.objects.only("web", "email").get(
+                organization_id=self.organization_id
+            )
+        except self.__class__.DoesNotExist:
+            return
+        update_fields = {}
+        for field in ["web", "email"]:
+            if getattr(self, field) != getattr(db_instance, field):
+                update_fields[field] = getattr(self, field)
+        if update_fields:
+            NotificationSetting = swapper.load_model(
+                "openwisp_notifications", "NotificationSetting"
+            )
+            transaction.on_commit(
+                lambda: NotificationSetting.objects.filter(
+                    organization_id=self.organization_id
+                ).update(**update_fields)
+            )
