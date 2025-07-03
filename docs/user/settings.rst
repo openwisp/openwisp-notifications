@@ -3,6 +3,51 @@ Settings
 
 .. include:: /partials/settings-note.rst
 
+.. _openwisp_notifications_web_enabled:
+
+``OPENWISP_NOTIFICATIONS_WEB_ENABLED``
+--------------------------------------
+
+======= ========
+Type    ``bool``
+Default ``True``
+======= ========
+
+This setting controls the global default for web notifications across the
+entire system. When set to ``False``, web notifications will be disabled
+by default for all users and organizations.
+
+This setting can be overridden at both :doc:`organization and user levels
+<notification-preferences>`. Organization administrators can configure
+different defaults for their organization, and individual users can set
+their own preferences regardless of the global or organization settings.
+
+.. _openwisp_notifications_email_enabled:
+
+``OPENWISP_NOTIFICATIONS_EMAIL_ENABLED``
+----------------------------------------
+
+======= ========
+Type    ``bool``
+Default ``True``
+======= ========
+
+This setting controls the global default for email notifications across
+the entire system. When set to ``False``, email notifications will be
+disabled by default for all users and organizations.
+
+This setting can be overridden at both :doc:`organization and user levels
+<notification-preferences>`. Organization administrators can configure
+different defaults for their organization, and individual users can set
+their own preferences regardless of the global or organization settings.
+
+.. note::
+
+    These global settings serve as the foundation for the notification
+    system. For more information about how users and organizations can
+    customize their notification preferences, see
+    :doc:`notification-preferences`.
+
 .. _openwisp_notifications_host:
 
 ``OPENWISP_NOTIFICATIONS_HOST``

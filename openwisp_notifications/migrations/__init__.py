@@ -10,7 +10,10 @@ def get_swapped_model(apps, app_name, model_name):
 
 def assign_organizationnotificationsettings_permissions_to_groups(apps, schema_editor):
     # Populate permissions
-    app_config = apps.get_app_config("openwisp_notifications")
+    OrganizationNotificationSetting = get_swapped_model(
+        apps, "openwisp_notifications", "OrganizationNotificationSettings"
+    )
+    app_config = apps.get_app_config(OrganizationNotificationSetting._meta.app_label)
     app_config.models_module = True
     create_permissions(app_config, apps=apps, verbosity=0)
 
@@ -39,3 +42,22 @@ def assign_organizationnotificationsettings_permissions_to_groups(apps, schema_e
             codename="{}_{}".format(operation, "organizationnotificationsettings"),
         )
         admin.permissions.add(permission.pk)
+
+
+def create_organization_notification_settings(apps, schema_editor):
+    OrganizationNotificationSettings = get_swapped_model(
+        apps, "openwisp_notifications", "OrganizationNotificationSettings"
+    )
+    Organization = get_swapped_model(apps, "openwisp_users", "Organization")
+
+    for org in Organization.objects.iterator():
+        org_setting = OrganizationNotificationSettings(organization=org)
+        org_setting.full_clean()
+        org_setting.save()
+
+
+def reverse_create_organization_notification_settings(apps, schema_editor):
+    OrganizationNotificationSettings = get_swapped_model(
+        apps, "openwisp_notifications", "OrganizationNotificationSettings"
+    )
+    OrganizationNotificationSettings.objects.all().delete()
