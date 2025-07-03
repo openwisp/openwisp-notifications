@@ -9,7 +9,7 @@
   <link rel="stylesheet" type="text/css" href="{% static 'openwisp-notifications/css/unsubscribe.css' %}">
 {% endblock %}
 
-{% block menu-bar %}{% endblock %}
+{% block menu-bar %}{% if user.is_authenticated %} {{ block.super }} {% endif %} {% endblock %}
 
 {% block content %}
   <div class="unsubscribe-container">
@@ -61,10 +61,11 @@
             </a>
           </p>
         </div>
-
       {% else %}
-        <h2>{% trans 'Invalid or Expired Link' %}</h2>
-        <p>{% trans 'The link you used is invalid or expired.' %}</p>
+        <div id="invalid-token-msg-container">
+          <h2>{% trans 'Invalid or Expired Link' %}</h2>
+          <p>{% trans 'The link you used is invalid or expired.' %}</p>
+        </div>
       {% endif %}
 
       <div class="footer">

@@ -115,6 +115,7 @@ class TestSelenium(
             self.assertEqual(
                 self.find_element(By.TAG_NAME, "h2").text, "Invalid or Expired Link"
             )
+            self.assertEqual(len(self.get_browser_logs()), 0)
 
         with self.subTest("User unsubscribe with valid URL"):
             unsubscribe_link = get_unsubscribe_url_for_user(self.admin, False)
@@ -127,6 +128,7 @@ class TestSelenium(
             self.wait_for_visibility(By.ID, "confirm-unsubscribed")
             self.wait_for_invisibility(By.ID, "confirm-subscribed")
             self.assertEqual(self.find_element(By.ID, "toggle-btn").text, "Subscribe")
+            self.assertEqual(len(self.get_browser_logs()), 0)
 
         with self.subTest("User subscribe to notifications again"):
             self.open(unsubscribe_link)
@@ -138,6 +140,7 @@ class TestSelenium(
             self.wait_for_visibility(By.ID, "confirm-subscribed")
             self.wait_for_invisibility(By.ID, "confirm-unsubscribed")
             self.assertEqual(self.find_element(By.ID, "toggle-btn").text, "Unsubscribe")
+            self.assertEqual(len(self.get_browser_logs()), 0)
 
         with self.subTest("Network request fails"):
             self.open(unsubscribe_link)
@@ -150,6 +153,7 @@ class TestSelenium(
             )
             self.web_driver.find_element(By.ID, "toggle-btn").click()
             self.wait_for_visibility(By.ID, "error-msg")
+            self.assertEqual(len(self.get_browser_logs()), 0)
 
     def test_notification_preference_page(self):
         self.login()

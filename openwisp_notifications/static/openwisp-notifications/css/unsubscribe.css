@@ -104,3 +104,13 @@ h1 {
 #error-msg-container {
   margin-top: 32px;
 }
+#invalid-token-msg-container {
+  margin: 32px auto;
+  text-align: center;
+}
+#invalid-token-msg-container h2 {
+  margin-bottom: 0;
+}
+#invalid-token-msg-container p {
+  margin-top: 0;
+}
