@@ -6,38 +6,44 @@
     <style type="text/css">
         .alert {
             box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.25);
-            border-radius: 0.5em;
+            border-radius: 8px;
             border: outset 1px #eee;
-            padding: 1.5em 1.2em;
-            font-size: 12px;
+            padding: 1.5rem 1.25rem;
+            font-size: 0.75rem;
             width: 100%;
             color: #475467;
         }
 
-        .alert+.alert {
-            margin-top: 1em;
+        .alert-link {
+            display: block;
+            text-decoration: none;
+        }
+
+        .alert-link+.alert-link {
+            margin-top: 0.75rem;
         }
 
         .alert div+div {
-            margin-top: 0.2em;
+            margin-top: 0.25rem;
         }
 
         .alert .timestamp {
             font-weight: 400;
-            line-height: 20px;
+            line-height: 1.25rem;
+            margin: 0px;
         }
 
         .alert .badge {
             background-color: #F2F4F7;
             border: solid #D0D5DD 1px;
             color: #333;
-            border-radius: 1em;
-            padding: 0.1em;
-            line-height: 18px;
+            border-radius: 16px;
+            padding: 0.13rem 0;
+            line-height: 1.13rem;
             text-transform: capitalize;
             display: inline-block;
             text-align: center;
-            min-width: 5em;
+            min-width: 4rem;
         }
 
         .alert .badge.warning {
@@ -64,18 +70,19 @@
             background-color: #DCFAE6;
         }
 
-        a {
-            text-decoration: none;
-        }
-
         a:link:hover .alert,
         a:link:focus .alert {
             background-color: #fff9c466
         }
 
+        .alert .title {
+            margin-left: 0.5rem;
+            padding: 0.13rem 0;
+        }
+
         .alert .title p {
-            line-height: 20px;
-            font-size: 14px;
+            line-height: 1.25rem;
+            font-size: 0.875rem;
             display: inline-block;
             vertical-align: middle;
             margin: 0 auto;
@@ -98,19 +105,19 @@
 
         @media screen and (max-width: 576px) {
             .alert .title {
-                width: 62vw;
+                width: 55vw;
             }
         }
 
         @media screen and (max-width: 425px) {
             .alert .title {
-                width: 50vw;
+                width: 40vw;
             }
         }
 
         @media screen and (max-width: 320px) {
             .alert .title {
-                width: 35vw;
+                width: 28vw;
             }
         }
   </style>
@@ -119,7 +126,7 @@
 {% block mail_body %}
     <div>
         {% for notification in notifications %}
-                {% if notification.url %}<a href="{{ notification.url }}" target="_blank">{% endif %}
+                {% if notification.url %}<a class="alert-link" href="{{ notification.url }}" target="_blank">{% endif %}
                     <table class="alert">
                         <tr>
                         <td>

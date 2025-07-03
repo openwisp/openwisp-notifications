@@ -127,7 +127,7 @@ def send_notification_email(
         )
 
     plain_text_content = render_to_string(
-        "openwisp_notifications/emails/batch_email.txt", extra_context
+        "openwisp_notifications/emails/notification.txt", extra_context
     )
     notifications_count = min(
         notifications_count, app_settings.EMAIL_BATCH_DISPLAY_LIMIT
@@ -149,7 +149,7 @@ def send_notification_email(
             "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
             "List-Unsubscribe": f"<{unsubscribe_url}>",
         },
-        html_email_template="openwisp_notifications/emails/batch_email.html",
+        html_email_template="openwisp_notifications/emails/notification.html",
     )
 
 
