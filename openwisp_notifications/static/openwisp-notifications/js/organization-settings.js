@@ -6,12 +6,15 @@
 
     $(webNotificationEnabled).on("change", function () {
       if (webNotificationEnabled.val() === "False") {
-        // Disable email notifications if web notifications are disabled
-        emailNotificationEnabled.prop("disabled", true);
+        // If web is set to false, also set email to false
         emailNotificationEnabled.val("False");
-      } else {
-        // Enable email notifications if web notifications are enabled
-        emailNotificationEnabled.prop("disabled", false);
+      }
+    });
+
+    $(emailNotificationEnabled).on("change", function () {
+      if (emailNotificationEnabled.val() === "True") {
+        // If email is set to true, also set web to true
+        webNotificationEnabled.val("True");
       }
     });
   });

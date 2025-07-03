@@ -2,6 +2,7 @@ from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from django.test import tag
 from django.urls import reverse
 from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import Select
 
 from openwisp_notifications.signals import notify
 from openwisp_notifications.swapper import load_model, swapper_load_model
@@ -17,7 +18,7 @@ Organization = swapper_load_model("openwisp_users", "Organization")
 OrganizationUser = swapper_load_model("openwisp_users", "OrganizationUser")
 
 
-@tag("test_selenium")
+@tag("selenium_tests")
 class TestSelenium(
     SeleniumTestMixin,
     TestOrganizationMixin,
@@ -244,3 +245,98 @@ class TestSelenium(
             no_organizations_element.text,
             "No organizations available.",
         )
+
+    def test_organization_admin_notification_settings(self):
+        """Test the organization-settings.js functionality in Django admin"""
+        # Create an organization
+        org = self._create_org(name="Test Organization")
+
+        # Login as admin
+        self.login()
+
+        # Navigate to organization change page
+        org_change_url = reverse(
+            "admin:openwisp_users_organization_change", args=(org.pk,)
+        )
+        self.open(org_change_url)
+
+        # Scroll to the bottom of the page to find notification settings
+        self.web_driver.execute_script(
+            "window.scrollTo(0, document.body.scrollHeight);"
+        )
+
+        # Wait for the notification settings section to be visible
+        web_field = Select(
+            self.wait_for_visibility(By.CSS_SELECTOR, "#id_notification_settings-0-web")
+        )
+        email_field = Select(
+            self.wait_for_visibility(
+                By.CSS_SELECTOR, "#id_notification_settings-0-email"
+            )
+        )
+
+        with self.subTest("Test initial state - both fields should be enabled"):
+            # Check initial values - both should be set to True
+            self.assertEqual(
+                web_field.first_selected_option.get_attribute("value"), "True"
+            )
+            self.assertEqual(
+                email_field.first_selected_option.get_attribute("value"), "True"
+            )
+
+        with self.subTest(
+            "Test disabling web notifications disables email notifications"
+        ):
+            # Select "False" for web notifications using Select object
+            web_field.select_by_value("False")
+
+            # Verify that email field is automatically set to False
+            self.assertEqual(
+                email_field.first_selected_option.get_attribute("value"), "False"
+            )
+
+        with self.subTest(
+            "Test enabling email notifications enables web notifications"
+        ):
+            # First, verify email is currently False
+            self.assertEqual(
+                email_field.first_selected_option.get_attribute("value"), "False"
+            )
+
+            # Select "True" for email notifications using Select object
+            email_field.select_by_value("True")
+
+            # Verify that web field is automatically set to True
+            self.assertEqual(
+                web_field.first_selected_option.get_attribute("value"), "True"
+            )
+
+        with self.subTest("Test setting web to False again after email was enabled"):
+            # Disable web notifications again using Select object
+            web_field.select_by_value("False")
+
+            # Verify that email field is automatically set to False
+            self.assertEqual(
+                email_field.first_selected_option.get_attribute("value"), "False"
+            )
+
+        with self.subTest("Test saving the form updates the database"):
+            # Set web to True and email to True for final test
+            web_field.select_by_value("True")
+            # Email should automatically be set to True when web is True
+            self.assertEqual(
+                email_field.first_selected_option.get_attribute("value"), "False"
+            )
+
+            # Save the form by clicking the Save button
+            save_button = self.find_element(By.CSS_SELECTOR, 'input[name="_continue"]')
+            save_button.click()
+
+            # Wait for the page to reload
+            self.wait_for_visibility(By.CSS_SELECTOR, ".success")
+
+            # Verify the object was updated in the database
+            org.refresh_from_db()
+            org_settings = org.notification_settings
+            self.assertEqual(org_settings.web, True)
+            self.assertEqual(org_settings.email, False)

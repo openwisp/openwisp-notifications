@@ -78,6 +78,8 @@ class Migration(migrations.Migration):
             ],
             options={
                 "abstract": False,
+                "verbose_name": "organization notification settings",
+                "verbose_name_plural": "organization notification settings",
                 "swappable": "OPENWISP_NOTIFICATIONS_ORGANIZATIONNOTIFICATIONSETTINGS_MODEL",
             },
         ),

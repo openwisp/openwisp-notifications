@@ -48,6 +48,33 @@ entirely by turning off both web and email notification settings.
     default to using the ``email_notification`` or ``web_notification``
     option defined for that notification type.
 
+Organization Settings
+---------------------
+
+Organization administrators have the ability to configure default
+notification settings at the organization level. These settings serve as
+the baseline configuration for all users within the organization and can
+be accessed through the organization's admin interface.
+
+.. note::
+
+    Organization settings provide default values that apply to all users
+    within the organization. However, individual users can override these
+    defaults by configuring their own notification preferences.
+
+When an organization admin disables web notifications at the organization
+level, email notifications are automatically disabled as well, following
+the same linking behavior as individual user settings. This ensures
+consistency across the notification system.
+
+Organization settings override the global defaults defined in Django
+project settings (see :ref:`openwisp_notifications_web_enabled` and
+:ref:`openwisp_notifications_email_enabled`) and establish new default
+values for all users within that specific organization. This allows
+organization administrators to customize the notification behavior to suit
+their organization's needs while maintaining the flexibility for
+individual users to further customize their own preferences if desired.
+
 .. _notifications_silencing:
 
 Silencing Notifications for Specific Objects

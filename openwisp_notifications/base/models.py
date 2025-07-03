@@ -556,6 +556,8 @@ class AbstractOrganizationNotificationSettings(models.Model):
 
     class Meta:
         abstract = True
+        verbose_name = _("organization notification settings")
+        verbose_name_plural = verbose_name
 
     def save(self, *args, **kwargs):
         if not self.web:
