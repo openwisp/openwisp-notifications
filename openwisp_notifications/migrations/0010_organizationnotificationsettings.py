@@ -53,28 +53,6 @@ class Migration(migrations.Migration):
                         verbose_name="Email notifications enabled",
                     ),
                 ),
-                (
-                    "email_batch_interval",
-                    openwisp_utils.fields.FallbackPositiveIntegerField(
-                        blank=True,
-                        default=None,
-                        fallback=10800,
-                        help_text="Email batch interval in seconds",
-                        null=True,
-                        verbose_name="Email batch interval",
-                    ),
-                ),
-                (
-                    "email_batch_display_limit",
-                    openwisp_utils.fields.FallbackPositiveIntegerField(
-                        blank=True,
-                        default=None,
-                        fallback=15,
-                        help_text="Maximum number of notifications to display in batch email",
-                        null=True,
-                        verbose_name="Batch email display limit",
-                    ),
-                ),
             ],
             options={
                 "abstract": False,

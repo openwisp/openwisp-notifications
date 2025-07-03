@@ -120,7 +120,5 @@ class OrganizationNotificationSettingsSerializer(serializers.ModelSerializer):
             "organization",
             "web",
             "email",
-            "email_batch_interval",
-            "email_batch_display_limit",
         ]
         read_only_fields = ["organization"]

@@ -35,10 +35,7 @@ from openwisp_notifications.utils import (
     send_notification_email,
 )
 from openwisp_utils.base import UUIDModel
-from openwisp_utils.fields import (
-    FallbackBooleanChoiceField,
-    FallbackPositiveIntegerField,
-)
+from openwisp_utils.fields import FallbackBooleanChoiceField
 
 from .notifications import AbstractNotification as BaseNotification
 
@@ -542,16 +539,6 @@ class AbstractOrganizationNotificationSettings(models.Model):
         fallback=app_settings.EMAIL_ENABLED,
         help_text=_("Whether the email notifications are enabled"),
         verbose_name=_("Email notifications enabled"),
-    )
-    email_batch_interval = FallbackPositiveIntegerField(
-        fallback=app_settings.EMAIL_BATCH_INTERVAL,
-        help_text=_("Email batch interval in seconds"),
-        verbose_name=_("Email batch interval"),
-    )
-    email_batch_display_limit = FallbackPositiveIntegerField(
-        fallback=app_settings.EMAIL_BATCH_DISPLAY_LIMIT,
-        help_text=_("Maximum number of notifications to display in batch email"),
-        verbose_name=_("Batch email display limit"),
     )
 
     class Meta:

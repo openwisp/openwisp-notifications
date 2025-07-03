@@ -1,6 +1,5 @@
 from django.test import TransactionTestCase
 
-from openwisp_notifications import settings as app_settings
 from openwisp_notifications.swapper import load_model, swapper_load_model
 from openwisp_users.tests.utils import TestOrganizationMixin
 
@@ -25,13 +24,6 @@ class TestOrganizationNotificationSettings(TestOrganizationMixin, TransactionTes
             org_setting = org.notification_settings
             self.assertEqual(org_setting.web, True)
             self.assertEqual(org_setting.email, True)
-            self.assertEqual(
-                org_setting.email_batch_interval, app_settings.EMAIL_BATCH_INTERVAL
-            )
-            self.assertEqual(
-                org_setting.email_batch_display_limit,
-                app_settings.EMAIL_BATCH_DISPLAY_LIMIT,
-            )
 
         with self.subTest(
             "Deleting organization deletes OrganizationNotificationSettings"
@@ -91,7 +83,6 @@ class TestOrganizationNotificationSettings(TestOrganizationMixin, TransactionTes
         user_settings = org1_user.notificationsetting_set.filter(
             organization=org1,
         )
-        print(user_settings)
         self.assertEqual(user_settings.count(), 2)
         for setting in user_settings:
             self.assertEqual(setting.web_notification, False)
