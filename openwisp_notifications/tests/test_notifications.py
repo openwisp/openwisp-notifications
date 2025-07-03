@@ -423,7 +423,7 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
         )
         self.assertInHTML(
             (
-                f'<a href="{n.redirect_view_url}" target="_blank">'
+                f'<a class="alert-link" href="{n.redirect_view_url}" target="_blank">'
                 '<table class="alert">'
                 "<tr><td><div>"
                 f'<p class="timestamp">{timestamp}</p>'
@@ -1162,6 +1162,8 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
             ).strip(),
         )
         html_email = email.alternatives[0][0]
+        with open("output.html", "w") as f:
+            f.write(html_email)
         self.assertInHTML(
             _test_batch_email_notification_email_html.format(
                 datetime_str=datetime_str,

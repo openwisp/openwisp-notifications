@@ -38,7 +38,8 @@ _test_batch_email_notification_email_html = """
       <div class="email-title">4 new notifications</div>
       <div class="subtitle">Since {datetime_str}</div>
       <div>
-        <a href="https://example.com/api/v1/notifications/notification/{notification_id}/redirect/"
+        <a class="alert-link"
+          href="https://example.com/api/v1/notifications/notification/{notification_id}/redirect/"
           target="_blank">
           <table class="alert">
             <tr>
@@ -77,7 +78,7 @@ _test_batch_email_notification_email_html = """
             </td>
           </tr>
         </table>
-        <a href="https://localhost:8000/admin" target="_blank">
+        <a class="alert-link" href="https://localhost:8000/admin" target="_blank">
           <table class="alert">
             <tr>
               <td>
@@ -97,7 +98,7 @@ _test_batch_email_notification_email_html = """
             </tr>
           </table>
         </a>
-        <a href="https://localhost:8000/admin" target="_blank">
+        <a class="alert-link" href="https://localhost:8000/admin" target="_blank">
           <table class="alert">
             <tr>
               <td>
