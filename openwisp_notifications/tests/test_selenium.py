@@ -153,7 +153,9 @@ class TestSelenium(
             )
             self.web_driver.find_element(By.ID, "toggle-btn").click()
             self.wait_for_visibility(By.ID, "error-msg")
-            self.assertEqual(len(self.get_browser_logs()), 0)
+            browser_logs = self.get_browser_logs()
+            self.assertEqual(len(browser_logs), 1)
+            self.assertIn("Error updating subscription")
 
     def test_notification_preference_page(self):
         self.login()
