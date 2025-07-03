@@ -1,6 +1,6 @@
 {% load i18n %}
 
-[{{ site_name }}] {{ notifications_count }} {% translate "unread notifications since" %} {{ start_time }}
+[{{ site_name }}] {{ notifications_count }} {% translate "unread notifications since" %} {{ since }}
 
 {% for notification in notifications %}
 - {{ notification.email_message }}{% if notification.rendered_description %}
@@ -9,6 +9,6 @@
   {% translate "URL" %}: {{ notification.url }}{% endif %}
 {% endfor %}
 
-{% if call_to_action_url %}
+{% if call_to_action_url and notifications|length > 1 %}
 {{ call_to_action_text }}: {{ call_to_action_url }}
 {% endif %}

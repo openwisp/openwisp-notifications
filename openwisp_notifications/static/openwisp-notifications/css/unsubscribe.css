@@ -1,6 +1,25 @@
+:root {
+  --body-loud-color: #101828 !important;
+  --body-fg: #475467 !important;
+  --button-bg: #ffffff !important;
+  --button-fg: #344054 !important;
+  --button-hover-bg: #ffffff !important;
+  --button-hover-fg: #101828 !important;
+  --button-border-color: #d0d5dd;
+}
 #content,
 .content {
   padding: 0 !important;
+}
+#content .unsubscribe-content {
+  font-size: 14px;
+  line-height: 20px;
+}
+h1 {
+  font-weight: 600;
+  font-size: 18px;
+  line-height: 28px;
+  color: var(--body-loud-color);
 }
 .unsubscribe-container {
   display: flex;
@@ -10,33 +29,78 @@
   height: 95vh;
 }
 .unsubscribe-content {
-  padding: 40px;
-  border-radius: 12px;
+  padding: 24px;
   text-align: center;
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
-  max-width: 500px;
+  box-shadow:
+    0px 20px 24px -4px rgba(16, 24, 40, 0.08),
+    0px 8px 8px -4px rgba(16, 24, 40, 0.03);
+  border-radius: 12px;
+  max-width: 400px;
   width: 100%;
 }
 .unsubscribe-content h1 {
-  padding-top: 10px;
+  margin-top: 10px;
 }
-.logo {
-  width: 200px;
-  margin-bottom: 80px;
+.status-msg-container {
+  margin-top: -16px;
+  margin-bottom: 0px;
+}
+#content .login #site-name a {
+  width: 104px;
+  height: 60px;
+  margin: 21px auto;
+}
+.email-icon-container {
+  width: 48px;
+  height: 48px;
+  margin: 0 auto;
+  background-color: #fef0c7;
+  border-radius: 24px;
 }
 .email-icon {
-  background-image: url("../../openwisp-notifications/images/icons/icon-email.svg");
-  background-repeat: no-repeat;
-  width: 50px;
-  height: 50px;
-  margin: 0 auto;
-  transform: scale(2) translate(25%, 25%);
+  width: 24px;
+  height: auto;
+  margin: 15px auto;
+}
+#toggle-btn {
+  margin-top: 32px;
+  margin-bottom: 32px;
+  width: 100%;
+}
+.button {
+  border: 1px solid var(--button-border-color);
+  background-color: var(--button-bg);
+  font-weight: 600;
+  font-size: 16px;
+  line-height: 24px;
+  padding: 10px 16px;
+  color: var(--button-fg);
+  box-shadow:
+    0px 1px 2px rgba(16, 24, 40, 0.05),
+    inset 0px 0px 0px 1px rgba(16, 24, 40, 0.18),
+    inset 0px -2px 0px rgba(16, 24, 40, 0.05);
+  border-radius: 8px;
+}
+.button:hover,
+.button:focus,
+.button:active {
+  color: var(--button-hover-fg);
+  border-color: var(--button-hover-fg);
+  background-color: var(--button-hover-bg);
 }
 .footer {
   margin-top: 20px;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 20px;
 }
-.confirmation-msg {
-  color: green;
-  margin-top: 20px;
-  font-weight: bold;
+#manage-preferences .footer p {
+  margin: 0px;
+}
+#manage-preferences .confirmation-msg {
+  color: #067647;
+  font-weight: 500;
+}
+#error-msg-container {
+  margin-top: 32px;
 }

@@ -23,47 +23,107 @@ _test_batch_email_notification_email_body = """
 """
 
 _test_batch_email_notification_email_html = """
-<div class="subject">[example.com] 4 unread notifications since {datetime_str}</div>
-<div>
-    <div class="alert info">
-        <h2><span class="badge info">INFO</span><span class="title"><a
-                    href="https://example.com/api/v1/notifications/notification/{notification_id}/redirect/"
-                    target="_blank">
+<div class="container">
+    <div class="logo-container">
+      <img
+        src="https://raw.githubusercontent.com/openwisp/openwisp-utils/master/openwisp_utils/static/openwisp-utils/images/openwisp-logo.png"
+        alt="Logo" class="logo">
+    </div>
+    <div class="email-info">This email is sent to <u></u> from [example.com]</div>
+    <div class="box">
+      <div class="icon-container">
+        <img src="https://example.com/static/ui/openwisp/images/email.png" alt="email icon">
+      </div>
+      <div class="sysname-container">example.com</div>
+      <div class="email-title">4 new notifications</div>
+      <div class="subtitle">Since {datetime_str}</div>
+      <div>
+        <a class="alert-link"
+          href="https://example.com/api/v1/notifications/notification/{notification_id}/redirect/"
+          target="_blank">
+          <table class="alert">
+            <tr>
+              <td>
+                <div>
+                  <p class="timestamp">{datetime_str}</p>
+                </div>
+                <div>
+                  <span class="badge info">info</span>
+                  <span class="title">
                     <p>Default notification with default verb and level info by Tester Tester (test org)</p>
-                </a></span></h2>
-        <p>{datetime_str}</p>
-        <p>
-            <p>Test Notification</p>
-        </p>
-    </div>
-    <div class="alert info">
-        <h2><span class="badge info">INFO</span><span class="title">
-                <p>Test Notification</p>
-            </span></h2>
-        <p>{datetime_str}</p>
-        <p>
-            <p>Test Notification</p>
-        </p>
-    </div>
-    <div class="alert info">
-        <h2><span class="badge info">INFO</span><span class="title"><a href="https://localhost:8000/admin"
-                    target="_blank">
+                  </span>
+                </div>
+              </td>
+              <td>
+                <img src="https://example.com/static/ui/openwisp/images/right-arrow.png" alt="right-arrow">
+              </td>
+            </tr>
+          </table>
+        </a>
+        <table class="alert">
+          <tr>
+            <td>
+              <div>
+                <p class="timestamp">{datetime_str}</p>
+              </div>
+              <div>
+                <span class="badge info">info</span>
+                <span class="title">
+                  <p>Test Notification</p>
+                </span>
+              </div>
+            </td>
+            <td>
+              <img src="https://example.com/static/ui/openwisp/images/right-arrow.png" alt="right-arrow">
+            </td>
+          </tr>
+        </table>
+        <a class="alert-link" href="https://localhost:8000/admin" target="_blank">
+          <table class="alert">
+            <tr>
+              <td>
+                <div>
+                  <p class="timestamp">{datetime_str}</p>
+                </div>
+                <div>
+                  <span class="badge info">info</span>
+                  <span class="title">
                     <p>Test Notification</p>
-                </a></span></h2>
-        <p>{datetime_str}</p>
-        <p>
-            <p>Test Notification</p>
-        </p>
-    </div>
-    <div class="alert info">
-        <h2><span class="badge info">INFO</span><span class="title"><a href="https://localhost:8000/admin"
-                    target="_blank">
+                  </span>
+                </div>
+              </td>
+              <td>
+                <img src="https://example.com/static/ui/openwisp/images/right-arrow.png" alt="right-arrow">
+              </td>
+            </tr>
+          </table>
+        </a>
+        <a class="alert-link" href="https://localhost:8000/admin" target="_blank">
+          <table class="alert">
+            <tr>
+              <td>
+                <div>
+                  <p class="timestamp">{datetime_str}</p>
+                </div>
+                <div>
+                  <span class="badge info">info</span>
+                  <span class="title">
                     <p>Test Notification</p>
-                </a></span></h2>
-        <p>{datetime_str}</p>
-        <p>
-            <p>Test Notification</p>
-        </p>
+                  </span>
+                </div>
+              </td>
+              <td>
+                <img src="https://example.com/static/ui/openwisp/images/right-arrow.png" alt="right-arrow">
+              </td>
+            </tr>
+          </table>
+        </a>
+      </div>
+    </div>
+    <div class="footer">
+      <p>To stop receiving all email notifications, <a
+          href="{unsubscribe_url}">unsubscribe</a>.
+      </p>
     </div>
 </div>
 """
