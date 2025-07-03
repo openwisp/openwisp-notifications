@@ -155,7 +155,7 @@ class TestSelenium(
             self.wait_for_visibility(By.ID, "error-msg")
             browser_logs = self.get_browser_logs()
             self.assertEqual(len(browser_logs), 1)
-            self.assertIn("Error updating subscription")
+            self.assertIn("Error updating subscription", browser_logs[0]["message"])
 
     def test_notification_preference_page(self):
         self.login()
