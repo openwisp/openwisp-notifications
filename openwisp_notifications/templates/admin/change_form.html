@@ -10,26 +10,26 @@
 {% endcomment %}
 
 {% block admin_change_form_document_ready %}
-    {{ block.super }}
-    {% if change %}
-        <script>
-            const owNotifyAppLabel = '{{ opts.app_label }}',
-                owNotifyModelName = '{{ opts.model_name }}',
-                uuidRegex = /\/((\w{4,12}-?)){5}\//,
-                owIsChangeForm = true;
-            let objectId;
-            try{
-                objectId = uuidRegex.exec(window.location)[0];
-            }
-            catch(error){
-                try{
-                    objectId = /\/(\d+)\//.exec(window.location)[0];
-                }
-                catch(error){
-                    throw error;
-                }
-            }
-            const owNotifyObjectId = objectId.replace(/\//g,'');
-        </script>
-    {% endif %}
+  {{ block.super }}
+  {% if change %}
+    <script>
+      const owNotifyAppLabel = '{{ opts.app_label }}',
+            owNotifyModelName = '{{ opts.model_name }}',
+            uuidRegex = /\/((\w{4,12}-?)){5}\//,
+            owIsChangeForm = true;
+      let objectId;
+      try{
+        objectId = uuidRegex.exec(window.location)[0];
+      }
+      catch(error){
+        try{
+          objectId = /\/(\d+)\//.exec(window.location)[0];
+        }
+        catch(error){
+          throw error;
+        }
+      }
+      const owNotifyObjectId = objectId.replace(/\//g,'');
+    </script>
+  {% endif %}
 {% endblock %}
