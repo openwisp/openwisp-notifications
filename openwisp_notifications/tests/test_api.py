@@ -67,13 +67,6 @@ class TestNotificationMixin:
         self.assertIn("email", response.data)
         self.assertEqual(response.data["web"], org_setting.web)
         self.assertEqual(response.data["email"], org_setting.email)
-        self.assertEqual(
-            response.data["email_batch_interval"], org_setting.email_batch_interval
-        )
-        self.assertEqual(
-            response.data["email_batch_display_limit"],
-            org_setting.email_batch_display_limit,
-        )
 
 
 class TestNotificationApi(

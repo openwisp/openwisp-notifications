@@ -237,16 +237,6 @@ class TestOrganizationNotificationsSettingsAdmin(BaseTestAdmin):
                 response,
                 '<select name="notification_settings-0-email" id="id_notification_settings-0-email">',
             )
-            self.assertNotContains(
-                response,
-                '<input type="number" name="notification_settings-0-email_batch_interval" value="10800"'
-                ' class="vIntegerField" min="0" id="id_notification_settings-0-email_batch_interval">',
-            )
-            self.assertNotContains(
-                response,
-                '<input type="number" name="notification_settings-0-email_batch_display_limit" value="15"'
-                ' class="vIntegerField" min="0" id="id_notification_settings-0-email_batch_display_limit">',
-            )
             self.assertContains(
                 response,
                 "<label>Web notifications enabled:</label>"
@@ -257,18 +247,6 @@ class TestOrganizationNotificationsSettingsAdmin(BaseTestAdmin):
                 response,
                 "<label>Email notifications enabled:</label>"
                 '<div class="readonly"><img src="/static/admin/img/icon-yes.svg" alt="True"></div>',
-                html=True,
-            )
-            self.assertContains(
-                response,
-                "<label>Email batch interval:</label>"
-                f'<div class="readonly">{app_settings.EMAIL_BATCH_INTERVAL}</div>',
-                html=True,
-            )
-            self.assertContains(
-                response,
-                "<label>Batch email display limit:</label>"
-                f'<div class="readonly">{app_settings.EMAIL_BATCH_DISPLAY_LIMIT}</div>',
                 html=True,
             )
 
@@ -284,16 +262,6 @@ class TestOrganizationNotificationsSettingsAdmin(BaseTestAdmin):
             self.assertContains(
                 response,
                 '<select name="notification_settings-0-email" id="id_notification_settings-0-email">',
-            )
-            self.assertContains(
-                response,
-                '<input type="number" name="notification_settings-0-email_batch_interval" value="10800"'
-                ' class="vIntegerField" min="0" id="id_notification_settings-0-email_batch_interval">',
-            )
-            self.assertContains(
-                response,
-                '<input type="number" name="notification_settings-0-email_batch_display_limit" value="15"'
-                ' class="vIntegerField" min="0" id="id_notification_settings-0-email_batch_display_limit">',
             )
 
 

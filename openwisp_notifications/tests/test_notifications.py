@@ -171,7 +171,6 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
             self.assertNotIn("pks", cached_data)
 
         with self.subTest("get_user_batch_email_data()"):
-            print(cache.get(cache_key))
             # pop = True means it will remove the data from cache
             last_email_sent_time, start_time, pks = (
                 Notification.get_user_batch_email_data(self.admin.pk, pop=True)
