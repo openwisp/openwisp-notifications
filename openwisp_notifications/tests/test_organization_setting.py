@@ -31,7 +31,7 @@ class TestOrganizationNotificationSettings(TestOrganizationMixin, TransactionTes
             org.delete()
             self.assertEqual(
                 OrganizationNotificationSettings.objects.filter(
-                    organization=org
+                    organization_id=org.id
                 ).count(),
                 0,
             )
