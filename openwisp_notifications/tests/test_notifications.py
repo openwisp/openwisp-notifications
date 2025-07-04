@@ -112,6 +112,7 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
         self.assertEqual(n.message, "Test Notification Description")
         self.assertEqual(n.recipient, self.admin)
 
+    @mock_notification_types
     def test_create_with_extra_data(self):
         register_notification_type(
             "error_type",
@@ -170,7 +171,6 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
             self.assertNotIn("pks", cached_data)
 
         with self.subTest("get_user_batch_email_data()"):
-            print(cache.get(cache_key))
             # pop = True means it will remove the data from cache
             last_email_sent_time, start_time, pks = (
                 Notification.get_user_batch_email_data(self.admin.pk, pop=True)
