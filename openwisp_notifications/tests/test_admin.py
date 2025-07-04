@@ -231,11 +231,11 @@ class TestOrganizationNotificationsSettingsAdmin(BaseTestAdmin):
             self.assertContains(response, "Notification Settings")
             self.assertNotContains(
                 response,
-                '<select name="notification_settings-0-web" id="id_notification_settings-0-web">',
+                '<select name="notification_settings-0-web"',
             )
             self.assertNotContains(
                 response,
-                '<select name="notification_settings-0-email" id="id_notification_settings-0-email">',
+                '<select name="notification_settings-0-email"',
             )
             self.assertContains(
                 response,
@@ -257,11 +257,11 @@ class TestOrganizationNotificationsSettingsAdmin(BaseTestAdmin):
             self.assertContains(response, "Notification Settings")
             self.assertContains(
                 response,
-                '<select name="notification_settings-0-web" id="id_notification_settings-0-web">',
+                '<select name="notification_settings-0-web"',
             )
             self.assertContains(
                 response,
-                '<select name="notification_settings-0-email" id="id_notification_settings-0-email">',
+                '<select name="notification_settings-0-email"',
             )
 
 
