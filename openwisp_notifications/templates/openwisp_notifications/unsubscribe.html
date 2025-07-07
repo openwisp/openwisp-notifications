@@ -2,25 +2,30 @@
 {% load i18n %}
 {% load static %}
 
-{% block head_title %}{% trans 'Manage Subscription Preferences' %}{% endblock %}
+{% block title %}{% trans 'Manage Email Notifications' %}{% endblock %}
 
 {% block extrastyle %}
   {{ block.super }}
   <link rel="stylesheet" type="text/css" href="{% static 'openwisp-notifications/css/unsubscribe.css' %}">
 {% endblock %}
 
-{% block menu-bar %}{% if user.is_authenticated %} {{ block.super }} {% endif %} {% endblock %}
+{% block menu-bar %}{% if user.is_authenticated %}{{ block.super }}{% endif %}{% endblock %}
 
 {% block content %}
   <div class="unsubscribe-container">
     {% comment %} Workaround to use the same logo as webapp to make overriding easier. {% endcomment %}
-    <div class="login"><div id="site-name"><a class="logo"></a></div></div>
+    <div class="login">
+      <div id="site-name">
+        <a class="logo"></a>
+      </div>
+    </div>
     <div class="unsubscribe-content">
       <div class="email-icon-container">
-        <img class="email-icon" src="{% static "ui/openwisp/images/email.png" %}" alt="{% trans 'Email Icon' %}">
+        <img class="email-icon"
+             src="{% static "ui/openwisp/images/email.png" %}"
+             alt="{% trans 'Email Icon' %}">
       </div>
       <h1>{% trans 'Email Notifications' %}</h1>
-
       {% if valid %}
         <div id="manage-preferences">
           <div class="status-msg-container">
@@ -31,7 +36,6 @@
               {% trans 'You are currently unsubscribed from email notifications.' %}
             </p>
           </div>
-
           <div class="confirmation-msg-container hidden">
             <p id="confirm-subscribed" class="confirmation-msg hidden">
               {% trans 'Successfully subscribed to all email notifications.' %}
@@ -40,7 +44,6 @@
               {% trans 'Successfully unsubscribed from all email notifications.' %}
             </p>
           </div>
-
           <button
             id="toggle-btn"
             class="button"
