@@ -99,25 +99,31 @@
     width: 80%;
   }
 
-  table.alert tr td:last-child {
+  .right-arrow-container {
     width: 6%;
+  }
+
+  @media screen and (max-width: 768px) {
+    .alert .title {
+      width: 67vw;
+    }
   }
 
   @media screen and (max-width: 576px) {
     .alert .title {
-      width: 55vw;
+      width: 52vw;
     }
   }
 
   @media screen and (max-width: 425px) {
     .alert .title {
-      width: 40vw;
+      width: 36vw;
     }
   }
 
   @media screen and (max-width: 320px) {
     .alert .title {
-      width: 28vw;
+      width: 24vw;
     }
   }
 </style>
@@ -128,20 +134,22 @@
   {% for notification in notifications %}
   {% if notification.url %}<a class="alert-link" href="{{ notification.url }}" target="_blank">{% endif %}
     <table class="alert">
-      <tr>
-        <td>
-          <div>
-            <p class="timestamp">{{ notification.timestamp|date:"F j, Y, g:i A e" }}</p>
-          </div>
-          <div>
-            <span class="badge {{ notification.level }}">{{ notification.level }}</span>
-            <span class="title"><p>{{ notification.email_message|striptags }}</p></span>
-          </div>
-        </td>
-        <td>
-          <img src="{{ site_url }}{% static 'ui/openwisp/images/right-arrow.png' %}" alt="right-arrow">
-        </td>
-      </tr>
+      <tbody>
+        <tr>
+          <td>
+            <div>
+              <p class="timestamp">{{ notification.timestamp|date:"F j, Y, g:i A e" }}</p>
+            </div>
+            <div>
+              <span class="badge {{ notification.level }}">{{ notification.level }}</span>
+              <span class="title"><p>{{ notification.email_message|striptags }}</p></span>
+            </div>
+          </td>
+          <td class="right-arrow-container">
+            <img src="{{ site_url }}{% static 'ui/openwisp/images/right-arrow.png' %}" alt="right-arrow">
+          </td>
+        </tr>
+      </tbody>
     </table>
     {% if notification.url %}</a>{% endif %}
   {% endfor %}

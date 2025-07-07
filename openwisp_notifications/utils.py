@@ -104,7 +104,7 @@ def send_notification_email(
         "notifications_count": notifications_count,
         "site_name": current_site.name,
         "footer": get_unsubscribe_url_email_footer(unsubscribe_url),
-        "title": _("{notifications_count} new {pluralize_notification}").format(
+        "title": _("{notifications_count} unread {pluralize_notification}").format(
             notifications_count=notifications_count,
             pluralize_notification=pluralize_notification,
         ),

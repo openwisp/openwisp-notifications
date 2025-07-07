@@ -170,7 +170,6 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
             self.assertNotIn("pks", cached_data)
 
         with self.subTest("get_user_batch_email_data()"):
-            print(cache.get(cache_key))
             # pop = True means it will remove the data from cache
             last_email_sent_time, start_time, pks = (
                 Notification.get_user_batch_email_data(self.admin.pk, pop=True)
@@ -425,14 +424,15 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
             (
                 f'<a class="alert-link" href="{n.redirect_view_url}" target="_blank">'
                 '<table class="alert">'
+                "<tbody>"
                 "<tr><td><div>"
                 f'<p class="timestamp">{timestamp}</p>'
                 '</div><div><span class="badge info">info</span>'
                 '<span class="title">'
                 "<p>Default notification with default verb and level info by Tester Tester (test org)"
-                "</p></span></div></td><td>"
+                '</p></span></div></td><td class="right-arrow-container">'
                 '<img src="https://example.com/static/ui/openwisp/images/right-arrow.png" alt="right-arrow">'
-                "</td></tr></table></a>"
+                "</td></tr></tbody></table></a>"
             ),
             html_email,
         )
@@ -1162,8 +1162,6 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
             ).strip(),
         )
         html_email = email.alternatives[0][0]
-        with open("output.html", "w") as f:
-            f.write(html_email)
         self.assertInHTML(
             _test_batch_email_notification_email_html.format(
                 datetime_str=datetime_str,
