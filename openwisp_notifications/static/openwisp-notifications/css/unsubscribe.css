@@ -45,11 +45,6 @@ h1 {
   margin-top: -16px;
   margin-bottom: 0px;
 }
-#content .login #site-name a {
-  width: 104px;
-  height: 60px;
-  margin: 21px auto;
-}
 .email-icon-container {
   width: 48px;
   height: 48px;
@@ -63,9 +58,8 @@ h1 {
   margin: 15px auto;
 }
 #toggle-btn {
-  margin-top: 32px;
-  margin-bottom: 32px;
   width: 100%;
+  margin: 10px 0;
 }
 .button {
   border: 1px solid var(--button-border-color);
@@ -89,8 +83,6 @@ h1 {
   background-color: var(--button-hover-bg);
 }
 .footer {
-  margin-top: 20px;
-  font-size: 12px;
   font-weight: 400;
   line-height: 20px;
 }
@@ -99,8 +91,18 @@ h1 {
 }
 #manage-preferences .confirmation-msg {
   color: #067647;
-  font-weight: 500;
+  font-weight: bold;
 }
 #error-msg-container {
   margin-top: 32px;
+}
+#invalid-token-msg-container {
+  margin: 32px auto;
+  text-align: center;
+}
+#invalid-token-msg-container h2 {
+  margin-bottom: 0;
+}
+#invalid-token-msg-container p {
+  margin-top: 0;
 }

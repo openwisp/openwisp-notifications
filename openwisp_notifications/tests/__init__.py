@@ -35,51 +35,35 @@ _test_batch_email_notification_email_html = """
         <img src="https://example.com/static/ui/openwisp/images/email.png" alt="email icon">
       </div>
       <div class="sysname-container">example.com</div>
-      <div class="email-title">4 new notifications</div>
+      <div class="email-title">4 unread notifications</div>
       <div class="subtitle">Since {datetime_str}</div>
       <div>
         <a class="alert-link"
           href="https://example.com/api/v1/notifications/notification/{notification_id}/redirect/"
           target="_blank">
           <table class="alert">
-            <tr>
-              <td>
-                <div>
-                  <p class="timestamp">{datetime_str}</p>
-                </div>
-                <div>
-                  <span class="badge info">info</span>
-                  <span class="title">
-                    <p>Default notification with default verb and level info by Tester Tester (test org)</p>
-                  </span>
-                </div>
-              </td>
-              <td>
-                <img src="https://example.com/static/ui/openwisp/images/right-arrow.png" alt="right-arrow">
-              </td>
-            </tr>
+            <tbody>
+              <tr>
+                <td>
+                  <div>
+                    <p class="timestamp">{datetime_str}</p>
+                  </div>
+                  <div>
+                    <span class="badge info">info</span>
+                    <span class="title">
+                      <p>Default notification with default verb and level info by Tester Tester (test org)</p>
+                    </span>
+                  </div>
+                </td>
+                <td class="right-arrow-container">
+                  <img src="https://example.com/static/ui/openwisp/images/right-arrow.png" alt="right-arrow">
+                </td>
+              </tr>
+            </tbody>
           </table>
         </a>
         <table class="alert">
-          <tr>
-            <td>
-              <div>
-                <p class="timestamp">{datetime_str}</p>
-              </div>
-              <div>
-                <span class="badge info">info</span>
-                <span class="title">
-                  <p>Test Notification</p>
-                </span>
-              </div>
-            </td>
-            <td>
-              <img src="https://example.com/static/ui/openwisp/images/right-arrow.png" alt="right-arrow">
-            </td>
-          </tr>
-        </table>
-        <a class="alert-link" href="https://localhost:8000/admin" target="_blank">
-          <table class="alert">
+          <tbody>
             <tr>
               <td>
                 <div>
@@ -92,30 +76,54 @@ _test_batch_email_notification_email_html = """
                   </span>
                 </div>
               </td>
-              <td>
+              <td class="right-arrow-container">
                 <img src="https://example.com/static/ui/openwisp/images/right-arrow.png" alt="right-arrow">
               </td>
             </tr>
+          </tbody>
+        </table>
+        <a class="alert-link" href="https://localhost:8000/admin" target="_blank">
+          <table class="alert">
+            <tbody>
+              <tr>
+                <td>
+                  <div>
+                    <p class="timestamp">{datetime_str}</p>
+                  </div>
+                  <div>
+                    <span class="badge info">info</span>
+                    <span class="title">
+                      <p>Test Notification</p>
+                    </span>
+                  </div>
+                </td>
+                <td class="right-arrow-container">
+                  <img src="https://example.com/static/ui/openwisp/images/right-arrow.png" alt="right-arrow">
+                </td>
+              </tr>
+            </tbody>
           </table>
         </a>
         <a class="alert-link" href="https://localhost:8000/admin" target="_blank">
           <table class="alert">
-            <tr>
-              <td>
-                <div>
-                  <p class="timestamp">{datetime_str}</p>
-                </div>
-                <div>
-                  <span class="badge info">info</span>
-                  <span class="title">
-                    <p>Test Notification</p>
-                  </span>
-                </div>
-              </td>
-              <td>
-                <img src="https://example.com/static/ui/openwisp/images/right-arrow.png" alt="right-arrow">
-              </td>
-            </tr>
+            <tbody>
+              <tr>
+                <td>
+                  <div>
+                    <p class="timestamp">{datetime_str}</p>
+                  </div>
+                  <div>
+                    <span class="badge info">info</span>
+                    <span class="title">
+                      <p>Test Notification</p>
+                    </span>
+                  </div>
+                </td>
+                <td class="right-arrow-container">
+                  <img src="https://example.com/static/ui/openwisp/images/right-arrow.png" alt="right-arrow">
+                </td>
+              </tr>
+            </tbody>
           </table>
         </a>
       </div>

@@ -9,7 +9,7 @@
   <link rel="stylesheet" type="text/css" href="{% static 'openwisp-notifications/css/unsubscribe.css' %}">
 {% endblock %}
 
-{% block menu-bar %}{% endblock %}
+{% block menu-bar %}{% if user.is_authenticated %} {{ block.super }} {% endif %} {% endblock %}
 
 {% block content %}
   <div class="unsubscribe-container">
@@ -19,16 +19,25 @@
       <div class="email-icon-container">
         <img class="email-icon" src="{% static "ui/openwisp/images/email.png" %}" alt="{% trans 'Email Icon' %}">
       </div>
-      <h1>{% trans 'Notification Preferences' %}</h1>
+      <h1>{% trans 'Email Notifications' %}</h1>
 
       {% if valid %}
         <div id="manage-preferences">
           <div class="status-msg-container">
             <p id="subscribed-message" class="{% if not is_subscribed %}hidden{% endif %}">
-              {% trans 'You are currently subscribed to notifications.' %}
+              {% trans 'You are currently subscribed to email notifications.' %}
             </p>
             <p id="unsubscribed-message" class="{% if is_subscribed %}hidden{% endif %}">
-              {% trans 'You are currently unsubscribed from notifications.' %}
+              {% trans 'You are currently unsubscribed from email notifications.' %}
+            </p>
+          </div>
+
+          <div class="confirmation-msg-container hidden">
+            <p id="confirm-subscribed" class="confirmation-msg hidden">
+              {% trans 'Successfully subscribed to all email notifications.' %}
+            </p>
+            <p id="confirm-unsubscribed" class="confirmation-msg hidden">
+              {% trans 'Successfully unsubscribed from all email notifications.' %}
             </p>
           </div>
 
@@ -43,14 +52,6 @@
               {% trans 'Subscribe' %}
             {% endif %}
           </button>
-          <div class="confirmation-msg-container hidden">
-            <p id="confirm-subscribed" class="confirmation-msg hidden">
-              {% trans 'You have successfully subscribed to all email notifications.' %}
-            </p>
-            <p id="confirm-unsubscribed" class="confirmation-msg hidden">
-              {% trans 'You have successfully unsubscribed from all email notifications.' %}
-            </p>
-          </div>
         </div>
         <div id="error-msg-container" class="hidden">
           <p id="error-msg" class="error-msg">
@@ -61,17 +62,19 @@
             </a>
           </p>
         </div>
-
       {% else %}
-        <h2>{% trans 'Invalid or Expired Link' %}</h2>
-        <p>{% trans 'The link you used is invalid or expired.' %}</p>
+        <div id="invalid-token-msg-container">
+          <h2>{% trans 'Invalid or Expired Link' %}</h2>
+          <p>{% trans 'The link you used is invalid or expired.' %}</p>
+        </div>
       {% endif %}
 
       <div class="footer">
         <p>
           {% url 'notifications:notification_preference' as notification_preference_url %}
           {% blocktrans with url=notification_preference_url %}
-            Customize your alerts by adjusting your <a href="{{ url }}">notification preferences</a>.
+            Fine-tune your alert settings in the
+            <a href="{{ url }}" class="highlighted">notification preferences</a>.
           {% endblocktrans %}
         </p>
       </div>

@@ -170,7 +170,6 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
             self.assertNotIn("pks", cached_data)
 
         with self.subTest("get_user_batch_email_data()"):
-            print(cache.get(cache_key))
             # pop = True means it will remove the data from cache
             last_email_sent_time, start_time, pks = (
                 Notification.get_user_batch_email_data(self.admin.pk, pop=True)
@@ -425,14 +424,15 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
             (
                 f'<a class="alert-link" href="{n.redirect_view_url}" target="_blank">'
                 '<table class="alert">'
+                "<tbody>"
                 "<tr><td><div>"
                 f'<p class="timestamp">{timestamp}</p>'
                 '</div><div><span class="badge info">info</span>'
                 '<span class="title">'
                 "<p>Default notification with default verb and level info by Tester Tester (test org)"
-                "</p></span></div></td><td>"
+                '</p></span></div></td><td class="right-arrow-container">'
                 '<img src="https://example.com/static/ui/openwisp/images/right-arrow.png" alt="right-arrow">'
-                "</td></tr></table></a>"
+                "</td></tr></tbody></table></a>"
             ),
             html_email,
         )
@@ -1146,8 +1146,16 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
         # Check if only one mail is sent initially
         self.assertEqual(len(mail.outbox), 1)
 
-        # Call the task
-        tasks.send_batched_email_notifications(self.admin.id)
+        fixed_datetime += timedelta(microseconds=100)
+
+        # Ensure the unsubscribe URL and the batch email notification
+        # are generated with the same timestamp. This guarantees the
+        # unsubscribe token in the email matches the one generated here,
+        # since the token is timestamp-dependent.
+        with freeze_time(fixed_datetime):
+            # Call the task
+            tasks.send_batched_email_notifications(self.admin.id)
+            unsubscribe_url = utils.get_unsubscribe_url_for_user(self.admin)
 
         # Check if the rest of the notifications are sent in a batch
         self.assertEqual(len(mail.outbox), 2)
@@ -1162,13 +1170,11 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
             ).strip(),
         )
         html_email = email.alternatives[0][0]
-        with open("output.html", "w") as f:
-            f.write(html_email)
         self.assertInHTML(
             _test_batch_email_notification_email_html.format(
                 datetime_str=datetime_str,
                 notification_id=default.id,
-                unsubscribe_url=utils.get_unsubscribe_url_for_user(self.admin),
+                unsubscribe_url=unsubscribe_url,
             ),
             html_email,
         )
