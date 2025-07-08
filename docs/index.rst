@@ -39,8 +39,6 @@ within the OpenWISP architecture.
     :maxdepth: 1
 
     ./user/intro.rst
-    ./user/notification-types.rst
-    ./user/sending-notifications.rst
     ./user/web-email-notifications.rst
     ./user/notification-preferences.rst
     ./user/scheduled-deletion-of-notifications.rst
