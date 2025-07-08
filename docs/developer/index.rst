@@ -7,6 +7,8 @@ Developer Docs
     :maxdepth: 2
 
     ./installation.rst
+    ./sending-notifications.rst
+    ./notification-types.rst
     ./utils.rst
     ./cache.rst
     ./extending.rst
