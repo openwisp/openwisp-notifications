@@ -3,7 +3,8 @@
   margin: 0 0 30px;
   display: none;
 }
-.global-settings > h2 {
+.global-settings > h2,
+.organizations h2 {
   font-size: 1.1rem;
   margin-top: 0.5rem;
   font-weight: normal;
@@ -15,14 +16,14 @@
 }
 .global-setting {
   flex: 1;
-  padding: 20px;
+  padding: 25px;
 }
 .global-setting-text h2 {
-  margin: 0 0 5px 0;
+  margin: 0 0 10px 0;
+  line-height: 25px;
 }
 .global-setting-content {
   display: flex;
-  margin-bottom: 10px;
 }
 .global-setting-content h2 {
   color: var(--body-fg);
@@ -46,9 +47,10 @@
 .global-setting-dropdown-toggle {
   display: flex;
   padding: 10px 16px;
+  min-width: 180px;
   background-color: inherit;
   border: 1px solid var(--hairline-color);
-  font-size: 0.9em;
+  font-size: 1em;
   border-radius: 4px;
   cursor: pointer;
   box-shadow: 0px 1px 2px 0px rgba(16, 24, 40, 0.05);
@@ -61,19 +63,20 @@
   background-color: #777;
   display: block;
   position: absolute;
-  top: 7px;
+  top: 8px;
   right: 10px;
 }
 .global-setting-dropdown-menu {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
   z-index: 1;
   display: none;
   position: absolute;
+  border-radius: 4px;
   background-color: #fff;
   border: 1px solid var(--hairline-color);
-  border-radius: 4px;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-  padding: 0;
-  margin: 0;
 }
 .global-setting-dropdown-menu-open {
   display: block;
@@ -87,16 +90,29 @@
   background: inherit;
   text-align: left;
   display: block;
+  font-size: 1em;
 }
 .global-setting-dropdown-menu button:not(:last-child) {
+  border: 0 none;
   border-bottom: 1px solid var(--hairline-color);
+}
+#content .organizations .intro {
+  display: none;
+}
+#content .organizations h2 {
+  margin-top: 0;
+}
+#content .organizations p {
+  margin-bottom: 30px;
 }
 
 /* Icons */
-.icon {
-  min-width: 24px;
-  min-height: 24px;
-  padding-right: 6px;
+.global-setting .icon,
+.modal .icon {
+  min-width: 25px;
+  min-height: 25px;
+  margin-right: 10px;
+  float: left;
 }
 .icon-web {
   background: url("../../openwisp-notifications/images/icons/icon-web.svg") 0 0
@@ -105,6 +121,8 @@
 .icon-email {
   background: url("../../openwisp-notifications/images/icons/icon-email.svg") 0
     0 no-repeat;
+  position: relative;
+  bottom: -3px;
 }
 
 /* Modal */
@@ -126,6 +144,10 @@
   border: 1px solid #888;
   width: 400px;
   border-radius: 5px;
+}
+.modal-header h2 {
+  margin-top: 0;
+  line-height: 24px;
 }
 .modal-header {
   margin-bottom: 20px;
@@ -361,6 +383,9 @@ input:checked + .slider:before {
   align-items: center;
   justify-content: center;
   gap: 4px;
+}
+.notification-header-container .switch {
+  margin: 0 2px;
 }
 
 /* For readability on narrow screens */

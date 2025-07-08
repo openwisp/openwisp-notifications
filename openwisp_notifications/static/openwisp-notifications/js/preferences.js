@@ -104,7 +104,9 @@ function getAbsoluteUrl(url) {
     // Update toggle's data-state and button text
     webToggle.setAttribute("data-state", webState);
     webToggle.innerHTML =
-      (isGlobalWebChecked ? "Notify on Web" : "Don't Notify on Web") +
+      (isGlobalWebChecked
+        ? gettext("Notify on web")
+        : gettext("Don't notify on web")) +
       " " +
       createArrowSpanHtml();
 
@@ -120,7 +122,9 @@ function getAbsoluteUrl(url) {
     // Update toggle's data-state and button text
     emailToggle.setAttribute("data-state", emailState);
     emailToggle.innerHTML =
-      (isGlobalEmailChecked ? "Notify by Email" : "Don't Notify by Email") +
+      (isGlobalEmailChecked
+        ? gettext("Notify by email")
+        : gettext("Don't notify by email")) +
       " " +
       createArrowSpanHtml();
   }
@@ -145,6 +149,8 @@ function getAbsoluteUrl(url) {
       `);
       return;
     }
+
+    $("#content .organizations .intro").show();
 
     // Render settings for each organization
     Object.keys(data).forEach(function (orgId, orgIndex) {
@@ -193,25 +199,26 @@ function getAbsoluteUrl(url) {
               <td>
                 <div class="notification-header-container">
                   <span>${gettext("Web")}</span>
-                  <span class="tooltip-icon" data-tooltip="${gettext(
-                    "Enable or disable web notifications for this organization",
-                  )}">?</span>
                   <label class="switch" id="org-${orgIndex + 1}-web">
                     <input type="checkbox" class="org-toggle" data-column="web" data-organization-id="${orgId}" />
                     <span class="slider round"></span>
                   </label>
+                  <span class="tooltip-icon" data-tooltip="${gettext(
+                    "Toggle web notifications for this organization",
+                  )}">?</span>
                 </div>
               </td>
               <td>
                 <div class="notification-header-container">
                   <span>${gettext("Email")}</span>
-                  <span class="tooltip-icon" data-tooltip="${gettext(
-                    "Enable or disable email notifications for this organization",
-                  )}">?</span>
+
                   <label class="switch" id="org-${orgIndex + 1}-email">
                     <input type="checkbox" class="org-toggle" data-organization-id="${orgId}" data-column="email" />
                     <span class="slider round"></span>
                   </label>
+                  <span class="tooltip-icon" data-tooltip="${gettext(
+                    "Toggle email notifications for this organization",
+                  )}">?</span>
                 </div>
               </td>
             </tr>
@@ -700,9 +707,9 @@ function getAbsoluteUrl(url) {
 
         // Update the state based on the selected option
         if (dropdownType === "web") {
-          isGlobalWebChecked = selectedOptionText === "Notify on Web";
+          isGlobalWebChecked = selectedOptionText === "Notify on web";
         } else if (dropdownType === "email") {
-          isGlobalEmailChecked = selectedOptionText === "Notify by Email";
+          isGlobalEmailChecked = selectedOptionText === "Notify by email";
         }
 
         // Email notifications require web notifications to be enabled
@@ -720,7 +727,7 @@ function getAbsoluteUrl(url) {
         // Update the UI and data-state attributes
         $webToggle
           .html(
-            (isGlobalWebChecked ? "Notify on Web" : "Don't Notify on Web") +
+            (isGlobalWebChecked ? "Notify on Web" : "Don't notify on Web") +
               " " +
               createArrowSpanHtml(),
           )
@@ -730,8 +737,8 @@ function getAbsoluteUrl(url) {
         $emailToggle
           .html(
             (isGlobalEmailChecked
-              ? "Notify by Email"
-              : "Don't Notify by Email") +
+              ? "Notify by email"
+              : "Don't notify by email") +
               " " +
               createArrowSpanHtml(),
           )
@@ -801,7 +808,7 @@ function getAbsoluteUrl(url) {
             // Update the dropdown toggles and data-state attributes
             $webToggle
               .html(
-                (isGlobalWebChecked ? "Notify on Web" : "Don't Notify on Web") +
+                (isGlobalWebChecked ? "Notify on web" : "Don't notify on web") +
                   " " +
                   createArrowSpanHtml(),
               )
@@ -814,8 +821,8 @@ function getAbsoluteUrl(url) {
             $emailToggle
               .html(
                 (isGlobalEmailChecked
-                  ? "Notify by Email"
-                  : "Don't Notify by Email") +
+                  ? "Notify by email"
+                  : "Don't notify by email") +
                   " " +
                   createArrowSpanHtml(),
               )

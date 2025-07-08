@@ -30,37 +30,43 @@
     <div class="global-settings">
       <h2>{% trans 'Global Settings' %}</h2>
       <div class="global-settings-container">
-        <!-- Global Web Setting -->
+        <!-- Global Web Settings -->
         <div class="global-setting">
           <div class="global-setting-content">
-            <div class="icon icon-web"></div>
             <div class="global-setting-text">
-              <h2>{% trans 'Web' %}</h2>
+              <h2>
+                <span class="icon icon-web"></span>
+                {% trans 'Web' %}
+              </h2>
               <p>
-                {% trans 'Enable or Disable all web notifications globally' %}
+                {% trans 'Enable or disable all web notifications globally' %}.
               </p>
               <div class="global-setting-dropdown" data-web-state="No">
                 <button class="global-setting-dropdown-toggle"></button>
                 <div class="global-setting-dropdown-menu">
-                  <button>{% trans 'Notify on Web' %}</button>
-                  <button>{% trans "Don't Notify on Web" %}</button>
+                  <button>{% trans 'Notify on web' %}</button>
+                  <button>{% trans "Don't notify on web" %}</button>
                 </div>
               </div>
             </div>
           </div>
         </div>
-        <!-- Global Email Setting -->
+        <!-- Global Email Settings -->
         <div class="global-setting">
           <div class="global-setting-content">
-            <div class="icon icon-email"></div>
             <div class="global-setting-text">
-              <h2>{% trans 'Email' %}</h2>
-              <p>{% trans 'Enable or Disable all email notifications globally' %}</p>
+              <h2>
+                <span class="icon icon-email"></span>
+                {% trans 'Email' %}
+              </h2>
+              <p>
+                {% trans 'Enable or disable all email notifications globally' %}.
+              </p>
               <div class="global-setting-dropdown" data-email-state="No">
                 <button class="global-setting-dropdown-toggle"></button>
                 <div class="global-setting-dropdown-menu">
-                  <button>{% trans 'Notify by Email' %}</button>
-                  <button>{% trans "Don't Notify by Email" %}</button>
+                  <button>{% trans 'Notify by email' %}</button>
+                  <button>{% trans "Don't notify by email" %}</button>
                 </div>
               </div>
             </div>
@@ -68,7 +74,18 @@
         </div>
       </div>
     </div>
-    <div id="org-panels"></div>
+    <!-- Org Settings -->
+    <div class="organizations">
+      <div class="intro">
+        <h2>
+          {% trans 'Organization Settings' %}
+        </h2>
+        <p>
+          {% trans 'Fine-tune notification settings for each organization below' %}.
+        </p>
+      </div>
+      <div id="org-panels"></div>
+    </div>
   </div>
 
   <!-- Confirmation Modal -->
