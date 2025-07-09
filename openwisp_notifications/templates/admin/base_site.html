@@ -17,6 +17,7 @@
 
 {% block user-tools %}
   {{ block.super }}
+  {% if show_notifications_widget %}
   <button class="ow-notifications toggle-btn" id="openwisp_notifications">
     <span id="ow-notification-btn"></span>
     {% unread_notifications %}
@@ -35,6 +36,7 @@
         <p>{% trans 'No new notification.' %}</p>
     </div>
   </div>
+  {% endif %}
 {% endblock  %}
 
 {% block footer %}
@@ -55,7 +57,7 @@
       </div>
   </div>
   {{ block.super }}
-  {% if request.user.is_authenticated %}
+  {% if show_notifications_widget %}
     <script type="text/javascript" src="{% static 'openwisp-notifications/js/vendor/reconnecting-websocket.min.js' %}"></script>
     <script type="text/javascript">
       {% if OPENWISP_NOTIFICATIONS_HOST %}

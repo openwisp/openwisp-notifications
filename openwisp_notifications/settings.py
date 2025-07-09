@@ -62,3 +62,14 @@ def get_config():
     config = CONFIG_DEFAULTS.copy()
     config.update(user_config)
     return config
+
+
+NOTIFICATION_WIDGET_ENABLE = getattr(
+    settings, "OPENWISP_NOTIFICATIONS_WIDGET_ENABLE", True
+)
+
+NOTIFICATION_WIDGET_ALLOWED_NAMESPACES = getattr(
+    settings,
+    "OPENWISP_NOTIFICATIONS_WIDGET_ALLOWED_NAMESPACES",
+    ["admin", "notifications"],
+)

@@ -187,3 +187,35 @@ Default ``15``
 
 This setting specifies the maximum number of email notifications that can
 be included in a single :ref:`email batch <notifications_batches>`.
+
+.. _openwisp_notifications_widget_enable:
+
+``OPENWISP_NOTIFICATIONS_WIDGET_ENABLE``
+----------------------------------------
+
+======= ========
+Type    ``bool``
+Default ``True``
+======= ========
+
+This setting controls whether the notification widget is enabled globally.
+When set to ``False``, the ``notification_widget_settings`` context
+processor will not inject widget settings into the template context, and
+the widget will not be rendered on any page.
+
+.. _openwisp_notifications_widget_allowed_namespaces:
+
+``OPENWISP_WIDGET_NOTIFICATIONS_ALLOWED_NAMESPACES``
+----------------------------------------------------
+
+======= ==============================
+Type    ``list``
+Default ``['admin', 'notifications']``
+======= ==============================
+
+This setting defines the list of URL namespaces in which the notification
+widget is allowed to appear. Only requests matching one of these
+namespaces and authenticated users will see the notification widget, as
+determined by the ``notification_widget_settings`` context processor. You
+can customize this list to include other namespaces as needed (e.g.,
+``['admin', 'dashboard']``).
