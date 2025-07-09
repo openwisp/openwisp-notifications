@@ -205,7 +205,7 @@ the widget will not be rendered on any page.
 
 .. _openwisp_notifications_widget_allowed_namespaces:
 
-``OPENWISP_WIDGET_NOTIFICATIONS_ALLOWED_NAMESPACES``
+``OPENWISP_NOTIFICATIONS_WIDGET_ALLOWED_NAMESPACES``
 ----------------------------------------------------
 
 ======= ==============================
