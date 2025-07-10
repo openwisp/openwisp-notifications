@@ -17,24 +17,26 @@
 
 {% block user-tools %}
   {{ block.super }}
-  <button class="ow-notifications toggle-btn" id="openwisp_notifications">
-    <span id="ow-notification-btn"></span>
-    {% unread_notifications %}
-  </button>
-  {% csrf_token %}
-  <div class="ow-notification-toast-wrapper"></div>
-  <div class="ow-notification-dropdown ow-hide">
-    <div class="filters">
-      <span class="toggle-btn" id="ow-mark-all-read" tabindex="0" role="button">{% trans 'Mark all as read' %}</span>
-      <a class="toggle-btn" href="{% url 'notifications:notification_preference' %}">{% trans 'Notification Preferences' %}</a>
+  {% if request.path|slice:":6" == "/admin" or request.path|slice:":14" == "/notifications" %}
+    <button class="ow-notifications toggle-btn" id="openwisp_notifications">
+      <span id="ow-notification-btn"></span>
+      {% unread_notifications %}
+    </button>
+    {% csrf_token %}
+    <div class="ow-notification-toast-wrapper"></div>
+    <div class="ow-notification-dropdown ow-hide">
+      <div class="filters">
+        <span class="toggle-btn" id="ow-mark-all-read" tabindex="0" role="button">{% trans 'Mark all as read' %}</span>
+        <a class="toggle-btn" href="{% url 'notifications:notification_preference' %}">{% trans 'Notification Preferences' %}</a>
+      </div>
+      <div class="ow-notification-wrapper ow-round-bottom-border">
+        <div id="ow-notifications-loader" class="ow-hide"><div class="loader"></div></div>
+      </div>
+      <div class="ow-no-notifications ow-round-bottom-border ow-hide">
+          <p>{% trans 'No new notification.' %}</p>
+      </div>
     </div>
-    <div class="ow-notification-wrapper ow-round-bottom-border">
-      <div id="ow-notifications-loader" class="ow-hide"><div class="loader"></div></div>
-    </div>
-    <div class="ow-no-notifications ow-round-bottom-border ow-hide">
-        <p>{% trans 'No new notification.' %}</p>
-    </div>
-  </div>
+  {% endif %}
 {% endblock  %}
 
 {% block footer %}
@@ -56,27 +58,29 @@
   </div>
   {{ block.super }}
   {% if request.user.is_authenticated %}
-    <script type="text/javascript" src="{% static 'openwisp-notifications/js/vendor/reconnecting-websocket.min.js' %}"></script>
-    <script type="text/javascript">
-      {% if OPENWISP_NOTIFICATIONS_HOST %}
-        const notificationApiHost = new URL('{{ OPENWISP_NOTIFICATIONS_HOST }}');
-      {% else %}
-        const notificationApiHost = window.location;
-      {% endif %}
-      const webSocketProtocol = notificationApiHost.protocol === 'http:' ? 'ws' : 'wss';
-      const notificationSound = new Audio('{{ OPENWISP_NOTIFICATIONS_SOUND | default:"" }}');
-      // Create websocket connection
-      const notificationSocket = new ReconnectingWebSocket(
-          `${webSocketProtocol}://${notificationApiHost.host}/ws/notification/`,
-          null, {
-              debug: false,
-              // The library re-connects if it fails to establish a connection in "timeoutInterval".
-              // On slow internet connections, the default value of "timeoutInterval" will
-              // keep terminating and re-establishing the connection.
-              timeoutInterval: 7000,
-          }
-      );
-    </script>
-    <script type="text/javascript" src="{% static 'openwisp-notifications/js/notifications.js' %}"></script>
+    {% if request.path|slice:":6" == "/admin" or request.path|slice:":14" == "/notifications" %}
+      <script type="text/javascript" src="{% static 'openwisp-notifications/js/vendor/reconnecting-websocket.min.js' %}"></script>
+      <script type="text/javascript">
+        {% if OPENWISP_NOTIFICATIONS_HOST %}
+          const notificationApiHost = new URL('{{ OPENWISP_NOTIFICATIONS_HOST }}');
+        {% else %}
+          const notificationApiHost = window.location;
+        {% endif %}
+        const webSocketProtocol = notificationApiHost.protocol === 'http:' ? 'ws' : 'wss';
+        const notificationSound = new Audio('{{ OPENWISP_NOTIFICATIONS_SOUND | default:"" }}');
+        // Create websocket connection
+        const notificationSocket = new ReconnectingWebSocket(
+            `${webSocketProtocol}://${notificationApiHost.host}/ws/notification/`,
+            null, {
+                debug: false,
+                // The library re-connects if it fails to establish a connection in "timeoutInterval".
+                // On slow internet connections, the default value of "timeoutInterval" will
+                // keep terminating and re-establishing the connection.
+                timeoutInterval: 7000,
+            }
+        );
+      </script>
+      <script type="text/javascript" src="{% static 'openwisp-notifications/js/notifications.js' %}"></script>
+    {% endif %}
   {% endif %}
 {% endblock footer %}
