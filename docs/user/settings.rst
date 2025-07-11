@@ -15,7 +15,7 @@ Default ``True``
 
 This setting controls the global default for web notifications across the
 entire system. When set to ``False``, web notifications will be disabled
-by default for all users and organizations.
+by default for all news users and organizations.
 
 This setting can be overridden at both :doc:`organization and user levels
 <notification-preferences>`. Organization administrators can configure
@@ -34,7 +34,7 @@ Default ``True``
 
 This setting controls the global default for email notifications across
 the entire system. When set to ``False``, email notifications will be
-disabled by default for all users and organizations.
+disabled by default for all new users and organizations.
 
 This setting can be overridden at both :doc:`organization and user levels
 <notification-preferences>`. Organization administrators can configure

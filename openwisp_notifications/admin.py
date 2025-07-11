@@ -22,5 +22,5 @@ class OrganizationNotificationSettingsInline(admin.StackedInline):
         ]
 
 
-OrganizationAdmin.inlines.append(OrganizationNotificationSettingsInline)
+OrganizationAdmin.inlines.insert(2, OrganizationNotificationSettingsInline)
 _add_object_notification_widget()
