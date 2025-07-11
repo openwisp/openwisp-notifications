@@ -1,6 +1,7 @@
 from django.test import TransactionTestCase
 
 from openwisp_notifications.swapper import load_model, swapper_load_model
+from openwisp_notifications.types import NOTIFICATION_TYPES
 from openwisp_users.tests.utils import TestOrganizationMixin
 
 NotificationSetting = load_model("NotificationSetting")
@@ -67,7 +68,7 @@ class TestOrganizationNotificationSettings(TestOrganizationMixin, TransactionTes
             user_settings = NotificationSetting.objects.filter(
                 organization=org, user=administrator
             )
-            self.assertEqual(user_settings.count(), 2)
+            self.assertEqual(user_settings.count(), len(NOTIFICATION_TYPES.keys()))
             for setting in user_settings:
                 self.assertEqual(setting.web, False)
                 self.assertEqual(setting.email, False)
@@ -83,7 +84,7 @@ class TestOrganizationNotificationSettings(TestOrganizationMixin, TransactionTes
         user_settings = org1_user.notificationsetting_set.filter(
             organization=org1,
         )
-        self.assertEqual(user_settings.count(), 2)
+        self.assertEqual(user_settings.count(), len(NOTIFICATION_TYPES.keys()))
         for setting in user_settings:
             self.assertEqual(setting.web_notification, False)
             self.assertEqual(setting.email_notification, False)
