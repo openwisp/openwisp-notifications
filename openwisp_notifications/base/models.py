@@ -532,12 +532,21 @@ class AbstractOrganizationNotificationSettings(models.Model):
     )
     web = FallbackBooleanChoiceField(
         fallback=app_settings.WEB_ENABLED,
-        help_text=_("Whether the web notifications are enabled"),
+        help_text=_(
+            "Changing this value will affect the web notification settings of all "
+            "users in the organization. Users will still be able to override "
+            "this setting in their personal preferences."
+        ),
         verbose_name=_("Web notifications enabled"),
     )
+
     email = FallbackBooleanChoiceField(
         fallback=app_settings.EMAIL_ENABLED,
-        help_text=_("Whether the email notifications are enabled"),
+        help_text=_(
+            "Changing this value will affect the email notification settings of all "
+            "users in the organization. Users will still be able to override "
+            "this setting in their personal preferences."
+        ),
         verbose_name=_("Email notifications enabled"),
     )
 

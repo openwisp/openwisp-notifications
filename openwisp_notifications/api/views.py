@@ -230,7 +230,6 @@ class OrganizationSettingView(ProtectedAPIMixin, RetrieveUpdateAPIView):
         organization__is_active=True
     )
     lookup_field = "organization_id"
-    lookup_url_kwarg = "id"
 
     def get_queryset(self):
         qs = super().get_queryset()

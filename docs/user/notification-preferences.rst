@@ -51,29 +51,25 @@ entirely by turning off both web and email notification settings.
 Organization Settings
 ---------------------
 
-Organization administrators have the ability to configure default
-notification settings at the organization level. These settings serve as
-the baseline configuration for all users within the organization and can
-be accessed through the organization's admin interface.
+Organization Settings
+---------------------
 
-.. note::
+Organization administrators can configure default notification settings
+for their organization. These settings act as the baseline for all users
+in the organization and can be managed via the organization's admin
+interface.
 
-    Organization settings provide default values that apply to all users
-    within the organization. However, individual users can override these
-    defaults by configuring their own notification preferences.
+Key points:
 
-When an organization admin disables web notifications at the organization
-level, email notifications are automatically disabled as well, following
-the same linking behavior as individual user settings. This ensures
-consistency across the notification system.
-
-Organization settings override the global defaults defined in Django
-project settings (see :ref:`openwisp_notifications_web_enabled` and
-:ref:`openwisp_notifications_email_enabled`) and establish new default
-values for all users within that specific organization. This allows
-organization administrators to customize the notification behavior to suit
-their organization's needs while maintaining the flexibility for
-individual users to further customize their own preferences if desired.
+- New users inherit these default settings automatically.
+- Changes apply to all existing users. For example, disabling email
+  notifications at the organization level disables them for all users in
+  the organization.
+- Users can override these defaults by customizing their own notification
+  preferences.
+- Organization settings override global defaults defined in Django
+  settings (see :ref:`openwisp_notifications_web_enabled` and
+  :ref:`openwisp_notifications_email_enabled`).
 
 .. _notifications_silencing:
 
