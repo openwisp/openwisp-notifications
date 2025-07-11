@@ -51,13 +51,23 @@ entirely by turning off both web and email notification settings.
 Organization Settings
 ---------------------
 
-Organization Settings
----------------------
-
-Organization administrators can configure default notification settings
+Organization managers can configure default notification settings
 for their organization. These settings act as the baseline for all users
 in the organization and can be managed via the organization's admin
 interface.
+
+Organization managers can access and manage the organization's notification
+settings from the **Organization Admin**:
+
+1. Navigate to **USERS & ORGANIZATIONS** on the left-hand navigation menu.
+2. Go to **Organizations**.
+3. Click on the specific organization you want to change.
+4. In the **NOTIFICATION
+
+.. image:: https://raw.githubusercontent.com/openwisp/openwisp-notifications/docs/docs/images/25/notifications/organization-preferences.png
+    :target: https://raw.githubusercontent.com/openwisp/openwisp-notifications/docs/docs/images/25/notifications/organization-preferences.png
+    :align: center
+
 
 Key points:
 
