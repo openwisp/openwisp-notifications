@@ -112,6 +112,7 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
         self.assertEqual(n.message, "Test Notification Description")
         self.assertEqual(n.recipient, self.admin)
 
+    @mock_notification_types
     def test_create_with_extra_data(self):
         register_notification_type(
             "error_type",
