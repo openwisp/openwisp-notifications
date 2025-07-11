@@ -116,9 +116,7 @@ class TestNotificationA(BaseTestNotificationApi):
 
 
 class TestMultitenancyApi(BaseTestMultitenancyApi):
-    fixtures = [
-        "tests/openwisp2/sample_notifications/tests/fixtures/initial_data.json",
-    ]
+    fixtures = []
 
 
 class TestNotificationSetting(BaseTestNotificationSetting):
