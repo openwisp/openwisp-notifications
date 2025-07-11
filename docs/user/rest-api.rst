@@ -174,22 +174,22 @@ User's Organization Notification Setting
 
     POST /api/v1/notifications/user/{user_id}/organization/{organization_id}/setting/
 
-Get Organization Notification Setting
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Get Organization Notification Settings
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block::
 
     GET /api/v1/notifications/organization/{organization_id}/setting/
 
-Change Organization Notification Setting
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Change Organization Notification Settings
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block::
 
     PUT /api/v1/notifications/organization/{organization_id}/setting/
 
-Patch Organization Notification Setting
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Patch Organization Notification Settings
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block::
 
