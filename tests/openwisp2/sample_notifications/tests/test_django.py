@@ -7,6 +7,12 @@ from django.core.cache import cache
 from openwisp_notifications.swapper import load_model, swapper_load_model
 from openwisp_notifications.tests.test_admin import TestAdmin as BaseTestAdmin
 from openwisp_notifications.tests.test_admin import TestAdminMedia as BaseTestAdminMedia
+from openwisp_notifications.tests.test_admin import (
+    TestOrganizationNotificationsSettingsAdmin as BaseTestOrganizationNotificationsSettingsAdmin,
+)
+from openwisp_notifications.tests.test_api import (
+    TestMultitenancyApi as BaseTestMultitenancyApi,
+)
 from openwisp_notifications.tests.test_api import (
     TestNotificationApi as BaseTestNotificationApi,
 )
@@ -21,6 +27,9 @@ from openwisp_notifications.tests.test_notifications import (
 )
 from openwisp_notifications.tests.test_notifications import (
     TestTransactionNotifications as BaseTestTransactionNotifications,
+)
+from openwisp_notifications.tests.test_organization_setting import (
+    TestOrganizationNotificationSettings as BaseTestOrganizationNotificationSettings,
 )
 from openwisp_notifications.tests.test_utils import TestChecks as BaseTestChecks
 from openwisp_notifications.tests.test_utils import (
@@ -38,6 +47,12 @@ class TestAdmin(BaseTestAdmin):
 
 
 class TestAdminMedia(BaseTestAdminMedia):
+    pass
+
+
+class TestOrganizationNotificationsSettingsAdmin(
+    BaseTestOrganizationNotificationsSettingsAdmin
+):
     pass
 
 
@@ -96,8 +111,14 @@ class TestTransactionNotifications(BaseTestTransactionNotifications):
         self.assertEqual(test_app_cache.name, test_app.name)
 
 
-class TestNotificationAPI(BaseTestNotificationApi):
+class TestNotificationA(BaseTestNotificationApi):
     pass
+
+
+class TestMultitenancyApi(BaseTestMultitenancyApi):
+    fixtures = [
+        "tests/openwisp2/sample_notifications/tests/fixtures/initial_data.json",
+    ]
 
 
 class TestNotificationSetting(BaseTestNotificationSetting):
@@ -105,6 +126,10 @@ class TestNotificationSetting(BaseTestNotificationSetting):
 
 
 class TestIgnoreObjectNotification(BaseTestIgnoreObjectNotification):
+    pass
+
+
+class TestOrganizationNotificationSettings(BaseTestOrganizationNotificationSettings):
     pass
 
 
@@ -120,5 +145,8 @@ del BaseTestAdmin
 del BaseTestAdminMedia
 del BaseTestNotifications
 del BaseTestNotificationApi
+del BaseTestMultitenancyApi
 del BaseTestNotificationSetting
 del BaseTestIgnoreObjectNotification
+del BaseTestOrganizationNotificationSettings
+del BaseTestOrganizationNotificationsSettingsAdmin
