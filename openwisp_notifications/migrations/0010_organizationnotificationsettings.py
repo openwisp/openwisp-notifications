@@ -37,7 +37,11 @@ class Migration(migrations.Migration):
                         blank=True,
                         default=None,
                         fallback=True,
-                        help_text="Whether the web notifications are enabled",
+                        help_text=(
+                            "Changing this value will affect the web notification settings of all "
+                            "users in the organization. Users will still be able to override "
+                            "this setting in their personal preferences."
+                        ),
                         null=True,
                         verbose_name="Web notifications enabled",
                     ),
@@ -48,7 +52,11 @@ class Migration(migrations.Migration):
                         blank=True,
                         default=None,
                         fallback=True,
-                        help_text="Whether the email notifications are enabled",
+                        help_text=(
+                            "Changing this value will affect the email notification settings of all "
+                            "users in the organization. Users will still be able to override "
+                            "this setting in their personal preferences."
+                        ),
                         null=True,
                         verbose_name="Email notifications enabled",
                     ),

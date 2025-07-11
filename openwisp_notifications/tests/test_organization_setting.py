@@ -99,7 +99,7 @@ class TestOrganizationNotificationSettings(TestOrganizationMixin, TransactionTes
         user_settings = org2_user.notificationsetting_set.filter(
             organization=org2,
         )
-        self.assertEqual(user_settings.count(), 2)
+        self.assertEqual(user_settings.count(), len(NOTIFICATION_TYPES.keys()))
 
         for setting in user_settings:
             self.assertEqual(setting.web_notification, True)
