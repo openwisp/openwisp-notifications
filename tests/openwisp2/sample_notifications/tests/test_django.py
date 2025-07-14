@@ -111,7 +111,7 @@ class TestTransactionNotifications(BaseTestTransactionNotifications):
         self.assertEqual(test_app_cache.name, test_app.name)
 
 
-class TestNotificationA(BaseTestNotificationApi):
+class TestNotificationApi(BaseTestNotificationApi):
     pass
 
 
@@ -146,5 +146,6 @@ del BaseTestNotificationApi
 del BaseTestMultitenancyApi
 del BaseTestNotificationSetting
 del BaseTestIgnoreObjectNotification
+del BaseTestTransactionNotifications
 del BaseTestOrganizationNotificationSettings
 del BaseTestOrganizationNotificationsSettingsAdmin
