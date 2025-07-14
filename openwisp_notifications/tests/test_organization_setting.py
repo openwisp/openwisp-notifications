@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 from django.test import TransactionTestCase
 
 from openwisp_notifications.swapper import load_model, swapper_load_model
@@ -112,3 +114,42 @@ class TestOrganizationNotificationSettings(TestOrganizationMixin, TransactionTes
         for setting in admin.notificationsetting_set.filter(organization=org2):
             self.assertEqual(setting.web_notification, True)
             self.assertEqual(setting.email_notification, False)
+
+    def test_one_setting_object_per_organization(self):
+        org = self._get_org()
+        org_setting = org.notification_settings
+        self.assertEqual(
+            OrganizationNotificationSettings.objects.filter(organization=org).count(),
+            1,
+        )
+        # Changing the organization object should not create a new setting
+        org.name = "New Org Name"
+        org.full_clean()
+        org.save()
+        org.refresh_from_db()
+        self.assertEqual(
+            OrganizationNotificationSettings.objects.filter(organization=org).count(),
+            1,
+        )
+        self.assertEqual(
+            org.notification_settings.pk,
+            org_setting.pk,
+        )
+
+    def test_updating_notification_setting_for_deleted_org(self):
+        org = self._get_org()
+        org_setting = org.notification_settings
+        self.assertEqual(org_setting.web, True)
+        self.assertEqual(org_setting.email, True)
+        org.delete()
+        self.assertEqual(
+            OrganizationNotificationSettings.objects.filter(
+                organization_id=org.pk
+            ).count(),
+            0,
+        )
+        with patch.object(NotificationSetting.objects, "update") as mocked_update:
+            with self.assertRaises(ValueError):
+                org_setting.web = False
+                org_setting.save()
+        mocked_update.assert_not_called()
