@@ -29,7 +29,7 @@ _test_batch_email_notification_email_html = """
         src="https://raw.githubusercontent.com/openwisp/openwisp-utils/master/openwisp_utils/static/openwisp-utils/images/openwisp-logo.png"
         alt="Logo" class="logo">
     </div>
-    <div class="email-info">This email is sent to <u></u> from [example.com]</div>
+    <div class="email-info">This email is sent to <u>admin@admin.com</u> from [example.com]</div>
     <div class="box">
       <div class="icon-container">
         <img src="https://example.com/static/ui/openwisp/images/email.png" alt="email icon">
