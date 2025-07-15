@@ -707,9 +707,11 @@ function getAbsoluteUrl(url) {
 
         // Update the state based on the selected option
         if (dropdownType === "web") {
-          isGlobalWebChecked = selectedOptionText === "Notify on web";
+          isGlobalWebChecked =
+            selectedOptionElement.attr("data-web-state") === "Yes";
         } else if (dropdownType === "email") {
-          isGlobalEmailChecked = selectedOptionText === "Notify by email";
+          isGlobalEmailChecked =
+            selectedOptionElement.attr("data-email-state") === "Yes";
         }
 
         // Email notifications require web notifications to be enabled
@@ -727,7 +729,7 @@ function getAbsoluteUrl(url) {
         // Update the UI and data-state attributes
         $webToggle
           .html(
-            (isGlobalWebChecked ? "Notify on Web" : "Don't notify on Web") +
+            (isGlobalWebChecked ? "Notify on web" : "Don't notify on web") +
               " " +
               createArrowSpanHtml(),
           )
@@ -882,8 +884,10 @@ function getAbsoluteUrl(url) {
         ? "web"
         : "email";
 
-      var newGlobalWebChecked = selectedOptionText === "Notify on Web";
-      var newGlobalEmailChecked = selectedOptionText === "Notify by Email";
+      var newGlobalWebChecked =
+        selectedOptionElement.attr("data-web-state") === "Yes";
+      var newGlobalEmailChecked =
+        selectedOptionElement.attr("data-email-state") === "Yes";
 
       // Enabling email notifications requires web notifications to be enabled
       if (newGlobalEmailChecked && !newGlobalWebChecked) {
