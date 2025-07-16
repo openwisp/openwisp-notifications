@@ -35,7 +35,7 @@ def unread_notifications(context):
     return output
 
 
-@register.filter(name="should_load_notifications_widget")
+@register.filter
 def should_load_notifications_widget(request):
     if not hasattr(request, "user"):
         return False

@@ -11,11 +11,9 @@
 
 {% block extrahead %}
   {{ block.super }}
-  {% if request|should_load_notifications_widget %}
-    {% if not media.js and 'jquery' not in block.super %}
-      <script src="{% static 'admin/js/vendor/jquery/jquery.min.js' %}"></script>
-      <script src="{% static 'admin/js/jquery.init.js' %}"></script>
-    {% endif %}
+  {% if request|should_load_notifications_widget and not media.js and 'jquery' not in block.super %}
+    <script src="{% static 'admin/js/vendor/jquery/jquery.min.js' %}"></script>
+    <script src="{% static 'admin/js/jquery.init.js' %}"></script>
   {% endif %}
 {% endblock %}
 
