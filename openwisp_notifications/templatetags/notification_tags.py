@@ -35,4 +35,13 @@ def unread_notifications(context):
     return output
 
 
+@register.filter
+def should_load_notifications_widget(request):
+    if not hasattr(request, "user"):
+        return False
+    return request.user.is_authenticated and request.path.startswith(
+        ("/admin", "/notifications")
+    )
+
+
 register.simple_tag(takes_context=True)(unread_notifications)
