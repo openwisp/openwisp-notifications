@@ -4,6 +4,7 @@ from openwisp_notifications.base.models import (
     AbstractIgnoreObjectNotification,
     AbstractNotification,
     AbstractNotificationSetting,
+    AbstractOrganizationNotificationSettings,
 )
 
 
@@ -25,4 +26,12 @@ class IgnoreObjectNotification(AbstractIgnoreObjectNotification):
         abstract = False
         swappable = swappable_setting(
             "openwisp_notifications", "IgnoreObjectNotification"
+        )
+
+
+class OrganizationNotificationSettings(AbstractOrganizationNotificationSettings):
+    class Meta(AbstractOrganizationNotificationSettings.Meta):
+        abstract = False
+        swappable = swappable_setting(
+            "openwisp_notifications", "OrganizationNotificationSettings"
         )
