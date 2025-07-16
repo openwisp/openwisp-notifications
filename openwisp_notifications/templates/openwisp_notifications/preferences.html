@@ -44,8 +44,8 @@
               <div class="global-setting-dropdown" data-web-state="No">
                 <button class="global-setting-dropdown-toggle"></button>
                 <div class="global-setting-dropdown-menu">
-                  <button>{% trans 'Notify on web' %}</button>
-                  <button>{% trans "Don't notify on web" %}</button>
+                  <button data-web-state="Yes">{% trans 'Notify on web' %}</button>
+                  <button data-web-state="No">{% trans "Don't notify on web" %}</button>
                 </div>
               </div>
             </div>
@@ -65,8 +65,8 @@
               <div class="global-setting-dropdown" data-email-state="No">
                 <button class="global-setting-dropdown-toggle"></button>
                 <div class="global-setting-dropdown-menu">
-                  <button>{% trans 'Notify by email' %}</button>
-                  <button>{% trans "Don't notify by email" %}</button>
+                  <button data-email-state="Yes">{% trans 'Notify by email' %}</button>
+                  <button data-email-state="No">{% trans "Don't notify by email" %}</button>
                 </div>
               </div>
             </div>
