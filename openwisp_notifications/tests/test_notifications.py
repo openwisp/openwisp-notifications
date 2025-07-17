@@ -427,18 +427,16 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
                 "    <tbody>"
                 "      <tr>"
                 "        <td>"
-                "          <div>"
-                '            <span class="badge info">info</span>'
-                '            <span class="title">'
+                '          <div> <span class="badge info">info</span>'
+                '            <div class="title">'
                 "              <p>Default notification with default verb and level info by Tester Tester"
                 "                 (test org)</p>"
-                "            </span>"
+                "            </div>"
                 "          </div>"
                 "        </td>"
-                '        <td class="right-arrow-container">'
-                '          <img src="https://example.com/static/ui/openwisp/images/right-arrow.png"'
-                '               alt="right-arrow">'
-                "        </td>"
+                '        <td class="right-arrow-container"> <img class="right-arrow"'
+                '            src="https://example.com/static/ui/openwisp/images/right-arrow.png"'
+                '            alt="right-arrow"> </td>'
                 "      </tr>"
                 "      <tr>"
                 "        <td>"
