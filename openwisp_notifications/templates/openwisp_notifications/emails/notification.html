@@ -3,15 +3,16 @@
 
 {% block styles %}
 {{ block.super }}
-<style type="text/css">
+<style>
   .alert {
     box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.25);
     border-radius: 8px;
-    border: outset 1px #eee;
-    padding: 1.5rem 1.25rem;
+    border: 1px solid #EAECF0;
+    border-spacing: 0;
     font-size: 0.75rem;
     width: 100%;
     color: #475467;
+    padding: 1rem 0.7rem 1rem 1rem;
   }
 
   .alert-link {
@@ -23,27 +24,60 @@
     margin-top: 0.75rem;
   }
 
-  .alert div+div {
-    margin-top: 0.25rem;
+  a:link:hover .alert,
+  a:link:focus .alert {
+    background-color: #fff9c466
   }
 
-  .alert .timestamp {
-    font-weight: 400;
-    line-height: 1.25rem;
-    margin: 0px;
+  .alert .title {
+    display: inline-block;
+    margin-left: 0.4rem;
+    padding: 0.13rem 0;
+    max-width: 560px;
   }
+
+  .alert .title p {
+    line-height: 1.25rem;
+    font-size: 0.875rem;
+    display: inline-block;
+    margin: 0 auto;
+    color: #0F1729;
+    padding-right: 1rem;
+  }
+
+  .right-arrow-container {
+    vertical-align: top;
+    text-align: right;
+    padding: 0;
+  }
+
+  .right-arrow {
+    width: 24px;
+    height: 24px;
+  }
+
+    .alert .timestamp {
+      font-weight: 400;
+      font-size: 13px;
+      line-height: 13px;
+      margin: 0.5rem 0 0 0;
+
+    }
 
   .alert .badge {
     background-color: #F2F4F7;
     border: solid #D0D5DD 1px;
-    color: #333;
+    color: #667085;
     border-radius: 16px;
     padding: 0.13rem 0;
     line-height: 1.13rem;
     text-transform: capitalize;
     display: inline-block;
     text-align: center;
+    vertical-align: top;
     min-width: 4rem;
+    margin-top: -1px;
+    margin-bottom: 0.5rem;
   }
 
   .alert .badge.warning {
@@ -70,60 +104,19 @@
     background-color: #DCFAE6;
   }
 
-  a:link:hover .alert,
-  a:link:focus .alert {
-    background-color: #fff9c466
-  }
-
-  .alert .title {
-    margin-left: 0.5rem;
-    padding: 0.13rem 0;
-  }
-
-  .alert .title p {
-    line-height: 1.25rem;
-    font-size: 0.875rem;
-    display: inline-block;
-    vertical-align: middle;
-    margin: 0 auto;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    color: #0F1729;
-    max-width: 550px;
-    width: 100%;
-    white-space: nowrap;
-  }
-
-  .alert .title {
-    display: inline-block;
-    width: 80%;
-  }
-
-  .right-arrow-container {
-    width: 6%;
+  .alert hr {
+    margin-right: 0.75rem;
+    margin-top: 0;
   }
 
   @media screen and (max-width: 768px) {
     .alert .title {
-      width: 67vw;
+      display: block;
+      margin: 0 auto 0.2rem 0;
     }
-  }
 
-  @media screen and (max-width: 576px) {
-    .alert .title {
-      width: 52vw;
-    }
-  }
-
-  @media screen and (max-width: 425px) {
-    .alert .title {
-      width: 36vw;
-    }
-  }
-
-  @media screen and (max-width: 320px) {
-    .alert .title {
-      width: 24vw;
+    .alert hr {
+      margin: 0;
     }
   }
 </style>
@@ -138,15 +131,20 @@
         <tr>
           <td>
             <div>
-              <p class="timestamp">{{ notification.timestamp|date:"F j, Y, g:i A e" }}</p>
-            </div>
-            <div>
               <span class="badge {{ notification.level }}">{{ notification.level }}</span>
-              <span class="title"><p>{{ notification.email_message|striptags }}</p></span>
+              <div class="title"><p>{{ notification.email_message|striptags }}</p></div>
             </div>
           </td>
           <td class="right-arrow-container">
-            <img src="{{ site_url }}{% static 'ui/openwisp/images/right-arrow.png' %}" alt="right-arrow">
+            <img class="right-arrow" src="{{ site_url }}{% static 'ui/openwisp/images/right-arrow.png' %}" alt="right-arrow">
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <hr>
+            <div>
+              <p class="timestamp">{{ notification.timestamp|date:"F j, Y, g:i A e" }}</p>
+            </div>
           </td>
         </tr>
       </tbody>
