@@ -167,6 +167,9 @@ Add the following to your ``settings.py``:
     OPENWISP_NOTIFICATIONS_IGNOREOBJECTNOTIFICATION_MODEL = (
         "mynotifications.IgnoreObjectNotification"
     )
+    OPENWISP_NOTIFICATIONS_ORGANIZATIONNOTIFICATIONSETTINGS_MODEL = (
+        "mynotifications.OrganizationNotificationSettings"
+    )
 
 9. Create database migrations
 -----------------------------
@@ -208,10 +211,10 @@ For example:
 
 .. code-block:: python
 
-    from openwisp_notifications.admin import NotificationSettingInline
+    from openwisp_notifications.admin import OrganizationNotificationSettingsInline
 
-    NotificationSettingInline.list_display.insert(1, "my_custom_field")
-    NotificationSettingInline.ordering = ["-my_custom_field"]
+    OrganizationNotificationSettingsInline.list_display.insert(1, "my_custom_field")
+    OrganizationNotificationSettingsInline.ordering = ["-my_custom_field"]
 
 2. Inheriting admin classes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -223,20 +226,26 @@ resort to monkey patching, you can proceed as follows:
 
     from django.contrib import admin
     from openwisp_notifications.admin import (
-        NotificationSettingInline as BaseNotificationSettingInline,
+        OrganizationNotificationSettingsInline as BaseOrganizationNotificationSettingsInline,
     )
+    from openwisp_users.admin import OrganizationAdmin
     from openwisp_notifications.swapper import load_model
 
-    NotificationSetting = load_model("NotificationSetting")
-
-    admin.site.unregister(NotificationSettingAdmin)
-    admin.site.unregister(NotificationSettingInline)
+    OrganizationNotificationSettings = load_model("OrganizationNotificationSettings")
 
 
-    @admin.register(NotificationSetting)
-    class NotificationSettingInline(BaseNotificationSettingInline):
+    class OrganizationNotificationSettingsInline(
+        BaseOrganizationNotificationSettingsInline
+    ):
         # add your changes here
         pass
+
+
+    OrganizationAdmin.inlines.insert(
+        OrganizationAdmin.inlines.index(BaseOrganizationNotificationSettingsInline),
+        OrganizationNotificationSettingsInline,
+    )
+    OrganizationAdmin.inlines.remove(BaseOrganizationNotificationSettingsInline)
 
 11. Create root URL configuration
 ---------------------------------
