@@ -167,12 +167,33 @@ Update Notification Setting Details
 
     PATCH /api/v1/notifications/user/{user_id}/user-setting/{pk}/
 
-Organization Notification Setting
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+User's Organization Notification Setting
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: text
 
     POST /api/v1/notifications/user/{user_id}/organization/{organization_id}/setting/
+
+Get Organization Notification Settings
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code-block::
+
+    GET /api/v1/notifications/organization/{organization_id}/setting/
+
+Change Organization Notification Settings
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code-block::
+
+    PUT /api/v1/notifications/organization/{organization_id}/setting/
+
+Patch Organization Notification Settings
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code-block::
+
+    PATCH /api/v1/notifications/organization/{organization_id}/setting/
 
 List User's Object Notification Setting
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

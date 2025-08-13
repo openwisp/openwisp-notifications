@@ -88,8 +88,8 @@ def create_notification_settings(user, organizations, notification_types):
             NotificationSetting.objects.update_or_create(
                 defaults={
                     "deleted": False,
-                    "email": None if global_setting.email else False,
-                    "web": None if global_setting.email else False,
+                    "email": None if org.notification_settings.email else False,
+                    "web": None if org.notification_settings.web else False,
                 },
                 user=user,
                 type=type,

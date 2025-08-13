@@ -61,4 +61,9 @@ def get_api_urls(api_views=None):
             views.notification_setting,
             name="notification_setting",
         ),
+        path(
+            "organization/<uuid:organization_id>/setting/",
+            views.organization_setting,
+            name="organization_setting",
+        ),
     ]

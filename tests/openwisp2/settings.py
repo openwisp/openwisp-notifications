@@ -207,6 +207,9 @@ if os.environ.get("SAMPLE_APP", False):
     OPENWISP_NOTIFICATIONS_NOTIFICATIONSETTING_MODEL = (
         "sample_notifications.NotificationSetting"
     )
+    OPENWISP_NOTIFICATIONS_ORGANIZATIONNOTIFICATIONSETTINGS_MODEL = (
+        "sample_notifications.OrganizationNotificationSettings"
+    )
     OPENWISP_NOTIFICATIONS_IGNOREOBJECTNOTIFICATION_MODEL = (
         "sample_notifications.IgnoreObjectNotification"
     )

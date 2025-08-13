@@ -10,6 +10,7 @@ import swapper
 from django.conf import settings
 from django.db import migrations, models
 
+import openwisp_utils.fields
 from openwisp_notifications.types import NOTIFICATION_CHOICES, get_notification_choices
 
 
@@ -307,5 +308,57 @@ class Migration(migrations.Migration):
                 ),
             ],
             options={"abstract": False, "ordering": ["valid_till"]},
+        ),
+        migrations.CreateModel(
+            name="OrganizationNotificationSettings",
+            fields=[
+                (
+                    "organization",
+                    models.OneToOneField(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        primary_key=True,
+                        related_name="notification_settings",
+                        serialize=False,
+                        to="openwisp_users.organization",
+                        verbose_name="organization",
+                    ),
+                ),
+                (
+                    "web",
+                    openwisp_utils.fields.FallbackBooleanChoiceField(
+                        blank=True,
+                        default=None,
+                        fallback=True,
+                        help_text=(
+                            "Changing this value will affect the web notification settings of all "
+                            "users in the organization. Users will still be able to override "
+                            "this setting in their personal preferences."
+                        ),
+                        null=True,
+                        verbose_name="Web notifications enabled",
+                    ),
+                ),
+                (
+                    "email",
+                    openwisp_utils.fields.FallbackBooleanChoiceField(
+                        blank=True,
+                        default=None,
+                        fallback=True,
+                        help_text=(
+                            "Changing this value will affect the email notification settings of all "
+                            "users in the organization. Users will still be able to override "
+                            "this setting in their personal preferences."
+                        ),
+                        null=True,
+                        verbose_name="Email notifications enabled",
+                    ),
+                ),
+                ("details", models.CharField(blank=True, max_length=64, null=True)),
+            ],
+            options={
+                "verbose_name": "organization notification settings",
+                "verbose_name_plural": "organization notification settings",
+                "abstract": False,
+            },
         ),
     ]
