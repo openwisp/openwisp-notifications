@@ -423,16 +423,32 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
         self.assertInHTML(
             (
                 f'<a class="alert-link" href="{n.redirect_view_url}" target="_blank">'
-                '<table class="alert">'
-                "<tbody>"
-                "<tr><td><div>"
-                f'<p class="timestamp">{timestamp}</p>'
-                '</div><div><span class="badge info">info</span>'
-                '<span class="title">'
-                "<p>Default notification with default verb and level info by Tester Tester (test org)"
-                '</p></span></div></td><td class="right-arrow-container">'
-                '<img src="https://example.com/static/ui/openwisp/images/right-arrow.png" alt="right-arrow">'
-                "</td></tr></tbody></table></a>"
+                '  <table class="alert">'
+                "    <tbody>"
+                "      <tr>"
+                "        <td>"
+                '          <div> <span class="badge info">info</span>'
+                '            <div class="title">'
+                "              <p>Default notification with default verb and level info by Tester Tester"
+                "                 (test org)</p>"
+                "            </div>"
+                "          </div>"
+                "        </td>"
+                '        <td class="right-arrow-container"> <img class="right-arrow"'
+                '            src="https://example.com/static/ui/openwisp/images/right-arrow.png"'
+                '            alt="right-arrow"> </td>'
+                "      </tr>"
+                "      <tr>"
+                "        <td>"
+                "          <hr>"
+                "          <div>"
+                f'            <p class="timestamp">{timestamp}</p>'
+                "          </div>"
+                "        </td>"
+                "      </tr>"
+                "    </tbody>"
+                "  </table>"
+                "</a>"
             ),
             html_email,
         )
