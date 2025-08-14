@@ -72,11 +72,13 @@ def send_notification_email(
 
     extra_context = {}
     current_site = Site.objects.get_current()
+
     if isinstance(notifications, load_model("Notification")):
         user = notifications.recipient
         since = notifications.timestamp
         notifications_count = 1
         notifications = [notifications]
+
     unsent_notifications = []
     for notification in notifications[: app_settings.EMAIL_BATCH_DISPLAY_LIMIT]:
         url = notification.data.get("url", "") if notification.data else None
@@ -99,6 +101,7 @@ def send_notification_email(
         "notification", "notifications", notifications_count
     )
     since = timezone.localtime(since).strftime("%B %-d, %Y, %-I:%M %p %Z")
+
     extra_context = {
         "notifications": unsent_notifications,
         "notifications_count": notifications_count,
@@ -110,11 +113,12 @@ def send_notification_email(
         ),
         "subtitle": _("Since {since}").format(since=since),
         "since": since,
+        "is_individual": False,
     }
     if notifications_count == 1:
         extra_context.update(
             {
-                "call_to_action_url": notification.url,
+                "call_to_action_url": unsent_notifications[0].url,
                 "call_to_action_text": _("View Details"),
             }
         )
@@ -126,21 +130,24 @@ def send_notification_email(
             }
         )
 
+    notifications_count_for_display = min(
+        notifications_count, app_settings.EMAIL_BATCH_DISPLAY_LIMIT
+    )
+
+    subject = _(
+        "[{site_name}] {notifications_count} unread {pluralize_notification} since {since}"
+    ).format(
+        site_name=current_site.name,
+        notifications_count=notifications_count_for_display,
+        since=since,
+        pluralize_notification=pluralize_notification,
+    )
+
     plain_text_content = render_to_string(
         "openwisp_notifications/emails/notification.txt", extra_context
     )
-    notifications_count = min(
-        notifications_count, app_settings.EMAIL_BATCH_DISPLAY_LIMIT
-    )
     send_email(
-        subject=_(
-            "[{site_name}] {notifications_count} unread {pluralize_notification} since {since}"
-        ).format(
-            site_name=current_site.name,
-            notifications_count=notifications_count,
-            since=since,
-            pluralize_notification=pluralize_notification,
-        ),
+        subject=subject,
         body_text=plain_text_content,
         body_html=True,
         recipients=[user.email],

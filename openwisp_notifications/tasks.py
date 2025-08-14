@@ -8,6 +8,7 @@ from django.db.models import Q
 from django.db.utils import OperationalError
 from django.utils import timezone
 
+from openwisp_notifications import settings as app_settings
 from openwisp_notifications import types
 from openwisp_notifications.swapper import load_model, swapper_load_model
 from openwisp_notifications.utils import send_notification_email
@@ -246,6 +247,19 @@ def send_batched_email_notifications(user_id):
     if notifications_count == 0:
         # The user have already read all the notifications.
         # Don't send batch summary.
+        return
+
+    if notifications_count == 1:
+        single_notification = unsent_notifications_query.first()
+        single_notification.send_email()
+        old_timestamp = timezone.now() - timezone.timedelta(
+            seconds=app_settings.EMAIL_BATCH_INTERVAL + 1
+        )
+        Notification.set_user_batch_email_data(
+            user,
+            last_email_sent_time=old_timestamp,
+            overwrite=True,
+        )
         return
 
     send_notification_email(
