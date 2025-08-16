@@ -194,6 +194,7 @@ def send_email_notification(sender, instance, created, **kwargs):
     #    no batch is scheduled
     if not last_email_sent_time or (
         not batch_start_time
+        and last_email_sent_time  # Check that last_email_sent_time is not None
         and (
             # More than EMAIL_BATCH_INTERVAL seconds have passed since the last email was sent
             last_email_sent_time

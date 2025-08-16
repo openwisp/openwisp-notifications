@@ -1118,15 +1118,59 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
         # The first notification will always be sent immediately
         self._create_notification()
         mail.outbox.clear()
-        # There's only one notification in the batch, it should
-        # not use summary of batched email.
         self._create_notification()
-        # The task is mocked to prevent immediate execution in test environment.
-        # In tests, Celery runs in EAGER mode which would execute tasks immediately,
-        # preventing us from testing the batching behavior properly.
         tasks.send_batched_email_notifications(str(self.admin.id))
         self.assertEqual(len(mail.outbox), 1)
-        self.assertIn("1 unread notifications since", mail.outbox[0].body)
+
+        email_body = mail.outbox[0].body
+
+        if mail.outbox[0].alternatives:
+            html_body = mail.outbox[0].alternatives[0][0]
+            self.assertIn("1 unread notification", html_body)
+            self.assertIn("Since", html_body)
+            self.assertIn("Test Notification", html_body)
+        else:
+            self.assertIn("1 unread notifications since", email_body)
+            self.assertIn("Test Notification", email_body)
+
+        batch_data = Notification.get_user_batch_email_data(self.admin)
+        self.assertIsNotNone(batch_data[0])
+        self.assertIsNone(batch_data[1])
+        self.assertEqual(batch_data[2], [])
+
+        email_subject = mail.outbox[0].subject
+        self.assertIn("1 unread notification since", email_subject)
+
+    @patch("openwisp_notifications.tasks.send_batched_email_notifications.apply_async")
+    def test_single_notification_restores_standard_behavior(self, mock_send_email):
+        """
+        Test that when a single notification is in a batch, it gets sent as
+        individual notification and restores standard behavior for future notifications.
+        """
+        self._create_notification()
+        mail.outbox.clear()
+
+        self._create_notification()
+        self.assertEqual(len(mail.outbox), 0)
+
+        tasks.send_batched_email_notifications(str(self.admin.id))
+        self.assertEqual(len(mail.outbox), 1)
+
+        mock_send_email.reset_mock()
+
+        email = mail.outbox[0]
+        self.assertIn("1 unread notification since", email.subject)
+
+        if email.alternatives:
+            html_body = email.alternatives[0][0]
+            self.assertIn("1 unread notification", html_body)
+            self.assertIn("Test Notification", html_body)
+
+        mail.outbox.clear()
+
+        self._create_notification()
+        self.assertEqual(len(mail.outbox), 1)
+        mock_send_email.assert_not_called()
 
     @patch("openwisp_notifications.tasks.send_batched_email_notifications.apply_async")
     def test_batch_email_notification(self, mock_send_email):
