@@ -96,17 +96,13 @@ function getAbsoluteUrl(url) {
     const webDropdown = document.querySelector(
       ".global-setting-dropdown[data-web-state]",
     );
-    const webToggle = webDropdown.querySelector(
-      ".global-setting-dropdown-toggle",
-    );
+    const webToggle = webDropdown.querySelector(".global-setting-dropdown-toggle");
     const webState = isGlobalWebChecked ? "on" : "off";
 
     // Update toggle's data-state and button text
     webToggle.setAttribute("data-state", webState);
     webToggle.innerHTML =
-      (isGlobalWebChecked
-        ? gettext("Notify on web")
-        : gettext("Don't notify on web")) +
+      (isGlobalWebChecked ? gettext("Notify on web") : gettext("Don't notify on web")) +
       " " +
       createArrowSpanHtml();
 
@@ -114,9 +110,7 @@ function getAbsoluteUrl(url) {
     const emailDropdown = document.querySelector(
       ".global-setting-dropdown[data-email-state]",
     );
-    const emailToggle = emailDropdown.querySelector(
-      ".global-setting-dropdown-toggle",
-    );
+    const emailToggle = emailDropdown.querySelector(".global-setting-dropdown-toggle");
     const emailState = isGlobalEmailChecked ? "on" : "off";
 
     // Update toggle's data-state and button text
@@ -131,9 +125,7 @@ function getAbsoluteUrl(url) {
 
   function groupBy(array, key) {
     return array.reduce((result, currentValue) => {
-      (result[currentValue[key]] = result[currentValue[key]] || []).push(
-        currentValue,
-      );
+      (result[currentValue[key]] = result[currentValue[key]] || []).push(currentValue);
       return result;
     }, {});
   }
@@ -278,19 +270,13 @@ function getAbsoluteUrl(url) {
     table.find(".org-toggle").each(function () {
       const column = $(this).data("column");
       const totalCheckboxes = table.find("." + column + "-checkbox").length;
-      const checkedCheckboxes = table.find(
-        "." + column + "-checkbox:checked",
-      ).length;
+      const checkedCheckboxes = table.find("." + column + "-checkbox:checked").length;
       const allChecked = totalCheckboxes === checkedCheckboxes;
       $(this).prop("checked", allChecked);
 
       // Update counts in the header
       const headerSpan = table
-        .find(
-          ".notification-" +
-            column +
-            "-header .notification-header-container span",
-        )
+        .find(".notification-" + column + "-header .notification-header-container span")
         .first();
       headerSpan.text(
         (column === "web" ? gettext("Web") : gettext("Email")) +
@@ -385,10 +371,7 @@ function getAbsoluteUrl(url) {
         },
         error: function () {
           // Rollback changes in case of error
-          showToast(
-            "error",
-            gettext("Something went wrong. Please try again."),
-          );
+          showToast("error", gettext("Something went wrong. Please try again."));
           $(
             `.web-checkbox[data-organization-id="${organizationId}"][data-pk="${settingId}"]`,
           ).prop("checked", previousWebChecked);
@@ -470,18 +453,13 @@ function getAbsoluteUrl(url) {
         "checked",
         isOrgWebChecked,
       );
-      $(
-        `.org-toggle[data-organization-id="${orgId}"][data-column="email"]`,
-      ).prop("checked", isOrgEmailChecked);
+      $(`.org-toggle[data-organization-id="${orgId}"][data-column="email"]`).prop(
+        "checked",
+        isOrgEmailChecked,
+      );
       table.find(".web-checkbox").prop("checked", isOrgWebChecked).change();
-      if (
-        (triggeredBy === "web" && !isOrgWebChecked) ||
-        triggeredBy === "email"
-      ) {
-        table
-          .find(".email-checkbox")
-          .prop("checked", isOrgEmailChecked)
-          .change();
+      if ((triggeredBy === "web" && !isOrgWebChecked) || triggeredBy === "email") {
+        table.find(".email-checkbox").prop("checked", isOrgEmailChecked).change();
       }
 
       updateMainCheckboxes(table);
@@ -502,33 +480,23 @@ function getAbsoluteUrl(url) {
         crossDomain: true,
         data: JSON.stringify(data),
         success: function () {
-          showToast(
-            "success",
-            gettext("Organization settings updated successfully."),
-          );
+          showToast("success", gettext("Organization settings updated successfully."));
         },
         error: function () {
-          showToast(
-            "error",
-            gettext("Something went wrong. Please try again."),
+          showToast("error", gettext("Something went wrong. Please try again."));
+          $(`.org-toggle[data-organization-id="${orgId}"][data-column="web"]`).prop(
+            "checked",
+            previousOrgWebChecked,
           );
-          $(
-            `.org-toggle[data-organization-id="${orgId}"][data-column="web"]`,
-          ).prop("checked", previousOrgWebChecked);
-          $(
-            `.org-toggle[data-organization-id="${orgId}"][data-column="email"]`,
-          ).prop("checked", previousOrgEmailChecked);
+          $(`.org-toggle[data-organization-id="${orgId}"][data-column="email"]`).prop(
+            "checked",
+            previousOrgEmailChecked,
+          );
           previousWebState.forEach(function (item) {
-            $(`.web-checkbox[data-pk="${item.id}"]`).prop(
-              "checked",
-              item.checked,
-            );
+            $(`.web-checkbox[data-pk="${item.id}"]`).prop("checked", item.checked);
           });
           previousEmailState.forEach(function (item) {
-            $(`.email-checkbox[data-pk="${item.id}"]`).prop(
-              "checked",
-              item.checked,
-            );
+            $(`.email-checkbox[data-pk="${item.id}"]`).prop("checked", item.checked);
           });
           updateMainCheckboxes(table);
         },
@@ -541,9 +509,9 @@ function getAbsoluteUrl(url) {
 
   // Update individual setting checkboxes and counts at the organization level
   function updateOrgLevelCheckboxes(organizationId) {
-    const table = $(
-      `.org-toggle[data-organization-id="${organizationId}"]`,
-    ).closest("table");
+    const table = $(`.org-toggle[data-organization-id="${organizationId}"]`).closest(
+      "table",
+    );
     const webCheckboxes = table.find(".web-checkbox");
     const emailCheckboxes = table.find(".email-checkbox");
     const webMainCheckbox = table.find('.org-toggle[data-column="web"]');
@@ -553,14 +521,8 @@ function getAbsoluteUrl(url) {
     const checkedWebCheckboxes = webCheckboxes.filter(":checked").length;
     const checkedEmailCheckboxes = emailCheckboxes.filter(":checked").length;
 
-    webMainCheckbox.prop(
-      "checked",
-      totalWebCheckboxes === checkedWebCheckboxes,
-    );
-    emailMainCheckbox.prop(
-      "checked",
-      totalEmailCheckboxes === checkedEmailCheckboxes,
-    );
+    webMainCheckbox.prop("checked", totalWebCheckboxes === checkedWebCheckboxes);
+    emailMainCheckbox.prop("checked", totalEmailCheckboxes === checkedEmailCheckboxes);
 
     // Update counts in the header
     const orgModule = table.closest(".module");
@@ -570,11 +532,7 @@ function getAbsoluteUrl(url) {
       gettext("Web") + " " + checkedWebCheckboxes + "/" + totalWebCheckboxes,
     );
     emailCountSpan.text(
-      gettext("Email") +
-        " " +
-        checkedEmailCheckboxes +
-        "/" +
-        totalEmailCheckboxes,
+      gettext("Email") + " " + checkedEmailCheckboxes + "/" + totalEmailCheckboxes,
     );
   }
 
@@ -648,17 +606,13 @@ function getAbsoluteUrl(url) {
       }
 
       if (activeDropdown) {
-        var dropdownType = activeDropdown.is("[data-web-state]")
-          ? "web"
-          : "email";
+        var dropdownType = activeDropdown.is("[data-web-state]") ? "web" : "email";
         var triggeredBy = dropdownType;
 
         var $webDropdown = $(".global-setting-dropdown[data-web-state]");
         var $emailDropdown = $(".global-setting-dropdown[data-email-state]");
         var $webToggle = $webDropdown.find(".global-setting-dropdown-toggle");
-        var $emailToggle = $emailDropdown.find(
-          ".global-setting-dropdown-toggle",
-        );
+        var $emailToggle = $emailDropdown.find(".global-setting-dropdown-toggle");
 
         // Determine the current states
         var isGlobalWebChecked = $webToggle.attr("data-state") === "on";
@@ -707,8 +661,7 @@ function getAbsoluteUrl(url) {
 
         // Update the state based on the selected option
         if (dropdownType === "web") {
-          isGlobalWebChecked =
-            selectedOptionElement.attr("data-web-state") === "Yes";
+          isGlobalWebChecked = selectedOptionElement.attr("data-web-state") === "Yes";
         } else if (dropdownType === "email") {
           isGlobalEmailChecked =
             selectedOptionElement.attr("data-email-state") === "Yes";
@@ -738,17 +691,12 @@ function getAbsoluteUrl(url) {
 
         $emailToggle
           .html(
-            (isGlobalEmailChecked
-              ? "Notify by email"
-              : "Don't notify by email") +
+            (isGlobalEmailChecked ? "Notify by email" : "Don't notify by email") +
               " " +
               createArrowSpanHtml(),
           )
           .attr("data-state", isGlobalEmailChecked ? "on" : "off");
-        $emailDropdown.attr(
-          "data-email-state",
-          isGlobalEmailChecked ? "Yes" : "No",
-        );
+        $emailDropdown.attr("data-email-state", isGlobalEmailChecked ? "Yes" : "No");
 
         // Update the checkboxes
         $('.org-toggle[data-column="web"]')
@@ -771,9 +719,7 @@ function getAbsoluteUrl(url) {
         });
 
         $(".module").each(function () {
-          const organizationId = $(this)
-            .find(".org-toggle")
-            .data("organization-id");
+          const organizationId = $(this).find(".org-toggle").data("organization-id");
           updateOrgLevelCheckboxes(organizationId);
         });
 
@@ -792,16 +738,10 @@ function getAbsoluteUrl(url) {
           crossDomain: true,
           data: data,
           success: function () {
-            showToast(
-              "success",
-              gettext("Global settings updated successfully."),
-            );
+            showToast("success", gettext("Global settings updated successfully."));
           },
           error: function () {
-            showToast(
-              "error",
-              gettext("Something went wrong. Please try again."),
-            );
+            showToast("error", gettext("Something went wrong. Please try again."));
 
             // Rollback the UI changes
             isGlobalWebChecked = previousGlobalWebChecked;
@@ -815,16 +755,11 @@ function getAbsoluteUrl(url) {
                   createArrowSpanHtml(),
               )
               .attr("data-state", isGlobalWebChecked ? "on" : "off");
-            $webDropdown.attr(
-              "data-web-state",
-              isGlobalWebChecked ? "Yes" : "No",
-            );
+            $webDropdown.attr("data-web-state", isGlobalWebChecked ? "Yes" : "No");
 
             $emailToggle
               .html(
-                (isGlobalEmailChecked
-                  ? "Notify by email"
-                  : "Don't notify by email") +
+                (isGlobalEmailChecked ? "Notify by email" : "Don't notify by email") +
                   " " +
                   createArrowSpanHtml(),
               )
@@ -880,12 +815,9 @@ function getAbsoluteUrl(url) {
       // Clear previous icon
       $modalIcon.empty();
 
-      var dropdownType = activeDropdown.is("[data-web-state]")
-        ? "web"
-        : "email";
+      var dropdownType = activeDropdown.is("[data-web-state]") ? "web" : "email";
 
-      var newGlobalWebChecked =
-        selectedOptionElement.attr("data-web-state") === "Yes";
+      var newGlobalWebChecked = selectedOptionElement.attr("data-web-state") === "Yes";
       var newGlobalEmailChecked =
         selectedOptionElement.attr("data-email-state") === "Yes";
 
@@ -903,8 +835,7 @@ function getAbsoluteUrl(url) {
       var changes = [];
 
       // Case 1: Enabling global web notifications, email remains the same
-      var isOnlyEnablingWeb =
-        newGlobalWebChecked === true && dropdownType === "web";
+      var isOnlyEnablingWeb = newGlobalWebChecked === true && dropdownType === "web";
 
       // Case 2: Disabling global email notifications, web remains the same
       var isOnlyDisablingEmail =
