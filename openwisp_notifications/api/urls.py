@@ -50,6 +50,11 @@ def get_api_urls(api_views=None):
             views.organization_notification_setting,
             name="organization_notification_setting",
         ),
+        path(
+            "organization/<uuid:organization_id>/setting/",
+            views.organization_setting,
+            name="organization_setting",
+        ),
         # DEPRECATED
         path(
             "user/user-setting/",
@@ -60,10 +65,5 @@ def get_api_urls(api_views=None):
             "user/user-setting/<uuid:pk>/",
             views.notification_setting,
             name="notification_setting",
-        ),
-        path(
-            "organization/<uuid:organization_id>/setting/",
-            views.organization_setting,
-            name="organization_setting",
         ),
     ]

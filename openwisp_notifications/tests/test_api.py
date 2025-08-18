@@ -1296,13 +1296,6 @@ class TestMultitenancyApi(
     AuthenticationMixin,
     TransactionTestCase,
 ):
-    # TransactionTestCase resets the database after each test which deletes
-    # Groups and their permissions.
-    # We use fixtures to set up the initial state for each test.
-    fixtures = [
-        "openwisp_notifications/tests/fixtures/initial_data.json",
-    ]
-
     def test_organization_setting_multitenancy(self):
         """Test operator and administrator access in multitenant scenarios"""
         org1 = self._create_org(name="test-org-1", slug="test-org-1")
@@ -1341,6 +1334,7 @@ class TestMultitenancyApi(
             response = self.client.patch(
                 org1_setting_path, data=data, content_type="application/json"
             )
+            self.assertEqual(response.status_code, 200)
             org1_settings.refresh_from_db()
             self.assertEqual(org1_settings.web, False)
             self.assertEqual(org1_settings.email, False)

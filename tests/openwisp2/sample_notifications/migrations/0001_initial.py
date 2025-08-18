@@ -19,7 +19,6 @@ class Migration(migrations.Migration):
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ("openwisp_users", "0009_create_organization_owners"),
         swapper.dependency("openwisp_users", "Organization"),
     ]
 
@@ -319,7 +318,7 @@ class Migration(migrations.Migration):
                         primary_key=True,
                         related_name="notification_settings",
                         serialize=False,
-                        to="openwisp_users.organization",
+                        to=swapper.get_model_name("openwisp_users", "Organization"),
                         verbose_name="organization",
                     ),
                 ),
