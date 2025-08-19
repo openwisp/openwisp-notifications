@@ -36,6 +36,11 @@ def get_api_urls(api_views=None):
             name="user_notification_setting",
         ),
         path(
+            "user/<uuid:user_id>/organization/<uuid:organization_id>/setting/",
+            views.user_org_notification_setting,
+            name="organization_notification_setting",
+        ),
+        path(
             "notification/ignore/",
             views.ignore_object_notification_list,
             name="ignore_object_notification_list",
@@ -44,11 +49,6 @@ def get_api_urls(api_views=None):
             "notification/ignore/<str:app_label>/<str:model_name>/<uuid:object_id>/",
             views.ignore_object_notification,
             name="ignore_object_notification",
-        ),
-        path(
-            "user/<uuid:user_id>/organization/<uuid:organization_id>/setting/",
-            views.organization_notification_setting,
-            name="organization_notification_setting",
         ),
         path(
             "organization/<uuid:organization_id>/setting/",

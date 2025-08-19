@@ -209,7 +209,11 @@ class IgnoreObjectNotificationView(
         )
 
 
-class OrganizationNotificationSettingView(GenericAPIView):
+class UserOrgNotificationSettingView(GenericAPIView):
+    """
+    Allows a user to enable or disable all notifications for a specific organization.
+    """
+
     permission_classes = [IsAuthenticated, PreferencesPermission]
     serializer_class = NotificationSettingUpdateSerializer
 
@@ -225,6 +229,11 @@ class OrganizationNotificationSettingView(GenericAPIView):
 
 
 class OrganizationSettingView(ProtectedAPIMixin, RetrieveUpdateAPIView):
+    """
+    Enables organization administrators to manage notification settings for
+    all users within their organization.
+    """
+
     serializer_class = OrganizationNotificationSettingsSerializer
     queryset = OrganizationNotificationSettings.objects.filter(
         organization__is_active=True
@@ -244,7 +253,7 @@ notifications_read_all = NotificationReadAllView.as_view()
 notification_read_redirect = NotificationReadRedirect.as_view()
 notification_setting_list = NotificationSettingListView.as_view()
 notification_setting = NotificationSettingView.as_view()
-organization_notification_setting = OrganizationNotificationSettingView.as_view()
+user_org_notification_setting = UserOrgNotificationSettingView.as_view()
 ignore_object_notification_list = IgnoreObjectNotificationListView.as_view()
 ignore_object_notification = IgnoreObjectNotificationView.as_view()
 organization_setting = OrganizationSettingView.as_view()
