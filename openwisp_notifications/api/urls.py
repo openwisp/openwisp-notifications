@@ -38,7 +38,7 @@ def get_api_urls(api_views=None):
         path(
             "user/<uuid:user_id>/organization/<uuid:organization_id>/setting/",
             views.user_org_notification_setting,
-            name="organization_notification_setting",
+            name="user_org_notification_setting",
         ),
         path(
             "notification/ignore/",
@@ -52,8 +52,8 @@ def get_api_urls(api_views=None):
         ),
         path(
             "organization/<uuid:organization_id>/setting/",
-            views.organization_setting,
-            name="organization_setting",
+            views.org_notification_setting,
+            name="org_notification_setting",
         ),
         # DEPRECATED
         path(

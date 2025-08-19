@@ -857,9 +857,7 @@ class TestNotificationApi(
         org = Organization.objects.first()
 
         with self.subTest("Test for current user"):
-            url = self._get_path(
-                "organization_notification_setting", self.admin.pk, org.pk
-            )
+            url = self._get_path("user_org_notification_setting", self.admin.pk, org.pk)
             NotificationSetting.objects.filter(
                 user=self.admin, organization_id=org.pk
             ).update(email=False, web=False)
@@ -878,7 +876,7 @@ class TestNotificationApi(
         with self.subTest("Test for non-admin user"):
             self.client.force_login(tester)
             url = self._get_path(
-                "organization_notification_setting",
+                "user_org_notification_setting",
                 self.admin.pk,
                 org.pk,
             )
@@ -888,7 +886,7 @@ class TestNotificationApi(
         with self.subTest("Test with invalid data"):
             self.client.force_login(self.admin)
             url = self._get_path(
-                "organization_notification_setting",
+                "user_org_notification_setting",
                 self.admin.pk,
                 org.pk,
             )
@@ -899,7 +897,7 @@ class TestNotificationApi(
             "Test email to False while keeping one of email notification setting to true"
         ):
             url = self._get_path(
-                "organization_notification_setting",
+                "user_org_notification_setting",
                 self.admin.pk,
                 org.pk,
             )
@@ -923,7 +921,7 @@ class TestNotificationApi(
 
         with self.subTest("Test web to False"):
             url = self._get_path(
-                "organization_notification_setting",
+                "user_org_notification_setting",
                 self.admin.pk,
                 org.pk,
             )
@@ -942,7 +940,7 @@ class TestNotificationApi(
 
         with self.subTest("Test email set to False and email not provided"):
             url = self._get_path(
-                "organization_notification_setting",
+                "user_org_notification_setting",
                 self.admin.pk,
                 org.pk,
             )
@@ -1211,12 +1209,12 @@ class TestNotificationApi(
 
         with self.subTest("Superuser can retrieve organization notification settings"):
             org1_settings = org1.notification_settings
-            url = self._get_path("organization_setting", org1.pk)
+            url = self._get_path("org_notification_setting", org1.pk)
             response = self.client.get(url)
             self._assert_org_setting_response(response, org1_settings)
 
         with self.subTest("Superuser can update organization notification settings"):
-            url = self._get_path("organization_setting", org1.pk)
+            url = self._get_path("org_notification_setting", org1.pk)
             data = {"web": False, "email": False}
             response = self.client.patch(
                 url, data=data, content_type="application/json"
@@ -1225,7 +1223,7 @@ class TestNotificationApi(
             self._assert_org_setting_response(response, org1_settings)
 
         with self.subTest("Superuser can access settings for any organization"):
-            url = self._get_path("organization_setting", org2.pk)
+            url = self._get_path("org_notification_setting", org2.pk)
             response = self.client.get(url)
             self.assertEqual(response.status_code, 200)
 
@@ -1239,14 +1237,14 @@ class TestNotificationApi(
         with self.subTest(
             "Unauthenticated user cannot retrieve organization notification settings"
         ):
-            url = self._get_path("organization_setting", org.pk)
+            url = self._get_path("org_notification_setting", org.pk)
             response = self.client.get(url)
             self.assertEqual(response.status_code, 401)
 
         with self.subTest(
             "Unauthenticated user cannot update organization notification settings"
         ):
-            url = self._get_path("organization_setting", org.pk)
+            url = self._get_path("org_notification_setting", org.pk)
             data = {"web": False, "email": False}
             response = self.client.patch(
                 url, data=data, content_type="application/json"
@@ -1263,14 +1261,14 @@ class TestNotificationApi(
         with self.subTest(
             "Regular user cannot retrieve organization notification settings"
         ):
-            url = self._get_path("organization_setting", org.pk)
+            url = self._get_path("org_notification_setting", org.pk)
             response = self.client.get(url)
             self.assertEqual(response.status_code, 403)
 
         with self.subTest(
             "Regular user cannot update organization notification settings"
         ):
-            url = self._get_path("organization_setting", org.pk)
+            url = self._get_path("org_notification_setting", org.pk)
             data = {"web": False, "email": False}
             response = self.client.patch(
                 url, data=data, content_type="application/json"
@@ -1285,7 +1283,7 @@ class TestNotificationApi(
         self.client.force_login(self.admin)
 
         with self.subTest("Cannot access settings for inactive organization"):
-            url = self._get_path("organization_setting", inactive_org.pk)
+            url = self._get_path("org_notification_setting", inactive_org.pk)
             response = self.client.get(url)
             self.assertEqual(response.status_code, 404)
 
@@ -1303,7 +1301,7 @@ class TestMultitenancyApi(
         org2 = self._create_org(name="test-org-2", slug="test-org-2")
         operator = self._create_operator(organizations=[org1])
         administrator = self._create_administrator(organizations=[org1])
-        org1_setting_path = self._get_path("organization_setting", org1.pk)
+        org1_setting_path = self._get_path("org_notification_setting", org1.pk)
 
         # Test operator permissions
         self.client.force_login(operator)
@@ -1342,6 +1340,6 @@ class TestMultitenancyApi(
         with self.subTest(
             "Administrator cannot retrieve organization notification settings of other organizations"
         ):
-            path = self._get_path("organization_setting", org2.pk)
+            path = self._get_path("org_notification_setting", org2.pk)
             response = self.client.get(path)
             self.assertEqual(response.status_code, 404)
