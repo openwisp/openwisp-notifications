@@ -4,7 +4,7 @@ from unittest.mock import patch
 from django.contrib.admin.sites import AdminSite
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
-from django.forms.widgets import MediaOrderConflictWarning
+from django.forms.widgets import Media, MediaOrderConflictWarning
 from django.test import TestCase, override_settings, tag
 from django.urls import reverse
 
@@ -345,4 +345,4 @@ class TestAdminMedia(BaseTestAdmin):
         response = self.client.get(
             reverse(f"admin:{self.users_app_label}_user_change", args=(self.admin.pk,))
         )
-        UserAdmin.Media = None
+        UserAdmin.Media = Media()
