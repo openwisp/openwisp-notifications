@@ -31,8 +31,6 @@ from openwisp_notifications.websockets import handlers as ws_handlers
 
 logger = logging.getLogger(__name__)
 
-EXTRA_DATA = app_settings.get_config()["USE_JSONFIELD"]
-
 User = get_user_model()
 
 Notification = load_model("Notification")
@@ -163,7 +161,7 @@ def notify_handler(**kwargs):
                     "%s_content_type" % opt,
                     ContentType.objects.get_for_model(obj),
                 )
-        if kwargs and EXTRA_DATA:
+        if kwargs:
             notification.data = kwargs
         notification.save()
         notification_list.append(notification)
