@@ -539,7 +539,6 @@ class AbstractOrganizationNotificationSettings(models.Model):
         ),
         verbose_name=_("Web notifications enabled"),
     )
-
     email = FallbackBooleanChoiceField(
         fallback=app_settings.EMAIL_ENABLED,
         help_text=_(

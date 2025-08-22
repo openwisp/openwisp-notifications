@@ -87,3 +87,18 @@ def mock_notification_types(func):
             return func(*args, **kwargs)
 
     return wrapper
+
+
+class GetEditFormInlineMixin(object):
+    def _get_org_edit_form_inline_params(self, user, org):
+        params = super()._get_org_edit_form_inline_params(user, org)
+        params.update(
+            {
+                # notification settings inline
+                "notification_settings-TOTAL_FORMS": 1,
+                "notification_settings-INITIAL_FORMS": 1,
+                "notification_settings-MIN_NUM_FORMS": 0,
+                "notification_settings-MAX_NUM_FORMS": 1,
+            }
+        )
+        return params

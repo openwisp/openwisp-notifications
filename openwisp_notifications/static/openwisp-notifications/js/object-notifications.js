@@ -42,8 +42,7 @@ function initObjectNotificationDropdown($) {
     e.stopPropagation();
     // Check if the clicked area is dropDown / ow-notify-btn or not
     if (
-      $(".ow-object-notification-option-container").has(e.target).length ===
-        0 &&
+      $(".ow-object-notification-option-container").has(e.target).length === 0 &&
       !$(e.target).is($(".ow-object-notify"))
     ) {
       $(".ow-object-notification-option-container").addClass("ow-hide");
@@ -52,9 +51,7 @@ function initObjectNotificationDropdown($) {
   $(document).on("focusin", function (e) {
     // Hide dropdown while accessing dropdown through keyboard
     e.stopPropagation();
-    if (
-      $(".ow-object-notification-option-container").has(e.target).length === 0
-    ) {
+    if ($(".ow-object-notification-option-container").has(e.target).length === 0) {
       $(".ow-object-notification-option-container").addClass("ow-hide");
     }
   });
@@ -97,9 +94,7 @@ function addObjectNotificationHandlers($) {
           withCredentials: true,
         },
         beforeSend: function () {
-          $(".ow-object-notification-option-container > button").addClass(
-            "ow-hide",
-          );
+          $(".ow-object-notification-option-container > button").addClass("ow-hide");
           $("#ow-object-notification-loader").removeClass("ow-hide");
         },
         data: {
@@ -132,9 +127,7 @@ function addObjectNotificationHandlers($) {
         withCredentials: true,
       },
       beforeSend: function () {
-        $(".ow-object-notification-option-container > button").addClass(
-          "ow-hide",
-        );
+        $(".ow-object-notification-option-container > button").addClass("ow-hide");
         $("#ow-object-notification-loader").removeClass("ow-hide");
       },
       crossDomain: true,
@@ -149,16 +142,10 @@ function addObjectNotificationHandlers($) {
           "You are receiving notifications for this object.",
         );
 
-        $("#ow-notification-help-text").html(
-          `Disable notifications for this object`,
-        );
+        $("#ow-notification-help-text").html(`Disable notifications for this object`);
         $("#ow-object-notification-loader").addClass("ow-hide");
-        $(".ow-notification-option.disable-notification").removeClass(
-          "ow-hide",
-        );
-        $(
-          ".ow-object-notification-option-container > button:visible:first",
-        ).focus();
+        $(".ow-notification-option.disable-notification").removeClass("ow-hide");
+        $(".ow-object-notification-option-container > button:visible:first").focus();
       },
       error: function (error) {
         throw error;
@@ -199,9 +186,7 @@ function updateObjectNotificationHelpText($, validTill) {
   if (validTill === null || validTill === undefined) {
     disabledText = `Disabled permanently`;
   } else {
-    let dateTimeString = dateTimeStampToDateTimeLocaleString(
-      new Date(validTill),
-    );
+    let dateTimeString = dateTimeStampToDateTimeLocaleString(new Date(validTill));
     disabledText = `Disabled till ${dateTimeString}`;
   }
 

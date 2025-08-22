@@ -104,43 +104,53 @@ def send_notification_email(
         "notifications_count": notifications_count,
         "site_name": current_site.name,
         "footer": get_unsubscribe_url_email_footer(unsubscribe_url),
-        "title": _("{notifications_count} unread {pluralize_notification}").format(
-            notifications_count=notifications_count,
-            pluralize_notification=pluralize_notification,
-        ),
         "subtitle": _("Since {since}").format(since=since),
         "since": since,
     }
     if notifications_count == 1:
         extra_context.update(
             {
-                "call_to_action_url": notification.url,
+                "call_to_action_url": unsent_notifications[0].url,
                 "call_to_action_text": _("View Details"),
+                "title": unsent_notifications[0].email_subject,
             }
         )
-    elif notifications_count > app_settings.EMAIL_BATCH_DISPLAY_LIMIT:
-        extra_context.update(
-            {
-                "call_to_action_url": f"https://{current_site.domain}/admin/#notifications",
-                "call_to_action_text": _("View all Notifications"),
-            }
+        subject = unsent_notifications[0].email_subject
+    else:
+        if notifications_count > app_settings.EMAIL_BATCH_DISPLAY_LIMIT:
+            extra_context.update(
+                {
+                    "call_to_action_url": f"https://{current_site.domain}/admin/#notifications",
+                    "call_to_action_text": _("View all Notifications"),
+                }
+            )
+        notifications_count = min(
+            notifications_count, app_settings.EMAIL_BATCH_DISPLAY_LIMIT
         )
-
-    plain_text_content = render_to_string(
-        "openwisp_notifications/emails/notification.txt", extra_context
-    )
-    notifications_count = min(
-        notifications_count, app_settings.EMAIL_BATCH_DISPLAY_LIMIT
-    )
-    send_email(
-        subject=_(
+        subject = _(
             "[{site_name}] {notifications_count} unread {pluralize_notification} since {since}"
         ).format(
             site_name=current_site.name,
             notifications_count=notifications_count,
             since=since,
             pluralize_notification=pluralize_notification,
-        ),
+        )
+        extra_context.update(
+            {
+                "title": _(
+                    "{notifications_count} unread {pluralize_notification}"
+                ).format(
+                    notifications_count=notifications_count,
+                    pluralize_notification=pluralize_notification,
+                ),
+            }
+        )
+
+    plain_text_content = render_to_string(
+        "openwisp_notifications/emails/notification.txt", extra_context
+    )
+    send_email(
+        subject=subject,
         body_text=plain_text_content,
         body_html=True,
         recipients=[user.email],

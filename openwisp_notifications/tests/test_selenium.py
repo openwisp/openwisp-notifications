@@ -24,6 +24,8 @@ class TestSelenium(
     TestOrganizationMixin,
     StaticLiveServerTestCase,
 ):
+    users_app_label = "openwisp_users"
+
     def setUp(self):
         super().setUp()
         org = self._create_org()
@@ -256,7 +258,7 @@ class TestSelenium(
 
         # Navigate to organization change page
         org_change_url = reverse(
-            "admin:openwisp_users_organization_change", args=(org.pk,)
+            f"admin:{self.users_app_label}_organization_change", args=(org.pk,)
         )
         self.open(org_change_url)
 

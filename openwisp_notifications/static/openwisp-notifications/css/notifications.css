@@ -121,8 +121,8 @@
   filter: invert(30%) sepia(3%);
 }
 .ow-notification-toast.warning .icon {
-  filter: invert(20%) sepia(90%) saturate(5000%) hue-rotate(366deg)
-    brightness(92%) contrast(96%);
+  filter: invert(20%) sepia(90%) saturate(5000%) hue-rotate(366deg) brightness(92%)
+    contrast(96%);
 }
 .ow-notification-toast.error .icon,
 .ow-notification-toast.success .icon {
@@ -266,21 +266,21 @@
   min-height: 15px;
   min-width: 15px;
   background-repeat: no-repeat;
-  filter: invert(46%) sepia(4%) saturate(139%) hue-rotate(317deg)
-    brightness(99%) contrast(85%);
+  filter: invert(46%) sepia(4%) saturate(139%) hue-rotate(317deg) brightness(99%)
+    contrast(85%);
   margin: -1px 1px 0 0;
 }
 .ow-notification-elem:hover .icon {
-  filter: invert(20%) sepia(1%) saturate(139%) hue-rotate(317deg)
-    brightness(99%) contrast(85%);
+  filter: invert(20%) sepia(1%) saturate(139%) hue-rotate(317deg) brightness(99%)
+    contrast(85%);
 }
 .ow-notification-elem.unread .icon {
-  filter: invert(95%) sepia(1%) saturate(139%) hue-rotate(317deg)
-    brightness(99%) contrast(85%);
+  filter: invert(95%) sepia(1%) saturate(139%) hue-rotate(317deg) brightness(99%)
+    contrast(85%);
 }
 .ow-notification-elem.unread:hover .icon {
-  filter: invert(100%) sepia(0%) saturate(139%) hue-rotate(317deg)
-    brightness(100%) contrast(85%);
+  filter: invert(100%) sepia(0%) saturate(139%) hue-rotate(317deg) brightness(100%)
+    contrast(85%);
 }
 .ow-notify-info {
   background-image: url("../../openwisp-notifications/images/icons/icon-info.svg");

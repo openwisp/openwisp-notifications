@@ -119,8 +119,8 @@
     no-repeat;
 }
 .icon-email {
-  background: url("../../openwisp-notifications/images/icons/icon-email.svg") 0
-    0 no-repeat;
+  background: url("../../openwisp-notifications/images/icons/icon-email.svg") 0 0
+    no-repeat;
   position: relative;
   bottom: -3px;
 }
@@ -258,12 +258,12 @@ tr.org-header {
 }
 
 .ow-notify-success {
-  filter: invert(48%) sepia(98%) saturate(546%) hue-rotate(95deg)
-    brightness(95%) contrast(90%);
+  filter: invert(48%) sepia(98%) saturate(546%) hue-rotate(95deg) brightness(95%)
+    contrast(90%);
 }
 .ow-notify-error {
-  filter: invert(18%) sepia(99%) saturate(5461%) hue-rotate(-10deg)
-    brightness(85%) contrast(120%);
+  filter: invert(18%) sepia(99%) saturate(5461%) hue-rotate(-10deg) brightness(85%)
+    contrast(120%);
 }
 
 /* Toggle Icon */

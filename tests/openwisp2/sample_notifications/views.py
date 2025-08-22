@@ -24,7 +24,7 @@ from openwisp_notifications.api.views import (
     NotificationSettingView as BaseNotificationSettingView,
 )
 from openwisp_notifications.api.views import (
-    OrganizationSettingView as BaseOrganizationSettingView,
+    OrganizationNotificationSettingView as BaseOrganizationNotificationSettingView,
 )
 
 
@@ -87,7 +87,7 @@ class IgnoreObjectNotificationListView(BaseIgnoreObjectNotificationListView):
     pass
 
 
-class OrganizationSettingView(BaseOrganizationSettingView):
+class OrganizationNotificationSettingView(BaseOrganizationNotificationSettingView):
     """
     Retrives details for a organization notification setting and
     provides endpoints for updating and deleting it.

@@ -4,10 +4,12 @@ from datetime import timedelta
 from celery import shared_task
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
+from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Q
 from django.db.utils import OperationalError
 from django.utils import timezone
 
+from openwisp_notifications import settings as app_settings
 from openwisp_notifications import types
 from openwisp_notifications.swapper import load_model, swapper_load_model
 from openwisp_notifications.utils import send_notification_email
@@ -85,11 +87,18 @@ def create_notification_settings(user, organizations, notification_types):
 
     for type in notification_types:
         for org in organizations:
+            try:
+                org_notification_settings = org.notification_settings
+                email = org_notification_settings.email
+                web = org_notification_settings.web
+            except ObjectDoesNotExist:
+                email = app_settings.WEB_ENABLED
+                web = app_settings.EMAIL_ENABLED
             NotificationSetting.objects.update_or_create(
                 defaults={
                     "deleted": False,
-                    "email": None if org.notification_settings.email else False,
-                    "web": None if org.notification_settings.web else False,
+                    "email": None if email else False,
+                    "web": None if web else False,
                 },
                 user=user,
                 type=type,

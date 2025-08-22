@@ -8,11 +8,7 @@
   border-radius: 50%;
   background: #464646;
   background: -moz-linear-gradient(left, #464646 10%, rgba(70, 70, 70, 0) 42%);
-  background: -webkit-linear-gradient(
-    left,
-    #464646 10%,
-    rgba(70, 70, 70, 0) 42%
-  );
+  background: -webkit-linear-gradient(left, #464646 10%, rgba(70, 70, 70, 0) 42%);
   background: -o-linear-gradient(left, #464646 10%, rgba(70, 70, 70, 0) 42%);
   background: -ms-linear-gradient(left, #464646 10%, rgba(70, 70, 70, 0) 42%);
   background: linear-gradient(to right, #464646 10%, rgba(70, 70, 70, 0) 42%);

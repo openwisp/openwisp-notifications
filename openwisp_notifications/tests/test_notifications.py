@@ -224,9 +224,9 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
         self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(mail.outbox[0].to, [self.admin.email])
         n = notification_queryset.first()
-        self.assertIn(
-            "[example.com] 1 unread notification since",
+        self.assertEqual(
             mail.outbox[0].subject,
+            "Test Email subject",
         )
         self.assertIn(n.message, mail.outbox[0].body)
         self.assertIn(n.data.get("url"), mail.outbox[0].body)
@@ -331,9 +331,9 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
     def test_description_in_email_subject(self):
         self.notification_options.pop("email_subject")
         self._create_notification()
-        self.assertIn(
-            "[example.com] 1 unread notification since",
+        self.assertEqual(
             mail.outbox[0].subject,
+            "Test Notification",
         )
 
     def test_handler_optional_tag(self):

@@ -79,6 +79,11 @@ high volumes.
   batch.
 - After sending the batch email, the system starts queuing new
   notifications for the next batch.
+- If the time since the last email is greater than
+  :ref:`OPENWISP_NOTIFICATIONS_EMAIL_BATCH_INTERVAL
+  <openwisp_notifications_email_batch_interval>`, the new notification is
+  sent instantly as a single notification email. Batching is used only if
+  more notifications arrive within that time window.
 - Only unread notifications are included in the batch. This check is
   performed at the time the batch is sent, ensuring that users don't
   receive emails for alerts they've already seen.
