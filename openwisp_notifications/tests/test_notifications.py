@@ -231,6 +231,10 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
         self.assertIn(n.message, mail.outbox[0].body)
         self.assertIn(n.data.get("url"), mail.outbox[0].body)
         self.assertIn("https://", n.data.get("url"))
+        html_email = mail.outbox[0].alternatives[0][0]
+        self.assertIn(
+            '<div class="email-title">1 unread notification</div>', html_email
+        )
 
     def test_email_disabled(self):
         self.notification_options.update(
