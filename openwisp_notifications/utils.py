@@ -106,13 +106,16 @@ def send_notification_email(
         "footer": get_unsubscribe_url_email_footer(unsubscribe_url),
         "subtitle": _("Since {since}").format(since=since),
         "since": since,
+        "title": _("{notifications_count} unread {pluralize_notification}").format(
+            notifications_count=notifications_count,
+            pluralize_notification=pluralize_notification,
+        ),
     }
     if notifications_count == 1:
         extra_context.update(
             {
                 "call_to_action_url": unsent_notifications[0].url,
                 "call_to_action_text": _("View Details"),
-                "title": unsent_notifications[0].email_subject,
             }
         )
         subject = unsent_notifications[0].email_subject
@@ -134,16 +137,6 @@ def send_notification_email(
             notifications_count=notifications_count,
             since=since,
             pluralize_notification=pluralize_notification,
-        )
-        extra_context.update(
-            {
-                "title": _(
-                    "{notifications_count} unread {pluralize_notification}"
-                ).format(
-                    notifications_count=notifications_count,
-                    pluralize_notification=pluralize_notification,
-                ),
-            }
         )
 
     plain_text_content = render_to_string(
