@@ -31,8 +31,6 @@ from openwisp_notifications.websockets import handlers as ws_handlers
 
 logger = logging.getLogger(__name__)
 
-EXTRA_DATA = app_settings.get_config()["USE_JSONFIELD"]
-
 User = get_user_model()
 
 Notification = load_model("Notification")
@@ -141,8 +139,10 @@ def notify_handler(**kwargs):
         (kwargs.pop(opt, None), opt) for opt in ("target", "action_object")
     ]
 
-    notification_list = []
-    for recipient in recipients:
+    notifications_to_create = []
+    recipients_list = list(recipients)
+
+    for recipient in recipients_list:
         notification = Notification(
             recipient=recipient,
             actor=actor,
@@ -163,10 +163,34 @@ def notify_handler(**kwargs):
                     "%s_content_type" % opt,
                     ContentType.objects.get_for_model(obj),
                 )
-        if kwargs and EXTRA_DATA:
+        if kwargs:
             notification.data = kwargs
-        notification.save()
-        notification_list.append(notification)
+        notifications_to_create.append(notification)
+
+    post_save.disconnect(clear_notification_cache, sender=Notification)
+
+    try:
+        notification_list = Notification.objects.bulk_create(notifications_to_create)
+
+        for notification in notification_list:
+            send_email_notification(Notification, notification, created=True)
+
+        for recipient in recipients_list:
+            Notification.invalidate_unread_cache(recipient)
+
+        first_notification = notification_list[0] if notification_list else None
+        ws_handlers.bulk_notification_update_handler(
+            recipients=recipients_list,
+            reload_widget=True,
+            notification=first_notification,
+        )
+
+    finally:
+        post_save.connect(
+            clear_notification_cache,
+            sender=Notification,
+            dispatch_uid="clear_notification_cache_saved",
+        )
 
     return notification_list
 
