@@ -64,6 +64,8 @@ function initNotificationDropDown($) {
   $(document).click(function (e) {
     e.stopPropagation();
     if (
+      // Only hide the widget on user-initiated clicks; ignore programmatic clicks
+      e.originalEvent?.isTrusted &&
       // Check if the clicked area is dropDown
       $(".ow-notification-dropdown").has(e.target).length === 0 &&
       // Check notification-btn or not

@@ -86,18 +86,42 @@ class TestSelenium(
             {"message": "Test Message", "description": "Test Description"}
         )
         notification = self._create_notification().pop()[1][0]
-        self.find_element(By.ID, "openwisp_notifications").click()
-        self.wait_for_visibility(By.ID, f"ow-{notification.id}")
-        self.find_element(By.ID, f"ow-{notification.id}").click()
-        self.wait_for_visibility(By.CLASS_NAME, "ow-dialog-notification")
-        dialog = self.find_element(By.CLASS_NAME, "ow-dialog-notification")
-        self.assertEqual(
-            dialog.find_element(By.CLASS_NAME, "ow-message-title").text, "Test Message"
-        )
-        self.assertEqual(
-            dialog.find_element(By.CLASS_NAME, "ow-message-description").text,
-            "Test Description",
-        )
+
+        with self.subTest(
+            "Notification dialog opens automatically on #notification fragment"
+        ):
+            self.open("{}#notifications".format(reverse("admin:index")))
+            # Since the above open() operation only changes the fragment,
+            # we need to refresh to page to simulate loading of page with fragment
+            self.web_driver.refresh()
+            self._wait_until_page_ready()
+            self.wait_for_visibility(By.CLASS_NAME, "ow-notification-dropdown")
+            self.wait_for_visibility(By.CLASS_NAME, "ow-notification-elem")
+
+            # Dialog is not closed on programmatic click events
+            self.web_driver.execute_script('django.jQuery("#main").trigger("click");')
+            self.wait_for_visibility(By.CLASS_NAME, "ow-notification-dropdown")
+            self.wait_for_visibility(By.CLASS_NAME, "ow-notification-elem")
+
+            # Dialog is closed on user click events
+            self.web_driver.find_element(By.ID, "main").click()
+            self.wait_for_invisibility(By.CLASS_NAME, "ow-notification-dropdown")
+            self.wait_for_invisibility(By.CLASS_NAME, "ow-notification-elem")
+
+        with self.subTest("Open notification dialog by clicking notification button"):
+            self.find_element(By.ID, "openwisp_notifications").click()
+            self.wait_for_visibility(By.ID, f"ow-{notification.id}")
+            self.find_element(By.ID, f"ow-{notification.id}").click()
+            self.wait_for_visibility(By.CLASS_NAME, "ow-dialog-notification")
+            dialog = self.find_element(By.CLASS_NAME, "ow-dialog-notification")
+            self.assertEqual(
+                dialog.find_element(By.CLASS_NAME, "ow-message-title").text,
+                "Test Message",
+            )
+            self.assertEqual(
+                dialog.find_element(By.CLASS_NAME, "ow-message-description").text,
+                "Test Description",
+            )
 
     def test_notification_dialog_open_button_visibility(self):
         self.login()
