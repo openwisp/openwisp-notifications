@@ -16,7 +16,7 @@ def get_setting(name, default=None):
     """
     Get a setting from the Django settings module or return a default value.
     """
-    return getattr(f"OPENWISP_NOTIFICATIONS_{name}", name, default)
+    return getattr(settings, f"OPENWISP_NOTIFICATIONS_{name}", default)
 
 
 HOST = get_setting("HOST", None)
@@ -53,7 +53,7 @@ SOUND = re.sub("^/static/", "", SOUND)
 
 
 def get_config():
-    user_config = getattr(settings, "OPENWISP_NOTIFICATIONS_CONFIG", {})
+    user_config = get_setting("CONFIG", {})
     config = CONFIG_DEFAULTS.copy()
     config.update(user_config)
     return config
