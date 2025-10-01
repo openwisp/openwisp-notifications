@@ -1506,6 +1506,38 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
             response = self.client.get(reverse(preference_page, args=(uuid4(),)))
             self.assertEqual(response.status_code, 404)
 
+    @mock_notification_types
+    def test_dynamic_verb_changed(self):
+        self.notification_options.update(
+            {"type": "default", "target": self._get_org_user()}
+        )
+        default_config = get_notification_configuration("default")
+        original_message = default_config["message"]
+        original_verb = default_config.get("verb", "default verb")
+        default_config["message"] = "Notification with {notification.verb}"
+        default_config["verb"] = "initial verb"
+
+        self._create_notification()
+        notification = notification_queryset.first()
+
+        with self.subTest("Test initial verb from config"):
+            self.assertEqual(notification.verb, "initial verb")
+            self.assertIn("initial verb", notification.message)
+
+        with self.subTest("Test verb changes dynamically from config"):
+            default_config["verb"] = "updated verb"
+            del notification.message
+            self.assertEqual(notification.verb, "updated verb")
+            self.assertIn("updated verb", notification.message)
+
+        with self.subTest("Test fallback to database verb"):
+            unregister_notification_type("default")
+            notification.__dict__["verb"] = "db verb"
+            self.assertEqual(notification.verb, "db verb")
+
+        default_config["message"] = original_message
+        default_config["verb"] = original_verb
+
 
 class TestTransactionNotifications(TestOrganizationMixin, TransactionTestCase):
     def setUp(self):

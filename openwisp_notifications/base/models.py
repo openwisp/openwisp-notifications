@@ -103,11 +103,14 @@ class AbstractNotification(UUIDModel, BaseNotification):
 
     @property
     def verb(self):
+        config = {}
         try:
             config = get_notification_configuration(self.type)
-            return config.get("verb") or self.__dict__.get("verb") or "unspecified"
-        except Exception:
-            return self.__dict__.get("verb") or "unspecified"
+        except (NotificationRenderException, TypeError) as e:
+            logger.warning(
+                "Could not get notification config for type %s: %s", self.type, e
+            )
+        return self.__dict__.get("verb") or config.get("verb")
 
     @verb.setter
     def verb(self, value):
