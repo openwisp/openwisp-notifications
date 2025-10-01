@@ -10,9 +10,8 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.AlterField(
+        migrations.RemoveField(
             model_name="notification",
             name="verb",
-            field=models.CharField(max_length=255, null=True, blank=True),
         ),
     ]
