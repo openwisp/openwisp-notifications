@@ -145,7 +145,6 @@ def notify_handler(**kwargs):
         notification = Notification(
             recipient=recipient,
             actor=actor,
-            verb="unspecified",
             public=public,
             description=description,
             timestamp=timestamp,
