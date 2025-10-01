@@ -101,6 +101,18 @@ class AbstractNotification(UUIDModel, BaseNotification):
     _action_object = BaseNotification.action_object
     _target = BaseNotification.target
 
+    @property
+    def verb(self):
+        try:
+            config = get_notification_configuration(self.type)
+            return config.get("verb") or self.__dict__.get("verb") or "unspecified"
+        except Exception:
+            return self.__dict__.get("verb") or "unspecified"
+
+    @verb.setter
+    def verb(self, value):
+        self.__dict__["verb"] = value
+
     class Meta(BaseNotification.Meta):
         abstract = True
 

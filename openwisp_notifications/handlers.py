@@ -67,7 +67,6 @@ def notify_handler(**kwargs):
     level = kwargs.pop(
         "level", notification_template.get("level", Notification.LEVELS.info)
     )
-    verb = notification_template.get("verb", kwargs.pop("verb", None))
     user_app_name = User._meta.app_label
 
     where = Q(is_superuser=True)
@@ -146,7 +145,7 @@ def notify_handler(**kwargs):
         notification = Notification(
             recipient=recipient,
             actor=actor,
-            verb=str(verb),
+            verb="unspecified",
             public=public,
             description=description,
             timestamp=timestamp,
