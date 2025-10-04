@@ -32,6 +32,10 @@ const owNotificationWindow = {
     // closing the window
     $(window).on("beforeunload", function () {
       owNotificationWindow.remove();
+      // Disconnect websocket to prevent missed notifications during page reload
+      if (typeof notificationSocket !== "undefined") {
+        notificationSocket.close();
+      }
     });
     // Get authority to play notification sound when
     // other windows are closed
@@ -160,7 +164,9 @@ function notificationWidget($) {
   }
 
   function appendPage() {
-    $("#ow-notifications-loader").before(pageContainer(fetchedPages[lastRenderedPage]));
+    $("#ow-notifications-loader").before(
+      pageContainer(fetchedPages[lastRenderedPage]),
+    );
     if (lastRenderedPage >= renderedPages) {
       $(".ow-notification-wrapper div:first").remove();
     }
@@ -185,7 +191,10 @@ function notificationWidget($) {
       },
       success: function (res) {
         nextPageUrl = res.next;
-        if (res.count === 0 || (res.results.length === 0 && nextPageUrl === null)) {
+        if (
+          res.count === 0 ||
+          (res.results.length === 0 && nextPageUrl === null)
+        ) {
           // If response does not have any notification, show no-notifications message.
           $(".ow-no-notifications").removeClass("ow-hide");
           $("#ow-mark-all-read").addClass("disabled");
@@ -225,7 +234,9 @@ function notificationWidget($) {
     busy = true;
     if (lastRenderedPage > renderedPages) {
       $(".ow-notification-wrapper div.page:last").remove();
-      var addedDiv = pageContainer(fetchedPages[lastRenderedPage - renderedPages - 1]);
+      var addedDiv = pageContainer(
+        fetchedPages[lastRenderedPage - renderedPages - 1],
+      );
       $(".ow-notification-wrapper").prepend(addedDiv);
       lastRenderedPage -= 1;
     }
@@ -247,7 +258,9 @@ function notificationWidget($) {
 
   function notificationListItem(elem) {
     let klass;
-    const datetime = dateTimeStampToDateTimeLocaleString(new Date(elem.timestamp));
+    const datetime = dateTimeStampToDateTimeLocaleString(
+      new Date(elem.timestamp),
+    );
 
     if (!notificationReadStatus.has(elem.id)) {
       if (elem.unread) {
@@ -408,7 +421,9 @@ function markNotificationRead(elem) {
 function notificationHandler($, elem) {
   var notification = fetchedPages
       .flat()
-      .find((notification) => notification.id == elem.get(0).id.replace("ow-", "")),
+      .find(
+        (notification) => notification.id == elem.get(0).id.replace("ow-", ""),
+      ),
     targetUrl = elem.data("location");
 
   // If notification is unread then send read request
@@ -433,7 +448,9 @@ function notificationHandler($, elem) {
             </div>
             <div class="ow-notification-date">${datetime}</div>
         `);
-    $(".ow-message-title").html(convertMessageWithRelativeURL(notification.message));
+    $(".ow-message-title").html(
+      convertMessageWithRelativeURL(notification.message),
+    );
     $(".ow-message-description").html(notification.description);
     $(".ow-overlay-notification").removeClass("ow-hide");
 
@@ -473,7 +490,8 @@ function initWebSockets($) {
     }
     // Check whether to display notification toast
     if (data.notification) {
-      let toast = $(`<div class="ow-notification-toast ${data.notification.level}"
+      let toast =
+        $(`<div class="ow-notification-toast ${data.notification.level}"
                                 data-location="${convertAbsoluteURLToRelativeURL(data.notification.target_url)}"
                                 id="ow-${data.notification.id}">
                                 <div class="icon ow-notify-close btn" role="button" tabindex="1"></div>
