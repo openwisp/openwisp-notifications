@@ -87,14 +87,46 @@ class NotificationPreferenceView(LoginRequiredMixin, UserPassesTestMixin, Templa
 
     def test_func(self):
         """
-        This method ensures that only admins can access the view when a custom user ID is provided.
+        Determines whether the current user can view or modify another user's
+        notification preferences.
+
+        Access rules:
+        1. Superusers can always access any user's preferences.
+        2. Users can access their own preferences.
+        3. Staff users can access another user's preferences if all of the following are true:
+           - They have the 'change_notificationsetting' permission.
+           - They manage at least one organization that the target user belongs to.
+
+        Returns:
+            bool: True if access is allowed, False otherwise.
         """
-        if "pk" in self.kwargs:
-            return (
-                self.request.user.is_superuser
-                or self.request.user.id == self.kwargs.get("pk")
-            )
-        return True
+        user = self.request.user
+        target_user_id = self.kwargs.get("pk")
+        target_user = (
+            User.objects.filter(id=target_user_id).first() if target_user_id else None
+        )
+
+        # Superusers always have access
+        if user.is_superuser:
+            return True
+
+        # Users can access their own preferences
+        if target_user_id and user.id == target_user_id:
+            return True
+
+        # Staff users with proper permission can access users in their managed orgs
+        if user.is_staff and user.has_perm(
+            "openwisp_notifications.change_notificationsetting"
+        ):
+            admin_orgs = set(user.organizations_managed)
+            target_orgs = set(target_user.organizations_dict.keys())
+
+            # Allow if staff manages at least one org the target user belongs to
+            if admin_orgs.intersection(target_orgs):
+                return True
+
+        # Otherwise, deny access
+        return False
 
 
 @method_decorator(csrf_exempt, name="dispatch")
