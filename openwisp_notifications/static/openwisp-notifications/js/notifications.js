@@ -32,6 +32,10 @@ const owNotificationWindow = {
     // closing the window
     $(window).on("beforeunload", function () {
       owNotificationWindow.remove();
+      // Disconnect websocket to prevent missed notifications during page reload
+      if (typeof notificationSocket !== "undefined") {
+        notificationSocket.close();
+      }
     });
     // Get authority to play notification sound when
     // other windows are closed
