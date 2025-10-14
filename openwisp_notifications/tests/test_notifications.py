@@ -407,7 +407,7 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
         self._create_notification()
         n = notification_queryset.first()
         self.assertEqual(n.level, "info")
-        self.assertEqual(n.verb, "default verb")
+        self.assertEqual(n.resolved_verb, "default verb")
         self.assertIn(
             "Default notification with default verb and level info by", n.message
         )
@@ -470,7 +470,7 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
         self._create_notification()
         n = notification_queryset.first()
         self.assertEqual(n.level, "info")
-        self.assertEqual(n.verb, "generic verb")
+        self.assertEqual(n.resolved_verb, "generic verb")
         expected_output = (
             '<p><a href="https://example.com{user_path}">admin</a></p>'
         ).format(
@@ -573,8 +573,8 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
             "verbose_name": "Test Notification Type",
             "level": "test",
             "verb": "testing",
-            "message": "{notification.verb} initiated by {notification.actor} since {notification}",
-            "email_subject": "[{site.name}] {notification.verb} reported by {notification.actor}",
+            "message": "{notification.resolved_verb} initiated by {notification.actor} since {notification}",
+            "email_subject": "[{site.name}] {notification.resolved_verb} reported by {notification.actor}",
         }
 
         with self.subTest("Registering new notification type"):
@@ -583,7 +583,7 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
             self._create_notification()
             n = notification_queryset.first()
             self.assertEqual(n.level, "test")
-            self.assertEqual(n.verb, "testing")
+            self.assertEqual(n.resolved_verb, "testing")
             self.assertEqual(
                 n.message,
                 "<p>testing initiated by admin since 0\xa0minutes</p>",
@@ -1514,20 +1514,20 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
         default_config = get_notification_configuration("default")
         original_message = default_config["message"]
         original_verb = default_config.get("verb", "default verb")
-        default_config["message"] = "Notification with {notification.verb}"
+        default_config["message"] = "Notification with {notification.resolved_verb}"
         default_config["verb"] = "initial verb"
 
         self._create_notification()
         notification = notification_queryset.first()
 
         with self.subTest("Test initial verb from config"):
-            self.assertEqual(notification.verb, "initial verb")
+            self.assertEqual(notification.resolved_verb, "initial verb")
             self.assertIn("initial verb", notification.message)
 
         with self.subTest("Test verb changes dynamically from config"):
             default_config["verb"] = "updated verb"
             del notification.message
-            self.assertEqual(notification.verb, "updated verb")
+            self.assertEqual(notification.resolved_verb, "updated verb")
             self.assertIn("updated verb", notification.message)
 
         with self.subTest("Test fallback to database verb"):
