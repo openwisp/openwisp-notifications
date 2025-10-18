@@ -220,6 +220,9 @@ tr.org-header {
 #org-panels td:not(:first-child) {
   text-align: center;
 }
+#org-panels h2 {
+  border: 0 none;
+}
 .no-settings,
 .no-organizations {
   padding: 10px;

@@ -69,7 +69,7 @@
   display: none;
   cursor: pointer;
   border: #fff solid 1px;
-  padding: 0.5em 1em 0.5em 1.1em;
+  padding: 0.3em 0 0.3em 1em;
   border-radius: 4px;
   font-size: 12px;
   border-color: rgba(0, 0, 0, 0.25);
@@ -109,13 +109,14 @@
   font-weight: 500;
 }
 .ow-notification-toast .ow-notify-close.btn {
-  min-width: 12px;
-  min-height: 12px;
+  min-width: 28px;
+  min-height: 30px;
   float: right;
   position: relative;
-  right: -2px;
-  bottom: -3px;
+  right: 0;
+  top: 1px;
   background-size: 9px;
+  background-position: 35% 50%;
 }
 .ow-notification-toast.info .icon {
   filter: invert(30%) sepia(3%);
