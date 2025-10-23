@@ -2,6 +2,7 @@ import uuid
 from datetime import datetime
 from unittest.mock import patch
 
+from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
 from django.core.cache import cache
 from django.test import TransactionTestCase
@@ -1286,6 +1287,206 @@ class TestNotificationApi(
             url = self._get_path("org_notification_setting", inactive_org.pk)
             response = self.client.get(url)
             self.assertEqual(response.status_code, 404)
+
+    def _add_permission(self, user, perm_codename):
+        perm = Permission.objects.get(codename=perm_codename)
+        user.user_permissions.add(perm)
+        user.save()
+
+    def _permissions_setUp(self):
+        self.staff_with_perm = self._create_user(
+            is_staff=True,
+            username="staff_with_perm",
+            email="staff_with_perm@example.com",
+        )
+        self.staff_without_perm = self._create_user(
+            is_staff=True,
+            username="staff_without_perm",
+            email="staff_without_perm@example.com",
+        )
+
+        # Give permission only to one staff user
+        self._add_permission(self.staff_with_perm, "change_notificationsetting")
+
+    def test_staff_user_access_own_notifications(self):
+        """Test that a staff user can access their own notification settings if they have permission"""
+
+        self._permissions_setUp()
+        user = self.staff_with_perm
+
+        url_list = reverse(
+            "notifications:user_notification_setting_list",
+            kwargs={
+                "user_id": self.staff_with_perm.id,
+            },
+        )
+
+        notification_setting_staff_with_perm = NotificationSetting.objects.create(
+            user=self.staff_with_perm, type="default", web=True, email=True
+        )
+
+        url_setting = reverse(
+            "notifications:user_notification_setting",
+            kwargs={
+                "user_id": self.staff_with_perm.id,
+                "pk": notification_setting_staff_with_perm.id,
+            },
+        )
+
+        self.client.force_login(user)
+
+        # The user should be able to access the list and detail views
+        response = self.client.get(url_list)
+        self.assertEqual(response.status_code, 200)
+
+        response = self.client.get(url_setting)
+        self.assertEqual(response.status_code, 200)
+
+    def test_staff_user_access_own_notifications_no_perm(self):
+        """Test that a staff user can access their own notification
+        settings even without explicit permission"""
+
+        self._permissions_setUp()
+        user = self.staff_without_perm
+
+        url_list = reverse(
+            "notifications:user_notification_setting_list",
+            kwargs={
+                "user_id": self.staff_without_perm.id,
+            },
+        )
+
+        notification_setting_staff_without_perm = NotificationSetting.objects.create(
+            user=self.staff_without_perm, type="default", web=True, email=True
+        )
+
+        url_setting = reverse(
+            "notifications:user_notification_setting",
+            kwargs={
+                "user_id": self.staff_without_perm.id,
+                "pk": notification_setting_staff_without_perm.id,
+            },
+        )
+
+        self.client.force_login(user)
+
+        # The user should be able to access their own list and detail views
+        response = self.client.get(url_list)
+        self.assertEqual(response.status_code, 200)
+
+        response = self.client.get(url_setting)
+        self.assertEqual(response.status_code, 200)
+
+    def test_staff_user_access_managed_org_user_notifications(self):
+        """Test that a staff user with permission can access
+        notification settings of users in organizations they manage"""
+
+        self._permissions_setUp()
+        user_of_org = self._create_user(
+            is_staff=False, username="user_of_org", email="user_of_org@example.com"
+        )
+
+        org = self._create_org(name="test1-org", slug="default")
+        org.add_user(self.staff_with_perm, is_admin=True)
+        org.add_user(user_of_org, is_admin=False)
+
+        url_list = reverse(
+            "notifications:user_notification_setting_list",
+            kwargs={"user_id": user_of_org.id},
+        )
+
+        notification_setting_user_of_org = NotificationSetting.objects.create(
+            user=user_of_org, type="default", web=True, email=True
+        )
+
+        url_setting = reverse(
+            "notifications:user_notification_setting",
+            kwargs={
+                "user_id": user_of_org.id,
+                "pk": notification_setting_user_of_org.id,
+            },
+        )
+
+        self.client.force_login(self.staff_with_perm)
+
+        # Staff user should have access because they manage the organization
+        response = self.client.get(url_list)
+        self.assertEqual(response.status_code, 200)
+
+        response = self.client.get(url_setting)
+        self.assertEqual(response.status_code, 200)
+
+    def test_staff_user_no_access_to_unmanaged_org_user_notifications(self):
+        """Test that staff users without permission or not managing the
+        organization cannot access notification settings of other users"""
+
+        self._permissions_setUp()
+        # Case 1: Staff user without permission trying to access user in their org
+        user_of_org1 = self._create_user(
+            is_staff=False, username="user_of_org1", email="user_of_org1@example.com"
+        )
+
+        org1 = self._create_org(name="test1-org", slug="default")
+        org1.add_user(self.staff_without_perm, is_admin=True)
+        org1.add_user(user_of_org1, is_admin=False)
+
+        url = reverse(
+            "notifications:user_notification_setting_list",
+            kwargs={"user_id": user_of_org1.id},
+        )
+
+        self.client.force_login(self.staff_without_perm)
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 403)
+
+        # Case 2: Staff user with permission but not managing the
+        # organization trying to access user in that org
+        user_of_org2 = self._create_user(
+            is_staff=False, username="user_of_org2", email="user_of_org2@example.com"
+        )
+
+        staff_with_perm_but_not_owner_of_org2 = self._create_user(
+            is_staff=True,
+            username="staff_with_perm_but_now_owner_of_org2",
+            email="staff_with_perm_but_now_owner_of_org2@example.com",
+        )
+
+        self._add_permission(
+            staff_with_perm_but_not_owner_of_org2, "change_notificationsetting"
+        )
+
+        org2 = self._create_org(name="test2-org", slug="default")
+        org2.add_user(self.staff_with_perm, is_admin=True)
+        org2.add_user(staff_with_perm_but_not_owner_of_org2, is_admin=False)
+        org2.add_user(user_of_org2, is_admin=False)
+
+        url = reverse(
+            "notifications:user_notification_setting_list",
+            kwargs={"user_id": user_of_org2.id},
+        )
+
+        self.client.force_login(staff_with_perm_but_not_owner_of_org2)
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 403)
+
+        # Case 3: Staff user with permission trying to access user not in any managed org
+        not_user_of_org3 = self._create_user(
+            is_staff=False,
+            username="not_user_of_org3",
+            email="not_user_of_org3@example.com",
+        )
+
+        org3 = self._create_org(name="test3-org", slug="default")
+        org3.add_user(self.staff_with_perm, is_admin=True)
+
+        url = reverse(
+            "notifications:user_notification_setting_list",
+            kwargs={"user_id": not_user_of_org3.id},
+        )
+
+        self.client.force_login(self.staff_with_perm)
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 403)
 
 
 class TestMultitenancyApi(
