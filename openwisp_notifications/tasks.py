@@ -1,6 +1,7 @@
 import logging
 from datetime import timedelta
 
+import django
 from celery import shared_task
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
@@ -94,16 +95,33 @@ def create_notification_settings(user, organizations, notification_types):
             except ObjectDoesNotExist:
                 email = app_settings.WEB_ENABLED
                 web = app_settings.EMAIL_ENABLED
-            NotificationSetting.objects.update_or_create(
-                defaults={
-                    "deleted": False,
-                    "email": None if email else False,
-                    "web": None if web else False,
-                },
-                user=user,
-                type=type,
-                organization=org,
-            )
+            if django.VERSION <= (5, 0):
+                # TODO: Remove this condition when support for Django 4.2 is dropped
+                updated = NotificationSetting.objects.filter(
+                    user=user, type=type, organization=org
+                ).update(deleted=False)
+                if not updated:
+                    # Create notification setting if it does not exist
+                    NotificationSetting.objects.create(
+                        user=user,
+                        type=type,
+                        organization=org,
+                        email=None if email else False,
+                        web=None if web else False,
+                        deleted=False,
+                    )
+            else:
+                NotificationSetting.objects.update_or_create(
+                    create_defaults={
+                        "deleted": False,
+                        "email": None if email else False,
+                        "web": None if web else False,
+                    },
+                    defaults={"deleted": False},
+                    user=user,
+                    type=type,
+                    organization=org,
+                )
 
 
 @shared_task(base=OpenwispCeleryTask)
