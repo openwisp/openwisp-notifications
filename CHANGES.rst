@@ -6,6 +6,15 @@ Version 1.3.0 [unreleased]
 
 Work in progress.
 
+Version 1.2.1 [2025-11-27]
+--------------------------
+
+Bugfixes
+~~~~~~~~
+
+- Fixed accidental overwriting of user preferences `#427
+  <https://github.com/openwisp/openwisp-notifications/issues/427>`_
+
 Version 1.2.0 [2025-10-23]
 --------------------------
 
