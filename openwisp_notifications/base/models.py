@@ -101,6 +101,17 @@ class AbstractNotification(UUIDModel, BaseNotification):
     _action_object = BaseNotification.action_object
     _target = BaseNotification.target
 
+    @property
+    def resolved_verb(self):
+        config = {}
+        try:
+            config = get_notification_configuration(self.type)
+        except NotificationRenderException as e:
+            logger.error(
+                "Couldn't get notification config for type %s : %s", self.type, e
+            )
+        return config.get("verb") or self.verb
+
     class Meta(BaseNotification.Meta):
         abstract = True
 
