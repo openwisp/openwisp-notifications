@@ -563,6 +563,24 @@ function getAbsoluteUrl(url) {
       });
 
       $menu.find("button").on("click", function () {
+        var $webToggle = $(".global-setting-dropdown[data-web-state]").find(".global-setting-dropdown-toggle");
+        var $emailToggle = $(".global-setting-dropdown[data-email-state]").find(".global-setting-dropdown-toggle");
+        var currentWeb = $webToggle.attr("data-state") === "on";
+        var currentEmail = $emailToggle.attr("data-state") === "on";
+        var selectedWeb = currentWeb;
+        var selectedEmail = currentEmail;
+
+        if ($(this).attr("data-web-state")) {
+          selectedWeb = $(this).attr("data-web-state") === "Yes";
+        } else if ($(this).attr("data-email-state")) {
+          selectedEmail = $(this).attr("data-email-state") === "Yes";
+        }
+
+        if (selectedWeb === currentWeb && selectedEmail === currentEmail) {
+          closeAllDropdowns();
+          return;
+        }
+
         activeDropdown = $dropdown;
         selectedOptionText = $(this).text().trim();
         selectedOptionElement = $(this);

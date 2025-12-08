@@ -459,10 +459,11 @@ class AbstractNotificationSetting(UUIDModel):
                     if not self.web:
                         updates["email"] = False
 
-                    # Update email notifiations only if it's different from the previous state
-                    # Otherwise, it would overwrite the email notification settings for specific
-                    # setting that were enabled by the user after disabling global email notifications
-                    if self.email != previous_state.email:
+                    # When disabling global email notifications, force disable all email notifications
+                    # to ensure consistency and prevent organization-level overrides from remaining enabled
+                    if not self.email:
+                        updates["email"] = False
+                    elif self.email != previous_state.email:
                         updates["email"] = self.email
 
                     self.user.notificationsetting_set.exclude(pk=self.pk).update(
