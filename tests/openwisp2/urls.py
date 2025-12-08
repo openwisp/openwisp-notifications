@@ -2,9 +2,14 @@ import os
 
 from django.contrib import admin
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
+from django.shortcuts import redirect
 from django.urls import include, path
 
+def home(request):
+    return redirect('admin:index')
+
 urlpatterns = [
+    path("", home, name="home"),
     path("admin/", admin.site.urls),
     path("accounts/", include("allauth.urls")),
     path("api/v1/", include("openwisp_utils.api.urls")),

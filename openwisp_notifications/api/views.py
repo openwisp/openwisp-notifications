@@ -145,6 +145,16 @@ class NotificationSettingListView(BaseNotificationSettingView, ListModelMixin):
 class NotificationSettingView(BaseNotificationSettingView, RetrieveUpdateAPIView):
     lookup_field = "pk"
 
+    def get_object(self):
+        if self.kwargs["pk"] == "null":
+            # Handle global setting (organization=None, type=None)
+            return get_object_or_404(
+                self.get_queryset(),
+                organization__isnull=True,
+                type__isnull=True
+            )
+        return super().get_object()
+
 
 class BaseIgnoreObjectNotificationView(GenericAPIView):
     model = IgnoreObjectNotification
