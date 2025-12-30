@@ -94,16 +94,21 @@ def create_notification_settings(user, organizations, notification_types):
             except ObjectDoesNotExist:
                 email = app_settings.WEB_ENABLED
                 web = app_settings.EMAIL_ENABLED
-            NotificationSetting.objects.update_or_create(
-                defaults={
-                    "deleted": False,
-                    "email": None if email else False,
-                    "web": None if web else False,
-                },
-                user=user,
-                type=type,
-                organization=org,
-            )
+            # If NotificationSetting already exists, then we ensure it is not marked deleted
+            updated = NotificationSetting.objects.filter(
+                user=user, type=type, organization=org
+            ).update(deleted=False)
+            if not updated:
+                # "updated" will be 0 if no NotificationSetting was found.
+                # In this case, we create a new NotificationSetting.
+                NotificationSetting.objects.create(
+                    user=user,
+                    type=type,
+                    organization=org,
+                    email=None if email else False,
+                    web=None if web else False,
+                    deleted=False,
+                )
 
 
 @shared_task(base=OpenwispCeleryTask)

@@ -2,8 +2,8 @@ import base64
 import json
 import logging
 
+from allauth.account.internal.flows import email_verification
 from allauth.account.models import EmailAddress
-from allauth.account.utils import send_email_confirmation
 from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
@@ -50,7 +50,9 @@ def resend_verification_email(request):
         messages.warning(request, _("Your email is already verified."))
     # if email is not verified, resend verification email
     elif email_address and not email_address.verified:
-        send_email_confirmation(request, user, email=email_address.email)
+        email_verification.send_verification_email_to_address(
+            request, address=email_address
+        )
     # block malicious redirect attempts
     redirect_to = request.GET.get("next", reverse("admin:index"))
     if not is_safe_url(redirect_to, allowed_hosts={request.get_host()}):

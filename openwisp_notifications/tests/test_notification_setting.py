@@ -95,12 +95,23 @@ class TestNotificationSetting(TestOrganizationMixin, TransactionTestCase):
 
     @mock_notification_types
     def test_post_migration_handler(self):
+        """
+        Tests notification_type_registered_unregistered_handler for:
+        1. Soft-deleting NotificationSettings when notification types are unregistered
+        2. Auto-creating NotificationSettings for newly registered notification types
+        3. Preserving existing user preferences during handler execution
+        """
         from openwisp_notifications.types import NOTIFICATION_CHOICES
 
         # Simulates loading of app when Django server starts
         admin = self._get_admin()
         org_user = self._create_staff_org_admin()
+        register_notification_type("test_unmodified", test_notification_type)
         self.assertEqual(ns_queryset.count(), 3)
+        # Disable notifications to test preservation of user preferences
+        NotificationSetting.objects.filter(
+            type__in=["test_unmodified", "default"], user=admin
+        ).update(email=False, web=False)
 
         base_unregister_notification_type("default")
         base_register_notification_type("test", test_notification_type)
@@ -142,6 +153,23 @@ class TestNotificationSetting(TestOrganizationMixin, TransactionTestCase):
                 user=org_user.user, type=None, organization=None
             ).count(),
             1,
+        )
+        # "test_unmodified" notifications should be disabled
+        self.assertEqual(
+            NotificationSetting.objects.filter(
+                user=admin,
+                type="test_unmodified",
+                web=False,
+                email=False,
+                deleted=False,
+            ).count(),
+            2,
+        )
+        self.assertEqual(
+            NotificationSetting.objects.filter(
+                user=admin, type="default", web=False, email=False, deleted=True
+            ).count(),
+            2,
         )
 
     def test_superuser_demoted_to_user(self):
