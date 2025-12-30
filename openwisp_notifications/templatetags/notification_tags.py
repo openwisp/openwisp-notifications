@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
+import swapper
 from django.core.cache import cache
 from django.template import Library
 from django.utils.html import format_html
 
-from openwisp_notifications.swapper import load_model
 from openwisp_notifications.utils import normalize_unread_count
 
-Notification = load_model("Notification")
+Notification = swapper.load_model("openwisp_notifications", "Notification")
+User = swapper.load_model("openwisp_users", "User")
+Organization = swapper.load_model("openwisp_users", "Organization")
 
 register = Library()
 
@@ -26,6 +28,7 @@ def get_notifications_count(context):
     return count
 
 
+@register.simple_tag(takes_context=True)
 def unread_notifications(context):
     count = get_notifications_count(context)
     output = ""
@@ -44,4 +47,26 @@ def should_load_notifications_widget(request):
     )
 
 
-register.simple_tag(takes_context=True)(unread_notifications)
+@register.simple_tag(takes_context=True)
+def can_change_notifications(context):
+    """
+    Template tag to determine whether the "Notification Preferences" button
+    should be rendered in the UI.
+
+    The button is shown if:
+    - The user is a superuser, OR
+    - The user is viewing their own preferences (matches 'user_id' in context), OR
+    - The user is staff AND has the 'change_notificationsetting' permission.
+
+    Returns:
+        bool: True if the button should be displayed, False otherwise.
+    """
+    user = context["request"].user
+    return (
+        user.is_superuser
+        or user.id == context.get("user_id")
+        or (
+            user.is_staff
+            and user.has_perm("openwisp_notifications.change_notificationsetting")
+        )
+    )
