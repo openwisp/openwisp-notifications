@@ -18,6 +18,9 @@ from openwisp_notifications.api.views import (
     NotificationReadAllView as BaseNotificationReadAllView,
 )
 from openwisp_notifications.api.views import (
+    NotificationReadRedirect as BaseNotificationReadRedirect,
+)
+from openwisp_notifications.api.views import (
     NotificationSettingListView as BaseNotificationSettingListView,
 )
 from openwisp_notifications.api.views import (
@@ -25,6 +28,9 @@ from openwisp_notifications.api.views import (
 )
 from openwisp_notifications.api.views import (
     OrganizationNotificationSettingView as BaseOrganizationNotificationSettingView,
+)
+from openwisp_notifications.api.views import (
+    UserOrgNotificationSettingView as BaseUserOrgNotificationSettingView,
 )
 
 
@@ -53,6 +59,10 @@ class NotificationReadAllView(BaseNotificationReadAllView):
     pass
 
 
+class NotificationReadRedirect(BaseNotificationReadRedirect):
+    pass
+
+
 class NotificationSettingView(BaseNotificationSettingView):
     """
     Retrives details for a notification setting and provides
@@ -67,6 +77,10 @@ class NotificationSettingListView(BaseNotificationSettingListView):
     Lists user's notification settings.
     """
 
+    pass
+
+
+class UserOrgNotificationSettingView(BaseUserOrgNotificationSettingView):
     pass
 
 
@@ -94,3 +108,15 @@ class OrganizationNotificationSettingView(BaseOrganizationNotificationSettingVie
     """
 
     pass
+
+
+notifications_list = NotificationListView.as_view()
+notification_detail = NotificationDetailView.as_view()
+notifications_read_all = NotificationReadAllView.as_view()
+notification_read_redirect = NotificationReadRedirect.as_view()
+notification_setting_list = NotificationSettingListView.as_view()
+notification_setting = NotificationSettingView.as_view()
+user_org_notification_setting = UserOrgNotificationSettingView.as_view()
+org_notification_setting = OrganizationNotificationSettingView.as_view()
+ignore_object_notification_list = IgnoreObjectNotificationListView.as_view()
+ignore_object_notification = IgnoreObjectNotificationView.as_view()
