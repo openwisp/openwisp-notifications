@@ -1,10 +1,74 @@
 Changelog
 =========
 
-Version 1.2.0 [Unreleased]
+Version 1.3.0 [unreleased]
 --------------------------
 
 Work in progress.
+
+Version 1.2.1 [2025-11-27]
+--------------------------
+
+Bugfixes
+~~~~~~~~
+
+- Fixed accidental overwriting of user preferences `#427
+  <https://github.com/openwisp/openwisp-notifications/issues/427>`_
+
+Version 1.2.0 [2025-10-23]
+--------------------------
+
+Features
+~~~~~~~~
+
+- Added `dedicated notification preferences page
+  <https://openwisp.io/docs/dev/notifications/user/notification-preferences.html>`_.
+- Added `organization notification settings
+  <https://openwisp.io/docs/dev/notifications/user/notification-preferences.html#organization-settings>`_.
+- Added `Email Batch Summary
+  <https://openwisp.io/docs/dev/notifications/user/web-email-notifications.html#email-batches>`_.
+- Added email verification warning `#281
+  <https://github.com/openwisp/openwisp-notifications/issues/281>`_.
+
+Changes
+~~~~~~~
+
+Other changes
++++++++++++++
+
+- Improved UI of email notifications.
+- Disallowed changing preferences for ``generic_message`` notification
+  type `#359
+  <https://github.com/openwisp/openwisp-notifications/issues/359>`_.
+- Dropped dependency on ``django-notifications`` `#353
+  <https://github.com/openwisp/openwisp-notifications/issues/353>`_.
+- Removed deprecated code for updating superuser notification settings
+  `#283 <https://github.com/openwisp/openwisp-notifications/issues/283>`_.
+
+Dependencies
+++++++++++++
+
+- Bumped ``openwisp-users~=1.2.0``.
+- Bumped ``openwisp-utils~=1.2.0``.
+- Bumped ``markdown~=3.9``.
+- Added support for Django ``5.x``.
+- Added support for Python ``3.11``, ``3.12``, and ``3.13``.
+- Dropped support for Django ``3.2`` and ``4.1``.
+- Dropped support for Python ``3.8``.
+
+Bugfixes
+~~~~~~~~
+
+- Prevented notification toast from appearing while leaving a page `#264
+  <https://github.com/openwisp/openwisp-notifications/issues/264>`_.
+- Ensured notification widget closes only on user-initiated clicks.
+- Fixed notification widget loading on non-admin pages `#271
+  <https://github.com/openwisp/openwisp-notifications/issues/271>`_.
+- Allowed overriding ``openwisp_users`` app label in tests.
+- Hid notification preferences for disabled organizations `#366
+  <https://github.com/openwisp/openwisp-notifications/issues/366>`_.
+- Fixed JavaScript logic for creating notification toasts.
+- Fixed issue with notification widget removing URL fragments.
 
 Version 1.1.1 [2025-01-31]
 --------------------------

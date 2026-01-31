@@ -4,7 +4,6 @@ import uuid
 
 import django.db.models.deletion
 import django.utils.timezone
-import jsonfield.fields
 import model_utils.fields
 from django.conf import settings
 from django.db import migrations, models
@@ -160,9 +159,7 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "data",
-                    jsonfield.fields.JSONField(
-                        blank=True, null=True, verbose_name="data"
-                    ),
+                    models.JSONField(blank=True, null=True, verbose_name="data"),
                 ),
                 (
                     "id",
