@@ -120,11 +120,12 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
         # Using gettext_lazy in notification data should not fail
         notification_options = dict(
             sender=self.admin,
-            description="Test Notification",
-            verb="Test Notification",
-            email_subject="Test Email subject",
+            description=gettext_lazy("Test Notification"),
+            verb=gettext_lazy("Test Notification"),
+            email_subject=gettext_lazy("Test Email subject"),
             url="https://localhost:8000/admin",
             message=gettext_lazy("Translated message"),
+            random=gettext_lazy("any extra kwargs is evaluated"),
         )
         # Must not raise TypeError: Object of type __proxy__ is not JSON serializable
         notify.send(**notification_options)

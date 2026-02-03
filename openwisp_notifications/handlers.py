@@ -162,10 +162,6 @@ def notify_handler(**kwargs):
                     ContentType.objects.get_for_model(obj),
                 )
         if kwargs:
-            # Coerce lazy translation strings in message to plain strings
-            # to avoid JSON serialization errors with Django's JSONField
-            if "message" in kwargs and not isinstance(kwargs["message"], str):
-                kwargs["message"] = str(kwargs["message"])
             notification.data = kwargs
         notification.save()
         notification_list.append(notification)
