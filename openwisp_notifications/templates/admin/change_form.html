@@ -15,15 +15,15 @@
     <script>
       const owNotifyAppLabel = '{{ opts.app_label }}',
             owNotifyModelName = '{{ opts.model_name }}',
-            uuidRegex = /\/((\w{4,12}-?)){5}\//,
+            uuidRegex= /\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i//,
             owIsChangeForm = true;
       let objectId;
       try{
-        objectId = uuidRegex.exec(window.location)[0];
+        objectId = uuidRegex.exec(window.location.pathname)[0];
       }
       catch(error){
         try{
-          objectId = /\/(\d+)\//.exec(window.location)[0];
+          objectId = /\/(\d+)\//.exec(window.location.pathname)[0];
         }
         catch(error){
           throw error;
