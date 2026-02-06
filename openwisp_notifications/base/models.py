@@ -297,23 +297,28 @@ class AbstractNotification(UUIDModel, BaseNotification):
 
     @cached_property
     def email_subject(self):
-        if self.type:
-            try:
-                config = get_notification_configuration(self.type)
-                data = self.data or {}
-                return config["email_subject"].format(
-                    site=Site.objects.get_current(), notification=self, **data
-                )
-            except (AttributeError, KeyError, NotificationRenderException) as exception:
-                self._invalid_notification(
-                    self.pk,
-                    exception,
-                    "Error encountered in generating notification email",
-                )
-        elif self.data.get("email_subject", None):
-            return self.data.get("email_subject")
-        else:
-            return self.message
+        with notification_render_attributes(self):
+            if self.type:
+                try:
+                    config = get_notification_configuration(self.type)
+                    data = self.data or {}
+                    return config["email_subject"].format(
+                        site=Site.objects.get_current(), notification=self, **data
+                    )
+                except (
+                    AttributeError,
+                    KeyError,
+                    NotificationRenderException,
+                ) as exception:
+                    self._invalid_notification(
+                        self.pk,
+                        exception,
+                        "Error encountered in generating notification email",
+                    )
+            elif self.data.get("email_subject", None):
+                return self.data.get("email_subject")
+            else:
+                return self.message
 
     def _related_object(self, field):
         obj_id = getattr(self, f"{field}_object_id")
