@@ -24,6 +24,7 @@ from freezegun import freeze_time
 
 from openwisp_notifications import settings as app_settings
 from openwisp_notifications import tasks, utils
+from openwisp_notifications.base.models import notification_render_attributes
 from openwisp_notifications.exceptions import NotificationRenderException
 from openwisp_notifications.handlers import (
     notify_handler,
@@ -431,7 +432,8 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
         self._create_notification()
         n = notification_queryset.first()
         self.assertEqual(n.level, "info")
-        self.assertEqual(n.verb, "default verb")
+        with notification_render_attributes(n) as rendered:
+            self.assertEqual(rendered.verb, "default verb")
         self.assertIn(
             "Default notification with default verb and level info by", n.message
         )
@@ -494,7 +496,8 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
         self._create_notification()
         n = notification_queryset.first()
         self.assertEqual(n.level, "info")
-        self.assertEqual(n.verb, "generic verb")
+        with notification_render_attributes(n) as rendered:
+            self.assertEqual(rendered.verb, "generic verb")
         expected_output = (
             '<p><a href="https://example.com{user_path}">admin</a></p>'
         ).format(
@@ -607,7 +610,8 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
             self._create_notification()
             n = notification_queryset.first()
             self.assertEqual(n.level, "test")
-            self.assertEqual(n.verb, "testing")
+            with notification_render_attributes(n) as rendered:
+                self.assertEqual(rendered.verb, "testing")
             self.assertEqual(
                 n.message,
                 "<p>testing initiated by admin since 0\xa0minutes</p>",
@@ -1529,6 +1533,49 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
         with self.subTest("Test invalid user ID"):
             response = self.client.get(reverse(preference_page, args=(uuid4(),)))
             self.assertEqual(response.status_code, 404)
+
+    @mock_notification_types
+    def test_dynamic_verb_changed(self):
+        self.notification_options.update(
+            {"type": "default", "target": self._get_org_user()}
+        )
+        default_config = get_notification_configuration("default")
+        original_message = default_config["message"]
+        original_verb = default_config.get("verb", "default verb")
+        default_config["message"] = "Notification with {notification.verb}"
+        default_config["verb"] = "initial verb"
+
+        self._create_notification()
+        notification = notification_queryset.first()
+
+        with self.subTest("DB does not store default verb"):
+            self.assertIsNone(notification.verb)
+
+        with self.subTest("Initial config verb is rendered"):
+            with notification_render_attributes(notification) as n:
+                self.assertEqual(n.verb, "initial verb")
+                self.assertIn("initial verb", n.message)
+
+        default_config["verb"] = "updated verb"
+        del notification.message
+
+        with self.subTest("Config change affects existing notification"):
+            with notification_render_attributes(notification) as n:
+                self.assertEqual(n.verb, "updated verb")
+                self.assertIn("updated verb", n.message)
+
+        notification.verb = "db verb"
+        notification.save()
+        notification.refresh_from_db()
+        del notification.message
+
+        with self.subTest("DB verb overrides config"):
+            with notification_render_attributes(notification) as n:
+                self.assertEqual(n.verb, "db verb")
+                self.assertIn("db verb", n.message)
+
+        default_config["message"] = original_message
+        default_config["verb"] = original_verb
 
 
 class TestTransactionNotifications(TestOrganizationMixin, TransactionTestCase):

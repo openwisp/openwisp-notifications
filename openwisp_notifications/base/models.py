@@ -62,6 +62,18 @@ def notification_render_attributes(obj, **attrs):
     }
     defaults.update(attrs)
 
+    db_verb = obj.verb
+
+    config = {}
+    if obj.type:
+        try:
+            config = get_notification_configuration(obj.type)
+        except NotificationRenderException as e:
+            logger.error(
+                "Couldn't get notification config for type %s : %s", obj.type, e
+            )
+    obj.verb = db_verb if db_verb is not None else config.get("verb")
+
     for target_attr, source_attr in defaults.items():
         setattr(obj, target_attr, getattr(obj, source_attr))
 
@@ -75,9 +87,11 @@ def notification_render_attributes(obj, **attrs):
     setattr(obj, "target", obj._related_object("target"))
 
     yield obj
+    obj.verb = db_verb
 
     for attr in defaults.keys():
-        delattr(obj, attr)
+        if hasattr(obj, attr):
+            delattr(obj, attr)
 
 
 class AbstractNotification(UUIDModel, BaseNotification):
@@ -283,23 +297,28 @@ class AbstractNotification(UUIDModel, BaseNotification):
 
     @cached_property
     def email_subject(self):
-        if self.type:
-            try:
-                config = get_notification_configuration(self.type)
-                data = self.data or {}
-                return config["email_subject"].format(
-                    site=Site.objects.get_current(), notification=self, **data
-                )
-            except (AttributeError, KeyError, NotificationRenderException) as exception:
-                self._invalid_notification(
-                    self.pk,
-                    exception,
-                    "Error encountered in generating notification email",
-                )
-        elif self.data.get("email_subject", None):
-            return self.data.get("email_subject")
-        else:
-            return self.message
+        with notification_render_attributes(self):
+            if self.type:
+                try:
+                    config = get_notification_configuration(self.type)
+                    data = self.data or {}
+                    return config["email_subject"].format(
+                        site=Site.objects.get_current(), notification=self, **data
+                    )
+                except (
+                    AttributeError,
+                    KeyError,
+                    NotificationRenderException,
+                ) as exception:
+                    self._invalid_notification(
+                        self.pk,
+                        exception,
+                        "Error encountered in generating notification email",
+                    )
+            elif self.data.get("email_subject", None):
+                return self.data.get("email_subject")
+            else:
+                return self.message
 
     def _related_object(self, field):
         obj_id = getattr(self, f"{field}_object_id")
