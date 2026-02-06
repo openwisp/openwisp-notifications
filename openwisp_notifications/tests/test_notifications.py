@@ -432,7 +432,8 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
         self._create_notification()
         n = notification_queryset.first()
         self.assertEqual(n.level, "info")
-        self.assertEqual(n.verb, "default verb")
+        with notification_render_attributes(n) as rendered:
+            self.assertEqual(rendered.verb, "default verb")
         self.assertIn(
             "Default notification with default verb and level info by", n.message
         )
@@ -495,7 +496,8 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
         self._create_notification()
         n = notification_queryset.first()
         self.assertEqual(n.level, "info")
-        self.assertEqual(n.verb, "generic verb")
+        with notification_render_attributes(n) as rendered:
+            self.assertEqual(rendered.verb, "generic verb")
         expected_output = (
             '<p><a href="https://example.com{user_path}">admin</a></p>'
         ).format(
@@ -608,7 +610,8 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
             self._create_notification()
             n = notification_queryset.first()
             self.assertEqual(n.level, "test")
-            self.assertEqual(n.verb, "testing")
+            with notification_render_attributes(n) as rendered:
+                self.assertEqual(rendered.verb, "testing")
             self.assertEqual(
                 n.message,
                 "<p>testing initiated by admin since 0\xa0minutes</p>",
@@ -1545,29 +1548,31 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
         self._create_notification()
         notification = notification_queryset.first()
 
-        with self.subTest("Test verb is saved as plain string"):
-            self.assertEqual(notification.verb, "initial verb")
-            self.assertIsInstance(notification.verb, str)
+        with self.subTest("DB does not store default verb"):
+            self.assertIsNone(notification.verb)
 
-        with self.subTest("Test verb renders correctly in message"):
-            self.assertIn("initial verb", notification.message)
+        with self.subTest("Initial config verb is rendered"):
+            with notification_render_attributes(notification) as n:
+                self.assertEqual(n.verb, "initial verb")
+                self.assertIn("initial verb", n.message)
 
-        with self.subTest("Test config verb is used as fallback when db verb is None"):
-            default_config["verb"] = "updated verb"
-            notification.verb = None
-            notification.save()
-            notification.refresh_from_db()
-            del notification.message
+        default_config["verb"] = "updated verb"
+        del notification.message
+
+        with self.subTest("Config change affects existing notification"):
             with notification_render_attributes(notification) as n:
                 self.assertEqual(n.verb, "updated verb")
                 self.assertIn("updated verb", n.message)
 
-        with self.subTest("Test db verb takes precedence over config verb"):
-            notification.verb = "db verb"
-            notification.save()
-            notification.refresh_from_db()
+        notification.verb = "db verb"
+        notification.save()
+        notification.refresh_from_db()
+        del notification.message
+
+        with self.subTest("DB verb overrides config"):
             with notification_render_attributes(notification) as n:
                 self.assertEqual(n.verb, "db verb")
+                self.assertIn("db verb", n.message)
 
         default_config["message"] = original_message
         default_config["verb"] = original_verb
