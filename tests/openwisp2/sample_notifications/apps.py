@@ -24,7 +24,7 @@ class SampleNotificationsConfig(OpenwispNotificationsConfig):
                 "verbose_name": "Object created",
                 "verb": "created",
                 "level": "info",
-                "message": "{notification.target} object {notification.resolved_verb}.",
+                "message": "{notification.target} object {notification.verb}.",
                 "email_subject": "[{site.name}] INFO: {notification.target} created",
             },
         )

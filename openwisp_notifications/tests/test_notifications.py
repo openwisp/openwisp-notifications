@@ -22,6 +22,7 @@ from freezegun import freeze_time
 
 from openwisp_notifications import settings as app_settings
 from openwisp_notifications import tasks, utils
+from openwisp_notifications.base.models import notification_render_attributes
 from openwisp_notifications.exceptions import NotificationRenderException
 from openwisp_notifications.handlers import (
     notify_handler,
@@ -407,7 +408,7 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
         self._create_notification()
         n = notification_queryset.first()
         self.assertEqual(n.level, "info")
-        self.assertEqual(n.resolved_verb, "default verb")
+        self.assertEqual(n.verb, "default verb")
         self.assertIn(
             "Default notification with default verb and level info by", n.message
         )
@@ -470,7 +471,7 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
         self._create_notification()
         n = notification_queryset.first()
         self.assertEqual(n.level, "info")
-        self.assertEqual(n.resolved_verb, "generic verb")
+        self.assertEqual(n.verb, "generic verb")
         expected_output = (
             '<p><a href="https://example.com{user_path}">admin</a></p>'
         ).format(
@@ -573,8 +574,8 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
             "verbose_name": "Test Notification Type",
             "level": "test",
             "verb": "testing",
-            "message": "{notification.resolved_verb} initiated by {notification.actor} since {notification}",
-            "email_subject": "[{site.name}] {notification.resolved_verb} reported by {notification.actor}",
+            "message": "{notification.verb} initiated by {notification.actor} since {notification}",
+            "email_subject": "[{site.name}] {notification.verb} reported by {notification.actor}",
         }
 
         with self.subTest("Registering new notification type"):
@@ -583,7 +584,7 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
             self._create_notification()
             n = notification_queryset.first()
             self.assertEqual(n.level, "test")
-            self.assertEqual(n.resolved_verb, "testing")
+            self.assertEqual(n.verb, "testing")
             self.assertEqual(
                 n.message,
                 "<p>testing initiated by admin since 0\xa0minutes</p>",
@@ -1514,26 +1515,35 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
         default_config = get_notification_configuration("default")
         original_message = default_config["message"]
         original_verb = default_config.get("verb", "default verb")
-        default_config["message"] = "Notification with {notification.resolved_verb}"
+        default_config["message"] = "Notification with {notification.verb}"
         default_config["verb"] = "initial verb"
 
         self._create_notification()
         notification = notification_queryset.first()
 
-        with self.subTest("Test initial verb from config"):
-            self.assertEqual(notification.resolved_verb, "initial verb")
+        with self.subTest("Test verb is saved as plain string"):
+            self.assertEqual(notification.verb, "initial verb")
+            self.assertIsInstance(notification.verb, str)
+
+        with self.subTest("Test verb renders correctly in message"):
             self.assertIn("initial verb", notification.message)
 
-        with self.subTest("Test verb changes dynamically from config"):
+        with self.subTest("Test config verb is used as fallback when db verb is None"):
             default_config["verb"] = "updated verb"
+            notification.verb = None
+            notification.save()
+            notification.refresh_from_db()
             del notification.message
-            self.assertEqual(notification.resolved_verb, "updated verb")
-            self.assertIn("updated verb", notification.message)
+            with notification_render_attributes(notification) as n:
+                self.assertEqual(n.verb, "updated verb")
+                self.assertIn("updated verb", n.message)
 
-        with self.subTest("Test fallback to database verb"):
-            unregister_notification_type("default")
-            notification.__dict__["verb"] = "db verb"
-            self.assertEqual(notification.verb, "db verb")
+        with self.subTest("Test db verb takes precedence over config verb"):
+            notification.verb = "db verb"
+            notification.save()
+            notification.refresh_from_db()
+            with notification_render_attributes(notification) as n:
+                self.assertEqual(n.verb, "db verb")
 
         default_config["message"] = original_message
         default_config["verb"] = original_verb

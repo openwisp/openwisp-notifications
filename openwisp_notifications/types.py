@@ -10,7 +10,7 @@ NOTIFICATION_TYPES = {
         "verbose_name": "Default Type",
         "email_subject": "[{site.name}] Default Notification Subject",
         "message": (
-            "Default notification with {notification.resolved_verb} and level {notification.level}"
+            "Default notification with {notification.verb} and level {notification.level}"
             " by [{notification.target}]({notification.target_link})"
         ),
         "message_template": "openwisp_notifications/default_message.md",
@@ -23,7 +23,7 @@ NOTIFICATION_TYPES = {
         "verbose_name": "Generic Type",
         "email_subject": "[{site.name}] Generic Notification Subject",
         "message": (
-            "Generic notification with {notification.resolved_verb} and level {notification.level}"
+            "Generic notification with {notification.verb} and level {notification.level}"
             " by [{notification.actor}]({notification.actor_link})"
         ),
         "description": "{notification.description}",

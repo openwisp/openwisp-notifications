@@ -62,6 +62,18 @@ def notification_render_attributes(obj, **attrs):
     }
     defaults.update(attrs)
 
+    db_verb = obj.verb
+
+    config = {}
+    if obj.type:
+        try:
+            config = get_notification_configuration(obj.type)
+        except NotificationRenderException as e:
+            logger.error(
+                "Couldn't get notification config for type %s : %s", obj.type, e
+            )
+    obj.verb = db_verb if db_verb is not None else config.get("verb")
+
     for target_attr, source_attr in defaults.items():
         setattr(obj, target_attr, getattr(obj, source_attr))
 
@@ -75,9 +87,11 @@ def notification_render_attributes(obj, **attrs):
     setattr(obj, "target", obj._related_object("target"))
 
     yield obj
+    obj.verb = db_verb
 
     for attr in defaults.keys():
-        delattr(obj, attr)
+        if hasattr(obj, attr):
+            delattr(obj, attr)
 
 
 class AbstractNotification(UUIDModel, BaseNotification):
@@ -100,17 +114,6 @@ class AbstractNotification(UUIDModel, BaseNotification):
     _actor = BaseNotification.actor
     _action_object = BaseNotification.action_object
     _target = BaseNotification.target
-
-    @property
-    def resolved_verb(self):
-        config = {}
-        try:
-            config = get_notification_configuration(self.type)
-        except NotificationRenderException as e:
-            logger.error(
-                "Couldn't get notification config for type %s : %s", self.type, e
-            )
-        return config.get("verb") or self.verb
 
     class Meta(BaseNotification.Meta):
         abstract = True
