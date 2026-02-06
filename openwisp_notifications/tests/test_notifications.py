@@ -17,7 +17,9 @@ from django.template import TemplateDoesNotExist
 from django.test import TransactionTestCase
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.functional import Promise
 from django.utils.timesince import timesince
+from django.utils.translation import gettext_lazy
 from freezegun import freeze_time
 
 from openwisp_notifications import settings as app_settings
@@ -51,15 +53,12 @@ from . import (
 )
 
 User = get_user_model()
-
+OrganizationUser = swapper_load_model("openwisp_users", "OrganizationUser")
+Group = swapper_load_model("openwisp_users", "Group")
 Notification = load_model("Notification")
 NotificationSetting = load_model("NotificationSetting")
 NotificationAppConfig = apps.get_app_config(Notification._meta.app_label)
-
-
-OrganizationUser = swapper_load_model("openwisp_users", "OrganizationUser")
-Group = swapper_load_model("openwisp_users", "Group")
-
+# reused across tests
 start_time = timezone.now()
 ten_minutes_ago = start_time - timedelta(minutes=10)
 notification_queryset = Notification.objects.order_by("-timestamp")
@@ -112,6 +111,31 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
         self.assertEqual(n.verb, "Test Notification")
         self.assertEqual(n.message, "Test Notification Description")
         self.assertEqual(n.recipient, self.admin)
+
+    def test_lazy_translation(self):
+        """
+        Regression test for issue #438.
+        Test that notifications with lazy translation objects in data
+        can be saved without raising a TypeError.
+        """
+        # Using gettext_lazy in notification data should not fail
+        notification_options = dict(
+            sender=self.admin,
+            description=gettext_lazy("Test Notification"),
+            verb=gettext_lazy("Test Notification"),
+            email_subject=gettext_lazy("Test Email subject"),
+            url="https://localhost:8000/admin",
+            message=gettext_lazy("Translated message"),
+            random=gettext_lazy("any extra kwargs is evaluated"),
+        )
+        # Must not raise TypeError: Object of type __proxy__ is not JSON serializable
+        notify.send(**notification_options)
+        self.assertEqual(notification_queryset.count(), 1)
+        n = notification_queryset.first()
+        # Verify the message was stored as a plain string, not a proxy object
+        self.assertEqual(n.data.get("message"), "Translated message")
+        # Verify the stored value is not a lazy proxy object
+        self.assertNotIsInstance(n.data.get("message"), Promise)
 
     @mock_notification_types
     def test_create_with_extra_data(self):
