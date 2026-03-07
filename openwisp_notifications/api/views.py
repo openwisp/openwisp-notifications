@@ -130,6 +130,7 @@ class BaseNotificationSettingView(GenericAPIView):
         return NotificationSetting.objects.exclude(
             Q(organization__is_active=False)
             | Q(type__in=app_settings.DISALLOW_PREFERENCES_CHANGE_TYPE)
+            | Q(deleted=True)
         ).filter(user_id=user_id)
 
 
@@ -223,7 +224,7 @@ class UserOrgNotificationSettingView(GenericAPIView):
             validated_data = serializer.validated_data
             NotificationSetting.objects.filter(
                 organization_id=organization_id, user_id=user_id
-            ).update(**validated_data)
+            ).exclude(deleted=True).update(**validated_data)
             return Response(status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
