@@ -819,6 +819,33 @@ class TestNotificationApi(
             )
             self.assertEqual(response.status_code, 404)
 
+    def test_deleted_notification_settings_absent_in_api(self):
+        # Retrieve an existing valid notification setting and soft-delete it
+        setting = self.admin.notificationsetting_set.exclude(
+            type__in=app_settings.DISALLOW_PREFERENCES_CHANGE_TYPE
+        ).first()
+        setting.deleted = True
+        setting.save()
+
+        with self.subTest("deleted setting not present in list view"):
+            path = self._get_path("notification_setting_list")
+            response = self.client.get(path)
+            self.assertEqual(response.status_code, 200)
+            setting_ids = [s["id"] for s in response.data["results"]]
+            self.assertNotIn(str(setting.pk), setting_ids)
+
+        with self.subTest("deleted setting not accessible in detail view"):
+            path = self._get_path("notification_setting", setting.pk)
+            response = self.client.get(path)
+            self.assertEqual(response.status_code, 404)
+
+        with self.subTest("deleted setting absent in update view"):
+            path = self._get_path("notification_setting", setting.pk)
+            response = self.client.put(
+                path, data={"web": False}, content_type="application/json"
+            )
+            self.assertEqual(response.status_code, 404)
+
     def test_notification_redirect_api(self):
         def _unread_notification(notification):
             notification.unread = True
@@ -966,6 +993,30 @@ class TestNotificationApi(
                     user=self.admin, organization_id=org.pk, email=True
                 ).exists()
             )
+
+        with self.subTest("Test bulk update ignores soft-deleted settings"):
+            url = self._get_path("user_org_notification_setting", self.admin.pk, org.pk)
+
+            # Setup a soft-deleted setting
+            setting = NotificationSetting.objects.filter(
+                user=self.admin, organization_id=org.pk
+            ).first()
+
+            # Record initial values
+            setting.web = False
+            setting.email = False
+            setting.deleted = True
+            setting.save()
+
+            # Perform bulk update for the organization
+            response = self.client.post(url, data={"web": True, "email": True})
+            self.assertEqual(response.status_code, 200)
+
+            # Verify the soft-deleted setting was completely ignored
+            setting.refresh_from_db()
+            self.assertFalse(setting.web)
+            self.assertFalse(setting.email)
+            self.assertTrue(setting.deleted)
 
     @patch("openwisp_notifications.tasks.delete_ignore_object_notification.apply_async")
     def test_create_ignore_obj_notification_api(self, mocked_task):
