@@ -31,9 +31,12 @@
         <span class="toggle-btn" id="ow-mark-all-read" tabindex="0" role="button">
           {% trans 'Mark all as read' %}
         </span>
-        <a class="toggle-btn" href="{% url 'notifications:notification_preference' %}">
-          {% trans 'Notification Preferences' %}
-        </a>
+        {% can_change_notifications as can_change_notifications %}
+        {% if can_change_notifications %}
+          <a class="toggle-btn" href="{% url 'notifications:notification_preference' %}">
+            {% trans 'Notification Preferences' %}
+          </a>
+        {% endif %}
       </div>
       <div class="ow-notification-wrapper ow-round-bottom-border">
         <div id="ow-notifications-loader" class="ow-hide"><div class="loader"></div></div>
