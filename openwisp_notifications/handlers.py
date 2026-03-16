@@ -139,8 +139,10 @@ def notify_handler(**kwargs):
         (kwargs.pop(opt, None), opt) for opt in ("target", "action_object")
     ]
 
-    notification_list = []
-    for recipient in recipients:
+    notifications_to_create = []
+    recipients_list = list(recipients)
+
+    for recipient in recipients_list:
         notification = Notification(
             recipient=recipient,
             actor=actor,
@@ -163,9 +165,18 @@ def notify_handler(**kwargs):
                 )
         if kwargs:
             notification.data = kwargs
-        notification.save()
-        notification_list.append(notification)
-
+        notifications_to_create.append(notification)
+    notification_list = Notification.objects.bulk_create(notifications_to_create)
+    for notification in notification_list:
+        send_email_notification(Notification, notification, created=True)
+    for recipient in recipients_list:
+        Notification.invalidate_unread_cache(recipient)
+    notification_map = dict(zip(recipients_list, notification_list))
+    ws_handlers.bulk_notification_update_handler(
+        recipients=recipients_list,
+        reload_widget=True,
+        notification_map=notification_map,
+    )
     return notification_list
 
 
