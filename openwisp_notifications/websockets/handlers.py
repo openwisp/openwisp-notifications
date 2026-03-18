@@ -1,13 +1,19 @@
+import logging
+
 from asgiref.sync import async_to_sync
 from channels import layers
 from django.core.cache import cache
 from django.db.models import Count, Q
 from django.utils.timezone import now, timedelta
+from rest_framework.exceptions import NotFound as SerializerNotFound
 
+from openwisp_notifications.exceptions import NotificationRenderException
 from openwisp_notifications.utils import normalize_unread_count
 
 from .. import settings as app_settings
 from ..swapper import load_model
+
+logger = logging.getLogger(__name__)
 
 Notification = load_model("Notification")
 
@@ -129,6 +135,8 @@ def user_in_notification_storm(user):
 def bulk_notification_update_handler(
     recipients, reload_widget=False, notification_map=None
 ):
+    from openwisp_notifications.api.serializers import NotificationListSerializer
+
     if not recipients:
         return
     channel_layer = layers.get_channel_layer()
@@ -137,16 +145,16 @@ def bulk_notification_update_handler(
         in_storm, unread_count = bulk_data.get(recipient.pk, (False, 0))
         serialized_notification = None
         if notification_map and recipient in notification_map:
-            from openwisp_notifications.api.serializers import (
-                NotificationListSerializer,
-            )
-
             try:
                 serialized_notification = NotificationListSerializer(
                     notification_map[recipient]
                 ).data
-            except Exception:
-                pass
+            except (NotificationRenderException, SerializerNotFound):
+                logger.warning(
+                    "Failed to serialize notification for recipient %s",
+                    recipient.pk,
+                    exc_info=True,
+                )
         async_to_sync(channel_layer.group_send)(
             f"ow-notification-{recipient.pk}",
             {
