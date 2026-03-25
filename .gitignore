@@ -189,3 +189,4 @@ venv.bak/
 pip-selfcheck.json
 
 # End of https://www.gitignore.io/api/code,venv,django,python
+venv/

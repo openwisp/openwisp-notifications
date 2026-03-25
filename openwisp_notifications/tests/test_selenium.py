@@ -171,11 +171,13 @@ class TestSelenium(
 
         with self.subTest("Network request fails"):
             self.open(unsubscribe_link)
-            self.web_driver.execute_script("""
+            self.web_driver.execute_script(
+                """
                 window.fetch = function() {
                     return Promise.reject(new Error('Simulated fetch failure'));
                 };
-            """)
+            """
+            )
             self.web_driver.find_element(By.ID, "toggle-btn").click()
             self.wait_for_visibility(By.ID, "error-msg")
             browser_logs = self.get_browser_logs()
