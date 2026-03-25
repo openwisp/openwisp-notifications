@@ -1,10 +1,11 @@
+import copy
 import uuid
 from unittest.mock import patch
 
 from django.contrib.admin.sites import AdminSite
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
-from django.forms.widgets import Media, MediaOrderConflictWarning
+from django.forms.widgets import MediaOrderConflictWarning
 from django.test import TestCase, override_settings, tag
 from django.urls import reverse
 
@@ -311,38 +312,68 @@ class TestAdminMedia(BaseTestAdmin):
         OPENWISP_NOTIFICATIONS_IGNORE_ENABLED_ADMIN=["openwisp_users.admin.UserAdmin"],
     )
     def test_object_notification_setting_configured(self):
-        _add_object_notification_widget()
-        response = self.client.get(
-            reverse(f"admin:{self.users_app_label}_user_change", args=(self.admin.pk,))
-        )
-        self.assertContains(
-            response,
-            'src="/static/openwisp-notifications/js/object-notifications.js"',
-            1,
-        )
 
-        # If a ModelAdmin already has a Media class
-        with self.assertWarns(MediaOrderConflictWarning):
+        original_media = getattr(UserAdmin, "Media", None)
+        if original_media:
+            original_js = copy.deepcopy(getattr(original_media, "js", None))
+            original_css = copy.deepcopy(getattr(original_media, "css", None))
+            original_extend = getattr(original_media, "extend", None)
+        else:
+            original_js = None
+            original_css = None
+            original_extend = None
+        try:
             _add_object_notification_widget()
             response = self.client.get(
                 reverse(
                     f"admin:{self.users_app_label}_user_change", args=(self.admin.pk,)
                 )
             )
+            self.assertContains(
+                response,
+                'src="/static/openwisp-notifications/js/object-notifications.js"',
+                1,
+            )
+            with self.assertWarns(MediaOrderConflictWarning):
+                _add_object_notification_widget()
+                response = self.client.get(
+                    reverse(
+                        f"admin:{self.users_app_label}_user_change",
+                        args=(self.admin.pk,),
+                    )
+                )
+            UserAdmin.Media.css = {"all": list()}
+            UserAdmin.Media.js = list()
+            _add_object_notification_widget()
+            response = self.client.get(
+                reverse(
+                    f"admin:{self.users_app_label}_user_change", args=(self.admin.pk,)
+                )
+            )
+            UserAdmin.Media.js = []
+            UserAdmin.Media.css = {}
+            _add_object_notification_widget()
+            response = self.client.get(
+                reverse(
+                    f"admin:{self.users_app_label}_user_change", args=(self.admin.pk,)
+                )
+            )
+        finally:
+            if original_media is not None:
+                UserAdmin.Media = original_media
+                if original_js is not None:
+                    UserAdmin.Media.js = original_js
+                elif hasattr(UserAdmin.Media, "js"):
+                    del UserAdmin.Media.js
 
-        # If a ModelAdmin has list instances of js and css
-        UserAdmin.Media.css = {"all": list()}
-        UserAdmin.Media.js = list()
-        _add_object_notification_widget()
-        response = self.client.get(
-            reverse(f"admin:{self.users_app_label}_user_change", args=(self.admin.pk,))
-        )
+                if original_css is not None:
+                    UserAdmin.Media.css = original_css
+                elif hasattr(UserAdmin.Media, "css"):
+                    del UserAdmin.Media.css
 
-        # If ModelAdmin has empty attributes
-        UserAdmin.Media.js = []
-        UserAdmin.Media.css = {}
-        _add_object_notification_widget()
-        response = self.client.get(
-            reverse(f"admin:{self.users_app_label}_user_change", args=(self.admin.pk,))
-        )
-        UserAdmin.Media = Media()
+                if original_extend is not None:
+                    UserAdmin.Media.extend = original_extend
+                elif hasattr(UserAdmin.Media, "extend"):
+                    del UserAdmin.Media.extend
+            elif hasattr(UserAdmin, "Media"):
+                delattr(UserAdmin, "Media")
