@@ -794,6 +794,98 @@ class TestNotificationApi(
             )
             self.assertEqual(response.status_code, 403)
 
+    def test_reapplying_global_email_setting_updates_organization_settings(self):
+        org = self._get_org("default")
+        global_setting = NotificationSetting.objects.get(
+            user=self.admin, type=None, organization=None
+        )
+        global_setting_url = self._get_path("notification_setting", global_setting.pk)
+        org_setting_url = self._get_path(
+            "user_org_notification_setting", self.admin.pk, org.pk
+        )
+
+        response = self.client.patch(
+            global_setting_url,
+            data={"email": False},
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(
+            NotificationSetting.objects.filter(
+                user=self.admin, organization=org, email=True
+            ).exists()
+        )
+
+        response = self.client.post(
+            org_setting_url,
+            data={"web": True, "email": True},
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(
+            NotificationSetting.objects.filter(
+                user=self.admin, organization=org, email=True
+            ).exists()
+        )
+
+        response = self.client.patch(
+            global_setting_url,
+            data={"email": False},
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(
+            NotificationSetting.objects.filter(
+                user=self.admin, organization=org, email=True
+            ).exists()
+        )
+
+    def test_reapplying_global_web_setting_updates_organization_settings(self):
+        org = self._get_org("default")
+        global_setting = NotificationSetting.objects.get(
+            user=self.admin, type=None, organization=None
+        )
+        global_setting_url = self._get_path("notification_setting", global_setting.pk)
+        org_setting_url = self._get_path(
+            "user_org_notification_setting", self.admin.pk, org.pk
+        )
+
+        response = self.client.patch(
+            global_setting_url,
+            data={"web": False},
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(
+            NotificationSetting.objects.filter(
+                user=self.admin, organization=org, web=True
+            ).exists()
+        )
+
+        response = self.client.post(
+            org_setting_url,
+            data={"web": True, "email": False},
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(
+            NotificationSetting.objects.filter(
+                user=self.admin, organization=org, web=True
+            ).exists()
+        )
+
+        response = self.client.patch(
+            global_setting_url,
+            data={"web": False},
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(
+            NotificationSetting.objects.filter(
+                user=self.admin, organization=org, web=True
+            ).exists()
+        )
+
     def test_disallowed_change_types_absent_in_notification_setting_api(self):
         with self.subTest("disallowed type setting not present in list"):
             path = self._get_path("notification_setting_list")
