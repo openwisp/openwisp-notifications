@@ -313,7 +313,7 @@ class TestAdminMedia(BaseTestAdmin):
     )
     def test_object_notification_setting_configured(self):
         original_media = getattr(UserAdmin, "Media", None)
-        if original_media:
+        if original_media is not None:
             original_js = copy.deepcopy(getattr(original_media, "js", None))
             original_css = copy.deepcopy(getattr(original_media, "css", None))
         else:
@@ -363,7 +363,11 @@ class TestAdminMedia(BaseTestAdmin):
                 UserAdmin.Media = original_media
                 if original_js is not None:
                     UserAdmin.Media.js = original_js
+                elif hasattr(UserAdmin.Media, "js"):
+                    delattr(UserAdmin.Media, "js")
                 if original_css is not None:
                     UserAdmin.Media.css = original_css
+                elif hasattr(UserAdmin.Media, "css"):
+                    delattr(UserAdmin.Media, "css")
             elif hasattr(UserAdmin, "Media"):
                 delattr(UserAdmin, "Media")
