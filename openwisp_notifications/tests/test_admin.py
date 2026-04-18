@@ -312,16 +312,12 @@ class TestAdminMedia(BaseTestAdmin):
         OPENWISP_NOTIFICATIONS_IGNORE_ENABLED_ADMIN=["openwisp_users.admin.UserAdmin"],
     )
     def test_object_notification_setting_configured(self):
-
         original_media = getattr(UserAdmin, "Media", None)
         if original_media:
             original_js = copy.deepcopy(getattr(original_media, "js", None))
             original_css = copy.deepcopy(getattr(original_media, "css", None))
-            original_extend = getattr(original_media, "extend", None)
         else:
-            original_js = None
-            original_css = None
-            original_extend = None
+            original_js = original_css = None
         try:
             _add_object_notification_widget()
             response = self.client.get(
@@ -342,10 +338,14 @@ class TestAdminMedia(BaseTestAdmin):
                         args=(self.admin.pk,),
                     )
                 )
+                self.assertContains(
+                    response,
+                    'src="/static/openwisp-notifications/js/object-notifications.js"',
+                )
             UserAdmin.Media.css = {"all": list()}
             UserAdmin.Media.js = list()
             _add_object_notification_widget()
-            response = self.client.get(
+            self.client.get(
                 reverse(
                     f"admin:{self.users_app_label}_user_change", args=(self.admin.pk,)
                 )
@@ -353,7 +353,7 @@ class TestAdminMedia(BaseTestAdmin):
             UserAdmin.Media.js = []
             UserAdmin.Media.css = {}
             _add_object_notification_widget()
-            response = self.client.get(
+            self.client.get(
                 reverse(
                     f"admin:{self.users_app_label}_user_change", args=(self.admin.pk,)
                 )
@@ -363,17 +363,7 @@ class TestAdminMedia(BaseTestAdmin):
                 UserAdmin.Media = original_media
                 if original_js is not None:
                     UserAdmin.Media.js = original_js
-                elif hasattr(UserAdmin.Media, "js"):
-                    del UserAdmin.Media.js
-
                 if original_css is not None:
                     UserAdmin.Media.css = original_css
-                elif hasattr(UserAdmin.Media, "css"):
-                    del UserAdmin.Media.css
-
-                if original_extend is not None:
-                    UserAdmin.Media.extend = original_extend
-                elif hasattr(UserAdmin.Media, "extend"):
-                    del UserAdmin.Media.extend
             elif hasattr(UserAdmin, "Media"):
                 delattr(UserAdmin, "Media")
