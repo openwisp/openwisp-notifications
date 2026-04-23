@@ -1,4 +1,5 @@
 import logging
+from itertools import islice
 from urllib.parse import quote
 
 from allauth.account.models import EmailAddress
@@ -41,6 +42,15 @@ IgnoreObjectNotification = load_model("IgnoreObjectNotification")
 Group = swapper_load_model("openwisp_users", "Group")
 OrganizationUser = swapper_load_model("openwisp_users", "OrganizationUser")
 Organization = swapper_load_model("openwisp_users", "Organization")
+
+
+_NOTIFY_BATCH_SIZE = 2000
+
+
+def _iter_chunks(iterable, size):
+    it = iter(iterable)
+    while chunk := list(islice(it, size)):
+        yield chunk
 
 
 def notify_handler(**kwargs):
@@ -138,35 +148,49 @@ def notify_handler(**kwargs):
     optional_objs = [
         (kwargs.pop(opt, None), opt) for opt in ("target", "action_object")
     ]
-
-    notification_list = []
-    for recipient in recipients:
-        notification = Notification(
-            recipient=recipient,
-            actor=actor,
-            verb=str(verb),
-            public=public,
-            description=description,
-            timestamp=timestamp,
-            level=level,
-            type=notification_type,
+    recipients_iter = (
+        recipients.iterator(chunk_size=_NOTIFY_BATCH_SIZE)
+        if isinstance(recipients, QuerySet)
+        else iter(recipients)
+    )
+    all_notifications = []
+    for recipients_chunk in _iter_chunks(recipients_iter, _NOTIFY_BATCH_SIZE):
+        notifications_chunk = []
+        for recipient in recipients_chunk:
+            notification = Notification(
+                recipient=recipient,
+                actor=actor,
+                verb=str(verb),
+                public=public,
+                description=description,
+                timestamp=timestamp,
+                level=level,
+                type=notification_type,
+            )
+            for obj, opt in optional_objs:
+                if obj is not None:
+                    setattr(notification, "%s_object_id" % opt, obj.pk)
+                    setattr(
+                        notification,
+                        "%s_content_type" % opt,
+                        ContentType.objects.get_for_model(obj),
+                    )
+            if kwargs:
+                notification.data = kwargs
+            notifications_chunk.append(notification)
+        created = Notification.objects.bulk_create(notifications_chunk)
+        notification_map = dict(zip(recipients_chunk, created, strict=True))
+        for notification in created:
+            send_email_notification(Notification, notification, created=True)
+        for recipient in recipients_chunk:
+            Notification.invalidate_unread_cache(recipient)
+        ws_handlers.bulk_notification_update_handler(
+            recipients=recipients_chunk,
+            reload_widget=True,
+            notification_map=notification_map,
         )
-
-        # Set optional objects
-        for obj, opt in optional_objs:
-            if obj is not None:
-                setattr(notification, "%s_object_id" % opt, obj.pk)
-                setattr(
-                    notification,
-                    "%s_content_type" % opt,
-                    ContentType.objects.get_for_model(obj),
-                )
-        if kwargs:
-            notification.data = kwargs
-        notification.save()
-        notification_list.append(notification)
-
-    return notification_list
+        all_notifications.extend(created)
+    return all_notifications
 
 
 @receiver(post_save, sender=Notification, dispatch_uid="send_email_notification")

@@ -1530,6 +1530,45 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
             response = self.client.get(reverse(preference_page, args=(uuid4(),)))
             self.assertEqual(response.status_code, 404)
 
+    @patch("openwisp_notifications.handlers.send_email_notification")
+    @patch(
+        "openwisp_notifications.handlers.ws_handlers.bulk_notification_update_handler"
+    )
+    def test_notify_handler_bulk_sql_queries(self, mock_ws, mock_email):
+        """Ref: https://github.com/openwisp/openwisp-notifications/issues/383"""
+        from django.db import connection
+
+        user2 = self._create_user(username="user2", email="user2@example.com")
+        user3 = self._create_user(username="user3", email="user3@example.com")
+        expected = 4 if connection.vendor == "postgresql" else 2
+        with self.assertNumQueries(expected):
+            notify.send(
+                sender=self.admin,
+                verb="Test",
+                recipient=[self.admin, user2, user3],
+            )
+        self.assertEqual(Notification.objects.count(), 3)
+        self.assertEqual(mock_email.call_count, 3)
+        self.assertEqual(mock_ws.call_count, 1)
+
+    def test_bulk_storm_check_uses_single_aggregated_query(self):
+        """Ref: https://github.com/openwisp/openwisp-notifications/issues/383"""
+        from openwisp_notifications.websockets.handlers import (
+            bulk_check_notification_storm_and_unread_count,
+        )
+
+        user2 = self._create_user(username="user2", email="user2@example.com")
+        user3 = self._create_user(username="user3", email="user3@example.com")
+        cache.clear()
+        with self.assertNumQueries(1):
+            result = bulk_check_notification_storm_and_unread_count(
+                [self.admin, user2, user3]
+            )
+        self.assertEqual(len(result), 3)
+        for pk, (in_storm, unread) in result.items():
+            self.assertFalse(in_storm)
+            self.assertEqual(unread, 0)
+
 
 class TestTransactionNotifications(TestOrganizationMixin, TransactionTestCase):
     def setUp(self):
