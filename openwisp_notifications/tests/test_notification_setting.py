@@ -417,3 +417,45 @@ class TestNotificationSetting(TestOrganizationMixin, TransactionTestCase):
             with self.assertRaises(ValidationError):
                 global_setting.full_clean()
                 global_setting.save()
+
+    def test_new_org_creation_respects_global_preferences(self):
+        admin = self._get_admin()
+        global_setting = NotificationSetting.objects.get(
+            user=admin, organization=None, type=None
+        )
+        global_setting.web = False
+        global_setting.email = False
+        global_setting.save()
+        org = self._create_org(name="New Test Org")
+        org_setting = NotificationSetting.objects.get(
+            user=admin, organization=org, type="default"
+        )
+        self.assertEqual(org_setting.web, False)
+        self.assertEqual(org_setting.email, False)
+
+    def test_org_admin_addition_respects_global_preferences(self):
+        user = self._get_user()
+        org1 = self._get_org()
+        self._create_org_user(user=user, organization=org1, is_admin=True)
+        # Global notification setting is created only when the user is
+        # admin of atleast one organization.
+        global_setting = NotificationSetting.objects.get(
+            user=user, organization=None, type=None
+        )
+        global_setting.web = False
+        global_setting.email = False
+        global_setting.save()
+        # Updating global setting should update existing org settings
+        org1_setting = NotificationSetting.objects.get(
+            user=user, organization=org1, type="default"
+        )
+        self.assertEqual(org1_setting.web, False)
+        self.assertEqual(org1_setting.email, False)
+        # New organization should also respect global preferences
+        org2 = self._create_org(name="New Test Org")
+        self._create_org_user(user=user, organization=org2, is_admin=True)
+        org2_setting = NotificationSetting.objects.get(
+            user=user, organization=org2, type="default"
+        )
+        self.assertEqual(org2_setting.web, False)
+        self.assertEqual(org2_setting.email, False)

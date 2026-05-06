@@ -56,25 +56,6 @@ class TestOrganizationNotificationSettings(TestOrganizationMixin, TransactionTes
             self.assertEqual(org_setting.email, False)
             self.assertEqual(org_setting.web, False)
 
-    def test_org_setting_changes_user_preferences(self):
-        org = self._get_org()
-        org_setting = org.notification_settings
-        administrator = self._create_administrator(organizations=[org])
-
-        with self.subTest("Disabling web for org disabled all notifications for users"):
-            org_setting.web = False
-            org_setting.full_clean()
-            org_setting.save()
-            self.assertEqual(org_setting.email, False)
-            self.assertEqual(org_setting.web, False)
-            user_settings = NotificationSetting.objects.filter(
-                organization=org, user=administrator
-            )
-            self.assertEqual(user_settings.count(), len(NOTIFICATION_TYPES.keys()))
-            for setting in user_settings:
-                self.assertEqual(setting.web, False)
-                self.assertEqual(setting.email, False)
-
     def test_new_orguser_uses_org_setting_as_default(self):
         org1 = self._get_org()
         org1_setting = org1.notification_settings

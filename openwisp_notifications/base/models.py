@@ -557,27 +557,4 @@ class AbstractOrganizationNotificationSettings(models.Model):
     def save(self, *args, **kwargs):
         if not self.web:
             self.email = False
-        if not self._state.adding:
-            self._update_organizationuser_settings()
         return super().save(*args, **kwargs)
-
-    def _update_organizationuser_settings(self):
-        try:
-            db_instance = self.__class__.objects.only("web", "email").get(
-                organization_id=self.organization_id
-            )
-        except self.__class__.DoesNotExist:
-            return
-        update_fields = {}
-        for field in ["web", "email"]:
-            if getattr(self, field) != getattr(db_instance, field):
-                update_fields[field] = getattr(self, field)
-        if update_fields:
-            NotificationSetting = swapper.load_model(
-                "openwisp_notifications", "NotificationSetting"
-            )
-            transaction.on_commit(
-                lambda: NotificationSetting.objects.filter(
-                    organization_id=self.organization_id
-                ).update(**update_fields)
-            )

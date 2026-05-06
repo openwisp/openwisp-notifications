@@ -87,13 +87,22 @@ def create_notification_settings(user, organizations, notification_types):
 
     for type in notification_types:
         for org in organizations:
-            try:
-                org_notification_settings = org.notification_settings
-                email = org_notification_settings.email
-                web = org_notification_settings.web
-            except ObjectDoesNotExist:
-                email = app_settings.WEB_ENABLED
-                web = app_settings.EMAIL_ENABLED
+            if global_setting.email is not False and global_setting.web is not False:
+                try:
+                    org_notification_settings = org.notification_settings
+                    email = org_notification_settings.email
+                    web = org_notification_settings.web
+                except ObjectDoesNotExist:
+                    email = app_settings.WEB_ENABLED
+                    web = app_settings.EMAIL_ENABLED
+            if global_setting.email is False:
+                email = False
+            if global_setting.web is False:
+                web = False
+            if email is True:
+                email = None
+            if web is True:
+                web = None
             # If NotificationSetting already exists, then we ensure it is not marked deleted
             updated = NotificationSetting.objects.filter(
                 user=user, type=type, organization=org
@@ -105,8 +114,8 @@ def create_notification_settings(user, organizations, notification_types):
                     user=user,
                     type=type,
                     organization=org,
-                    email=None if email else False,
-                    web=None if web else False,
+                    email=email,
+                    web=web,
                     deleted=False,
                 )
 
