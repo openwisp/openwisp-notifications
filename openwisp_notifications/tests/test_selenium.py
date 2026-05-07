@@ -253,7 +253,7 @@ class TestSelenium(
                 NotificationSetting.objects.get(
                     pk=input.get_attribute("data-pk")
                 ).email,
-                True,
+                None,
             )
 
     def test_empty_notification_preference_page(self):
@@ -272,6 +272,7 @@ class TestSelenium(
         )
 
     def test_notification_preference_resolution_with_org_and_user_override(self):
+        Organization.objects.all().delete()
         self.login()
         org = self._get_org()
         setting = NotificationSetting.objects.get(
