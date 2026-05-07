@@ -247,6 +247,7 @@ class TestNotificationSetting(TestOrganizationMixin, TransactionTestCase):
         notification_setting = queryset.first()
 
         notification_setting.full_clean()
+        notification_setting.save()
         self.assertIsNone(notification_setting.email)
         self.assertIsNone(notification_setting.web)
 

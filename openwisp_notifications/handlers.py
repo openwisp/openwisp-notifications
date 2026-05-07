@@ -97,7 +97,7 @@ def notify_handler(**kwargs):
         # chain can still resolve to True.
         if notification_type:
             web_notification = Q(notificationsetting__web=True)
-            if org_web is True and notification_template["web_notification"]:
+            if org_web is not False and notification_template["web_notification"]:
                 web_notification |= Q(notificationsetting__web=None)
 
             notification_setting = web_notification & Q(

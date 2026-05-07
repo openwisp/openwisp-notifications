@@ -56,6 +56,7 @@ OrganizationUser = swapper_load_model("openwisp_users", "OrganizationUser")
 Group = swapper_load_model("openwisp_users", "Group")
 Notification = load_model("Notification")
 NotificationSetting = load_model("NotificationSetting")
+OrganizationNotificationSettings = load_model("OrganizationNotificationSettings")
 NotificationAppConfig = apps.get_app_config(Notification._meta.app_label)
 # reused across tests
 start_time = timezone.now()
@@ -978,7 +979,8 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
             notification_setting.email = True
             notification_setting.save()
             notification_setting.refresh_from_db()
-            self.assertTrue(notification_setting.email)
+            self.assertEqual(notification_setting.email, None)
+            self.assertEqual(notification_setting.email_notification, True)
 
         with self.subTest('Test user web preference is "True"'):
             NotificationSetting.objects.filter(
@@ -1529,6 +1531,298 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
         with self.subTest("Test invalid user ID"):
             response = self.client.get(reverse(preference_page, args=(uuid4(),)))
             self.assertEqual(response.status_code, 404)
+
+
+class TestNotificationSending(TestOrganizationMixin, TransactionTestCase):
+    app_label = "openwisp_notifications"
+
+    def setUp(self):
+        self.admin = self._create_admin()
+        self.org = self._get_org()
+        self.user = self._get_operator()
+        self.target = self._create_org_user(organization=self.org, user=self.user)
+        Notification.objects.all().delete()
+        mail.outbox.clear()
+
+    def _set_org_notification_settings(self, web=None, email=None):
+        org_setting = OrganizationNotificationSettings.objects.get(
+            organization=self.org
+        )
+        org_setting.web = web
+        org_setting.email = email
+        org_setting.full_clean()
+        org_setting.save()
+
+    def _set_user_notification_settings(self, type_name, web=None, email=None):
+        ns = NotificationSetting.objects.get(
+            user=self.admin, organization=self.org, type=type_name
+        )
+        ns.web = web
+        ns.email = email
+        ns.full_clean()
+        ns.save()
+
+    def _set_global_notification_settings(self, web=None, email=None):
+        ns = NotificationSetting.objects.get(
+            user=self.admin, type=None, organization=None
+        )
+        ns.web = web
+        ns.email = email
+        ns.full_clean()
+        ns.save()
+
+    def _send_notification(self, type_name="default", **kwargs):
+        options = dict(
+            sender=self.admin,
+            type=type_name,
+            target=self.target,
+        )
+        options.update(kwargs)
+        notify.send(
+            **options,
+        )
+
+    def _assert_notification_created(self, expected=True, target=None):
+        if target is None:
+            target = self.target
+        count = Notification.objects.filter(
+            recipient=self.admin,
+            target_object_id=target.pk,
+        ).count()
+        if expected:
+            self.assertEqual(count, 1)
+        else:
+            self.assertEqual(count, 0)
+
+    def _assert_email_sent(self, expected=True):
+        if expected:
+            self.assertEqual(len(mail.outbox), 1)
+            self.assertEqual(mail.outbox[0].to, [self.admin.email])
+        else:
+            self.assertEqual(len(mail.outbox), 0)
+
+    def test_default_type_org_none_user_none(self):
+        self._send_notification("default")
+        self._assert_notification_created(True)
+        self._assert_email_sent(True)
+
+    def test_generic_type_org_none_user_none(self):
+        self._send_notification("generic_message")
+        self._assert_notification_created(True)
+        self._assert_email_sent(False)
+
+    def test_default_type_org_enabled_user_none(self):
+        self._set_org_notification_settings(web=True, email=True)
+        self._send_notification("default")
+        self._assert_notification_created(True)
+        self._assert_email_sent(True)
+
+    def test_default_type_org_disabled_user_none(self):
+        self._set_org_notification_settings(web=False, email=False)
+        self._send_notification("default")
+        self._assert_notification_created(False)
+        self._assert_email_sent(False)
+
+    def test_generic_type_org_enabled_user_none(self):
+        self._set_org_notification_settings(web=True, email=True)
+        self._send_notification("generic_message")
+        self._assert_notification_created(True)
+        self._assert_email_sent(False)
+
+    def test_generic_type_org_disabled_user_none(self):
+        self._set_org_notification_settings(web=False, email=False)
+        self._send_notification("generic_message")
+        self._assert_notification_created(False)
+        self._assert_email_sent(False)
+
+    def test_default_type_org_none_user_enabled(self):
+        self._set_user_notification_settings("default", web=True, email=True)
+        self._send_notification("default")
+        self._assert_notification_created(True)
+        self._assert_email_sent(True)
+
+    def test_default_type_org_none_user_disabled(self):
+        self._set_user_notification_settings("default", web=False, email=False)
+        self._send_notification("default")
+        self._assert_notification_created(False)
+        self._assert_email_sent(False)
+
+    def test_generic_type_org_none_user_enabled(self):
+        self._set_user_notification_settings("generic_message", web=True, email=True)
+        self._send_notification("generic_message")
+        self._assert_notification_created(True)
+        self._assert_email_sent(True)
+
+    def test_generic_type_org_none_user_disabled(self):
+        self._set_user_notification_settings("generic_message", web=False, email=False)
+        self._send_notification("generic_message")
+        self._assert_notification_created(False)
+        self._assert_email_sent(False)
+
+    def test_default_type_org_enabled_user_enabled(self):
+        self._set_org_notification_settings(web=True, email=True)
+        self._set_user_notification_settings("default", web=True, email=True)
+        self._send_notification("default")
+        self._assert_notification_created(True)
+        self._assert_email_sent(True)
+
+    def test_default_type_org_enabled_user_disabled(self):
+        self._set_org_notification_settings(web=True, email=True)
+        self._set_user_notification_settings("default", web=False, email=False)
+        self._send_notification("default")
+        self._assert_notification_created(False)
+        self._assert_email_sent(False)
+
+    def test_default_type_org_disabled_user_enabled(self):
+        self._set_org_notification_settings(web=False, email=False)
+        self._set_user_notification_settings("default", web=True, email=True)
+        self._send_notification("default")
+        self._assert_notification_created(True)
+        self._assert_email_sent(True)
+
+    def test_default_type_org_disabled_user_disabled(self):
+        self._set_org_notification_settings(web=False, email=False)
+        self._set_user_notification_settings("default", web=False, email=False)
+        self._send_notification("default")
+        self._assert_notification_created(False)
+        self._assert_email_sent(False)
+
+    def test_generic_type_org_enabled_user_enabled(self):
+        self._set_org_notification_settings(web=True, email=True)
+        self._set_user_notification_settings("generic_message", web=True, email=True)
+        self._send_notification("generic_message")
+        self._assert_notification_created(True)
+        self._assert_email_sent(True)
+
+    def test_generic_type_org_enabled_user_disabled(self):
+        self._set_org_notification_settings(web=True, email=True)
+        self._set_user_notification_settings("generic_message", web=False, email=False)
+        self._send_notification("generic_message")
+        self._assert_notification_created(False)
+        self._assert_email_sent(False)
+
+    def test_generic_type_org_disabled_user_enabled(self):
+        self._set_org_notification_settings(web=False, email=False)
+        self._set_user_notification_settings("generic_message", web=True, email=True)
+        self._send_notification("generic_message")
+        self._assert_notification_created(True)
+        self._assert_email_sent(True)
+
+    def test_generic_type_org_disabled_user_disabled(self):
+        self._set_org_notification_settings(web=False, email=False)
+        self._set_user_notification_settings("generic_message", web=False, email=False)
+        self._send_notification("generic_message")
+        self._assert_notification_created(False)
+        self._assert_email_sent(False)
+
+    def test_global_setting_web_disabled(self):
+        self._set_global_notification_settings(web=False)
+        self._send_notification("default")
+        self._assert_notification_created(False)
+        self._assert_email_sent(False)
+
+    def test_global_setting_email_disabled(self):
+        self._set_global_notification_settings(email=False)
+        self._send_notification("default")
+        self._assert_notification_created(True)
+        self._assert_email_sent(False)
+
+    def test_global_setting_propagation_sending_change(self):
+        self._set_global_notification_settings(web=True, email=True)
+        self._send_notification("default")
+        self._assert_notification_created(True)
+        self._assert_email_sent(True)
+
+        Notification.objects.all().delete()
+        mail.outbox.clear()
+
+        self._set_global_notification_settings(web=False)
+        self._send_notification("default")
+        self._assert_notification_created(False)
+        self._assert_email_sent(False)
+
+        self._set_global_notification_settings(web=True, email=True)
+        self._send_notification("default")
+        self._assert_notification_created(True)
+        self._assert_email_sent(True)
+
+    def test_multi_org_notification_sending(self):
+        org_a = self.org
+        org_a_setting = OrganizationNotificationSettings.objects.get(organization=org_a)
+        org_a_setting.web = True
+        org_a_setting.save()
+        org_a_target = self.target
+        org_b = self._create_org(name="Org B")
+        org_b_setting = OrganizationNotificationSettings.objects.get(organization=org_b)
+        org_b_setting.web = False
+        org_b_setting.save()
+        org_b_target = self._create_org_user(organization=org_b, user=self.user)
+
+        Notification.objects.all().delete()
+        mail.outbox.clear()
+        with self.subTest("Web notifications enabled in Org A and disabled in Org B"):
+            notify.send(
+                sender=self.admin,
+                type="default",
+                target=org_a_target,
+                verb="To Org A",
+                email_subject="To Org A",
+            )
+            self._assert_notification_created(True, target=org_a_target)
+            self._assert_email_sent(True)
+
+            Notification.objects.all().delete()
+            mail.outbox.clear()
+            notify.send(
+                sender=self.admin,
+                type="default",
+                target=org_b_target,
+                verb="To Org B",
+                email_subject="To Org B",
+            )
+            self._assert_notification_created(False, target=org_b_target)
+            self._assert_email_sent(False)
+
+        Notification.objects.all().delete()
+        mail.outbox.clear()
+        with self.subTest(
+            "Global web notification disabled, Org A enabled, Org B disabled"
+        ):
+            global_setting = NotificationSetting.objects.get(
+                user=self.admin, type=None, organization=None
+            )
+            global_setting.web = False
+            global_setting.save()
+            notify.send(
+                sender=self.admin,
+                type="default",
+                target=org_a_target,
+                verb="To Org A",
+                email_subject="To Org A",
+            )
+            self._assert_notification_created(False, target=org_a_target)
+            self._assert_email_sent(False)
+
+        with self.subTest(
+            "Global web notification disabled, override specific notification"
+        ):
+            Notification.objects.all().delete()
+            mail.outbox.clear()
+            ns = NotificationSetting.objects.get(
+                user=self.admin, organization=org_b, type="default"
+            )
+            ns.web = True
+            ns.email = True
+            ns.save()
+            notify.send(
+                sender=self.admin,
+                type="default",
+                target=org_b_target,
+                verb="To Org B",
+                email_subject="To Org B",
+            )
+            self._assert_notification_created(True, target=org_b_target)
+            self._assert_email_sent(True)
 
 
 class TestTransactionNotifications(TestOrganizationMixin, TransactionTestCase):

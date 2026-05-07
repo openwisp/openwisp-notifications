@@ -444,9 +444,29 @@ class AbstractNotificationSetting(UUIDModel):
             ):
                 raise ValidationError("There can only be one global setting per user.")
 
-    def save(self, *args, **kwargs):
-        if not self.web_notification:
+    def normalize_settings(self):
+        if self.web_notification is False:
             self.email = self.web_notification
+        if self.organization and self.type:
+            should_enable_email = self.type_config["email_notification"]
+            should_enabled_web = self.type_config["web_notification"]
+            if self.organization and hasattr(
+                self.organization, "notification_settings"
+            ):
+                should_enable_email = (
+                    should_enable_email
+                    and self.organization.notification_settings.email
+                )
+                should_enabled_web = (
+                    should_enabled_web and self.organization.notification_settings.web
+                )
+            if self.email == should_enable_email:
+                self.email = None
+            if self.web == should_enabled_web:
+                self.web = None
+
+    def save(self, *args, **kwargs):
+        self.normalize_settings()
         with transaction.atomic():
             if not self.organization and not self.type:
                 try:
@@ -456,7 +476,7 @@ class AbstractNotificationSetting(UUIDModel):
                     updates = {"web": self.web}
 
                     # If global web notifications are disabled, then disable email notifications as well
-                    if not self.web:
+                    if self.web is False:
                         updates["email"] = False
 
                     # Update email notifiations only if it's different from the previous state
@@ -475,11 +495,6 @@ class AbstractNotificationSetting(UUIDModel):
 
     def full_clean(self, *args, **kwargs):
         self.validate_global_setting()
-        if self.organization and self.type:
-            if self.email == self.type_config["email_notification"]:
-                self.email = None
-            if self.web == self.type_config["web_notification"]:
-                self.web = None
         return super().full_clean(*args, **kwargs)
 
     @property
@@ -490,13 +505,29 @@ class AbstractNotificationSetting(UUIDModel):
     def email_notification(self):
         if self.email is not None:
             return self.email
-        return self.type_config.get("email_notification")
+        email_enabled = self.type_config.get("email_notification")
+        if (
+            self.organization
+            and hasattr(self.organization, "notification_settings")
+            and self.organization.notification_settings.email is not None
+        ):
+            email_enabled = (
+                email_enabled and self.organization.notification_settings.email
+            )
+        return email_enabled
 
     @property
     def web_notification(self):
         if self.web is not None:
             return self.web
-        return self.type_config.get("web_notification")
+        web_enabled = self.type_config.get("web_notification")
+        if (
+            self.organization
+            and hasattr(self.organization, "notification_settings")
+            and self.organization.notification_settings.web is not None
+        ):
+            web_enabled = web_enabled and self.organization.notification_settings.web
+        return web_enabled
 
     @classmethod
     def email_notifications_enabled(cls, user):
