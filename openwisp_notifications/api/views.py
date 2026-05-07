@@ -127,10 +127,14 @@ class BaseNotificationSettingView(GenericAPIView):
         if getattr(self, "swagger_fake_view", False):
             return NotificationSetting.objects.none()  # pragma: no cover
         user_id = self.kwargs.get("user_id", self.request.user.id)
-        return NotificationSetting.objects.exclude(
-            Q(organization__is_active=False)
-            | Q(type__in=app_settings.DISALLOW_PREFERENCES_CHANGE_TYPE)
-        ).filter(user_id=user_id).select_related("organization__notification_settings")
+        return (
+            NotificationSetting.objects.exclude(
+                Q(organization__is_active=False)
+                | Q(type__in=app_settings.DISALLOW_PREFERENCES_CHANGE_TYPE)
+            )
+            .filter(user_id=user_id)
+            .select_related("organization__notification_settings")
+        )
 
 
 class NotificationSettingListView(BaseNotificationSettingView, ListModelMixin):
