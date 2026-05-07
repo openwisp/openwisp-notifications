@@ -1543,6 +1543,7 @@ class TestNotificationSending(TestOrganizationMixin, TransactionTestCase):
         self.target = self._create_org_user(organization=self.org, user=self.user)
         Notification.objects.all().delete()
         mail.outbox.clear()
+        cache.delete(Notification.get_user_batched_notifications_cache_key(self.admin))
 
     def _set_org_notification_settings(self, web=None, email=None):
         org_setting = OrganizationNotificationSettings.objects.get(

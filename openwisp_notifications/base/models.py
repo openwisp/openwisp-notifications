@@ -453,13 +453,17 @@ class AbstractNotificationSetting(UUIDModel):
             if self.organization and hasattr(
                 self.organization, "notification_settings"
             ):
-                should_enable_email = (
-                    should_enable_email
-                    and self.organization.notification_settings.email
-                )
-                should_enabled_web = (
-                    should_enabled_web and self.organization.notification_settings.web
-                )
+                if self.organization.notification_settings.web is not None:
+                    should_enabled_web = (
+                        should_enabled_web
+                        and self.organization.notification_settings.web
+                    )
+                if self.organization.notification_settings.email is not None:
+                    should_enable_email = (
+                        should_enable_email
+                        and self.organization.notification_settings.email
+                    )
+
             if self.email == should_enable_email:
                 self.email = None
             if self.web == should_enabled_web:

@@ -1,6 +1,7 @@
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from django.test import tag
 from django.urls import reverse
+from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select, WebDriverWait
 
@@ -273,7 +274,6 @@ class TestSelenium(
         )
 
     def test_notification_preference_resolution_with_org_and_user_override(self):
-        Organization.objects.all().delete()
         self.login()
         org = self._get_org()
         setting = NotificationSetting.objects.get(
@@ -314,7 +314,7 @@ class TestSelenium(
                     lambda d: d.find_element(By.CLASS_NAME, "toast")
                 )
                 toast.click()
-            except Exception:
+            except TimeoutException:
                 pass
 
         def _set_user_web(value: bool):

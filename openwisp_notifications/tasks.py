@@ -87,18 +87,22 @@ def create_notification_settings(user, organizations, notification_types):
 
     for type in notification_types:
         for org in organizations:
-            if global_setting.email is not False and global_setting.web is not False:
+            # Any new notification setting shall inherit user's global
+            # notification preferences.
+            email = False if global_setting.email is False else None
+            web = False if global_setting.web is False else None
+            if email is not False or web is not False:
                 try:
                     org_notification_settings = org.notification_settings
-                    email = org_notification_settings.email
-                    web = org_notification_settings.web
+                    org_email = org_notification_settings.email
+                    org_web = org_notification_settings.web
                 except ObjectDoesNotExist:
-                    email = app_settings.WEB_ENABLED
-                    web = app_settings.EMAIL_ENABLED
-            if global_setting.email is False:
-                email = False
-            if global_setting.web is False:
-                web = False
+                    org_email = app_settings.EMAIL_ENABLED
+                    org_web = app_settings.WEB_ENABLED
+                if email is not False:
+                    email = org_email
+                if web is not False:
+                    web = org_web
             if email is True:
                 email = None
             if web is True:
