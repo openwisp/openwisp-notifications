@@ -434,6 +434,30 @@ class TestNotificationSetting(TestOrganizationMixin, TransactionTestCase):
         self.assertEqual(org_setting.web, False)
         self.assertEqual(org_setting.email, False)
 
+        with self.subTest("global email=False, web=True"):
+            global_setting.refresh_from_db()
+            global_setting.email = False
+            global_setting.web = True
+            global_setting.save()
+            org = self._create_org(name="Asymmetric Org Email False")
+            org_setting = NotificationSetting.objects.get(
+                user=admin, organization=org, type="default"
+            )
+            self.assertEqual(org_setting.email, False)
+            self.assertEqual(org_setting.web, True)
+
+        with self.subTest("global web=False, email=True"):
+            global_setting.refresh_from_db()
+            global_setting.web = False
+            global_setting.email = True
+            global_setting.save()
+            org = self._create_org(name="Asymmetric Org Web False")
+            org_setting = NotificationSetting.objects.get(
+                user=admin, organization=org, type="default"
+            )
+            self.assertEqual(org_setting.web, False)
+            self.assertEqual(org_setting.email, True)
+
     def test_org_admin_addition_respects_global_preferences(self):
         user = self._get_user()
         org1 = self._get_org()
@@ -460,3 +484,39 @@ class TestNotificationSetting(TestOrganizationMixin, TransactionTestCase):
         )
         self.assertEqual(org2_setting.web, False)
         self.assertEqual(org2_setting.email, False)
+
+        with self.subTest("global email=False, web=True"):
+            new_user = self._create_operator()
+            org_a = self._create_org(name="Asymmetric Add Org A")
+            self._create_org_user(user=new_user, organization=org_a, is_admin=True)
+            new_global = NotificationSetting.objects.get(
+                user=new_user, organization=None, type=None
+            )
+            new_global.email = False
+            new_global.web = True
+            new_global.save()
+            org_b = self._create_org(name="Asymmetric Add Org B")
+            self._create_org_user(user=new_user, organization=org_b, is_admin=True)
+            org_setting = NotificationSetting.objects.get(
+                user=new_user, organization=org_b, type="default"
+            )
+            self.assertEqual(org_setting.email, False)
+            self.assertEqual(org_setting.web, True)
+
+        with self.subTest("global web=False, email=True"):
+            new_user = self._create_operator()
+            org_a = self._create_org(name="Asymmetric Add Org C")
+            self._create_org_user(user=new_user, organization=org_a, is_admin=True)
+            new_global = NotificationSetting.objects.get(
+                user=new_user, organization=None, type=None
+            )
+            new_global.web = False
+            new_global.email = True
+            new_global.save()
+            org_b = self._create_org(name="Asymmetric Add Org D")
+            self._create_org_user(user=new_user, organization=org_b, is_admin=True)
+            org_setting = NotificationSetting.objects.get(
+                user=new_user, organization=org_b, type="default"
+            )
+            self.assertEqual(org_setting.web, False)
+            self.assertEqual(org_setting.email, True)
