@@ -445,15 +445,26 @@ class AbstractNotificationSetting(UUIDModel):
                 raise ValidationError("There can only be one global setting per user.")
 
     def save(self, *args, **kwargs):
+        explicit_global_update_fields = set(
+            getattr(self, "_explicit_global_update_fields", [])
+        )
+        if hasattr(self, "_explicit_global_update_fields"):
+            delattr(self, "_explicit_global_update_fields")
         if not self.web_notification:
             self.email = self.web_notification
         with transaction.atomic():
             if not self.organization and not self.type:
                 try:
-                    previous_state = self.__class__.objects.only("email").get(
+                    previous_state = self.__class__.objects.only("web", "email").get(
                         pk=self.pk
                     )
-                    updates = {"web": self.web}
+                    updates = {}
+
+                    if (
+                        self.web != previous_state.web
+                        or "web" in explicit_global_update_fields
+                    ):
+                        updates["web"] = self.web
 
                     # If global web notifications are disabled, then disable email notifications as well
                     if not self.web:
@@ -462,7 +473,10 @@ class AbstractNotificationSetting(UUIDModel):
                     # Update email notifiations only if it's different from the previous state
                     # Otherwise, it would overwrite the email notification settings for specific
                     # setting that were enabled by the user after disabling global email notifications
-                    if self.email != previous_state.email:
+                    if (
+                        self.email != previous_state.email
+                        or "email" in explicit_global_update_fields
+                    ):
                         updates["email"] = self.email
 
                     self.user.notificationsetting_set.exclude(pk=self.pk).update(

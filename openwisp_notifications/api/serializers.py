@@ -91,6 +91,16 @@ class NotificationSettingSerializer(ValidatedModelSerializer):
         data["email"] = instance.email_notification
         return data
 
+    def update(self, instance, validated_data):
+        explicit_global_fields = {
+            field for field in ["web", "email"] if field in validated_data
+        }
+        if explicit_global_fields and not instance.organization and not instance.type:
+            # The preferences UI can explicitly reapply the same global state.
+            # Preserve that intent so the model can resync organization rows.
+            instance._explicit_global_update_fields = explicit_global_fields
+        return super().update(instance, validated_data)
+
 
 class IgnoreObjectNotificationSerializer(serializers.ModelSerializer):
     class Meta:
