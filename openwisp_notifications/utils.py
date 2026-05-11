@@ -69,7 +69,6 @@ def send_notification_email(
     notifications_count=0,
     user=None,
 ):
-
     extra_context = {}
     current_site = Site.objects.get_current()
     if isinstance(notifications, load_model("Notification")):
@@ -168,8 +167,14 @@ def get_user_email_preference(notification):
         # therefore send email anyway.
         return True
     try:
-        return notification.recipient.notificationsetting_set.get(
-            organization=target_org, type=notification.type
-        ).email_notification
+        return (
+            # Avoid an extra query when email_notification accesses
+            # organization.notification_settings.
+            notification.recipient.notificationsetting_set.select_related(
+                "organization__notification_settings"
+            )
+            .get(organization=target_org, type=notification.type)
+            .email_notification
+        )
     except ObjectDoesNotExist:
         return False

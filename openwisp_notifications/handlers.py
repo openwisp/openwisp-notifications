@@ -83,15 +83,32 @@ def notify_handler(**kwargs):
         where = where | (Q(is_staff=True) & org_admin_query)
         where_group = org_admin_query
 
-        # We can only find notification setting if notification type and
-        # target organization is present.
+        # Notification preference resolution:
+        # user setting -> org setting -> type default.
+        #
+        # Users with web=None are included only when the fallback
+        # chain can still resolve to True. Org-level web settings
+        # are resolved via JOINs in the main query to avoid an
+        # additional OrganizationNotificationSettings lookup.
         if notification_type:
-            # Create notification for users who have opted for receiving notifications.
-            # For users who have not configured web_notifications,
-            # use default from notification type
             web_notification = Q(notificationsetting__web=True)
             if notification_template["web_notification"]:
-                web_notification |= Q(notificationsetting__web=None)
+                # Users with web=None inherit the org setting, so
+                # include them unless the org explicitly disables
+                # web notifications.
+                web_notification |= Q(
+                    notificationsetting__web=None,
+                ) & (
+                    Q(
+                        notificationsetting__organization__notification_settings__web=True
+                    )
+                    | Q(
+                        notificationsetting__organization__notification_settings__web=None
+                    )
+                    | Q(
+                        notificationsetting__organization__notification_settings__isnull=True
+                    )
+                )
 
             notification_setting = web_notification & Q(
                 notificationsetting__type=notification_type,
