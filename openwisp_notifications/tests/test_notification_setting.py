@@ -492,3 +492,56 @@ class TestNotificationSetting(TestOrganizationMixin, TransactionTestCase):
             )
             self.assertEqual(org_setting.email, False)
             self.assertEqual(org_setting.web, None)
+
+    def test_global_email_change_does_not_reset_user_web_override(self):
+        admin = self._create_admin()
+        org = self._get_org()
+        global_setting = NotificationSetting.objects.get(
+            user=admin,
+            organization=None,
+            type=None,
+        )
+        global_setting.web = True
+        global_setting.email = True
+        global_setting.full_clean()
+        global_setting.save()
+        notification_setting = NotificationSetting.objects.get(
+            user=admin,
+            organization=org,
+            type="default",
+        )
+        notification_setting.web = False
+        notification_setting.full_clean()
+        notification_setting.save()
+        notification_setting.refresh_from_db()
+        self.assertEqual(notification_setting.web, False)
+        # Change only global email preference
+        global_setting.email = False
+        global_setting.full_clean()
+        global_setting.save()
+        # Explicit user override must remain intact
+        notification_setting.refresh_from_db()
+        self.assertEqual(notification_setting.web, False)
+
+    def test_global_toggle_does_not_override_type_email_default(self):
+        admin = self._get_admin()
+        org = self._get_org("default")
+        generic_setting = NotificationSetting.objects.get(
+            user=admin, organization=org, type="generic_message"
+        )
+        self.assertIsNone(generic_setting.email)
+        self.assertEqual(generic_setting.email_notification, False)
+        # Disable global email so all settings changes to False
+        global_setting = NotificationSetting.objects.get(
+            user=admin, organization=None, type=None
+        )
+        global_setting.email = False
+        global_setting.full_clean()
+        global_setting.save()
+        # Enable email for global setting
+        global_setting.email = True
+        global_setting.full_clean()
+        global_setting.save()
+        generic_setting.refresh_from_db()
+        self.assertIsNone(generic_setting.email)
+        self.assertEqual(generic_setting.email_notification, False)

@@ -78,6 +78,27 @@ def delete_old_notifications(days):
     ).delete()
 
 
+def _resolve_initial_notification_setting(global_value, org_value):
+    """
+    Resolve initial stored value for a notification preference.
+
+    Stored semantics:
+
+    - False: explicit override disabling notifications
+    - None: inherit effective value from org/type defaults
+
+    We never persist True because enabled/default states are
+    represented through inheritance.
+    """
+    if global_value is False:
+        return False
+
+    if org_value is False:
+        return False
+
+    return None
+
+
 # Following tasks updates notification settings in database.
 # 'ns' is short for notification_setting
 def create_notification_settings(user, organizations, notification_types):
@@ -89,24 +110,22 @@ def create_notification_settings(user, organizations, notification_types):
         for org in organizations:
             # Any new notification setting shall inherit user's global
             # notification preferences.
-            email = False if global_setting.email is False else None
-            web = False if global_setting.web is False else None
-            if email is not False or web is not False:
-                try:
-                    org_notification_settings = org.notification_settings
-                    org_email = org_notification_settings.email
-                    org_web = org_notification_settings.web
-                except ObjectDoesNotExist:
-                    org_email = app_settings.EMAIL_ENABLED
-                    org_web = app_settings.WEB_ENABLED
-                if email is not False:
-                    email = org_email
-                if web is not False:
-                    web = org_web
-            if email is True:
-                email = None
-            if web is True:
-                web = None
+            try:
+                org_notification_settings = org.notification_settings
+                org_email = org_notification_settings.email
+                org_web = org_notification_settings.web
+            except ObjectDoesNotExist:
+                org_email = app_settings.EMAIL_ENABLED
+                org_web = app_settings.WEB_ENABLED
+
+            email = _resolve_initial_notification_setting(
+                global_setting.email,
+                org_email,
+            )
+            web = _resolve_initial_notification_setting(
+                global_setting.web,
+                org_web,
+            )
             # If NotificationSetting already exists, then we ensure it is not marked deleted
             updated = NotificationSetting.objects.filter(
                 user=user, type=type, organization=org

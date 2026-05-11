@@ -1545,30 +1545,36 @@ class TestNotificationSending(TestOrganizationMixin, TransactionTestCase):
         mail.outbox.clear()
         cache.delete(Notification.get_user_batched_notifications_cache_key(self.admin))
 
-    def _set_org_notification_settings(self, web=None, email=None):
+    def _set_org_notification_settings(self, **kwargs):
         org_setting = OrganizationNotificationSettings.objects.get(
             organization=self.org
         )
-        org_setting.web = web
-        org_setting.email = email
+        if "web" in kwargs:
+            org_setting.web = kwargs["web"]
+        if "email" in kwargs:
+            org_setting.email = kwargs["email"]
         org_setting.full_clean()
         org_setting.save()
 
-    def _set_user_notification_settings(self, type_name, web=None, email=None):
+    def _set_user_notification_settings(self, type_name, **kwargs):
         ns = NotificationSetting.objects.get(
             user=self.admin, organization=self.org, type=type_name
         )
-        ns.web = web
-        ns.email = email
+        if "web" in kwargs:
+            ns.web = kwargs["web"]
+        if "email" in kwargs:
+            ns.email = kwargs["email"]
         ns.full_clean()
         ns.save()
 
-    def _set_global_notification_settings(self, web=None, email=None):
+    def _set_global_notification_settings(self, **kwargs):
         ns = NotificationSetting.objects.get(
             user=self.admin, type=None, organization=None
         )
-        ns.web = web
-        ns.email = email
+        if "web" in kwargs:
+            ns.web = kwargs["web"]
+        if "email" in kwargs:
+            ns.email = kwargs["email"]
         ns.full_clean()
         ns.save()
 

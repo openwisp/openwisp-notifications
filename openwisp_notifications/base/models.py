@@ -446,27 +446,22 @@ class AbstractNotificationSetting(UUIDModel):
 
     def normalize_settings(self):
         if self.web_notification is False:
-            self.email = self.web_notification
+            self.email = False
         if self.organization and self.type:
             should_enable_email = self.type_config["email_notification"]
-            should_enabled_web = self.type_config["web_notification"]
-            if self.organization and hasattr(
-                self.organization, "notification_settings"
-            ):
-                if self.organization.notification_settings.web is not None:
-                    should_enabled_web = (
-                        should_enabled_web
-                        and self.organization.notification_settings.web
-                    )
-                if self.organization.notification_settings.email is not None:
-                    should_enable_email = (
-                        should_enable_email
-                        and self.organization.notification_settings.email
-                    )
+            should_enable_web = self.type_config["web_notification"]
+            if hasattr(self.organization, "notification_settings"):
+                should_enable_web = (
+                    should_enable_web and self.organization.notification_settings.web
+                )
+                should_enable_email = (
+                    should_enable_email
+                    and self.organization.notification_settings.email
+                )
 
             if self.email == should_enable_email:
                 self.email = None
-            if self.web == should_enabled_web:
+            if self.web == should_enable_web:
                 self.web = None
 
     def save(self, *args, **kwargs):
@@ -474,20 +469,22 @@ class AbstractNotificationSetting(UUIDModel):
         with transaction.atomic():
             if not self.organization and not self.type:
                 try:
-                    previous_state = self.__class__.objects.only("email").get(
+                    previous_state = self.__class__.objects.only("email", "web").get(
                         pk=self.pk
                     )
-                    updates = {"web": self.web}
+                    updates = {}
+
+                    if self.web != previous_state.web:
+                        updates["web"] = None if self.web is True else self.web
 
                     # If global web notifications are disabled, then disable email notifications as well
                     if self.web is False:
                         updates["email"] = False
-
-                    # Update email notifiations only if it's different from the previous state
+                    # Update email notifications only if it's different from the previous state
                     # Otherwise, it would overwrite the email notification settings for specific
                     # setting that were enabled by the user after disabling global email notifications
-                    if self.email != previous_state.email:
-                        updates["email"] = self.email
+                    elif self.email != previous_state.email:
+                        updates["email"] = None if self.email is True else self.email
 
                     self.user.notificationsetting_set.exclude(pk=self.pk).update(
                         **updates
@@ -510,11 +507,7 @@ class AbstractNotificationSetting(UUIDModel):
         if self.email is not None:
             return self.email
         email_enabled = self.type_config.get("email_notification")
-        if (
-            self.organization
-            and hasattr(self.organization, "notification_settings")
-            and self.organization.notification_settings.email is not None
-        ):
+        if self.organization and hasattr(self.organization, "notification_settings"):
             email_enabled = (
                 email_enabled and self.organization.notification_settings.email
             )
@@ -525,11 +518,7 @@ class AbstractNotificationSetting(UUIDModel):
         if self.web is not None:
             return self.web
         web_enabled = self.type_config.get("web_notification")
-        if (
-            self.organization
-            and hasattr(self.organization, "notification_settings")
-            and self.organization.notification_settings.web is not None
-        ):
+        if self.organization and hasattr(self.organization, "notification_settings"):
             web_enabled = web_enabled and self.organization.notification_settings.web
         return web_enabled
 

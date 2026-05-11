@@ -71,14 +71,7 @@ def notify_handler(**kwargs):
     where = Q(is_superuser=True)
     not_where = Q()
     where_group = Q()
-    org_web = None
     if target_org:
-        org_settings = (
-            OrganizationNotificationSettings.objects.filter(organization_id=target_org)
-            .only("web")
-            .first()
-        )
-        org_web = getattr(org_settings, "web", None)
         org_admin_query = Q(
             **{
                 f"{user_app_name}_organizationuser__organization": target_org,
@@ -88,17 +81,32 @@ def notify_handler(**kwargs):
         where = where | (Q(is_staff=True) & org_admin_query)
         where_group = org_admin_query
 
-        # Notification preference filtering
+        # Notification preference resolution:
+        # user setting -> org setting -> type default.
         #
-        # Resolution order:
-        # user setting -> org setting -> type default
-        #
-        # Users with web=None are included only if the fallback
-        # chain can still resolve to True.
+        # Users with web=None are included only when the fallback
+        # chain can still resolve to True. Org-level web settings
+        # are resolved via JOINs in the main query to avoid an
+        # additional OrganizationNotificationSettings lookup.
         if notification_type:
             web_notification = Q(notificationsetting__web=True)
-            if org_web is not False and notification_template["web_notification"]:
-                web_notification |= Q(notificationsetting__web=None)
+            if notification_template["web_notification"]:
+                # Users with web=None inherit the org setting, so
+                # include them unless the org explicitly disables
+                # web notifications.
+                web_notification |= Q(
+                    notificationsetting__web=None,
+                ) & (
+                    Q(
+                        notificationsetting__organization__notification_settings__web=True
+                    )
+                    | Q(
+                        notificationsetting__organization__notification_settings__web=None
+                    )
+                    | Q(
+                        notificationsetting__organization__notification_settings__isnull=True
+                    )
+                )
 
             notification_setting = web_notification & Q(
                 notificationsetting__type=notification_type,
