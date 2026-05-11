@@ -1793,6 +1793,7 @@ class TestNotificationSending(TestOrganizationMixin, TransactionTestCase):
                 user=self.admin, type=None, organization=None
             )
             global_setting.web = False
+            global_setting.full_clean()
             global_setting.save()
             notify.send(
                 sender=self.admin,

@@ -426,6 +426,7 @@ class TestNotificationSetting(TestOrganizationMixin, TransactionTestCase):
         )
         global_setting.web = False
         global_setting.email = False
+        global_setting.full_clean()
         global_setting.save()
         org = self._create_org(name="New Test Org")
         org_setting = NotificationSetting.objects.get(
@@ -457,6 +458,7 @@ class TestNotificationSetting(TestOrganizationMixin, TransactionTestCase):
         )
         global_setting.web = False
         global_setting.email = False
+        global_setting.full_clean()
         global_setting.save()
         # Updating global setting should update existing org settings
         org1_setting = NotificationSetting.objects.get(
