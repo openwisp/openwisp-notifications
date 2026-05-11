@@ -420,6 +420,9 @@ class TestNotificationSetting(TestOrganizationMixin, TransactionTestCase):
                 global_setting.save()
 
     def test_new_org_creation_respects_global_preferences(self):
+        """
+        Regression test for https://github.com/openwisp/openwisp-notifications/issues/448
+        """
         admin = self._get_admin()
         global_setting = NotificationSetting.objects.get(
             user=admin, organization=None, type=None
@@ -448,6 +451,9 @@ class TestNotificationSetting(TestOrganizationMixin, TransactionTestCase):
             self.assertEqual(org_setting.web, None)
 
     def test_org_admin_addition_respects_global_preferences(self):
+        """
+        Regression test for https://github.com/openwisp/openwisp-notifications/issues/448
+        """
         user = self._get_user()
         org1 = self._get_org()
         self._create_org_user(user=user, organization=org1, is_admin=True)
@@ -492,6 +498,37 @@ class TestNotificationSetting(TestOrganizationMixin, TransactionTestCase):
             )
             self.assertEqual(org_setting.email, False)
             self.assertEqual(org_setting.web, None)
+
+    def test_org_setting_change_does_not_change_user_overrides(self):
+        """
+        Regression test for https://github.com/openwisp/openwisp-notifications/issues/448
+        """
+        admin = self._create_admin()
+        org = self._get_org()
+        global_setting = NotificationSetting.objects.get(
+            user=admin, organization=None, type=None
+        )
+        # User explicitly disables web for this org
+        org_setting = NotificationSetting.objects.get(
+            user=admin, organization=org, type="default"
+        )
+        org_setting.web = False
+        org_setting.full_clean()
+        org_setting.save()
+        org_setting.refresh_from_db()
+        self.assertEqual(org_setting.web, False)
+
+        # Toggle global web off and back on
+        global_setting.web = False
+        global_setting.full_clean()
+        global_setting.save()
+        global_setting.web = True
+        global_setting.full_clean()
+        global_setting.save()
+        default_type_setting = NotificationSetting.objects.get(
+            user=admin, organization=org, type="default"
+        )
+        self.assertEqual(default_type_setting.web_notification, True)
 
     def test_global_email_change_does_not_reset_user_web_override(self):
         admin = self._create_admin()

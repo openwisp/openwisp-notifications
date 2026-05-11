@@ -23,30 +23,55 @@ screenshot below:
 Alternatively, you can also visit ``/notification/preferences/`` to manage
 your settings.
 
+Preference Resolution
+---------------------
+
+Notification preferences are resolved using the following inheritance
+chain:
+
+1. User-specific notification preference
+2. Organization notification preference
+3. Notification type default
+
+A notification setting can therefore either:
+
+- explicitly enable notifications,
+- explicitly disable notifications,
+- or inherit the effective value from organization and notification type
+  defaults.
+
 .. note::
 
     - You can disable notifications globally while still enabling them for
-      specific organizations.
+      specific organizations or notification types.
     - Notification settings are now linked: disabling web notifications
       will automatically disable email notifications, and enabling email
       notifications will automatically enable web notifications.
+    - Notification settings inherit organization and notification type
+      defaults whenever possible instead of storing redundant explicit
+      values.
     - Deleting notification settings is no longer possible via the web
       interface (please use the REST API if removal is needed).
 
-Notification settings are automatically generated for all notification
-types and organizations for every user. Superusers have the ability to
-manage notification settings for all users, including adding or deleting
-them. Meanwhile, staff users can modify their preferred notification
-delivery methods, choosing between receiving notifications via web, email,
-or both. Additionally, users have the option to disable notifications
-entirely by turning off both web and email notification settings.
+Notification settings are automatically generated for notification types
+and organizations associated with a user. Effective notification behavior
+is resolved dynamically using inherited defaults. Superusers have the
+ability to manage notification settings for all users, including adding or
+deleting them. Meanwhile, staff users can modify their preferred
+notification delivery methods, choosing between receiving notifications
+via web, email, or both. Additionally, users have the option to disable
+notifications entirely by turning off both web and email notification
+settings.
 
 .. note::
 
-    If a user has not configured their preferences for email or web
-    notifications for a specific notification type, the system will
-    default to using the ``email_notification`` or ``web_notification``
-    option defined for that notification type.
+    If a user has not explicitly configured a notification preference, the
+    system resolves the effective value using the following order:
+
+    1. User notification preference
+    2. Organization notification preference
+    3. Notification type default (``email_notification`` /
+       ``web_notification``)
 
 Organization Settings
 ---------------------
@@ -72,9 +97,9 @@ notification settings from the **Organization Admin**:
 Key points:
 
 - New users inherit these default settings automatically.
-- Changes apply to all existing users. For example, disabling email
-  notifications at the organization level disables them for all users in
-  the organization.
+- Organization settings act as defaults for all users in the organization.
+- Users inheriting organization defaults will automatically observe
+  organization-level changes.
 - Users can override these defaults by customizing their own notification
   preferences.
 - Organization settings override global defaults defined in Django
