@@ -668,7 +668,7 @@ class TestNotificationApi(
                 "notification_setting",
                 notification_setting.pk,
             )
-            with self.assertNumQueries(3):
+            with self.assertNumQueries(2):
                 response = self.client.get(url)
             self.assertEqual(response.status_code, 200)
             data = response.data

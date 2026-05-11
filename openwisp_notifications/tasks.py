@@ -78,6 +78,25 @@ def delete_old_notifications(days):
     ).delete()
 
 
+def _resolve_initial_notification_setting(global_value, org_value):
+    """
+    Resolve initial stored value for a notification preference.
+
+    Stored semantics:
+
+    - False: explicit override disabling notifications
+    - None: inherit effective value from org/type defaults
+
+    We never persist True because enabled/default states are
+    represented through inheritance.
+    """
+    if global_value is False:
+        return False
+    if org_value is False:
+        return False
+    return None
+
+
 # Following tasks updates notification settings in database.
 # 'ns' is short for notification_setting
 def create_notification_settings(user, organizations, notification_types):
@@ -87,13 +106,24 @@ def create_notification_settings(user, organizations, notification_types):
 
     for type in notification_types:
         for org in organizations:
+            # Any new notification setting shall inherit user's global
+            # notification preferences.
             try:
                 org_notification_settings = org.notification_settings
-                email = org_notification_settings.email
-                web = org_notification_settings.web
+                org_email = org_notification_settings.email
+                org_web = org_notification_settings.web
             except ObjectDoesNotExist:
-                email = app_settings.WEB_ENABLED
-                web = app_settings.EMAIL_ENABLED
+                org_email = app_settings.EMAIL_ENABLED
+                org_web = app_settings.WEB_ENABLED
+
+            email = _resolve_initial_notification_setting(
+                global_setting.email,
+                org_email,
+            )
+            web = _resolve_initial_notification_setting(
+                global_setting.web,
+                org_web,
+            )
             # If NotificationSetting already exists, then we ensure it is not marked deleted
             updated = NotificationSetting.objects.filter(
                 user=user, type=type, organization=org
@@ -105,8 +135,8 @@ def create_notification_settings(user, organizations, notification_types):
                     user=user,
                     type=type,
                     organization=org,
-                    email=None if email else False,
-                    web=None if web else False,
+                    email=email,
+                    web=web,
                     deleted=False,
                 )
 

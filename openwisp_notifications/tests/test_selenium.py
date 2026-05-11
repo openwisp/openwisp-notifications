@@ -1,8 +1,9 @@
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from django.test import tag
 from django.urls import reverse
+from selenium.common.exceptions import StaleElementReferenceException, TimeoutException
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import Select
+from selenium.webdriver.support.ui import Select, WebDriverWait
 
 from openwisp_notifications.signals import notify
 from openwisp_notifications.swapper import load_model, swapper_load_model
@@ -252,7 +253,7 @@ class TestSelenium(
                 NotificationSetting.objects.get(
                     pk=input.get_attribute("data-pk")
                 ).email,
-                True,
+                None,
             )
 
     def test_empty_notification_preference_page(self):
@@ -269,6 +270,112 @@ class TestSelenium(
             no_organizations_element.text,
             "No organizations available.",
         )
+
+    def test_notification_preference_resolution_with_org_and_user_override(self):
+        Organization.objects.all().delete()
+        self.login()
+        org = self._get_org()
+        setting = NotificationSetting.objects.get(
+            user=self.admin,
+            organization=org,
+            type="default",
+            web=None,
+            email=None,
+        )
+        self.open(reverse("notifications:notification_preference"))
+
+        def _expand_org():
+            self.find_element(By.CSS_SELECTOR, ".toggle-icon").click()
+
+        def _set_org_settings(web, email):
+            org.notification_settings.refresh_from_db()
+            org.notification_settings.web = web
+            org.notification_settings.email = email
+            org.notification_settings.save()
+
+        def _get_web_checkbox():
+            return self.find_element(
+                By.CSS_SELECTOR,
+                f'input[data-pk="{setting.pk}"][data-type="web"]',
+                wait_for="presence",
+            )
+
+        def _get_email_checkbox():
+            return self.find_element(
+                By.CSS_SELECTOR,
+                f'input[data-pk="{setting.pk}"][data-type="email"]',
+                wait_for="presence",
+            )
+
+        def _dismiss_toast_if_present():
+            try:
+                toast = WebDriverWait(self.web_driver, 1).until(
+                    lambda d: d.find_element(By.CLASS_NAME, "toast")
+                )
+                toast.click()
+            except (TimeoutException, StaleElementReferenceException):
+                pass
+
+        def _set_user_web(value: bool):
+            cb = _get_web_checkbox()
+            if cb.is_selected() != value:
+                parent = cb.find_element(By.XPATH, "..")
+                _dismiss_toast_if_present()
+                parent.click()
+
+        def _set_user_email(value: bool):
+            cb = _get_email_checkbox()
+            if cb.is_selected() != value:
+                parent = cb.find_element(By.XPATH, "..")
+                _dismiss_toast_if_present()
+                parent.click()
+
+        def _verify_state(expected_web, expected_email):
+            self.web_driver.refresh()
+            self._wait_until_page_ready()
+            _expand_org()
+            self.assertEqual(_get_web_checkbox().is_selected(), expected_web)
+            self.assertEqual(_get_email_checkbox().is_selected(), expected_email)
+
+        with self.subTest("Org enabled + user None → enabled"):
+            _set_org_settings(web=True, email=True)
+            self.assertEqual(setting.web, None)
+            self.assertEqual(setting.email, None)
+            _verify_state(expected_web=True, expected_email=True)
+
+        with self.subTest("Org disabled + user None → disabled"):
+            _set_org_settings(web=False, email=False)
+            self.assertEqual(setting.web, None)
+            self.assertEqual(setting.email, None)
+            _verify_state(expected_web=False, expected_email=False)
+
+        with self.subTest("Org disabled + user override ON → enabled"):
+            _set_org_settings(web=False, email=False)
+            _set_user_web(True)
+            _set_user_email(True)
+            _verify_state(expected_web=True, expected_email=True)
+
+        with self.subTest("Org enabled + user override ON → enabled"):
+            _set_org_settings(web=True, email=True)
+            _set_user_web(True)
+            _set_user_email(True)
+            _verify_state(expected_web=True, expected_email=True)
+
+        with self.subTest("Org enabled + user override OFF → disabled"):
+            _set_org_settings(web=True, email=True)
+            _set_user_web(False)
+            _set_user_email(False)
+            _verify_state(expected_web=False, expected_email=False)
+
+        with self.subTest("Return to inherited state → DB None, UI ON"):
+            _set_org_settings(web=True, email=True)
+            _set_user_web(True)
+            _set_user_email(True)
+            _verify_state(expected_web=True, expected_email=True)
+
+            setting.refresh_from_db()
+            self.assertIsNone(setting.web)
+            self.assertIsNone(setting.email)
 
     def test_organization_admin_notification_settings(self):
         """Test the organization-settings.js functionality in Django admin"""

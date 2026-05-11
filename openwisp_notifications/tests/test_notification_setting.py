@@ -247,6 +247,7 @@ class TestNotificationSetting(TestOrganizationMixin, TransactionTestCase):
         notification_setting = queryset.first()
 
         notification_setting.full_clean()
+        notification_setting.save()
         self.assertIsNone(notification_setting.email)
         self.assertIsNone(notification_setting.web)
 
@@ -417,3 +418,213 @@ class TestNotificationSetting(TestOrganizationMixin, TransactionTestCase):
             with self.assertRaises(ValidationError):
                 global_setting.full_clean()
                 global_setting.save()
+
+    def test_new_org_creation_respects_global_preferences(self):
+        """
+        Regression test for bug 1 in https://github.com/openwisp/openwisp-notifications/issues/448
+        """
+        admin = self._get_admin()
+        global_setting = NotificationSetting.objects.get(
+            user=admin, organization=None, type=None
+        )
+        global_setting.web = False
+        global_setting.email = False
+        global_setting.full_clean()
+        global_setting.save()
+        org = self._create_org(name="New Test Org")
+        org_setting = NotificationSetting.objects.get(
+            user=admin, organization=org, type="default"
+        )
+        self.assertEqual(org_setting.web, False)
+        self.assertEqual(org_setting.email, False)
+
+        with self.subTest("global email=False, web=True"):
+            global_setting.refresh_from_db()
+            global_setting.email = False
+            global_setting.web = True
+            global_setting.save()
+            org = self._create_org(name="Asymmetric Org Email False")
+            org_setting = NotificationSetting.objects.get(
+                user=admin, organization=org, type="default"
+            )
+            self.assertEqual(org_setting.email, False)
+            self.assertEqual(org_setting.web, None)
+
+    def test_org_admin_addition_respects_global_preferences(self):
+        """
+        Regression test for bug 2 in https://github.com/openwisp/openwisp-notifications/issues/448
+        """
+        user = self._get_user()
+        org1 = self._get_org()
+        self._create_org_user(user=user, organization=org1, is_admin=True)
+        # Global notification setting is created only when the user is
+        # admin of atleast one organization.
+        global_setting = NotificationSetting.objects.get(
+            user=user, organization=None, type=None
+        )
+        global_setting.web = False
+        global_setting.email = False
+        global_setting.full_clean()
+        global_setting.save()
+        # Updating global setting should update existing org settings
+        org1_setting = NotificationSetting.objects.get(
+            user=user, organization=org1, type="default"
+        )
+        self.assertEqual(org1_setting.web, False)
+        self.assertEqual(org1_setting.email, False)
+        # New organization should also respect global preferences
+        org2 = self._create_org(name="New Test Org")
+        self._create_org_user(user=user, organization=org2, is_admin=True)
+        org2_setting = NotificationSetting.objects.get(
+            user=user, organization=org2, type="default"
+        )
+        self.assertEqual(org2_setting.web, False)
+        self.assertEqual(org2_setting.email, False)
+
+        with self.subTest("global email=False, web=True"):
+            new_user = self._create_operator()
+            org_a = self._create_org(name="Asymmetric Add Org A")
+            self._create_org_user(user=new_user, organization=org_a, is_admin=True)
+            new_global = NotificationSetting.objects.get(
+                user=new_user, organization=None, type=None
+            )
+            new_global.email = False
+            new_global.web = True
+            new_global.save()
+            org_b = self._create_org(name="Asymmetric Add Org B")
+            self._create_org_user(user=new_user, organization=org_b, is_admin=True)
+            org_setting = NotificationSetting.objects.get(
+                user=new_user, organization=org_b, type="default"
+            )
+            self.assertEqual(org_setting.email, False)
+            self.assertEqual(org_setting.web, None)
+
+    def test_org_setting_change_does_not_change_user_overrides(self):
+        """
+        Regression test for bug 3 in https://github.com/openwisp/openwisp-notifications/issues/448
+        """
+        admin = self._create_admin()
+        org = self._get_org()
+        global_setting = NotificationSetting.objects.get(
+            user=admin, organization=None, type=None
+        )
+        # User explicitly disables web for this org
+        org_setting = NotificationSetting.objects.get(
+            user=admin, organization=org, type="default"
+        )
+        org_setting.web = False
+        org_setting.full_clean()
+        org_setting.save()
+        org_setting.refresh_from_db()
+        self.assertEqual(org_setting.web, False)
+
+        # Toggle global web off and back on
+        global_setting.web = False
+        global_setting.full_clean()
+        global_setting.save()
+        global_setting.web = True
+        global_setting.full_clean()
+        global_setting.save()
+        default_type_setting = NotificationSetting.objects.get(
+            user=admin, organization=org, type="default"
+        )
+        self.assertEqual(default_type_setting.web_notification, True)
+
+    def test_global_email_change_does_not_reset_user_web_override(self):
+        admin = self._create_admin()
+        org = self._get_org()
+        global_setting = NotificationSetting.objects.get(
+            user=admin,
+            organization=None,
+            type=None,
+        )
+        global_setting.web = True
+        global_setting.email = True
+        global_setting.full_clean()
+        global_setting.save()
+        notification_setting = NotificationSetting.objects.get(
+            user=admin,
+            organization=org,
+            type="default",
+        )
+        notification_setting.web = False
+        notification_setting.full_clean()
+        notification_setting.save()
+        notification_setting.refresh_from_db()
+        self.assertEqual(notification_setting.web, False)
+        # Change only global email preference
+        global_setting.email = False
+        global_setting.full_clean()
+        global_setting.save()
+        # Explicit user override must remain intact
+        notification_setting.refresh_from_db()
+        self.assertEqual(notification_setting.web, False)
+
+    def test_global_toggle_does_not_override_type_email_default(self):
+        admin = self._get_admin()
+        org = self._get_org("default")
+        generic_setting = NotificationSetting.objects.get(
+            user=admin, organization=org, type="generic_message"
+        )
+        self.assertIsNone(generic_setting.email)
+        self.assertEqual(generic_setting.email_notification, False)
+        # Disable global email so all settings changes to False
+        global_setting = NotificationSetting.objects.get(
+            user=admin, organization=None, type=None
+        )
+        global_setting.email = False
+        global_setting.full_clean()
+        global_setting.save()
+        # Enable email for global setting
+        global_setting.email = True
+        global_setting.full_clean()
+        global_setting.save()
+        generic_setting.refresh_from_db()
+        self.assertIsNone(generic_setting.email)
+        self.assertEqual(generic_setting.email_notification, False)
+
+    def test_user_explicit_false_not_collapsed_when_type_enabled_default(self):
+        admin = self._get_admin()
+        org = self._get_org()
+        notification_setting = NotificationSetting.objects.get(
+            user=admin, organization=org, type="default"
+        )
+        self.assertEqual(notification_setting.type_config["email_notification"], True)
+        # User explicitly disables email for this org
+        notification_setting.email = False
+        notification_setting.full_clean()
+        notification_setting.save()
+        notification_setting.refresh_from_db()
+        self.assertEqual(notification_setting.email_notification, False)
+        # Toggle organization notification settings
+        org.notification_settings.email = False
+        org.notification_settings.full_clean()
+        org.notification_settings.save()
+        org.notification_settings.email = True
+        org.notification_settings.save()
+        notification_setting.refresh_from_db()
+        self.assertEqual(notification_setting.email, False)
+        self.assertEqual(notification_setting.email_notification, False)
+
+    def test_user_explicit_false_not_collapsed_on_web_when_type_enabled(self):
+        admin = self._get_admin()
+        org = self._get_org()
+        notification_setting = NotificationSetting.objects.get(
+            user=admin, organization=org, type="default"
+        )
+        self.assertEqual(notification_setting.type_config["web_notification"], True)
+        # User explicitly disables web for this org
+        notification_setting.web = False
+        notification_setting.full_clean()
+        notification_setting.save()
+        notification_setting.refresh_from_db()
+        self.assertEqual(notification_setting.web_notification, False)
+        # Toggle organization notification settings
+        org.notification_settings.web = False
+        org.notification_settings.full_clean()
+        org.notification_settings.save()
+        org.notification_settings.web = True
+        org.notification_settings.save()
+        notification_setting.refresh_from_db()
+        self.assertEqual(notification_setting.web, False)
+        self.assertEqual(notification_setting.web_notification, False)
