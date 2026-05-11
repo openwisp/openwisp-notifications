@@ -445,6 +445,23 @@ class AbstractNotificationSetting(UUIDModel):
                 raise ValidationError("There can only be one global setting per user.")
 
     def normalize_settings(self):
+        """
+        Normalize stored notification preferences into sparse overrides.
+
+        Effective notification preferences are resolved through inheritance:
+
+            user setting -> organization setting -> notification type default
+
+        Stored values follow these semantics:
+            - True/False: explicit user override notification settings.
+            - None: inherit effective value from organization/type defaults.
+
+        Explicit enabled states are collapsed to ``None`` whenever they
+        match the inherited effective value, avoiding redundant storage.
+
+        Email notifications cannot be enabled when web notifications are
+        effectively disabled.
+        """
         if self.web_notification is False:
             self.email = False
         if self.organization and self.type:
@@ -504,6 +521,21 @@ class AbstractNotificationSetting(UUIDModel):
 
     @property
     def email_notification(self):
+        """
+        Resolve effective email notification preference.
+
+        Resolution order:
+            1. Explicit user preference stored on this notification setting.
+            2. Organization-level notification preference.
+            3. Notification type default configuration.
+
+        Stored values use sparse inheritance semantics:
+            - True/False: explicitly set by the user.
+            - None: inherit from organization/type defaults.
+
+        Explicit True values are normalized away and represented through
+        inheritance whenever possible.
+        """
         if self.email is not None:
             return self.email
         email_enabled = self.type_config.get("email_notification")
@@ -515,6 +547,21 @@ class AbstractNotificationSetting(UUIDModel):
 
     @property
     def web_notification(self):
+        """
+        Resolve effective web notification preference.
+
+        Resolution order:
+            1. Explicit user preference stored on this notification setting.
+            2. Organization-level notification preference.
+            3. Notification type default configuration.
+
+        Stored values use sparse inheritance semantics:
+            - True/False: explicitly set by the user.
+            - None: inherit from organization/type defaults.
+
+        Explicit True values are normalized away and represented through
+        inheritance whenever possible.
+        """
         if self.web is not None:
             return self.web
         web_enabled = self.type_config.get("web_notification")
