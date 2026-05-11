@@ -1,7 +1,7 @@
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from django.test import tag
 from django.urls import reverse
-from selenium.common.exceptions import TimeoutException
+from selenium.common.exceptions import StaleElementReferenceException, TimeoutException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select, WebDriverWait
 
@@ -313,7 +313,7 @@ class TestSelenium(
                     lambda d: d.find_element(By.CLASS_NAME, "toast")
                 )
                 toast.click()
-            except TimeoutException:
+            except (TimeoutException, StaleElementReferenceException):
                 pass
 
         def _set_user_web(value: bool):

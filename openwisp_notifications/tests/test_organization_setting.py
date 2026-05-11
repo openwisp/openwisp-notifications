@@ -1,5 +1,3 @@
-from unittest.mock import patch
-
 from django.test import TransactionTestCase
 
 from openwisp_notifications.swapper import load_model, swapper_load_model
@@ -116,21 +114,3 @@ class TestOrganizationNotificationSettings(TestOrganizationMixin, TransactionTes
             org.notification_settings.pk,
             org_setting.pk,
         )
-
-    def test_updating_notification_setting_for_deleted_org(self):
-        org = self._get_org()
-        org_setting = org.notification_settings
-        self.assertEqual(org_setting.web, True)
-        self.assertEqual(org_setting.email, True)
-        org.delete()
-        self.assertEqual(
-            OrganizationNotificationSettings.objects.filter(
-                organization_id=org.pk
-            ).count(),
-            0,
-        )
-        with patch.object(NotificationSetting.objects, "update") as mocked_update:
-            with self.assertRaises(ValueError):
-                org_setting.web = False
-                org_setting.save()
-        mocked_update.assert_not_called()

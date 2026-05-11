@@ -421,7 +421,7 @@ class TestNotificationSetting(TestOrganizationMixin, TransactionTestCase):
 
     def test_new_org_creation_respects_global_preferences(self):
         """
-        Regression test for https://github.com/openwisp/openwisp-notifications/issues/448
+        Regression test for bug 1 in https://github.com/openwisp/openwisp-notifications/issues/448
         """
         admin = self._get_admin()
         global_setting = NotificationSetting.objects.get(
@@ -452,7 +452,7 @@ class TestNotificationSetting(TestOrganizationMixin, TransactionTestCase):
 
     def test_org_admin_addition_respects_global_preferences(self):
         """
-        Regression test for https://github.com/openwisp/openwisp-notifications/issues/448
+        Regression test for bug 2 in https://github.com/openwisp/openwisp-notifications/issues/448
         """
         user = self._get_user()
         org1 = self._get_org()
@@ -501,7 +501,7 @@ class TestNotificationSetting(TestOrganizationMixin, TransactionTestCase):
 
     def test_org_setting_change_does_not_change_user_overrides(self):
         """
-        Regression test for https://github.com/openwisp/openwisp-notifications/issues/448
+        Regression test for bug 3 in https://github.com/openwisp/openwisp-notifications/issues/448
         """
         admin = self._create_admin()
         org = self._get_org()
@@ -582,3 +582,49 @@ class TestNotificationSetting(TestOrganizationMixin, TransactionTestCase):
         generic_setting.refresh_from_db()
         self.assertIsNone(generic_setting.email)
         self.assertEqual(generic_setting.email_notification, False)
+
+    def test_user_explicit_false_not_collapsed_when_type_enabled_default(self):
+        admin = self._get_admin()
+        org = self._get_org()
+        notification_setting = NotificationSetting.objects.get(
+            user=admin, organization=org, type="default"
+        )
+        self.assertEqual(notification_setting.type_config["email_notification"], True)
+        # User explicitly disables email for this org
+        notification_setting.email = False
+        notification_setting.full_clean()
+        notification_setting.save()
+        notification_setting.refresh_from_db()
+        self.assertEqual(notification_setting.email_notification, False)
+        # Toggle organization notification settings
+        org.notification_settings.email = False
+        org.notification_settings.full_clean()
+        org.notification_settings.save()
+        org.notification_settings.email = True
+        org.notification_settings.save()
+        notification_setting.refresh_from_db()
+        self.assertEqual(notification_setting.email, False)
+        self.assertEqual(notification_setting.email_notification, False)
+
+    def test_user_explicit_false_not_collapsed_on_web_when_type_enabled(self):
+        admin = self._get_admin()
+        org = self._get_org()
+        notification_setting = NotificationSetting.objects.get(
+            user=admin, organization=org, type="default"
+        )
+        self.assertEqual(notification_setting.type_config["web_notification"], True)
+        # User explicitly disables web for this org
+        notification_setting.web = False
+        notification_setting.full_clean()
+        notification_setting.save()
+        notification_setting.refresh_from_db()
+        self.assertEqual(notification_setting.web_notification, False)
+        # Toggle organization notification settings
+        org.notification_settings.web = False
+        org.notification_settings.full_clean()
+        org.notification_settings.save()
+        org.notification_settings.web = True
+        org.notification_settings.save()
+        notification_setting.refresh_from_db()
+        self.assertEqual(notification_setting.web, False)
+        self.assertEqual(notification_setting.web_notification, False)

@@ -47,9 +47,6 @@ A notification setting can therefore either:
     - Notification settings are now linked: disabling web notifications
       will automatically disable email notifications, and enabling email
       notifications will automatically enable web notifications.
-    - Notification settings inherit organization and notification type
-      defaults whenever possible instead of storing redundant explicit
-      values.
     - Deleting notification settings is no longer possible via the web
       interface (please use the REST API if removal is needed).
 

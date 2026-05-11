@@ -456,8 +456,8 @@ class AbstractNotificationSetting(UUIDModel):
             - True/False: explicit user override notification settings.
             - None: inherit effective value from organization/type defaults.
 
-        Explicit enabled states are collapsed to ``None`` whenever they
-        match the inherited effective value, avoiding redundant storage.
+        Explicit enabled states are collapsed to ``None`` whenever they match
+        the inherited effective value, avoiding redundant storage.
 
         Email notifications cannot be enabled when web notifications are
         effectively disabled.
@@ -476,9 +476,13 @@ class AbstractNotificationSetting(UUIDModel):
                     and self.organization.notification_settings.email
                 )
 
-            if self.email == should_enable_email:
+            if self.email == should_enable_email and not (
+                self.email is False and self.type_config["email_notification"] is True
+            ):
                 self.email = None
-            if self.web == should_enable_web:
+            if self.web == should_enable_web and not (
+                self.web is False and self.type_config["web_notification"] is True
+            ):
                 self.web = None
 
     def save(self, *args, **kwargs):

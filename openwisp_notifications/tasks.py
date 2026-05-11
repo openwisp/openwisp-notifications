@@ -92,10 +92,8 @@ def _resolve_initial_notification_setting(global_value, org_value):
     """
     if global_value is False:
         return False
-
     if org_value is False:
         return False
-
     return None
 
 
