@@ -144,27 +144,36 @@ def create_notification_settings(user, organizations, notification_types):
 @shared_task(base=OpenwispCeleryTask)
 def create_superuser_notification_settings(user_id):
     """
-    Adds notification setting for all notification types and organizations.
+    Adds notification settings for privileged users.
+    Creates a global row for staff and a full association grid for superusers.
+    This works on either staff users or super users.
     """
     user = User.objects.get(pk=user_id)
-    # Create notification settings for superuser
-    create_notification_settings(
-        user=user,
-        organizations=Organization.objects.all(),
-        notification_types=types.NOTIFICATION_TYPES.keys(),
-    )
+    if user.is_superuser:
+        create_notification_settings(
+            user=user,
+            organizations=Organization.objects.all(),
+            notification_types=types.NOTIFICATION_TYPES.keys(),
+        )
+    else:
+        # Creates global notification setting for the user
+        create_notification_settings(user=user, organizations=[], notification_types=[])
 
 
 @shared_task(base=OpenwispCeleryTask)
 def superuser_demoted_notification_setting(user_id):
     """
     Flags NotificationSettings as deleted for non-managed organizations
-    when a superuser is demoted to a non-superuser.
+    when a superuser is demoted to a non-superuser, or privileges are removed.
     """
     user = User.objects.get(pk=user_id)
-    NotificationSetting.objects.filter(user_id=user_id).exclude(
+    qs = NotificationSetting.objects.filter(user_id=user_id).exclude(
         organization__in=user.organizations_managed
-    ).update(deleted=True)
+    )
+    # Do not delete global setting if user is staff or manages at least one organization
+    if user.is_staff or user.organizations_managed:
+        qs = qs.exclude(organization=None)
+    qs.update(deleted=True)
 
 
 @shared_task(base=OpenwispCeleryTask)
@@ -184,6 +193,12 @@ def ns_register_unregister_notification_type(
     # Create notification settings for superusers
     for user in User.objects.filter(is_superuser=True).iterator():
         create_notification_settings(user, organizations, notification_types)
+
+    # Create notification settings for staff users
+    # Skip during single-type registration since global rows are independent of types
+    if notification_type is None:
+        for user in User.objects.filter(is_staff=True, is_superuser=False).iterator():
+            create_notification_settings(user, [], [])
 
     # Create notification settings for organization admin
     for org_user in OrganizationUser.objects.select_related(
@@ -212,9 +227,13 @@ def update_org_user_notificationsetting(org_user_id, user_id, org_id, is_org_adm
     if not user.is_superuser:
         # The following query covers conditions for change in admin status
         # and organization field of related OrganizationUser objects
-        NotificationSetting.objects.filter(user=user).exclude(
+        qs = NotificationSetting.objects.filter(user=user).exclude(
             organization_id__in=user.organizations_managed
-        ).update(deleted=True)
+        )
+        # Do not delete global setting if user is staff or manages at least one organization
+        if user.is_staff or user.organizations_managed:
+            qs = qs.exclude(organization=None)
+        qs.update(deleted=True)
 
     if not is_org_admin:
         return

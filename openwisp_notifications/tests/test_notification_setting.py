@@ -307,8 +307,11 @@ class TestNotificationSetting(TestOrganizationMixin, TransactionTestCase):
     @patch.object(create_superuser_notification_settings, "delay")
     def test_task_not_called_on_user_login(self, created_mock, demoted_mock):
         admin = self._create_admin()
+        # Called once for the superuser
+        self.assertEqual(created_mock.call_count, 1)
         org_user = self._create_staff_org_admin()
-        created_mock.assert_called_once()
+        # Called once again for the staff org admin user
+        self.assertEqual(created_mock.call_count, 2)
 
         created_mock.reset_mock()
         with self.subTest("Test task not called if superuser status is unchanged"):
@@ -628,3 +631,138 @@ class TestNotificationSetting(TestOrganizationMixin, TransactionTestCase):
         notification_setting.refresh_from_db()
         self.assertEqual(notification_setting.web, False)
         self.assertEqual(notification_setting.web_notification, False)
+
+    def test_staff_user_created(self):
+        """
+        Verify staff users receive global setting row on creation.
+        """
+        self._create_user(username="staff", email="staff@example.com", is_staff=True)
+        self.assertEqual(
+            NotificationSetting.objects.filter(organization=None, type=None).count(), 1
+        )
+
+    def test_user_promoted_to_staff(self):
+        """
+        Verify basic users get populated with global preference on staff promotion.
+        """
+        user = self._create_user(username="promote_staff", email="staff@example.com")
+        self.assertEqual(NotificationSetting.objects.count(), 0)
+
+        user.is_staff = True
+        user.save()
+        self.assertEqual(
+            NotificationSetting.objects.filter(
+                user=user, organization=None, type=None
+            ).count(),
+            1,
+        )
+
+    def test_staff_joins_org_retains_global_preference(self):
+        """
+        Ensure the global notification setting is preserved when a staff user
+        joins an organization (both as admin and regular member).
+        """
+        user = self._create_user(username="staff_org", is_staff=True)
+        org = self._get_org()
+        global_ns = NotificationSetting.objects.get(user=user, organization=None)
+        self.assertFalse(global_ns.deleted)
+
+        # Case A: Join org as regular member (is_admin=False)
+        org_user = OrganizationUser.objects.create(
+            user=user, organization=org, is_admin=False
+        )
+        global_ns.refresh_from_db()
+        self.assertFalse(
+            global_ns.deleted,
+            "Global setting was wiped when joining org as non-admin",
+        )
+
+        # Case B: Join org as admin (is_admin=True)
+        org_user.is_admin = True
+        org_user.save()
+        global_ns.refresh_from_db()
+        self.assertFalse(
+            global_ns.deleted, "Global setting was wiped when promoted to admin"
+        )
+
+    def test_superuser_and_staff_demoted_to_staff_only(self):
+        """
+        Verify demoting a Superuser+Staff to Staff-only preserves the
+        global setting but prunes per-organization records.
+        """
+        user = self._create_user(username="both_priv", is_superuser=True, is_staff=True)
+        # Superuser already has settings generated for ALL orgs automatically.
+        # Assert global row and organization rows exist initially.
+        self.assertTrue(
+            NotificationSetting.objects.filter(user=user, deleted=False).count() > 1
+        )
+
+        # Demote superuser status
+        user.is_superuser = False
+        user.save()
+        # Global row remains alive
+        global_ns = NotificationSetting.objects.get(user=user, organization=None)
+        self.assertFalse(
+            global_ns.deleted, "Global setting was deleted on superuser demotion"
+        )
+        # All organization rows are soft-deleted (user manages 0 orgs)
+        self.assertFalse(
+            NotificationSetting.objects.filter(user=user, deleted=False)
+            .exclude(organization=None)
+            .exists(),
+            "Org settings were not pruned on superuser demotion",
+        )
+
+    def test_staff_demoted_to_regular_user(self):
+        """
+        Verify that removing staff privilege from a basic staff user
+        who manages no orgs deletes their global notification setting.
+        """
+        user = self._create_user(username="staff_demote", is_staff=True)
+        global_ns = NotificationSetting.objects.get(user=user, organization=None)
+        self.assertFalse(global_ns.deleted)
+
+        # Demote from staff to normal user
+        user.is_staff = False
+        user.save()
+        global_ns.refresh_from_db()
+        self.assertTrue(
+            global_ns.deleted,
+            "Global setting was not deleted upon total privilege loss",
+        )
+
+    def test_staff_promoted_to_superuser(self):
+        """
+        Verify that promoting a staff user to superuser creates the full
+        association grid of settings for all organizations.
+        """
+        user = self._create_user(username="staff_to_super", is_staff=True)
+        self.assertEqual(NotificationSetting.objects.filter(user=user).count(), 1)
+
+        user.is_superuser = True
+        user.save()
+
+        self.assertTrue(NotificationSetting.objects.filter(user=user).count() > 1)
+
+    def test_superuser_and_staff_demoted_to_regular_user(self):
+        """
+        Verify demoting a Superuser+Staff to a regular user removes both
+        the organization-specific settings and the global setting.
+        """
+        user = self._create_user(
+            username="both_to_none", is_superuser=True, is_staff=True
+        )
+        self.assertTrue(
+            NotificationSetting.objects.filter(user=user, deleted=False).count() > 1
+        )
+
+        user.is_superuser = False
+        user.is_staff = False
+        user.save()
+
+        self.assertEqual(
+            NotificationSetting.objects.filter(user=user, deleted=False).count(), 0
+        )
+        self.assertTrue(
+            NotificationSetting.objects.filter(user=user, deleted=True).count() > 0
+        )
