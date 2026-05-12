@@ -1,6 +1,22 @@
 Changelog
 =========
 
+Version 1.2.2 [2026-05-12]
+--------------------------
+
+Bugfixes
+~~~~~~~~
+
+- Fixed multiple bugs affecting notification preferences `#448
+  <https://github.com/openwisp/openwisp-notifications/issues/448>`_:
+
+  1. Creating a new organization ignored the user's global notification
+     preferences.
+  2. Promoting or adding an organization admin did not respect global
+     preferences.
+  3. Changes to organization-level settings could overwrite user-specific
+     preferences.
+
 Version 1.2.1 [2025-11-27]
 --------------------------
 
