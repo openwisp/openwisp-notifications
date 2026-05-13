@@ -50,7 +50,7 @@ class AbstractNotification(models.Model):
     actor = GenericForeignKey("actor_content_type", "actor_object_id")
     actor.short_description = _("actor")
 
-    verb = models.CharField(_("verb"), max_length=255)
+    verb = models.CharField(_("verb"), max_length=255, null=True, blank=True)
     description = models.TextField(_("description"), blank=True, null=True)
 
     target_content_type = models.ForeignKey(
