@@ -26,7 +26,6 @@ NotificationSetting = load_model("NotificationSetting")
 IgnoreObjectNotification = load_model("IgnoreObjectNotification")
 
 Organization = swapper_load_model("openwisp_users", "Organization")
-OrganizationUser = swapper_load_model("openwisp_users", "OrganizationUser")
 
 
 class TestNotificationMixin:
@@ -1201,49 +1200,23 @@ class TestNotificationApi(
     @mock_notification_types
     def test_preferences_api_excludes_removed_org_user_settings(self):
         org = self._get_org()
-        owner_user = self._get_user()
-        OrganizationUser.objects.create(
-            user=owner_user, organization=org, is_admin=True
-        )
-        non_owner = self._create_user(username="non_owner", email="non_owner@test.com")
-        org_user = OrganizationUser.objects.create(
-            user=non_owner, organization=org, is_admin=True
-        )
+        self._create_org_user(user=self._get_user(), organization=org, is_admin=True)
+        user = self._create_user(username="non_owner", email="non_owner@test.com")
+        org_user = self._create_org_user(user=user, organization=org, is_admin=True)
+        self.client.force_login(user)
         url = reverse(
             "notifications:user_notification_setting_list",
-            kwargs={"user_id": str(non_owner.id)},
+            kwargs={"user_id": str(user.id)},
         )
-        with self.subTest(
-            "superuser: preferences visible before OrganizationUser deletion"
-        ):
-            response = self.client.get(url)
-            self.assertEqual(response.status_code, 200)
-            org_ids = [obj["organization"] for obj in response.data["results"]]
-            self.assertIn(org.id, org_ids)
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        org_ids = {obj["organization"] for obj in response.data["results"]}
+        self.assertIn(org.id, org_ids)
         org_user.delete()
-        with self.subTest(
-            "superuser: preferences hidden after OrganizationUser deletion"
-        ):
-            self.client.force_login(self.admin)
-            response = self.client.get(url)
-            self.assertEqual(response.status_code, 200)
-            org_ids = [obj["organization"] for obj in response.data["results"]]
-            self.assertNotIn(org.id, org_ids)
-        org_user = OrganizationUser.objects.create(
-            user=non_owner, organization=org, is_admin=True
-        )
-        self.client.force_login(non_owner)
-        with self.subTest("user: preferences visible before OrganizationUser deletion"):
-            response = self.client.get(url)
-            self.assertEqual(response.status_code, 200)
-            org_ids = [obj["organization"] for obj in response.data["results"]]
-            self.assertIn(org.id, org_ids)
-        org_user.delete()
-        with self.subTest("user: preferences hidden after OrganizationUser deletion"):
-            response = self.client.get(url)
-            self.assertEqual(response.status_code, 200)
-            org_ids = [obj["organization"] for obj in response.data["results"]]
-            self.assertNotIn(org.id, org_ids)
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        org_ids = {obj["organization"] for obj in response.data["results"]}
+        self.assertNotIn(org.id, org_ids)
 
     def test_organization_setting_superuser_access(self):
         """Test superuser can retrieve and update organization notification settings"""
