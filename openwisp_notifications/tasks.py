@@ -103,6 +103,9 @@ def create_notification_settings(user, organizations, notification_types):
     global_setting, _ = NotificationSetting.objects.get_or_create(
         user=user, organization=None, type=None, defaults={"email": True, "web": True}
     )
+    if global_setting.deleted:
+        global_setting.deleted = False
+        global_setting.save(update_fields=["deleted"])
 
     for type in notification_types:
         for org in organizations:
@@ -155,7 +158,7 @@ def create_superuser_notification_settings(user_id):
             organizations=Organization.objects.all(),
             notification_types=types.NOTIFICATION_TYPES.keys(),
         )
-    else:
+    elif user.is_staff:
         # Empty iterables create only the global setting row.
         create_notification_settings(user=user, organizations=[], notification_types=[])
 

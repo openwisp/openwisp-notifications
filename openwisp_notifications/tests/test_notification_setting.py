@@ -697,6 +697,38 @@ class TestNotificationSetting(TestOrganizationMixin, TransactionTestCase):
             1,
         )
 
+    def test_create_superuser_notification_settings_skips_regular_user(self):
+        user = self._create_user(
+            username="regular_task", email="regular_task@example.com"
+        )
+        create_superuser_notification_settings.delay(user.pk)
+        self.assertFalse(
+            NotificationSetting.objects.filter(user=user).exists(),
+            "Regular users must not get notification settings from this task.",
+        )
+
+    def test_staff_repromoted_reactivates_global_preference(self):
+        user = self._create_user(
+            username="staff_repromote",
+            email="staff_repromote@example.com",
+            is_staff=True,
+        )
+        global_ns = NotificationSetting.objects.get(user=user, organization=None)
+        self.assertFalse(global_ns.deleted)
+
+        user.is_staff = False
+        user.save()
+        global_ns.refresh_from_db()
+        self.assertTrue(global_ns.deleted)
+
+        user.is_staff = True
+        user.save()
+        global_ns.refresh_from_db()
+        self.assertFalse(
+            global_ns.deleted,
+            "Re-promoting a staff user must reactivate the global setting.",
+        )
+
     def test_staff_joins_org_retains_global_preference(self):
         """
         Ensure the global notification setting is preserved when a staff user
