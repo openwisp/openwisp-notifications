@@ -132,7 +132,7 @@ class BaseNotificationSettingView(GenericAPIView):
                 Q(organization__is_active=False)
                 | Q(type__in=app_settings.DISALLOW_PREFERENCES_CHANGE_TYPE)
             )
-            .filter(user_id=user_id)
+            .filter(user_id=user_id, deleted=False)
             .select_related("organization__notification_settings")
         )
 

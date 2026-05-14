@@ -1202,7 +1202,9 @@ class TestNotificationApi(
     def test_preferences_api_excludes_removed_org_user_settings(self):
         org = self._get_org()
         owner_user = self._get_user()
-        OrganizationUser.objects.create(user=owner_user, organization=org, is_admin=True)
+        OrganizationUser.objects.create(
+            user=owner_user, organization=org, is_admin=True
+        )
         non_owner = self._create_user(username="non_owner", email="non_owner@test.com")
         org_user = OrganizationUser.objects.create(
             user=non_owner, organization=org, is_admin=True
