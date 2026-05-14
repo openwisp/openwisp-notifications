@@ -340,6 +340,46 @@ class TestNotificationSetting(TestOrganizationMixin, TransactionTestCase):
             admin.save()
             created_mock.assert_called_once()
 
+    @patch.object(superuser_demoted_notification_setting, "delay")
+    @patch.object(create_superuser_notification_settings, "delay")
+    def test_privilege_flags_do_not_leak_to_unrelated_saves(
+        self, created_mock, demoted_mock
+    ):
+        with self.subTest("gained privileges"):
+            user = self._create_user(
+                username="gain_privilege", email="gain_privilege@example.com"
+            )
+            user.is_staff = True
+            user.save()
+            created_mock.assert_called_once()
+            demoted_mock.assert_not_called()
+
+            created_mock.reset_mock()
+            user.username = "gain_privilege_updated"
+            user.save(update_fields=["username"])
+            created_mock.assert_not_called()
+            demoted_mock.assert_not_called()
+
+        created_mock.reset_mock()
+        demoted_mock.reset_mock()
+        with self.subTest("lost privileges"):
+            user = self._create_user(
+                username="lose_privilege",
+                email="lose_privilege@example.com",
+                is_staff=True,
+            )
+            created_mock.reset_mock()
+            user.is_staff = False
+            user.save()
+            demoted_mock.assert_called_once()
+            created_mock.assert_not_called()
+
+            demoted_mock.reset_mock()
+            user.username = "lose_privilege_updated"
+            user.save(update_fields=["username"])
+            created_mock.assert_not_called()
+            demoted_mock.assert_not_called()
+
     def test_global_notification_setting_update(self):
         admin = self._get_admin()
         org = self._get_org("default")

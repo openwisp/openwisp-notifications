@@ -156,7 +156,7 @@ def create_superuser_notification_settings(user_id):
             notification_types=types.NOTIFICATION_TYPES.keys(),
         )
     else:
-        # Creates global notification setting for the user
+        # Empty iterables create only the global setting row.
         create_notification_settings(user=user, organizations=[], notification_types=[])
 
 

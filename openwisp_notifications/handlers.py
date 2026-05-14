@@ -338,6 +338,8 @@ def superuser_status_changed_notification_setting(instance, update_fields, **kwa
     Handles modification of user notification settings when
     privileges change. This works on either staff users or super users.
     """
+    instance._lost_privileges = False
+    instance._gained_privileges = False
     if update_fields is not None and not {"is_superuser", "is_staff"}.intersection(
         update_fields
     ):
@@ -373,11 +375,15 @@ def create_superuser_notification_settings(instance, created, **kwargs):
             lambda: tasks.create_superuser_notification_settings.delay(instance.pk)
         )
     elif not created:
-        if getattr(instance, "_lost_privileges", False):
+        lost_privileges = getattr(instance, "_lost_privileges", False)
+        gained_privileges = getattr(instance, "_gained_privileges", False)
+        instance._lost_privileges = False
+        instance._gained_privileges = False
+        if lost_privileges:
             transaction.on_commit(
                 lambda: tasks.superuser_demoted_notification_setting.delay(instance.pk)
             )
-        elif getattr(instance, "_gained_privileges", False):
+        elif gained_privileges:
             transaction.on_commit(
                 lambda: tasks.create_superuser_notification_settings.delay(instance.pk)
             )
