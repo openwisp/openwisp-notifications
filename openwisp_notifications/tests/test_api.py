@@ -1213,13 +1213,33 @@ class TestNotificationApi(
             "notifications:user_notification_setting_list",
             kwargs={"user_id": str(non_owner.id)},
         )
-        with self.subTest("Preferences visible before OrganizationUser deletion"):
+        with self.subTest(
+            "superuser: preferences visible before OrganizationUser deletion"
+        ):
             response = self.client.get(url)
             self.assertEqual(response.status_code, 200)
             org_ids = [obj["organization"] for obj in response.data["results"]]
             self.assertIn(org.id, org_ids)
         org_user.delete()
-        with self.subTest("Preferences hidden after OrganizationUser deletion"):
+        with self.subTest(
+            "superuser: preferences hidden after OrganizationUser deletion"
+        ):
+            self.client.force_login(self.admin)
+            response = self.client.get(url)
+            self.assertEqual(response.status_code, 200)
+            org_ids = [obj["organization"] for obj in response.data["results"]]
+            self.assertNotIn(org.id, org_ids)
+        org_user = OrganizationUser.objects.create(
+            user=non_owner, organization=org, is_admin=True
+        )
+        self.client.force_login(non_owner)
+        with self.subTest("user: preferences visible before OrganizationUser deletion"):
+            response = self.client.get(url)
+            self.assertEqual(response.status_code, 200)
+            org_ids = [obj["organization"] for obj in response.data["results"]]
+            self.assertIn(org.id, org_ids)
+        org_user.delete()
+        with self.subTest("user: preferences hidden after OrganizationUser deletion"):
             response = self.client.get(url)
             self.assertEqual(response.status_code, 200)
             org_ids = [obj["organization"] for obj in response.data["results"]]
