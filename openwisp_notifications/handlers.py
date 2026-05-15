@@ -352,13 +352,11 @@ def superuser_status_changed_notification_setting(instance, update_fields, **kwa
         return
     was_privileged = db_instance.is_superuser or db_instance.is_staff
     is_now_privileged = instance.is_superuser or instance.is_staff
-    # Transition Scenarios
     gained_superuser = not db_instance.is_superuser and instance.is_superuser
     gained_first_privilege = not was_privileged and is_now_privileged
     lost_superuser = db_instance.is_superuser and not instance.is_superuser
     lost_all_privileges = was_privileged and not is_now_privileged
-    # Attach transition flags to the instance to dispatch safely in post_save
-    # This bypasses eager Celery race conditions in testing environments
+    # Flags are read by the post_save handler to dispatch the matching task.
     instance._lost_privileges = lost_superuser or lost_all_privileges
     instance._gained_privileges = gained_superuser or gained_first_privilege
 

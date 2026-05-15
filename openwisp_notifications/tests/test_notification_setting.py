@@ -665,9 +665,14 @@ class TestNotificationSetting(TestOrganizationMixin, TransactionTestCase):
         self.assertEqual(notification_setting.web_notification, False)
 
     def test_staff_user_created(self):
-        self._create_user(username="staff", email="staff@example.com", is_staff=True)
+        user = self._create_user(
+            username="staff", email="staff@example.com", is_staff=True
+        )
         self.assertEqual(
-            NotificationSetting.objects.filter(organization=None, type=None).count(), 1
+            NotificationSetting.objects.filter(
+                user=user, organization=None, type=None, deleted=False
+            ).count(),
+            1,
         )
 
     def test_user_promoted_to_staff(self):
@@ -677,7 +682,7 @@ class TestNotificationSetting(TestOrganizationMixin, TransactionTestCase):
         user.save()
         self.assertEqual(
             NotificationSetting.objects.filter(
-                user=user, organization=None, type=None
+                user=user, organization=None, type=None, deleted=False
             ).count(),
             1,
         )
