@@ -68,22 +68,41 @@ class NotificationPreferenceView(LoginRequiredMixin, UserPassesTestMixin, Templa
     template_name = "openwisp_notifications/preferences.html"
     login_url = reverse_lazy("admin:login")
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
+    def _get_user(self):
+        if hasattr(self, "user"):
+            return self.user
         user_id = self.kwargs.get("pk")
-        context["title"] = _("Notification Preferences")
-
         if user_id:
             try:
-                user = User.objects.get(pk=user_id)
-                # Only admin should access other users preferences
-                context["username"] = user.username
-                context["title"] += f" ({user.username})"
+                self.user = User.objects.get(pk=user_id)
             except User.DoesNotExist:
-                raise Http404("User does not exist")
+                raise Http404(_("User does not exist"))
         else:
-            user = self.request.user
+            self.user = self.request.user
+        return self.user
 
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.is_authenticated:
+            user = self._get_user()
+            if not user.is_staff and not user.is_superuser:
+                messages.error(
+                    request,
+                    _(
+                        "Notification preferences are available only for staff users "
+                        "or superusers."
+                    ),
+                )
+                return redirect(reverse("admin:index"))
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["title"] = _("Notification Preferences")
+        user = self._get_user()
+        if "pk" in self.kwargs:
+            # Only admin should access other users preferences
+            context["username"] = user.username
+            context["title"] += f" ({user.username})"
         context["user_id"] = user.id
         return context
 

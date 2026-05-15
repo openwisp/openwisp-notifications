@@ -31,6 +31,7 @@ The repository is a single Python package, not a monorepo.
 - Use `.github/workflows/build.yml` as the authoritative compatibility matrix for supported Python and Django versions.
 - Preserve swappable model support and integration with `openwisp-users` organizations and memberships.
 - Be careful with notification preference inheritance, global notification settings, soft-deleted `NotificationSetting` rows, and user/organization permission boundaries.
+- Mark user-facing strings as translatable with Django i18n helpers, typically `gettext_lazy` imported as `_`.
 - Add or update tests for behavior changes.
 - For bug fixes, prefer the red/green workflow: write or update the regression test first, run it against the unfixed code and confirm the failure message is clear, then apply the fix and rerun the targeted test plus the relevant module.
 

@@ -9,6 +9,7 @@ from celery.exceptions import OperationalError
 from django.apps.registry import apps
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
+from django.contrib.messages import get_messages
 from django.core import mail
 from django.core.cache import cache
 from django.core.exceptions import ImproperlyConfigured
@@ -1502,7 +1503,7 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
 
     def test_notification_preference_page(self):
         preference_page = "notifications:user_notification_preference"
-        tester = self._create_user(username="tester")
+        tester = self._create_user(username="tester", is_staff=True)
 
         with self.subTest("Test user is not authenticated"):
             response = self.client.get(reverse(preference_page, args=(self.admin.pk,)))
@@ -1531,6 +1532,27 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
         with self.subTest("Test invalid user ID"):
             response = self.client.get(reverse(preference_page, args=(uuid4(),)))
             self.assertEqual(response.status_code, 404)
+
+    def test_notification_preference_page_regular_user_redirects_to_admin(self):
+        user = self._create_user(username="regular_preference_user")
+        self.client.force_login(self.admin)
+        response = self.client.get(
+            reverse("notifications:user_notification_preference", args=(user.pk,))
+        )
+        self.assertEqual(
+            response.status_code,
+            302,
+            "Notification preferences for regular users must redirect to the admin index.",
+        )
+        self.assertRedirects(
+            response, reverse("admin:index"), fetch_redirect_response=False
+        )
+        self.assertEqual(
+            [str(message) for message in get_messages(response.wsgi_request)],
+            [
+                "Notification preferences are available only for staff users or superusers."
+            ],
+        )
 
 
 class TestNotificationSending(TestOrganizationMixin, TransactionTestCase):
