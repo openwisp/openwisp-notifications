@@ -1554,6 +1554,27 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
             ],
         )
 
+    def test_notification_preference_page_cross_user_access_denied_before_lookup(self):
+        user = self._create_user(
+            username="cross_user_requester", email="cross_user_requester@example.com"
+        )
+        target = self._create_user(
+            username="cross_user_target",
+            email="cross_user_target@example.com",
+        )
+        self.client.force_login(user)
+        for target_pk in [target.pk, uuid4()]:
+            with self.subTest(target_pk=target_pk):
+                url = reverse(
+                    "notifications:user_notification_preference", args=(target_pk,)
+                )
+                response = self.client.get(url)
+                self.assertEqual(
+                    response.status_code,
+                    403,
+                    "Cross-user preference access must be denied before resolving the target user.",
+                )
+
 
 class TestNotificationSending(TestOrganizationMixin, TransactionTestCase):
     app_label = "openwisp_notifications"

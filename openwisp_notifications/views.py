@@ -82,6 +82,14 @@ class NotificationPreferenceView(LoginRequiredMixin, UserPassesTestMixin, Templa
         return self.user
 
     def dispatch(self, request, *args, **kwargs):
+        user_id = kwargs.get("pk")
+        if (
+            request.user.is_authenticated
+            and user_id
+            and not request.user.is_superuser
+            and str(request.user.pk) != str(user_id)
+        ):
+            return self.handle_no_permission()
         if request.user.is_authenticated:
             user = self._get_user()
             if not user.is_staff and not user.is_superuser:
