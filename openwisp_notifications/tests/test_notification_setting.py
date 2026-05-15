@@ -131,7 +131,8 @@ class TestNotificationSetting(TestOrganizationMixin, TransactionTestCase):
         self.assertEqual(ns_queryset.filter(type="default", deleted=True).count(), 3)
 
         # Notification Settings for "test" type are created
-        queryset = NotificationSetting.objects.filter(deleted=False)
+        # We exclude the global row (type=None) to correctly count only typed settings
+        queryset = NotificationSetting.objects.filter(deleted=False).exclude(type=None)
         notification_types_count = len(NOTIFICATION_CHOICES)
         self.assertEqual(queryset.count(), 3 * notification_types_count)
         self.assertEqual(
@@ -141,16 +142,16 @@ class TestNotificationSetting(TestOrganizationMixin, TransactionTestCase):
             queryset.filter(user=org_user.user).count(), 1 * notification_types_count
         )
 
-        # Check Global Notification Setting is created
+        # Check Global Notification Setting is created and not deleted
         self.assertEqual(
             NotificationSetting.objects.filter(
-                user=admin, type=None, organization=None
+                user=admin, type=None, organization=None, deleted=False
             ).count(),
             1,
         )
         self.assertEqual(
             NotificationSetting.objects.filter(
-                user=org_user.user, type=None, organization=None
+                user=org_user.user, type=None, organization=None, deleted=False
             ).count(),
             1,
         )
@@ -307,35 +308,70 @@ class TestNotificationSetting(TestOrganizationMixin, TransactionTestCase):
     @patch.object(create_superuser_notification_settings, "delay")
     def test_task_not_called_on_user_login(self, created_mock, demoted_mock):
         admin = self._create_admin()
+        # Called once for the superuser
+        self.assertEqual(created_mock.call_count, 1)
         org_user = self._create_staff_org_admin()
-        created_mock.assert_called_once()
-
+        # Called once again for the staff org admin user
+        self.assertEqual(created_mock.call_count, 2)
         created_mock.reset_mock()
         with self.subTest("Test task not called if superuser status is unchanged"):
             admin.username = "new_admin"
             admin.save()
             created_mock.assert_not_called()
             demoted_mock.assert_not_called()
-
         with self.subTest("Test task not called when superuser logs in"):
             self.client.force_login(admin)
             created_mock.assert_not_called()
             demoted_mock.assert_not_called()
-
         with self.subTest("Test task not called when org user logs in"):
             self.client.force_login(org_user.user)
             created_mock.assert_not_called()
             demoted_mock.assert_not_called()
-
         with self.subTest("Test task called when superuser status changed"):
             admin.is_superuser = False
             admin.save()
             demoted_mock.assert_called_once()
             created_mock.assert_not_called()
-
             admin.is_superuser = True
             admin.save()
             created_mock.assert_called_once()
+
+    @patch.object(superuser_demoted_notification_setting, "delay")
+    @patch.object(create_superuser_notification_settings, "delay")
+    def test_privilege_flags_do_not_leak_to_unrelated_saves(
+        self, created_mock, demoted_mock
+    ):
+        with self.subTest("gained privileges"):
+            user = self._create_user(
+                username="gain_privilege", email="gain_privilege@example.com"
+            )
+            user.is_staff = True
+            user.save()
+            created_mock.assert_called_once()
+            demoted_mock.assert_not_called()
+            created_mock.reset_mock()
+            user.username = "gain_privilege_updated"
+            user.save(update_fields=["username"])
+            created_mock.assert_not_called()
+            demoted_mock.assert_not_called()
+        created_mock.reset_mock()
+        demoted_mock.reset_mock()
+        with self.subTest("lost privileges"):
+            user = self._create_user(
+                username="lose_privilege",
+                email="lose_privilege@example.com",
+                is_staff=True,
+            )
+            created_mock.reset_mock()
+            user.is_staff = False
+            user.save()
+            demoted_mock.assert_called_once()
+            created_mock.assert_not_called()
+            demoted_mock.reset_mock()
+            user.username = "lose_privilege_updated"
+            user.save(update_fields=["username"])
+            created_mock.assert_not_called()
+            demoted_mock.assert_not_called()
 
     def test_global_notification_setting_update(self):
         admin = self._get_admin()
@@ -628,3 +664,113 @@ class TestNotificationSetting(TestOrganizationMixin, TransactionTestCase):
         notification_setting.refresh_from_db()
         self.assertEqual(notification_setting.web, False)
         self.assertEqual(notification_setting.web_notification, False)
+
+    def test_staff_user_created(self):
+        user = self._create_user(
+            username="staff", email="staff@example.com", is_staff=True
+        )
+        self.assertEqual(
+            NotificationSetting.objects.filter(
+                user=user, organization=None, type=None, deleted=False
+            ).count(),
+            1,
+        )
+
+    def test_user_promoted_to_staff(self):
+        user = self._create_user(username="promote_staff", email="staff@example.com")
+        self.assertEqual(NotificationSetting.objects.count(), 0)
+        user.is_staff = True
+        user.save()
+        self.assertEqual(
+            NotificationSetting.objects.filter(
+                user=user, organization=None, type=None, deleted=False
+            ).count(),
+            1,
+        )
+
+    def test_create_superuser_notification_settings_skips_regular_user(self):
+        user = self._create_user(
+            username="regular_task", email="regular_task@example.com"
+        )
+        create_superuser_notification_settings.delay(user.pk)
+        self.assertFalse(
+            NotificationSetting.objects.filter(user=user).exists(),
+            "Regular users must not get notification settings from this task.",
+        )
+
+    def test_staff_repromoted_reactivates_global_preference(self):
+        user = self._create_user(
+            username="staff_repromote",
+            email="staff_repromote@example.com",
+            is_staff=True,
+        )
+        global_ns = NotificationSetting.objects.get(user=user, organization=None)
+        self.assertFalse(global_ns.deleted)
+        user.is_staff = False
+        user.save()
+        global_ns.refresh_from_db()
+        self.assertTrue(global_ns.deleted)
+        user.is_staff = True
+        user.save()
+        global_ns.refresh_from_db()
+        self.assertFalse(
+            global_ns.deleted,
+            "Re-promoting a staff user must reactivate the global setting.",
+        )
+
+    def test_staff_joins_org_retains_global_preference(self):
+        user = self._create_user(username="staff_org", is_staff=True)
+        org = self._get_org()
+        global_ns = NotificationSetting.objects.get(user=user, organization=None)
+        self.assertFalse(global_ns.deleted)
+        org_user = OrganizationUser.objects.create(
+            user=user, organization=org, is_admin=False
+        )
+        global_ns.refresh_from_db()
+        self.assertFalse(
+            global_ns.deleted,
+            "Global setting was wiped when joining org as non-admin",
+        )
+        org_user.is_admin = True
+        org_user.save()
+        global_ns.refresh_from_db()
+        self.assertFalse(
+            global_ns.deleted, "Global setting was wiped when promoted to admin"
+        )
+
+    def test_superuser_and_staff_demoted_to_staff_only(self):
+        user = self._create_user(username="both_priv", is_superuser=True, is_staff=True)
+        self.assertTrue(
+            NotificationSetting.objects.filter(user=user, deleted=False).count() > 1
+        )
+        user.is_superuser = False
+        user.save()
+        global_ns = NotificationSetting.objects.get(user=user, organization=None)
+        self.assertFalse(
+            global_ns.deleted, "Global setting was deleted on superuser demotion"
+        )
+        self.assertFalse(
+            NotificationSetting.objects.filter(user=user, deleted=False)
+            .exclude(organization=None)
+            .exists(),
+            "Org settings were not pruned on superuser demotion",
+        )
+
+    def test_staff_demoted_to_regular_user(self):
+        user = self._create_user(username="staff_demote", is_staff=True)
+        global_ns = NotificationSetting.objects.get(user=user, organization=None)
+        self.assertFalse(global_ns.deleted)
+        user.is_staff = False
+        user.save()
+        global_ns.refresh_from_db()
+        self.assertTrue(
+            global_ns.deleted,
+            "Global setting was not deleted upon total privilege loss",
+        )
+
+    def test_staff_promoted_to_superuser(self):
+        user = self._create_user(username="staff_to_super", is_staff=True)
+        self.assertEqual(NotificationSetting.objects.filter(user=user).count(), 1)
+        user.is_superuser = True
+        user.save()
+        self.assertTrue(NotificationSetting.objects.filter(user=user).count() > 1)
