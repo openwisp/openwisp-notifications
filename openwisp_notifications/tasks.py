@@ -213,9 +213,10 @@ def ns_register_unregister_notification_type(
 
     if delete_unregistered:
         # Delete all notification settings for unregistered notification types
-        NotificationSetting.objects.exclude(type__in=notification_types).update(
-            deleted=True
-        )
+        # exclude(type=None) protects the global settings row from deletion
+        NotificationSetting.objects.exclude(type__in=notification_types).exclude(
+            type=None
+        ).update(deleted=True)
         # Delete notifications related to unregister notification types
         Notification.objects.exclude(type__in=notification_types).delete()
 

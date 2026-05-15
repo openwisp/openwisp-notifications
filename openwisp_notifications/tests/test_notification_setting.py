@@ -131,7 +131,8 @@ class TestNotificationSetting(TestOrganizationMixin, TransactionTestCase):
         self.assertEqual(ns_queryset.filter(type="default", deleted=True).count(), 3)
 
         # Notification Settings for "test" type are created
-        queryset = NotificationSetting.objects.filter(deleted=False)
+        # We exclude the global row (type=None) to correctly count only typed settings
+        queryset = NotificationSetting.objects.filter(deleted=False).exclude(type=None)
         notification_types_count = len(NOTIFICATION_CHOICES)
         self.assertEqual(queryset.count(), 3 * notification_types_count)
         self.assertEqual(
@@ -141,16 +142,16 @@ class TestNotificationSetting(TestOrganizationMixin, TransactionTestCase):
             queryset.filter(user=org_user.user).count(), 1 * notification_types_count
         )
 
-        # Check Global Notification Setting is created
+        # Check Global Notification Setting is created and not deleted
         self.assertEqual(
             NotificationSetting.objects.filter(
-                user=admin, type=None, organization=None
+                user=admin, type=None, organization=None, deleted=False
             ).count(),
             1,
         )
         self.assertEqual(
             NotificationSetting.objects.filter(
-                user=org_user.user, type=None, organization=None
+                user=org_user.user, type=None, organization=None, deleted=False
             ).count(),
             1,
         )
