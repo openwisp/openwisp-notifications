@@ -159,7 +159,7 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "data",
-                    models.JSONField(blank=True, null=True, verbose_name="data"),
+                    models.TextField(blank=True, null=True, verbose_name="data"),
                 ),
                 (
                     "id",
