@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.utils.module_loading import import_string
 
-from openwisp_utils.admin import UUIDAdmin
+from openwisp_utils.admin import CopyableFieldsAdmin
 
 
 class IgnoreObjectNotificationWidgetMedia:
@@ -42,5 +42,7 @@ def _add_object_notification_widget():
                 )
         except AttributeError:
             model_admin_class.Media = IgnoreObjectNotificationWidgetMedia
-            # Needed tp maintain order or JS imports.
-            model_admin_class.Media.js = UUIDAdmin.Media.js + model_admin_class.Media.js
+            # Needed to maintain order or JS imports.
+            model_admin_class.Media.js = (
+                CopyableFieldsAdmin.Media.js + model_admin_class.Media.js
+            )

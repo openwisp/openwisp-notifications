@@ -31,8 +31,6 @@ from openwisp_notifications.websockets import handlers as ws_handlers
 
 logger = logging.getLogger(__name__)
 
-EXTRA_DATA = app_settings.get_config()["USE_JSONFIELD"]
-
 User = get_user_model()
 
 Notification = load_model("Notification")
@@ -83,15 +81,32 @@ def notify_handler(**kwargs):
         where = where | (Q(is_staff=True) & org_admin_query)
         where_group = org_admin_query
 
-        # We can only find notification setting if notification type and
-        # target organization is present.
+        # Notification preference resolution:
+        # user setting -> org setting -> type default.
+        #
+        # Users with web=None are included only when the fallback
+        # chain can still resolve to True. Org-level web settings
+        # are resolved via JOINs in the main query to avoid an
+        # additional OrganizationNotificationSettings lookup.
         if notification_type:
-            # Create notification for users who have opted for receiving notifications.
-            # For users who have not configured web_notifications,
-            # use default from notification type
             web_notification = Q(notificationsetting__web=True)
             if notification_template["web_notification"]:
-                web_notification |= Q(notificationsetting__web=None)
+                # Users with web=None inherit the org setting, so
+                # include them unless the org explicitly disables
+                # web notifications.
+                web_notification |= Q(
+                    notificationsetting__web=None,
+                ) & (
+                    Q(
+                        notificationsetting__organization__notification_settings__web=True
+                    )
+                    | Q(
+                        notificationsetting__organization__notification_settings__web=None
+                    )
+                    | Q(
+                        notificationsetting__organization__notification_settings__isnull=True
+                    )
+                )
 
             notification_setting = web_notification & Q(
                 notificationsetting__type=notification_type,
@@ -163,7 +178,7 @@ def notify_handler(**kwargs):
                     "%s_content_type" % opt,
                     ContentType.objects.get_for_model(obj),
                 )
-        if kwargs and EXTRA_DATA:
+        if kwargs:
             notification.data = kwargs
         notification.save()
         notification_list.append(notification)
@@ -320,38 +335,56 @@ def notification_setting_delete_org_user(instance, **kwargs):
 @receiver(pre_save, sender=User, dispatch_uid="superuser_demoted_notification_setting")
 def superuser_status_changed_notification_setting(instance, update_fields, **kwargs):
     """
-    If user is demoted from superuser status, then
-    remove notification settings for non-managed organizations.
-
-    If user is promoted to superuser, then
-    create notification settings for all organizations.
+    Handles modification of user notification settings when
+    privileges change. This works on either staff users or super users.
     """
-    if update_fields is not None and "is_superuser" not in update_fields:
-        # No-op if is_superuser field is not being updated.
-        # If update_fields is None, it means any field could be updated.
+    instance._lost_privileges = False
+    instance._gained_privileges = False
+    if update_fields is not None and not {"is_superuser", "is_staff"}.intersection(
+        update_fields
+    ):
+        # No-op if relevant privilege fields are not being updated.
         return
     try:
-        db_instance = User.objects.only("is_superuser").get(pk=instance.pk)
+        db_instance = User.objects.only("is_superuser", "is_staff").get(pk=instance.pk)
     except User.DoesNotExist:
         # User is being created
         return
-    # If user is demoted from superuser to non-superuser
-    if db_instance.is_superuser and not instance.is_superuser:
-        transaction.on_commit(
-            lambda: tasks.superuser_demoted_notification_setting.delay(instance.pk)
-        )
-    elif not db_instance.is_superuser and instance.is_superuser:
-        transaction.on_commit(
-            lambda: tasks.create_superuser_notification_settings.delay(instance.pk)
-        )
+    was_privileged = db_instance.is_superuser or db_instance.is_staff
+    is_now_privileged = instance.is_superuser or instance.is_staff
+    gained_superuser = not db_instance.is_superuser and instance.is_superuser
+    gained_first_privilege = not was_privileged and is_now_privileged
+    lost_superuser = db_instance.is_superuser and not instance.is_superuser
+    lost_all_privileges = was_privileged and not is_now_privileged
+    # Flags are read by the post_save handler to dispatch the matching task.
+    instance._lost_privileges = lost_superuser or lost_all_privileges
+    instance._gained_privileges = gained_superuser or gained_first_privilege
 
 
 @receiver(post_save, sender=User, dispatch_uid="create_superuser_notification_settings")
 def create_superuser_notification_settings(instance, created, **kwargs):
-    if created and instance.is_superuser:
+    """
+    Triggers initialization or modification of notification settings for privileged users.
+    Handles initial account creation as well as dynamic privilege level updates.
+    This works on either staff users or super users.
+    """
+    if created and (instance.is_superuser or instance.is_staff):
         transaction.on_commit(
             lambda: tasks.create_superuser_notification_settings.delay(instance.pk)
         )
+    elif not created:
+        lost_privileges = getattr(instance, "_lost_privileges", False)
+        gained_privileges = getattr(instance, "_gained_privileges", False)
+        instance._lost_privileges = False
+        instance._gained_privileges = False
+        if lost_privileges:
+            transaction.on_commit(
+                lambda: tasks.superuser_demoted_notification_setting.delay(instance.pk)
+            )
+        elif gained_privileges:
+            transaction.on_commit(
+                lambda: tasks.create_superuser_notification_settings.delay(instance.pk)
+            )
 
 
 @receiver(

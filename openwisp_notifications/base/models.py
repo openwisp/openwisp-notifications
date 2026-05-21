@@ -444,26 +444,68 @@ class AbstractNotificationSetting(UUIDModel):
             ):
                 raise ValidationError("There can only be one global setting per user.")
 
+    def normalize_settings(self):
+        """
+        Normalize stored notification preferences into sparse overrides.
+
+        Effective notification preferences are resolved through inheritance:
+
+            user setting -> organization setting -> notification type default
+
+        Stored values follow these semantics:
+            - True/False: explicit user override notification settings.
+            - None: inherit effective value from organization/type defaults.
+
+        Explicit enabled states are collapsed to ``None`` whenever they match
+        the inherited effective value, avoiding redundant storage.
+
+        Email notifications cannot be enabled when web notifications are
+        effectively disabled.
+        """
+        if self.web_notification is False:
+            self.email = False
+        if self.organization and self.type:
+            should_enable_email = self.type_config["email_notification"]
+            should_enable_web = self.type_config["web_notification"]
+            if hasattr(self.organization, "notification_settings"):
+                should_enable_web = (
+                    should_enable_web and self.organization.notification_settings.web
+                )
+                should_enable_email = (
+                    should_enable_email
+                    and self.organization.notification_settings.email
+                )
+
+            if self.email == should_enable_email and not (
+                self.email is False and self.type_config["email_notification"] is True
+            ):
+                self.email = None
+            if self.web == should_enable_web and not (
+                self.web is False and self.type_config["web_notification"] is True
+            ):
+                self.web = None
+
     def save(self, *args, **kwargs):
-        if not self.web_notification:
-            self.email = self.web_notification
+        self.normalize_settings()
         with transaction.atomic():
             if not self.organization and not self.type:
                 try:
-                    previous_state = self.__class__.objects.only("email").get(
+                    previous_state = self.__class__.objects.only("email", "web").get(
                         pk=self.pk
                     )
-                    updates = {"web": self.web}
+                    updates = {}
+
+                    if self.web != previous_state.web:
+                        updates["web"] = None if self.web is True else self.web
 
                     # If global web notifications are disabled, then disable email notifications as well
-                    if not self.web:
+                    if self.web is False:
                         updates["email"] = False
-
-                    # Update email notifiations only if it's different from the previous state
+                    # Update email notifications only if it's different from the previous state
                     # Otherwise, it would overwrite the email notification settings for specific
                     # setting that were enabled by the user after disabling global email notifications
-                    if self.email != previous_state.email:
-                        updates["email"] = self.email
+                    elif self.email != previous_state.email:
+                        updates["email"] = None if self.email is True else self.email
 
                     self.user.notificationsetting_set.exclude(pk=self.pk).update(
                         **updates
@@ -475,11 +517,6 @@ class AbstractNotificationSetting(UUIDModel):
 
     def full_clean(self, *args, **kwargs):
         self.validate_global_setting()
-        if self.organization and self.type:
-            if self.email == self.type_config["email_notification"]:
-                self.email = None
-            if self.web == self.type_config["web_notification"]:
-                self.web = None
         return super().full_clean(*args, **kwargs)
 
     @property
@@ -488,15 +525,53 @@ class AbstractNotificationSetting(UUIDModel):
 
     @property
     def email_notification(self):
+        """
+        Resolve effective email notification preference.
+
+        Resolution order:
+            1. Explicit user preference stored on this notification setting.
+            2. Organization-level notification preference.
+            3. Notification type default configuration.
+
+        Stored values use sparse inheritance semantics:
+            - True/False: explicitly set by the user.
+            - None: inherit from organization/type defaults.
+
+        Explicit True values are normalized away and represented through
+        inheritance whenever possible.
+        """
         if self.email is not None:
             return self.email
-        return self.type_config.get("email_notification")
+        email_enabled = self.type_config.get("email_notification")
+        if self.organization and hasattr(self.organization, "notification_settings"):
+            email_enabled = (
+                email_enabled and self.organization.notification_settings.email
+            )
+        return email_enabled
 
     @property
     def web_notification(self):
+        """
+        Resolve effective web notification preference.
+
+        Resolution order:
+            1. Explicit user preference stored on this notification setting.
+            2. Organization-level notification preference.
+            3. Notification type default configuration.
+
+        Stored values use sparse inheritance semantics:
+            - True/False: explicitly set by the user.
+            - None: inherit from organization/type defaults.
+
+        Explicit True values are normalized away and represented through
+        inheritance whenever possible.
+        """
         if self.web is not None:
             return self.web
-        return self.type_config.get("web_notification")
+        web_enabled = self.type_config.get("web_notification")
+        if self.organization and hasattr(self.organization, "notification_settings"):
+            web_enabled = web_enabled and self.organization.notification_settings.web
+        return web_enabled
 
     @classmethod
     def email_notifications_enabled(cls, user):
@@ -557,27 +632,4 @@ class AbstractOrganizationNotificationSettings(models.Model):
     def save(self, *args, **kwargs):
         if not self.web:
             self.email = False
-        if not self._state.adding:
-            self._update_organizationuser_settings()
         return super().save(*args, **kwargs)
-
-    def _update_organizationuser_settings(self):
-        try:
-            db_instance = self.__class__.objects.only("web", "email").get(
-                organization_id=self.organization_id
-            )
-        except self.__class__.DoesNotExist:
-            return
-        update_fields = {}
-        for field in ["web", "email"]:
-            if getattr(self, field) != getattr(db_instance, field):
-                update_fields[field] = getattr(self, field)
-        if update_fields:
-            NotificationSetting = swapper.load_model(
-                "openwisp_notifications", "NotificationSetting"
-            )
-            transaction.on_commit(
-                lambda: NotificationSetting.objects.filter(
-                    organization_id=self.organization_id
-                ).update(**update_fields)
-            )
