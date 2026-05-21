@@ -1539,12 +1539,7 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
             username="regular_preference_user",
             email="regular_pref_user@test.com",
         )
-        staff = self._create_user(
-            username="staff_without_perm",
-            email="staff_without_perm@test.com",
-            is_staff=True,
-        )
-        self.client.force_login(staff)
+        self.client.force_login(user)
         response = self.client.get(
             reverse("notifications:user_notification_preference", args=(user.pk,))
         )
