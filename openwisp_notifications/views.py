@@ -139,7 +139,7 @@ class NotificationPreferenceView(LoginRequiredMixin, UserPassesTestMixin, Templa
             return (
                 self.request.user.is_superuser
                 or self.request.user.has_perm(NOTIFICATION_SETTING_PERM)
-                or self.request.user.id == self.kwargs.get("pk")
+                or str(self.request.user.id) == str(self.kwargs.get("pk"))
             )
         return True
 
