@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 from django.contrib.admin.sites import AdminSite
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Permission
 from django.core.cache import cache
 from django.forms.widgets import MediaOrderConflictWarning
 from django.test import TestCase, override_settings, tag
@@ -164,7 +165,9 @@ class TestAdmin(BaseTestAdmin):
         self.assertNotContains(response, "owIsChangeForm")
 
     def test_notification_preferences_button_staff_user(self):
-        user = self._create_user(is_staff=True)
+        user = self._create_user(
+            username="btn_tester", email="btn_tester@test.com", is_staff=True
+        )
         user_admin_page = reverse(
             f"admin:{self.users_app_label}_user_change", args=(user.pk,)
         )
@@ -180,13 +183,46 @@ class TestAdmin(BaseTestAdmin):
             response = self.client.get(user_admin_page)
             self.assertContains(response, expected_html, html=True)
 
-        # Button does not appear for non-staff user
-        with self.subTest("Button should not appear for non-staff user"):
+        with self.subTest("Superuser sees button for non-staff user"):
             user.is_staff = False
             user.full_clean()
             user.save()
             response = self.client.get(user_admin_page)
-            self.assertNotContains(response, expected_html, html=True)
+            self.assertContains(response, expected_html, html=True)
+
+    def test_notification_preferences_button_with_permission(self):
+        from openwisp_users.models import OrganizationUser
+
+        perm = Permission.objects.get(codename="change_notificationsetting")
+        org = self._get_org()
+        staff_perm = self._create_administrator(
+            username="perm_viewer",
+            email="perm_viewer@test.com",
+            organizations=[org],
+        )
+        staff_perm.user_permissions.add(perm)
+        non_staff = self._create_user(
+            username="non_staff_target",
+            email="non_staff_target@test.com",
+            is_staff=False,
+        )
+        OrganizationUser.objects.create(
+            user=non_staff, organization=org, is_admin=False
+        )
+        non_staff_page = reverse(
+            f"admin:{self.users_app_label}_user_change", args=(non_staff.pk,)
+        )
+        expected_url = reverse(
+            "notifications:user_notification_preference", args=(non_staff.pk,)
+        )
+        expected_html = (
+            f'<a class="button" href="{expected_url}">Notification Preferences</a>'
+        )
+
+        self.client.force_login(staff_perm)
+        response = self.client.get(non_staff_page)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, expected_html, html=True)
 
 
 class TestOrganizationNotificationsSettingsAdmin(BaseTestAdmin):

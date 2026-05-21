@@ -3,7 +3,7 @@
 {% load i18n admin_urls %}
 
 {% block object-tools-items %}
-  {% if request.user.is_staff and original.is_staff %}
+  {% if request.user.is_superuser or request.user.is_staff and original.is_staff or perms.openwisp_notifications.change_notificationsetting %}
     <li>
       <a class="button" href="{% url 'notifications:user_notification_preference' object_id %}">Notification Preferences</a>
     </li>

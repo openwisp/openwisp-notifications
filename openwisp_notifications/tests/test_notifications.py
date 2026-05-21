@@ -8,6 +8,7 @@ from allauth.account.models import EmailAddress
 from celery.exceptions import OperationalError
 from django.apps.registry import apps
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.messages import get_messages
 from django.core import mail
@@ -1534,8 +1535,16 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
             self.assertEqual(response.status_code, 404)
 
     def test_notification_preference_page_regular_user_redirects_to_admin(self):
-        user = self._create_user(username="regular_preference_user")
-        self.client.force_login(self.admin)
+        user = self._create_user(
+            username="regular_preference_user",
+            email="regular_pref_user@test.com",
+        )
+        staff = self._create_user(
+            username="staff_without_perm",
+            email="staff_without_perm@test.com",
+            is_staff=True,
+        )
+        self.client.force_login(staff)
         response = self.client.get(
             reverse("notifications:user_notification_preference", args=(user.pk,))
         )
@@ -1574,6 +1583,65 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
                     403,
                     "Cross-user preference access must be denied before resolving the target user.",
                 )
+
+    def test_notification_preference_page_staff_with_perm(self):
+        perm = Permission.objects.get(codename="change_notificationsetting")
+        staff_perm = self._create_user(
+            username="staff_with_perm",
+            email="staff_with_perm@test.com",
+            is_staff=True,
+        )
+        staff_perm.user_permissions.add(perm)
+        target_staff = self._create_user(
+            username="target_staff",
+            email="target_staff@test.com",
+            is_staff=True,
+        )
+        target_regular = self._create_user(
+            username="target_regular",
+            email="target_regular@test.com",
+            is_staff=False,
+        )
+        preference_page = "notifications:user_notification_preference"
+
+        with self.subTest("Staff with perm can access other staff user's page"):
+            self.client.force_login(staff_perm)
+            response = self.client.get(
+                reverse(preference_page, args=(target_staff.pk,))
+            )
+            self.assertEqual(response.status_code, 200)
+
+        with self.subTest("Staff with perm can access regular user's preference page"):
+            response = self.client.get(
+                reverse(preference_page, args=(target_regular.pk,))
+            )
+            self.assertEqual(response.status_code, 200)
+
+        with self.subTest("Staff with perm can access own preferences"):
+            response = self.client.get(reverse("notifications:notification_preference"))
+            self.assertEqual(response.status_code, 200)
+
+    def test_notification_preference_page_staff_without_perm(self):
+        staff_noperm = self._create_user(
+            username="staff_no_perm",
+            email="staff_no_perm@test.com",
+            is_staff=True,
+        )
+        target = self._create_user(
+            username="other_staff",
+            email="other_staff@test.com",
+            is_staff=True,
+        )
+        preference_page = "notifications:user_notification_preference"
+
+        with self.subTest("Staff without perm cannot access another staff user's page"):
+            self.client.force_login(staff_noperm)
+            response = self.client.get(reverse(preference_page, args=(target.pk,)))
+            self.assertEqual(response.status_code, 403)
+
+        with self.subTest("Staff without perm can access own preference page"):
+            response = self.client.get(reverse("notifications:notification_preference"))
+            self.assertEqual(response.status_code, 200)
 
 
 class TestNotificationSending(TestOrganizationMixin, TransactionTestCase):

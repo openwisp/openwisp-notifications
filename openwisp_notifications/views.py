@@ -87,20 +87,26 @@ class NotificationPreferenceView(LoginRequiredMixin, UserPassesTestMixin, Templa
             request.user.is_authenticated
             and user_id
             and not request.user.is_superuser
+            and not request.user.has_perm(
+                "openwisp_notifications.change_notificationsetting"
+            )
             and str(request.user.pk) != str(user_id)
         ):
             return self.handle_no_permission()
         if request.user.is_authenticated:
             user = self._get_user()
             if not user.is_staff and not user.is_superuser:
-                messages.error(
-                    request,
-                    _(
-                        "Notification preferences are available only for staff users "
-                        "or superusers."
-                    ),
-                )
-                return redirect(reverse("admin:index"))
+                if not request.user.is_superuser and not request.user.has_perm(
+                    "openwisp_notifications.change_notificationsetting"
+                ):
+                    messages.error(
+                        request,
+                        _(
+                            "Notification preferences are available only for staff users "
+                            "or superusers."
+                        ),
+                    )
+                    return redirect(reverse("admin:index"))
         return super().dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
@@ -116,11 +122,15 @@ class NotificationPreferenceView(LoginRequiredMixin, UserPassesTestMixin, Templa
 
     def test_func(self):
         """
-        This method ensures that only admins can access the view when a custom user ID is provided.
+        This method ensures that only authorized users can access the view
+        when a custom user ID is provided.
         """
         if "pk" in self.kwargs:
             return (
                 self.request.user.is_superuser
+                or self.request.user.has_perm(
+                    "openwisp_notifications.change_notificationsetting"
+                )
                 or self.request.user.id == self.kwargs.get("pk")
             )
         return True
