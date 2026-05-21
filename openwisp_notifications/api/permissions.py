@@ -22,4 +22,5 @@ class PreferencesPermission(BasePermission):
         perm = f"{NotificationSetting._meta.app_label}.change_{NotificationSetting._meta.model_name}"
         if request.user.has_perm(perm):
             return True
-        return str(request.user.id) == str(view.kwargs.get("user_id"))
+        user_id = view.kwargs.get("user_id")
+        return user_id is not None and str(request.user.id) == str(user_id)

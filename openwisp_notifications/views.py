@@ -124,8 +124,16 @@ class NotificationPreferenceView(LoginRequiredMixin, UserPassesTestMixin, Templa
 
     def test_func(self):
         """
-        This method ensures that only authorized users can access the view
-        when a custom user ID is provided.
+        Authorization check for UserPassesTestMixin.
+
+        When a custom user ID (pk) is provided:
+        - Allows superusers
+        - Allows users with the change permission for the active
+          NotificationSetting model
+        - Allows users accessing their own preferences
+
+        When no custom user ID is provided (accessing own preferences):
+        - Always allows (user is viewing their own preferences)
         """
         if "pk" in self.kwargs:
             return (
