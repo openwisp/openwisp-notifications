@@ -52,13 +52,13 @@ A notification setting can therefore either:
 
 Notification settings are automatically generated for notification types
 and organizations associated with a user. Effective notification behavior
-is resolved dynamically using inherited defaults. Superusers have the
-ability to manage notification settings for all users, including adding or
-deleting them. Meanwhile, staff users can modify their preferred
-notification delivery methods, choosing between receiving notifications
-via web, email, or both. Additionally, users have the option to disable
-notifications entirely by turning off both web and email notification
-settings.
+is resolved dynamically using inherited defaults. Superusers, as well as
+staff users who have the ``change_notificationsetting`` permission, have
+the ability to manage notification settings for any user. Meanwhile, users
+can modify their own preferred notification delivery methods, choosing
+between receiving notifications via web, email, or both. Additionally,
+users have the option to disable notifications entirely by turning off
+both web and email notification settings.
 
 .. note::
 
