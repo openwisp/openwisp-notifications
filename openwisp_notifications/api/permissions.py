@@ -1,5 +1,9 @@
 from rest_framework.permissions import BasePermission
 
+from openwisp_notifications.swapper import load_model
+
+NotificationSetting = load_model("NotificationSetting")
+
 
 class PreferencesPermission(BasePermission):
     """
@@ -15,6 +19,7 @@ class PreferencesPermission(BasePermission):
     def has_permission(self, request, view):
         if request.user.is_superuser:
             return True
-        if request.user.has_perm("openwisp_notifications.change_notificationsetting"):
+        perm = f"{NotificationSetting._meta.app_label}.change_{NotificationSetting._meta.model_name}"
+        if request.user.has_perm(perm):
             return True
         return str(request.user.id) == str(view.kwargs.get("user_id"))

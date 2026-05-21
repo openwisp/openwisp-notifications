@@ -24,6 +24,10 @@ from .tokens import email_token_generator
 
 User = get_user_model()
 NotificationSetting = load_model("NotificationSetting")
+NOTIFICATION_SETTING_PERM = (
+    f"{NotificationSetting._meta.app_label}."
+    f"change_{NotificationSetting._meta.model_name}"
+)
 
 logger = logging.getLogger(__name__)
 
@@ -87,9 +91,7 @@ class NotificationPreferenceView(LoginRequiredMixin, UserPassesTestMixin, Templa
             request.user.is_authenticated
             and user_id
             and not request.user.is_superuser
-            and not request.user.has_perm(
-                "openwisp_notifications.change_notificationsetting"
-            )
+            and not request.user.has_perm(NOTIFICATION_SETTING_PERM)
             and str(request.user.pk) != str(user_id)
         ):
             return self.handle_no_permission()
@@ -97,7 +99,7 @@ class NotificationPreferenceView(LoginRequiredMixin, UserPassesTestMixin, Templa
             user = self._get_user()
             if not user.is_staff and not user.is_superuser:
                 if not request.user.is_superuser and not request.user.has_perm(
-                    "openwisp_notifications.change_notificationsetting"
+                    NOTIFICATION_SETTING_PERM
                 ):
                     messages.error(
                         request,
@@ -128,9 +130,7 @@ class NotificationPreferenceView(LoginRequiredMixin, UserPassesTestMixin, Templa
         if "pk" in self.kwargs:
             return (
                 self.request.user.is_superuser
-                or self.request.user.has_perm(
-                    "openwisp_notifications.change_notificationsetting"
-                )
+                or self.request.user.has_perm(NOTIFICATION_SETTING_PERM)
                 or self.request.user.id == self.kwargs.get("pk")
             )
         return True
