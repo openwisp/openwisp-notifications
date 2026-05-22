@@ -27,6 +27,7 @@ NotificationSetting = load_model("NotificationSetting")
 IgnoreObjectNotification = load_model("IgnoreObjectNotification")
 
 Organization = swapper_load_model("openwisp_users", "Organization")
+OrganizationUser = swapper_load_model("openwisp_users", "OrganizationUser")
 
 
 class TestNotificationMixin:
@@ -820,8 +821,6 @@ class TestNotificationApi(
             self.assertEqual(response.status_code, 404)
 
     def test_notification_setting_permission_access(self):
-        from openwisp_users.models import OrganizationUser
-
         org = self._get_org()
         target_user = self._create_user(
             username="target_user",
@@ -908,6 +907,11 @@ class TestNotificationApi(
         ):
             self.client.force_login(self.admin)
             url = self._get_path("user_notification_setting_list", target_user.pk)
+            response = self.client.get(url)
+            self.assertEqual(response.status_code, 200)
+
+        with self.subTest("Regular user can access own notification settings"):
+            url = self._get_path("user_notification_setting_list", regular.pk)
             response = self.client.get(url)
             self.assertEqual(response.status_code, 200)
 

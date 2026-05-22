@@ -13,7 +13,7 @@ class PreferencesPermission(BasePermission):
     1. Superusers can change the notification preferences of any user.
     2. Staff users with "change_notificationsetting" permission can change
        the notification preferences of any user.
-    3. Regular users can only change their own preferences.
+    3. All other authenticated users can only change their own preferences.
     """
 
     def has_permission(self, request, view):

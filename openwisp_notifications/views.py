@@ -97,18 +97,19 @@ class NotificationPreferenceView(LoginRequiredMixin, UserPassesTestMixin, Templa
             return self.handle_no_permission()
         if request.user.is_authenticated:
             user = self._get_user()
-            if not user.is_staff and not user.is_superuser:
-                if not request.user.is_superuser and not request.user.has_perm(
-                    NOTIFICATION_SETTING_PERM
-                ):
-                    messages.error(
-                        request,
-                        _(
-                            "Notification preferences are available only for staff users "
-                            "or superusers."
-                        ),
-                    )
-                    return redirect(reverse("admin:index"))
+            if (
+                not user.is_staff
+                and not request.user.is_superuser
+                and not request.user.has_perm(NOTIFICATION_SETTING_PERM)
+            ):
+                messages.error(
+                    request,
+                    _(
+                        "Notification preferences are available only for staff users "
+                        "or superusers."
+                    ),
+                )
+                return redirect(reverse("admin:index"))
         return super().dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):

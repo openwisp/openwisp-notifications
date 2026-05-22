@@ -23,6 +23,7 @@ Notification = load_model("Notification")
 NotificationSetting = load_model("NotificationSetting")
 notification_queryset = Notification.objects.order_by("-timestamp")
 Group = swapper_load_model("openwisp_users", "Group")
+OrganizationUser = swapper_load_model("openwisp_users", "OrganizationUser")
 
 
 class MockUser:
@@ -191,8 +192,6 @@ class TestAdmin(BaseTestAdmin):
             self.assertContains(response, expected_html, html=True)
 
     def test_notification_preferences_button_with_permission(self):
-        from openwisp_users.models import OrganizationUser
-
         perm = Permission.objects.get(codename="change_notificationsetting")
         org = self._get_org()
         staff_perm = self._create_administrator(
@@ -218,7 +217,6 @@ class TestAdmin(BaseTestAdmin):
         expected_html = (
             f'<a class="button" href="{expected_url}">Notification Preferences</a>'
         )
-
         self.client.force_login(staff_perm)
         response = self.client.get(non_staff_page)
         self.assertEqual(response.status_code, 200)
