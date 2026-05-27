@@ -43,6 +43,7 @@ within the OpenWISP architecture.
     ./user/notification-preferences.rst
     ./user/scheduled-deletion-of-notifications.rst
     ./user/rest-api.rst
+    ./user/websocket-api.rst
     ./user/settings.rst
     ./user/management-commands.rst
 
