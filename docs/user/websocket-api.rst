@@ -21,7 +21,7 @@ All endpoints:
 .. _notifications_websocket_authentication:
 
 Authentication and Authorization
----------------------------------
+--------------------------------
 
 The WebSocket endpoint requires an authenticated user. Authentication
 relies on the standard Django session: connect from a browser context
@@ -52,7 +52,7 @@ Real-time notification events for the authenticated user.
 .. _notifications_websocket_server_to_client:
 
 Server-to-Client Messages
-++++++++++++++++++++++++++
++++++++++++++++++++++++++
 
 After the connection is established, the server pushes a message every
 time a notification is created, read, or deleted for the connected user.
@@ -78,20 +78,21 @@ time a notification is created, read, or deleted for the connected user.
 The ``notification`` field is ``null`` in the following cases:
 
 - The notification was marked as read or deleted (no toast needed).
-- A :ref:`notification storm <openwisp_notifications_notification_storm_prevention>`
-  is in progress: the server throttles toast delivery to avoid flooding
-  the client. The widget still reloads to reflect the updated count when
-  ``reload_widget`` is ``true``.
+- A :ref:`notification storm
+  <openwisp_notifications_notification_storm_prevention>` is in progress:
+  the server throttles toast delivery to avoid flooding the client. The
+  widget still reloads to reflect the updated count when ``reload_widget``
+  is ``true``.
 
 .. _notifications_websocket_client_to_server:
 
 Client-to-Server Messages
-++++++++++++++++++++++++++
++++++++++++++++++++++++++
 
 The client can send the following message types to the server.
 
 Mark a Notification as Read
-''''''''''''''''''''''''''''
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Send this message to mark a single notification as read:
 
@@ -112,11 +113,11 @@ If the ``notification_id`` does not belong to the authenticated user, or
 the notification does not exist, the message is silently ignored.
 
 Retrieve Object Notification Mute Status
-''''''''''''''''''''''''''''''''''''''''
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Send this message to check whether notifications for a specific object
-are muted for the authenticated user (i.e. an
-``IgnoreObjectNotification`` record exists):
+Send this message to check whether notifications for a specific object are
+muted for the authenticated user (i.e. an ``IgnoreObjectNotification``
+record exists):
 
 .. code-block:: javascript
 
@@ -133,7 +134,7 @@ If a matching mute record exists, the server responds with:
 
     {
         "type": "object_notification",
-        "valid_till": "<datetime>"    // ISO 8601 datetime until which notifications are muted
+        "valid_till": "<datetime>"    // ISO 8601 datetime until which notifications are muted; null means permanently muted
     }
 
 If no mute record exists for the given object, the server sends no
