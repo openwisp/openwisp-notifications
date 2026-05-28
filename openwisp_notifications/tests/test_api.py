@@ -911,6 +911,7 @@ class TestNotificationApi(
             self.assertEqual(response.status_code, 200)
 
         with self.subTest("Regular user can access own notification settings"):
+            self.client.force_login(regular)
             url = self._get_path("user_notification_setting_list", regular.pk)
             response = self.client.get(url)
             self.assertEqual(response.status_code, 200)
