@@ -18,12 +18,13 @@ from django.utils.translation import gettext_lazy as _
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import TemplateView
 
-from openwisp_notifications.swapper import load_model
+from openwisp_notifications.swapper import load_model, swapper_load_model
 
 from .tokens import email_token_generator
 
 User = get_user_model()
 NotificationSetting = load_model("NotificationSetting")
+OrganizationUser = swapper_load_model("openwisp_users", "OrganizationUser")
 NOTIFICATION_SETTING_PERM = (
     f"{NotificationSetting._meta.app_label}."
     f"change_{NotificationSetting._meta.model_name}"
@@ -85,23 +86,34 @@ class NotificationPreferenceView(LoginRequiredMixin, UserPassesTestMixin, Templa
             self.user = self.request.user
         return self.user
 
+    def _has_other_user_permission(self, user_id):
+        """
+        Allow other-user access for superusers and organization managers
+        with permission to change notification settings.
+        """
+        user = self.request.user
+        if user.is_superuser or str(user.pk) == str(user_id):
+            return True
+        if not user.has_perm(NOTIFICATION_SETTING_PERM):
+            return False
+        return OrganizationUser.objects.filter(
+            user_id=user_id,
+            organization_id__in=user.organizations_managed,
+        ).exists()
+
     def dispatch(self, request, *args, **kwargs):
         user_id = kwargs.get("pk")
         if (
             request.user.is_authenticated
             and user_id
-            and not request.user.is_superuser
-            and not request.user.has_perm(NOTIFICATION_SETTING_PERM)
-            and str(request.user.pk) != str(user_id)
+            and not self._has_other_user_permission(user_id)
         ):
             return self.handle_no_permission()
+        # Preserve the current admin UI rule: this preference page is only
+        # available for staff users and superusers as targets.
         if request.user.is_authenticated:
             user = self._get_user()
-            if (
-                not user.is_staff
-                and not request.user.is_superuser
-                and not request.user.has_perm(NOTIFICATION_SETTING_PERM)
-            ):
+            if not user.is_staff and not user.is_superuser:
                 messages.error(
                     request,
                     _(
@@ -117,7 +129,6 @@ class NotificationPreferenceView(LoginRequiredMixin, UserPassesTestMixin, Templa
         context["title"] = _("Notification Preferences")
         user = self._get_user()
         if "pk" in self.kwargs:
-            # Only admin should access other users preferences
             context["username"] = user.username
             context["title"] += f" ({user.username})"
         context["user_id"] = user.id
@@ -130,18 +141,15 @@ class NotificationPreferenceView(LoginRequiredMixin, UserPassesTestMixin, Templa
         When a custom user ID (pk) is provided:
         - Allows superusers
         - Allows users with the change permission for the active
-          NotificationSetting model
+          NotificationSetting model if they manage one of the user's
+          organizations
         - Allows users accessing their own preferences
 
         When no custom user ID is provided (accessing own preferences):
         - Always allows (user is viewing their own preferences)
         """
         if "pk" in self.kwargs:
-            return (
-                self.request.user.is_superuser
-                or self.request.user.has_perm(NOTIFICATION_SETTING_PERM)
-                or str(self.request.user.id) == str(self.kwargs.get("pk"))
-            )
+            return self._has_other_user_permission(self.kwargs.get("pk"))
         return True
 
 

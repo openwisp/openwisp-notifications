@@ -8,7 +8,6 @@ from allauth.account.models import EmailAddress
 from celery.exceptions import OperationalError
 from django.apps.registry import apps
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.messages import get_messages
 from django.core import mail
@@ -34,6 +33,7 @@ from openwisp_notifications.handlers import (
 from openwisp_notifications.signals import notify
 from openwisp_notifications.swapper import load_model, swapper_load_model
 from openwisp_notifications.tests.test_helpers import (
+    get_notification_setting_permission,
     mock_notification_types,
     register_notification_type,
     test_notification_type,
@@ -1558,13 +1558,14 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
             ],
         )
 
-    def test_notification_preference_page_cross_user_access_denied_before_lookup(self):
+    def test_notification_preference_page_other_user_access_denied_before_lookup(self):
         user = self._create_user(
-            username="cross_user_requester", email="cross_user_requester@example.com"
+            username="requesting_other_user",
+            email="requesting_other_user@example.com",
         )
         target = self._create_user(
-            username="cross_user_target",
-            email="cross_user_target@example.com",
+            username="other_user_target",
+            email="other_user_target@example.com",
         )
         self.client.force_login(user)
         for target_pk in [target.pk, uuid4()]:
@@ -1580,11 +1581,13 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
                 )
 
     def test_notification_preference_page_staff_with_perm(self):
-        perm = Permission.objects.get(codename="change_notificationsetting")
-        staff_perm = self._create_user(
+        org = self._get_org()
+        other_org = self._create_org(name="other-org")
+        perm = get_notification_setting_permission("change")
+        staff_perm = self._create_administrator(
             username="staff_with_perm",
             email="staff_with_perm@test.com",
-            is_staff=True,
+            organizations=[org],
         )
         staff_perm.user_permissions.add(perm)
         target_staff = self._create_user(
@@ -1592,10 +1595,24 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
             email="target_staff@test.com",
             is_staff=True,
         )
+        OrganizationUser.objects.create(
+            user=target_staff, organization=org, is_admin=False
+        )
         target_regular = self._create_user(
             username="target_regular",
             email="target_regular@test.com",
             is_staff=False,
+        )
+        OrganizationUser.objects.create(
+            user=target_regular, organization=org, is_admin=False
+        )
+        other_target = self._create_user(
+            username="other_target",
+            email="other_target@test.com",
+            is_staff=True,
+        )
+        OrganizationUser.objects.create(
+            user=other_target, organization=other_org, is_admin=False
         )
         preference_page = "notifications:user_notification_preference"
 
@@ -1606,11 +1623,21 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
             )
             self.assertEqual(response.status_code, 200)
 
-        with self.subTest("Staff with perm can access regular user's preference page"):
+        with self.subTest(
+            "Staff with perm cannot access regular user's preference page"
+        ):
             response = self.client.get(
                 reverse(preference_page, args=(target_regular.pk,))
             )
-            self.assertEqual(response.status_code, 200)
+            self.assertRedirects(
+                response, reverse("admin:index"), fetch_redirect_response=False
+            )
+
+        with self.subTest("Staff with perm cannot access users outside managed orgs"):
+            response = self.client.get(
+                reverse(preference_page, args=(other_target.pk,))
+            )
+            self.assertEqual(response.status_code, 403)
 
         with self.subTest("Staff with perm can access own preferences"):
             response = self.client.get(reverse("notifications:notification_preference"))

@@ -127,7 +127,7 @@ class BaseNotificationSettingView(GenericAPIView):
         if getattr(self, "swagger_fake_view", False):
             return NotificationSetting.objects.none()  # pragma: no cover
         user_id = self.kwargs.get("user_id", self.request.user.id)
-        return (
+        queryset = (
             NotificationSetting.objects.exclude(
                 Q(organization__is_active=False)
                 | Q(type__in=app_settings.DISALLOW_PREFERENCES_CHANGE_TYPE)
@@ -135,6 +135,16 @@ class BaseNotificationSettingView(GenericAPIView):
             .filter(user_id=user_id, deleted=False)
             .select_related("organization__notification_settings")
         )
+        # Other-user reads should never expose organization settings outside
+        # the organizations managed by the requester.
+        if not self.request.user.is_superuser and str(self.request.user.pk) != str(
+            user_id
+        ):
+            queryset = queryset.filter(
+                Q(organization__isnull=True)
+                | Q(organization_id__in=self.request.user.organizations_managed)
+            )
+        return queryset
 
 
 class NotificationSettingListView(BaseNotificationSettingView, ListModelMixin):
