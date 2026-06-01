@@ -86,10 +86,10 @@ class NotificationPreferenceView(LoginRequiredMixin, UserPassesTestMixin, Templa
             self.user = self.request.user
         return self.user
 
-    def _has_other_user_permission(self, user_id):
+    def _can_access_user(self, user_id):
         """
-        Allow other-user access for superusers and organization managers
-        with permission to change notification settings.
+        Allow access for the user themselves, superusers, and organization
+        managers with permission to change notification settings.
         """
         user = self.request.user
         if user.is_superuser or str(user.pk) == str(user_id):
@@ -106,7 +106,7 @@ class NotificationPreferenceView(LoginRequiredMixin, UserPassesTestMixin, Templa
         if (
             request.user.is_authenticated
             and user_id
-            and not self._has_other_user_permission(user_id)
+            and not self._can_access_user(user_id)
         ):
             return self.handle_no_permission()
         # Preserve the current admin UI rule: this preference page is only
@@ -149,7 +149,7 @@ class NotificationPreferenceView(LoginRequiredMixin, UserPassesTestMixin, Templa
         - Always allows (user is viewing their own preferences)
         """
         if "pk" in self.kwargs:
-            return self._has_other_user_permission(self.kwargs.get("pk"))
+            return self._can_access_user(self.kwargs.get("pk"))
         return True
 
 

@@ -6,7 +6,7 @@
   {% has_notification_setting_permission request.user as has_perm %}
   {% if original.is_staff and request.user.is_superuser or original.is_staff and has_perm %}
     <li>
-      <a class="button" href="{% url 'notifications:user_notification_preference' object_id %}">Notification Preferences</a>
+      <a class="button" href="{% url 'notifications:user_notification_preference' object_id %}">{% trans "Notification Preferences" %}</a>
     </li>
   {% endif %}
   {{ block.super }}

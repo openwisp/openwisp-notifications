@@ -47,8 +47,6 @@ class PreferencesPermission(BasePermission):
         superuser access are handled separately in ``has_permission``.
         """
         user_id = view.kwargs.get("user_id")
-        if user_id is None:
-            return True
         queryset = OrganizationUser.objects.filter(
             user_id=user_id,
             organization_id__in=request.user.organizations_managed,
