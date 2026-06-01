@@ -1644,16 +1644,24 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
             self.assertEqual(response.status_code, 200)
 
     def test_notification_preference_page_staff_without_perm(self):
+        org = self._get_org()
+        # staff_noperm manages the same org as target but is intentionally not
+        # added to a group granting change_notificationsetting, so the 403 is
+        # caused by the missing permission and not by a missing org scope.
         staff_noperm = self._create_user(
             username="staff_no_perm",
             email="staff_no_perm@test.com",
             is_staff=True,
+        )
+        OrganizationUser.objects.create(
+            user=staff_noperm, organization=org, is_admin=True
         )
         target = self._create_user(
             username="other_staff",
             email="other_staff@test.com",
             is_staff=True,
         )
+        OrganizationUser.objects.create(user=target, organization=org, is_admin=False)
         preference_page = "notifications:user_notification_preference"
 
         with self.subTest("Staff without perm cannot access another staff user's page"):
