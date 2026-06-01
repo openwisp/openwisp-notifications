@@ -15,6 +15,7 @@ class PreferencesPermission(BasePermission):
     2. Users with the required NotificationSetting permission can access
        the notification preferences of another user in a managed organization.
     3. All other authenticated users can only change their own preferences.
+       This includes deprecated routes without a user_id URL parameter.
     """
 
     def _get_perm(self, action):
@@ -63,7 +64,9 @@ class PreferencesPermission(BasePermission):
         if request.user.is_superuser:
             return True
         user_id = view.kwargs.get("user_id")
-        if user_id is not None and str(request.user.id) == str(user_id):
+        if user_id is None:
+            return True
+        if str(request.user.id) == str(user_id):
             return True
         return self._has_required_perm(request) and self._can_access_target_user(
             request, view

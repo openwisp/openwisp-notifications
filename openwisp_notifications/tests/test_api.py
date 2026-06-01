@@ -980,6 +980,9 @@ class TestNotificationApi(
                 username="regular_user",
                 email="regular_user@test.com",
             )
+            OrganizationUser.objects.create(
+                user=regular, organization=org, is_admin=False
+            )
             self.client.force_login(regular)
             url = self._get_path("user_notification_setting_list", target_user.pk)
             response = self.client.get(url)
@@ -997,6 +1000,28 @@ class TestNotificationApi(
             self.client.force_login(regular)
             url = self._get_path("user_notification_setting_list", regular.pk)
             response = self.client.get(url)
+            self.assertEqual(response.status_code, 200)
+
+        regular_setting, _ = NotificationSetting.objects.get_or_create(
+            user=regular,
+            organization=org,
+            type="default",
+            defaults={"web": True, "email": True},
+        )
+        with self.subTest(
+            "Regular user can access own deprecated notification setting list"
+        ):
+            url = self._get_path("notification_setting_list")
+            response = self.client.get(url)
+            self.assertEqual(response.status_code, 200)
+
+        with self.subTest(
+            "Regular user can update own deprecated notification setting"
+        ):
+            url = self._get_path("notification_setting", regular_setting.pk)
+            response = self.client.put(
+                url, {"web": False}, content_type="application/json"
+            )
             self.assertEqual(response.status_code, 200)
 
     def test_notification_redirect_api(self):

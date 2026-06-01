@@ -54,11 +54,12 @@ Notification settings are automatically generated for notification types
 and organizations associated with a user. Effective notification behavior
 is resolved dynamically using inherited defaults. Staff users who have the
 ``change_notificationsetting`` permission can manage notification settings
-for users in organizations they manage. Meanwhile, users can modify their
-own preferred notification delivery methods, choosing between receiving
-notifications via web, email, or both. Additionally, users have the option
-to disable notifications entirely by turning off both web and email
-notification settings.
+for users in organizations they manage. Superusers can manage any user's
+notification settings without additional permissions. Meanwhile, users can
+modify their own preferred notification delivery methods, choosing between
+receiving notifications via web, email, or both. Additionally, users have
+the option to disable notifications entirely by turning off both web and
+email notification settings.
 
 .. note::
 
