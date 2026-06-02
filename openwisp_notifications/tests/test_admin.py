@@ -12,6 +12,9 @@ from django.urls import reverse
 from openwisp_notifications import settings as app_settings
 from openwisp_notifications.signals import notify
 from openwisp_notifications.swapper import load_model, swapper_load_model
+from openwisp_notifications.templatetags.notification_tags import (
+    has_notification_setting_permission,
+)
 from openwisp_notifications.widgets import _add_object_notification_widget
 from openwisp_users.admin import UserAdmin
 from openwisp_users.tests.utils import TestMultitenantAdminMixin
@@ -274,6 +277,32 @@ class TestAdmin(BaseTestAdmin):
         response = self.client.get(target_staff_page)
         self.assertEqual(response.status_code, 200)
         self.assertNotContains(response, expected_html, html=True)
+
+    def test_notification_preferences_button_outside_managed_org(self):
+        org_b = self._create_org(name="other org", slug="other-org")
+        perm = get_notification_setting_permission("change")
+        requester = self._create_administrator(
+            username="requester",
+            email="requester@test.com",
+            organizations=[self._get_org()],
+        )
+        requester.user_permissions.add(perm)
+        target_outside = self._create_user(
+            username="outside_target",
+            email="outside_target@test.com",
+            is_staff=True,
+        )
+        OrganizationUser.objects.create(
+            user=target_outside, organization=org_b, is_admin=False
+        )
+
+        with self.subTest("Tag returns False for target outside managed orgs"):
+            self.assertFalse(
+                has_notification_setting_permission(requester, target_outside)
+            )
+
+        with self.subTest("Tag returns True without target user"):
+            self.assertTrue(has_notification_setting_permission(requester))
 
 
 class TestOrganizationNotificationsSettingsAdmin(BaseTestAdmin):
