@@ -13,50 +13,40 @@ Core code lives in `openwisp_notifications/`:
 - `api/`, `views.py`, `serializers.py`, `templates/`, and `static/` provide API, admin/UI, and frontend behavior.
 - `openwisp_notifications/tests/` contains package-level tests; `tests/openwisp2/sample_notifications/` contains sample app coverage.
 
-The repository is a single Python package, not a monorepo.
-
 ## Source of Truth
 
-- For local development setup, database initialization, running the development server, Redis/Celery, and baseline test commands, use `docs/developer/installation.rst`.
-- For developer-oriented package documentation, start from `docs/developer/index.rst`.
-- For CI-tested dependency installation, QA commands, test execution, environment variables, and the Python/Django compatibility matrix, use `.github/workflows/build.yml`.
-- For release publishing details, use `.github/workflows/pypi.yml`.
-- For contribution and PR expectations, use `.github/pull_request_template.md` and `CONTRIBUTING.rst`.
+- Use `docs/developer/installation.rst` and `docs/developer/index.rst` for local setup, Redis/Celery, services, and baseline test commands.
+- Use `.github/workflows/build.yml` for CI-tested dependencies, QA/test commands, env vars, and supported Python/Django versions.
+- Use GitHub issue/PR templates when asked to open issues or PRs.
 
-## Working Notes
+If instructions conflict, repository config and CI workflows win first, official docs next, and this file is supplemental.
 
-- `openwisp_notifications/tests/` for package-level tests.
-- `tests/openwisp2/sample_notifications/` for sample project and integration coverage.
+## Testing and QA
+
+- Add or update tests for every behavior change.
+- For bug fixes, write the regression test first, run it against the unfixed code, confirm it fails for the expected reason, then implement the fix.
+- Use targeted tests while iterating, for example `./tests/manage.py test openwisp_notifications.tests.test_api`.
+- Run `openwisp-qa-format` after editing when available.
+- Run `./run-qa-checks` and the full test suite as defined in `.github/workflows/build.yml` before considering the change complete.
+- Prefer in-process tests so coverage tools can measure changed code.
+
+## Development Notes
+
 - `tests/openwisp2/` is the Django test project used by `runtests.py`.
-- Use `.github/workflows/build.yml` as the authoritative compatibility matrix for supported Python and Django versions.
 - Preserve swappable model support and integration with `openwisp-users` organizations and memberships.
-- Be careful with notification preference inheritance, global notification settings, soft-deleted `NotificationSetting` rows, and user/organization permission boundaries.
 - Mark user-facing strings as translatable with Django i18n helpers, typically `gettext_lazy` imported as `_`.
-- Add or update tests for behavior changes.
-- For bug fixes, prefer the red/green workflow: write or update the regression test first, run it against the unfixed code and confirm the failure message is clear, then apply the fix and rerun the targeted test plus the relevant module.
-
-## Instruction Priority
-
-When instructions conflict:
-
-1. CI workflows and repository configuration are authoritative.
-2. Official documentation is authoritative for setup and workflows.
-3. AGENTS.md provides supplemental repository-specific guidance.
+- Avoid unnecessary blank lines inside function and method bodies.
 
 ## Security and Auth Notes
 
 - Notification visibility depends on user, organization, and object permissions; avoid changes that could leak notifications across tenants.
+- Be careful with notification preference inheritance, global notification settings, soft-deleted `NotificationSetting` rows, and user/organization permission boundaries.
 - Be careful when changing organization membership handling, notification preference APIs, unsubscribe flows, email verification warnings, websocket updates, and cache invalidation.
-- Do not hardcode secrets into committed settings files; use `tests/openwisp2/local_settings.py` only for local overrides.
 - Notification payloads can include related objects and URLs; preserve validation and permission checks when changing serializers, views, handlers, or tasks.
-
-## Pull Request Guidelines
-
-Keep PRs focused and avoid unrelated refactors. Follow the current checklist in `.github/pull_request_template.md`.
+- Write comments and docstrings only when they explain why code is shaped a certain way. Put comments before the relevant code block instead of scattering them inside it.
 
 ## Troubleshooting
 
-- If setup, QA, or test commands need adjustment, check the relevant docs page first and then verify the current CI workflow.
 - If you change notification setting creation/deletion, run focused notification setting tests and check staff, superuser, organization admin, and regular user transitions.
 - If you change UI notification preferences, include browser/Selenium coverage when the behavior is user-facing.
 - If you change background tasks or signals, account for Celery eager execution in tests and normal asynchronous execution in production.

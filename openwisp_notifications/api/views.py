@@ -12,7 +12,6 @@ from rest_framework.generics import (
     get_object_or_404,
 )
 from rest_framework.mixins import CreateModelMixin, ListModelMixin, UpdateModelMixin
-from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
@@ -29,6 +28,7 @@ from openwisp_notifications.api.serializers import (
 from openwisp_notifications.swapper import load_model
 from openwisp_users.api.authentication import BearerAuthentication
 from openwisp_users.api.mixins import ProtectedAPIMixin
+from openwisp_utils.api.pagination import OpenWispPagination
 
 from .filters import NotificationSettingFilter
 
@@ -43,10 +43,8 @@ OrganizationNotificationSettings = load_model("OrganizationNotificationSettings"
 IgnoreObjectNotification = load_model("IgnoreObjectNotification")
 
 
-class NotificationPaginator(PageNumberPagination):
+class NotificationPaginator(OpenWispPagination):
     page_size = 20
-    page_size_query_param = "page_size"
-    max_page_size = 100
 
 
 class BaseNotificationView(GenericAPIView):
