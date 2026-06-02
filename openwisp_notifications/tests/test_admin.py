@@ -188,6 +188,28 @@ class TestAdmin(BaseTestAdmin):
             response = self.client.get(user_admin_page)
             self.assertNotContains(response, expected_html, html=True)
 
+    def test_base_site_template(self):
+        response = self.client.get(self._url)
+        self.assertContains(response, "openwisp-notifications/css/loader.css")
+        self.assertContains(response, "openwisp-notifications/css/notifications.css")
+        self.assertContains(response, "openwisp-notifications/js/notifications.js")
+        self.assertContains(
+            response, "openwisp-notifications/js/vendor/reconnecting-websocket.min.js"
+        )
+        self.assertContains(response, 'id="openwisp_notifications"')
+
+    def test_change_form_template(self):
+        org = self._get_org()
+        url = reverse(
+            f"admin:{self.users_app_label}_organization_change", args=(org.pk,)
+        )
+        response = self.client.get(url)
+        self.assertContains(response, "owIsChangeForm = true")
+        self.assertContains(
+            response, f"const owNotifyAppLabel = '{self.users_app_label}'"
+        )
+        self.assertContains(response, "owNotifyModelName = 'organization'")
+
 
 class TestOrganizationNotificationsSettingsAdmin(BaseTestAdmin):
     app_label = "openwisp_notifications"
