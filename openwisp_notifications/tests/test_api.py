@@ -14,6 +14,7 @@ from openwisp_notifications.signals import notify
 from openwisp_notifications.swapper import load_model, swapper_load_model
 from openwisp_notifications.tests.test_helpers import (
     TEST_DATETIME,
+    get_notification_setting_permission,
     mock_notification_types,
     register_notification_type,
 )
@@ -26,6 +27,7 @@ NotificationSetting = load_model("NotificationSetting")
 IgnoreObjectNotification = load_model("IgnoreObjectNotification")
 
 Organization = swapper_load_model("openwisp_users", "Organization")
+OrganizationUser = swapper_load_model("openwisp_users", "OrganizationUser")
 
 
 class TestNotificationMixin:
@@ -817,6 +819,210 @@ class TestNotificationApi(
                 path, data={"web": False}, content_type="application/json"
             )
             self.assertEqual(response.status_code, 404)
+
+    def test_notification_setting_permission_access(self):
+        org = self._get_org()
+        other_org = self._create_org(name="other_org", slug="other-org")
+        target_user = self._create_user(
+            username="target_user",
+            email="target_user@test.com",
+            is_staff=True,
+        )
+        OrganizationUser.objects.create(
+            user=target_user, organization=org, is_admin=True
+        )
+        OrganizationUser.objects.create(
+            user=target_user, organization=other_org, is_admin=True
+        )
+        target_setting = NotificationSetting.objects.filter(
+            user=target_user, organization=org
+        ).first()
+        other_target_user = self._create_user(
+            username="other_target_user",
+            email="other_target_user@test.com",
+            is_staff=True,
+        )
+        OrganizationUser.objects.create(
+            user=other_target_user, organization=other_org, is_admin=True
+        )
+        other_target_setting = NotificationSetting.objects.filter(
+            user=other_target_user, organization=other_org
+        ).first()
+        change_perm = get_notification_setting_permission("change")
+        view_perm = get_notification_setting_permission("view")
+
+        with self.subTest("Staff with perm can retrieve another user's settings"):
+            staff_perm = self._create_user(
+                username="staff_perm",
+                email="staff_perm@test.com",
+                is_staff=True,
+            )
+            OrganizationUser.objects.create(
+                user=staff_perm, organization=org, is_admin=True
+            )
+            staff_perm.user_permissions.add(change_perm)
+            self.client.force_login(staff_perm)
+            url = self._get_path("user_notification_setting_list", target_user.pk)
+            response = self.client.get(url)
+            self.assertEqual(response.status_code, 200)
+            self.assertNotIn(
+                other_org.pk,
+                [setting["organization"] for setting in response.data["results"]],
+            )
+
+        with self.subTest("Staff with view perm can retrieve another user's settings"):
+            staff_view_perm = self._create_user(
+                username="staff_view_perm",
+                email="staff_view_perm@test.com",
+                is_staff=True,
+            )
+            OrganizationUser.objects.create(
+                user=staff_view_perm, organization=org, is_admin=True
+            )
+            staff_view_perm.user_permissions.add(view_perm)
+            self.client.force_login(staff_view_perm)
+            url = self._get_path("user_notification_setting_list", target_user.pk)
+            response = self.client.get(url)
+            self.assertEqual(response.status_code, 200)
+
+        with self.subTest("Staff with view perm cannot update another user's setting"):
+            url = self._get_path(
+                "user_notification_setting", target_user.pk, target_setting.pk
+            )
+            response = self.client.put(
+                url, {"web": False}, content_type="application/json"
+            )
+            self.assertEqual(response.status_code, 403)
+
+        with self.subTest(
+            "Staff with view perm cannot bulk update another user's org settings"
+        ):
+            url = self._get_path(
+                "user_org_notification_setting", target_user.pk, org.pk
+            )
+            response = self.client.post(url, {"web": True, "email": True})
+            self.assertEqual(response.status_code, 403)
+
+        self.client.force_login(staff_perm)
+
+        with self.subTest("Staff with perm cannot retrieve user outside managed org"):
+            url = self._get_path("user_notification_setting_list", other_target_user.pk)
+            response = self.client.get(url)
+            self.assertEqual(response.status_code, 403)
+
+        with self.subTest("Staff with perm cannot update user outside managed org"):
+            url = self._get_path(
+                "user_notification_setting",
+                other_target_user.pk,
+                other_target_setting.pk,
+            )
+            response = self.client.put(
+                url, {"web": False}, content_type="application/json"
+            )
+            self.assertEqual(response.status_code, 403)
+
+        with self.subTest(
+            "Staff with perm cannot bulk update org settings outside managed org"
+        ):
+            url = self._get_path(
+                "user_org_notification_setting", other_target_user.pk, other_org.pk
+            )
+            response = self.client.post(url, {"web": True, "email": True})
+            self.assertEqual(response.status_code, 403)
+
+        with self.subTest("Staff with perm can update another user's setting"):
+            url = self._get_path(
+                "user_notification_setting", target_user.pk, target_setting.pk
+            )
+            response = self.client.put(
+                url, {"web": False}, content_type="application/json"
+            )
+            self.assertEqual(response.status_code, 200)
+
+        with self.subTest(
+            "Staff with perm can bulk update another user's org settings"
+        ):
+            url = self._get_path(
+                "user_org_notification_setting", target_user.pk, org.pk
+            )
+            response = self.client.post(url, {"web": True, "email": True})
+            self.assertEqual(response.status_code, 200)
+
+        with self.subTest("Staff without perm cannot retrieve another user's settings"):
+            staff_noperm = self._create_user(
+                username="staff_noperm",
+                email="staff_noperm@test.com",
+                is_staff=True,
+            )
+            self.client.force_login(staff_noperm)
+            url = self._get_path("user_notification_setting_list", target_user.pk)
+            response = self.client.get(url)
+            self.assertEqual(response.status_code, 403)
+
+        with self.subTest("Staff without perm cannot update another user's setting"):
+            url = self._get_path(
+                "user_notification_setting", target_user.pk, target_setting.pk
+            )
+            response = self.client.put(
+                url, {"web": False}, content_type="application/json"
+            )
+            self.assertEqual(response.status_code, 403)
+
+        with self.subTest("Staff without perm can access own notification settings"):
+            url = self._get_path("user_notification_setting_list", staff_noperm.pk)
+            response = self.client.get(url)
+            self.assertEqual(response.status_code, 200)
+
+        with self.subTest(
+            "Regular user cannot access another user's notification settings"
+        ):
+            regular = self._create_user(
+                username="regular_user",
+                email="regular_user@test.com",
+            )
+            OrganizationUser.objects.create(
+                user=regular, organization=org, is_admin=False
+            )
+            self.client.force_login(regular)
+            url = self._get_path("user_notification_setting_list", target_user.pk)
+            response = self.client.get(url)
+            self.assertEqual(response.status_code, 403)
+
+        with self.subTest(
+            "Superuser can always access another user's notification settings"
+        ):
+            self.client.force_login(self.admin)
+            url = self._get_path("user_notification_setting_list", target_user.pk)
+            response = self.client.get(url)
+            self.assertEqual(response.status_code, 200)
+
+        with self.subTest("Regular user can access own notification settings"):
+            self.client.force_login(regular)
+            url = self._get_path("user_notification_setting_list", regular.pk)
+            response = self.client.get(url)
+            self.assertEqual(response.status_code, 200)
+
+        regular_setting, _ = NotificationSetting.objects.get_or_create(
+            user=regular,
+            organization=org,
+            type="default",
+            defaults={"web": True, "email": True},
+        )
+        with self.subTest(
+            "Regular user can access own deprecated notification setting list"
+        ):
+            url = self._get_path("notification_setting_list")
+            response = self.client.get(url)
+            self.assertEqual(response.status_code, 200)
+
+        with self.subTest(
+            "Regular user can update own deprecated notification setting"
+        ):
+            url = self._get_path("notification_setting", regular_setting.pk)
+            response = self.client.put(
+                url, {"web": False}, content_type="application/json"
+            )
+            self.assertEqual(response.status_code, 200)
 
     def test_notification_redirect_api(self):
         def _unread_notification(notification):
