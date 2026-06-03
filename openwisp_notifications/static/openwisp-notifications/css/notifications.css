@@ -22,11 +22,11 @@
   mask-size: 22px;
   -webkit-mask-size: 22px;
   border: 0px;
-  background: #777;
+  background: var(--ow-color-fg-dark);
 }
 .ow-notifications.toggle-btn:hover #ow-notification-btn,
 .ow-notifications:focus #ow-notification-btn {
-  background: #df5d43;
+  background: var(--ow-color-primary);
 }
 #ow-notification-count {
   position: absolute;
@@ -34,13 +34,13 @@
   left: 30px;
   min-width: 15px;
   height: 15px;
-  background-color: #df5d43;
+  background-color: var(--ow-color-primary);
   display: flex;
   justify-content: center;
   align-items: center;
   padding: 2px 3px;
   border-radius: 6px;
-  color: #fff;
+  color: var(--ow-color-white);
   font-size: 10px;
   box-shadow: 0px 0px 3px #ffffff82 inset;
 }
@@ -68,37 +68,37 @@
   text-transform: none;
   display: none;
   cursor: pointer;
-  border: #fff solid 1px;
+  border: var(--ow-color-white) solid 1px;
   padding: 0.3em 0 0.3em 1em;
   border-radius: 4px;
   font-size: 12px;
-  border-color: rgba(0, 0, 0, 0.25);
+  border-color: var(--ow-overlay-25);
 }
 #container .ow-notification-toast a {
   border-bottom: 0 none;
 }
 .ow-notification-toast.info,
 .ow-notification-toast.warning {
-  background-color: #ededed;
-  color: #333333;
+  background-color: var(--ow-color-fg-light);
+  color: var(--ow-color-fg-darker);
 }
 #container .ow-notification-toast.info a,
 #container .ow-notification-toast.warning a {
-  color: #df5d43;
+  color: var(--ow-color-primary);
 }
 .ow-notification-toast.error {
-  background-color: #d04124;
-  color: #fff;
-  border-color: rgba(0, 0, 0, 0);
+  background-color: var(--ow-color-danger);
+  color: var(--ow-color-white);
+  border-color: transparent;
 }
 #container .ow-notification-toast.error a,
 #container .ow-notification-toast.success a {
-  color: #fff;
+  color: var(--ow-color-white);
 }
 .ow-notification-toast.success {
-  background-color: #1c8828;
-  color: #fff;
-  border-color: rgba(0, 0, 0, 0);
+  background-color: var(--ow-color-success);
+  color: var(--ow-color-white);
+  border-color: transparent;
 }
 .ow-notification-toast > div {
   display: flex;
@@ -138,15 +138,15 @@
   text-align: left;
   width: 425px;
   text-transform: none;
-  background-color: #fff;
+  background-color: var(--ow-color-white);
   border-radius: 8px;
   box-shadow: 4px 4px 12px 0px rgba(0, 0, 0, 0.12);
-  border: 1px solid rgba(0, 0, 0, 0.07);
+  border: 1px solid var(--ow-overlay-7);
   font-size: 12px;
   top: 49px;
 }
 .ow-notification-dropdown .toggle-btn {
-  color: #777 !important;
+  color: var(--ow-color-fg-dark) !important;
   text-decoration: none !important;
 }
 .ow-notification-dropdown .toggle-btn:active {
@@ -158,11 +158,11 @@
   display: flex;
   justify-content: space-between;
   font-weight: 500;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  border-bottom: 1px solid var(--ow-overlay-10);
 }
 .ow-notification-dropdown .disabled {
-  color: rgba(0, 0, 0, 0.4) !important;
-  background: #dfdfdf;
+  color: var(--ow-overlay-40) !important;
+  background: var(--ow-color-fg-light);
   pointer-events: none;
 }
 .ow-notification-wrapper {
@@ -175,12 +175,12 @@
   cursor: pointer;
   padding: 0;
   transition: 0.4s;
-  color: #333333;
+  color: var(--ow-color-fg-darker);
   font-weight: bold;
 }
 .ow-notification-elem.unread {
-  background: rgba(0, 0, 0, 0.72);
-  color: #fff;
+  background: var(--ow-overlay-90);
+  color: var(--ow-color-white);
 }
 .ow-notification-elem p {
   margin: 5px auto 0px auto;
@@ -189,7 +189,7 @@
 .ow-notification-meta {
   display: flex;
   justify-content: space-between;
-  color: #777;
+  color: var(--ow-color-fg-dark);
   -webkit-text-stroke: 0.2px white;
   padding: 1px 0px;
 }
@@ -197,27 +197,27 @@
   font-weight: normal;
 }
 .ow-notification-elem a {
-  color: #df5d43 !important;
+  color: var(--ow-color-primary) !important;
   border-bottom: 0 !important;
   font-weight: bold;
 }
 .ow-notification-elem.unread .ow-notification-meta {
-  color: #fff;
+  color: var(--ow-color-white);
 }
 .ow-notification-elem:not(.unread):hover,
 .ow-notification-elem:not(.unread):focus {
-  background: #f4f7f6;
+  background: var(--ow-color-login-bg);
 }
 .ow-notification-elem:not(.unread):hover .ow-notification-meta,
 .ow-notification-elem:not(.unread):focus .ow-notification-meta {
-  color: #000;
+  color: var(--ow-color-black);
 }
 .ow-notification-elem.unread:hover,
 .ow-notification-elem.unread:focus {
-  background: #000;
+  background: var(--ow-color-black);
 }
 .ow-no-notifications {
-  color: #464646;
+  color: var(--ow-color-fg-darker);
   text-align: center;
   font-weight: bold;
   font-size: small;
@@ -227,11 +227,11 @@
 .ow-notification-elem:focus,
 .ow-notification-elem a:focus,
 .ow-notification-dropdown .toggle-btn:focus {
-  outline: 0.5px dotted rgba(0, 0, 0, 0.25);
+  outline: 0.5px dotted var(--ow-overlay-25);
 }
 #ow-notification-dropdown-error-container {
-  color: #c51b25;
-  background-color: #ffd2d2;
+  color: var(--ow-color-danger);
+  background-color: var(--ow-color-primary-light);
   display: none;
 }
 #ow-notification-dropdown-error {
@@ -299,7 +299,7 @@
   background-image: url("../../openwisp-notifications/images/icons/icon-close.svg");
 }
 .ow-notification-inner {
-  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  border-bottom: 1px solid var(--ow-overlay-10);
   padding: 16px 22px;
 }
 .ow-notification-elem:last-child .ow-notification-inner {
@@ -308,7 +308,7 @@
 
 /* Generic notification dialog */
 .ow-overlay-notification {
-  background-color: rgba(0, 0, 0, 0.6);
+  background-color: var(--ow-overlay-60);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -316,7 +316,7 @@
 }
 .ow-dialog-notification {
   position: relative;
-  background-color: white;
+  background-color: var(--ow-color-white);
   padding: 20px;
   padding-top: 20px;
   border-radius: 10px;
@@ -350,14 +350,14 @@
   right: 10px;
 }
 .ow-dialog-close-x:hover {
-  color: #df5d43;
+  color: var(--ow-color-primary);
 }
 .ow-message-title {
-  color: #333;
+  color: var(--ow-color-fg-darker);
   margin-bottom: 10px;
 }
 .ow-message-title a {
-  color: #df5d43;
+  color: var(--ow-color-primary);
 }
 .ow-message-title a:hover {
   text-decoration: underline;
