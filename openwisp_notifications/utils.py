@@ -14,6 +14,7 @@ from django.utils.translation import ngettext_lazy
 from openwisp_notifications import settings as app_settings
 from openwisp_notifications.exceptions import NotificationRenderException
 from openwisp_notifications.swapper import load_model
+from openwisp_notifications.types import get_notification_configuration
 from openwisp_utils.admin_theme.email import send_email
 
 from .tokens import email_token_generator
@@ -158,14 +159,17 @@ def send_notification_email(
 def get_user_email_preference(notification):
     """
     Returns the user's email preference for notifications.
-    If the user has no preference set, it defaults to True.
+    Falls back to the notification type's ``email_notification``
+    configuration when the target has no organization.
     """
     target_org = getattr(getattr(notification, "target", None), "organization_id", None)
-    if not (notification.type and target_org):
-        # We can not check email preference if notification type is absent,
-        # or if target_org is not present
-        # therefore send email anyway.
+    if not notification.type:
+        # notify.send() may create notifications without a type; when no type is
+        # available, default to email notifications being enabled.
         return True
+    if not target_org:
+        type_config = get_notification_configuration(notification.type)
+        return type_config.get("email_notification", True)
     try:
         return (
             # Avoid an extra query when email_notification accesses
