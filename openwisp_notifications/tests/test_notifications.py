@@ -33,6 +33,7 @@ from openwisp_notifications.handlers import (
 from openwisp_notifications.signals import notify
 from openwisp_notifications.swapper import load_model, swapper_load_model
 from openwisp_notifications.tests.test_helpers import (
+    get_notification_setting_permission,
     mock_notification_types,
     register_notification_type,
     test_notification_type,
@@ -1534,8 +1535,11 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
             self.assertEqual(response.status_code, 404)
 
     def test_notification_preference_page_regular_user_redirects_to_admin(self):
-        user = self._create_user(username="regular_preference_user")
-        self.client.force_login(self.admin)
+        user = self._create_user(
+            username="regular_preference_user",
+            email="regular_pref_user@test.com",
+        )
+        self.client.force_login(user)
         response = self.client.get(
             reverse("notifications:user_notification_preference", args=(user.pk,))
         )
@@ -1554,13 +1558,14 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
             ],
         )
 
-    def test_notification_preference_page_cross_user_access_denied_before_lookup(self):
+    def test_notification_preference_page_other_user_access_denied_before_lookup(self):
         user = self._create_user(
-            username="cross_user_requester", email="cross_user_requester@example.com"
+            username="requesting_other_user",
+            email="requesting_other_user@example.com",
         )
         target = self._create_user(
-            username="cross_user_target",
-            email="cross_user_target@example.com",
+            username="other_user_target",
+            email="other_user_target@example.com",
         )
         self.client.force_login(user)
         for target_pk in [target.pk, uuid4()]:
@@ -1574,6 +1579,99 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
                     403,
                     "Cross-user preference access must be denied before resolving the target user.",
                 )
+
+    def test_notification_preference_page_staff_with_perm(self):
+        org = self._get_org()
+        other_org = self._create_org(name="other-org")
+        perm = get_notification_setting_permission("change")
+        staff_perm = self._create_administrator(
+            username="staff_with_perm",
+            email="staff_with_perm@test.com",
+            organizations=[org],
+        )
+        staff_perm.user_permissions.add(perm)
+        target_staff = self._create_user(
+            username="target_staff",
+            email="target_staff@test.com",
+            is_staff=True,
+        )
+        OrganizationUser.objects.create(
+            user=target_staff, organization=org, is_admin=False
+        )
+        target_regular = self._create_user(
+            username="target_regular",
+            email="target_regular@test.com",
+            is_staff=False,
+        )
+        OrganizationUser.objects.create(
+            user=target_regular, organization=org, is_admin=False
+        )
+        other_target = self._create_user(
+            username="other_target",
+            email="other_target@test.com",
+            is_staff=True,
+        )
+        OrganizationUser.objects.create(
+            user=other_target, organization=other_org, is_admin=False
+        )
+        preference_page = "notifications:user_notification_preference"
+
+        with self.subTest("Staff with perm can access other staff user's page"):
+            self.client.force_login(staff_perm)
+            response = self.client.get(
+                reverse(preference_page, args=(target_staff.pk,))
+            )
+            self.assertEqual(response.status_code, 200)
+
+        with self.subTest(
+            "Staff with perm cannot access regular user's preference page"
+        ):
+            response = self.client.get(
+                reverse(preference_page, args=(target_regular.pk,))
+            )
+            self.assertRedirects(
+                response, reverse("admin:index"), fetch_redirect_response=False
+            )
+
+        with self.subTest("Staff with perm cannot access users outside managed orgs"):
+            response = self.client.get(
+                reverse(preference_page, args=(other_target.pk,))
+            )
+            self.assertEqual(response.status_code, 403)
+
+        with self.subTest("Staff with perm can access own preferences"):
+            response = self.client.get(reverse("notifications:notification_preference"))
+            self.assertEqual(response.status_code, 200)
+
+    def test_notification_preference_page_staff_without_perm(self):
+        org = self._get_org()
+        # staff_noperm manages the same org as target but is intentionally not
+        # added to a group granting change_notificationsetting, so the 403 is
+        # caused by the missing permission and not by a missing org scope.
+        staff_noperm = self._create_user(
+            username="staff_no_perm",
+            email="staff_no_perm@test.com",
+            is_staff=True,
+        )
+        OrganizationUser.objects.create(
+            user=staff_noperm, organization=org, is_admin=True
+        )
+        target = self._create_user(
+            username="other_staff",
+            email="other_staff@test.com",
+            is_staff=True,
+        )
+        OrganizationUser.objects.create(user=target, organization=org, is_admin=False)
+        preference_page = "notifications:user_notification_preference"
+
+        with self.subTest("Staff without perm cannot access another staff user's page"):
+            self.client.force_login(staff_noperm)
+            response = self.client.get(reverse(preference_page, args=(target.pk,)))
+            self.assertEqual(response.status_code, 403)
+
+        with self.subTest("Staff without perm can access own preference page"):
+            response = self.client.get(reverse("notifications:notification_preference"))
+            self.assertEqual(response.status_code, 200)
 
 
 class TestNotificationSending(TestOrganizationMixin, TransactionTestCase):

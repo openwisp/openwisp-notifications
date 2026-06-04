@@ -13,16 +13,20 @@ from django.urls import reverse
 from openwisp_notifications import settings as app_settings
 from openwisp_notifications.signals import notify
 from openwisp_notifications.swapper import load_model, swapper_load_model
+from openwisp_notifications.templatetags.notification_tags import (
+    has_notification_setting_permission,
+)
 from openwisp_notifications.widgets import _add_object_notification_widget
 from openwisp_users.admin import UserAdmin
 from openwisp_users.tests.utils import TestMultitenantAdminMixin
 
-from .test_helpers import MessagingRequest
+from .test_helpers import MessagingRequest, get_notification_setting_permission
 
 Notification = load_model("Notification")
 NotificationSetting = load_model("NotificationSetting")
 notification_queryset = Notification.objects.order_by("-timestamp")
 Group = swapper_load_model("openwisp_users", "Group")
+OrganizationUser = swapper_load_model("openwisp_users", "OrganizationUser")
 
 
 class MockUser:
@@ -165,7 +169,9 @@ class TestAdmin(BaseTestAdmin):
         self.assertNotContains(response, "owIsChangeForm")
 
     def test_notification_preferences_button_staff_user(self):
-        user = self._create_user(is_staff=True)
+        user = self._create_user(
+            username="btn_tester", email="btn_tester@test.com", is_staff=True
+        )
         user_admin_page = reverse(
             f"admin:{self.users_app_label}_user_change", args=(user.pk,)
         )
@@ -181,8 +187,7 @@ class TestAdmin(BaseTestAdmin):
             response = self.client.get(user_admin_page)
             self.assertContains(response, expected_html, html=True)
 
-        # Button does not appear for non-staff user
-        with self.subTest("Button should not appear for non-staff user"):
+        with self.subTest("Superuser does not see button for non-staff user"):
             user.is_staff = False
             user.full_clean()
             user.save()
@@ -215,6 +220,117 @@ class TestAdmin(BaseTestAdmin):
             response, f"const owNotifyAppLabel = '{self.users_app_label}'"
         )
         self.assertContains(response, "owNotifyModelName = 'organization'")
+
+    def test_notification_preferences_button_with_permission(self):
+        perm = get_notification_setting_permission("change")
+        org = self._get_org()
+        staff_perm = self._create_administrator(
+            username="perm_viewer",
+            email="perm_viewer@test.com",
+            organizations=[org],
+        )
+        staff_perm.user_permissions.add(perm)
+        target_staff = self._create_user(
+            username="staff_target_with_perm",
+            email="staff_target_with_perm@test.com",
+            is_staff=True,
+        )
+        OrganizationUser.objects.create(
+            user=target_staff, organization=org, is_admin=False
+        )
+        target_staff_page = reverse(
+            f"admin:{self.users_app_label}_user_change", args=(target_staff.pk,)
+        )
+        expected_url = reverse(
+            "notifications:user_notification_preference", args=(target_staff.pk,)
+        )
+        expected_html = (
+            f'<a class="button" href="{expected_url}">Notification Preferences</a>'
+        )
+        self.client.force_login(staff_perm)
+        response = self.client.get(target_staff_page)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, expected_html, html=True)
+
+        non_staff = self._create_user(
+            username="non_staff_target",
+            email="non_staff_target@test.com",
+            is_staff=False,
+        )
+        OrganizationUser.objects.create(
+            user=non_staff, organization=org, is_admin=False
+        )
+        non_staff_page = reverse(
+            f"admin:{self.users_app_label}_user_change", args=(non_staff.pk,)
+        )
+        expected_url = reverse(
+            "notifications:user_notification_preference", args=(non_staff.pk,)
+        )
+        expected_html = (
+            f'<a class="button" href="{expected_url}">Notification Preferences</a>'
+        )
+        response = self.client.get(non_staff_page)
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, expected_html, html=True)
+
+    def test_notification_preferences_button_without_permission(self):
+        org = self._get_org()
+        staff_noperm = self._create_administrator(
+            username="no_perm_viewer",
+            email="no_perm_viewer@test.com",
+            organizations=[org],
+        )
+        perm = get_notification_setting_permission("change")
+        staff_noperm.user_permissions.remove(perm)
+        for group in staff_noperm.groups.all():
+            group.permissions.remove(perm)
+        target_staff = self._create_user(
+            username="staff_target",
+            email="staff_target@test.com",
+            is_staff=True,
+        )
+        OrganizationUser.objects.create(
+            user=target_staff, organization=org, is_admin=False
+        )
+        target_staff_page = reverse(
+            f"admin:{self.users_app_label}_user_change", args=(target_staff.pk,)
+        )
+        expected_url = reverse(
+            "notifications:user_notification_preference", args=(target_staff.pk,)
+        )
+        expected_html = (
+            f'<a class="button" href="{expected_url}">Notification Preferences</a>'
+        )
+        self.client.force_login(staff_noperm)
+        response = self.client.get(target_staff_page)
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, expected_html, html=True)
+
+    def test_notification_preferences_button_outside_managed_org(self):
+        org_b = self._create_org(name="other org", slug="other-org")
+        perm = get_notification_setting_permission("change")
+        requester = self._create_administrator(
+            username="requester",
+            email="requester@test.com",
+            organizations=[self._get_org()],
+        )
+        requester.user_permissions.add(perm)
+        target_outside = self._create_user(
+            username="outside_target",
+            email="outside_target@test.com",
+            is_staff=True,
+        )
+        OrganizationUser.objects.create(
+            user=target_outside, organization=org_b, is_admin=False
+        )
+
+        with self.subTest("Tag returns False for target outside managed orgs"):
+            self.assertFalse(
+                has_notification_setting_permission(requester, target_outside)
+            )
+
+        with self.subTest("Tag returns True without target user"):
+            self.assertTrue(has_notification_setting_permission(requester))
 
 
 class TestOrganizationNotificationsSettingsAdmin(BaseTestAdmin):

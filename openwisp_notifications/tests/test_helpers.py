@@ -2,6 +2,8 @@ from copy import deepcopy
 from datetime import datetime
 from unittest.mock import patch
 
+from django.contrib.auth.models import Permission
+from django.contrib.contenttypes.models import ContentType
 from django.contrib.messages.storage.fallback import FallbackStorage
 from django.http import HttpRequest
 from django.utils import timezone
@@ -64,6 +66,14 @@ def register_notification_type(type_name, type_config, models=[]):
 def unregister_notification_type(type_name):
     base_unregister_notification_type(type_name)
     NotificationSetting.objects.filter(type=type_name).update(deleted=True)
+
+
+def get_notification_setting_permission(action="change"):
+    content_type = ContentType.objects.get_for_model(NotificationSetting)
+    return Permission.objects.get(
+        content_type=content_type,
+        codename=f"{action}_{NotificationSetting._meta.model_name}",
+    )
 
 
 def notification_related_object_url(obj, field, *args, **kwargs):

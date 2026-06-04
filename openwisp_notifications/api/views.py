@@ -12,7 +12,6 @@ from rest_framework.generics import (
     get_object_or_404,
 )
 from rest_framework.mixins import CreateModelMixin, ListModelMixin, UpdateModelMixin
-from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
@@ -29,6 +28,7 @@ from openwisp_notifications.api.serializers import (
 from openwisp_notifications.swapper import load_model
 from openwisp_users.api.authentication import BearerAuthentication
 from openwisp_users.api.mixins import ProtectedAPIMixin
+from openwisp_utils.api.pagination import OpenWispPagination
 
 from .filters import NotificationSettingFilter
 
@@ -43,10 +43,8 @@ OrganizationNotificationSettings = load_model("OrganizationNotificationSettings"
 IgnoreObjectNotification = load_model("IgnoreObjectNotification")
 
 
-class NotificationPaginator(PageNumberPagination):
+class NotificationPaginator(OpenWispPagination):
     page_size = 20
-    page_size_query_param = "page_size"
-    max_page_size = 100
 
 
 class BaseNotificationView(GenericAPIView):
@@ -127,7 +125,7 @@ class BaseNotificationSettingView(GenericAPIView):
         if getattr(self, "swagger_fake_view", False):
             return NotificationSetting.objects.none()  # pragma: no cover
         user_id = self.kwargs.get("user_id", self.request.user.id)
-        return (
+        queryset = (
             NotificationSetting.objects.exclude(
                 Q(organization__is_active=False)
                 | Q(type__in=app_settings.DISALLOW_PREFERENCES_CHANGE_TYPE)
@@ -135,6 +133,16 @@ class BaseNotificationSettingView(GenericAPIView):
             .filter(user_id=user_id, deleted=False)
             .select_related("organization__notification_settings")
         )
+        # Other-user reads should never expose organization settings outside
+        # the organizations managed by the requester.
+        if not self.request.user.is_superuser and str(self.request.user.pk) != str(
+            user_id
+        ):
+            queryset = queryset.filter(
+                Q(organization__isnull=True)
+                | Q(organization_id__in=self.request.user.organizations_managed)
+            )
+        return queryset
 
 
 class NotificationSettingListView(BaseNotificationSettingView, ListModelMixin):
