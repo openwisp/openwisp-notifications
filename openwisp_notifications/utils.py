@@ -164,6 +164,8 @@ def get_user_email_preference(notification):
     """
     target_org = getattr(getattr(notification, "target", None), "organization_id", None)
     if not notification.type:
+        # notify.send() may create notifications without a type; when no type is
+        # available, default to email notifications being enabled.
         return True
     if not target_org:
         type_config = get_notification_configuration(notification.type)
