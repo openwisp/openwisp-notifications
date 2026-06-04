@@ -6,6 +6,7 @@ from django.contrib.admin.sites import AdminSite
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
 from django.forms.widgets import MediaOrderConflictWarning
+from django.templatetags.static import static
 from django.test import TestCase, override_settings, tag
 from django.urls import reverse
 
@@ -190,11 +191,16 @@ class TestAdmin(BaseTestAdmin):
 
     def test_base_site_template(self):
         response = self.client.get(self._url)
-        self.assertContains(response, "openwisp-notifications/css/loader.css")
-        self.assertContains(response, "openwisp-notifications/css/notifications.css")
-        self.assertContains(response, "openwisp-notifications/js/notifications.js")
+        self.assertContains(response, static("openwisp-notifications/css/loader.css"))
         self.assertContains(
-            response, "openwisp-notifications/js/vendor/reconnecting-websocket.min.js"
+            response, static("openwisp-notifications/css/notifications.css")
+        )
+        self.assertContains(
+            response, static("openwisp-notifications/js/notifications.js")
+        )
+        self.assertContains(
+            response,
+            static("openwisp-notifications/js/vendor/reconnecting-websocket.min.js"),
         )
         self.assertContains(response, 'id="openwisp_notifications"')
 
