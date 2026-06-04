@@ -61,8 +61,8 @@ time a notification is created, read, or deleted for the connected user.
 
     {
         "type": "notification",
-        "notification_count": 3,          // Unread count; returns "99+" when count exceeds 99
-        "reload_widget": true,            // Whether the client should reload the notification widget
+        "notification_count": 3,          // Unread count (integer, or "99+" string when count exceeds 99)
+        "reload_widget": true,            // Whether the client should reload the notification widget; false during notification storm throttling
         "notification": {                 // null when no toast should be shown (e.g. on read/delete or during a notification storm)
             "id": "<uuid>",
             "message": "<string>",        // Short notification message
@@ -80,9 +80,11 @@ The ``notification`` field is ``null`` in the following cases:
 - The notification was marked as read or deleted (no toast needed).
 - A :ref:`notification storm
   <openwisp_notifications_notification_storm_prevention>` is in progress:
-  the server throttles toast delivery to avoid flooding the client. The
-  widget still reloads to reflect the updated count when ``reload_widget``
-  is ``true``.
+  the server applies a backoff strategy that throttles toast delivery and
+  may set ``reload_widget`` to ``false`` to suppress widget reloads during
+  the storm window. The widget reloads periodically based on the
+  ``max_allowed_backoff`` interval defined in the storm prevention
+  settings.
 
 .. _notifications_websocket_client_to_server:
 
