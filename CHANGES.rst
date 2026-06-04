@@ -1,6 +1,21 @@
 Changelog
 =========
 
+Version 1.2.3 [2026-06-04]
+--------------------------
+
+Bugfixes
+~~~~~~~~
+
+- Filtered out soft-deleted notification settings in preferences API `#452
+  <https://github.com/openwisp/openwisp-notifications/issues/452>`_
+- Fixed accidental email delivery for generic_message notifications `#478
+  <https://github.com/openwisp/openwisp-notifications/issues/478>`_
+- Restrict notification preferences page to staff or super users `#462
+  <https://github.com/openwisp/openwisp-notifications/issues/462>`_
+- Create global notification settings for non-org admin staff users `#453
+  <https://github.com/openwisp/openwisp-notifications/issues/453>`_
+
 Version 1.2.2 [2026-05-12]
 --------------------------
 
