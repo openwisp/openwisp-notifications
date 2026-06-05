@@ -54,7 +54,7 @@ def notify_handler(**kwargs):
     description = kwargs.pop("description", None)
     timestamp = kwargs.pop("timestamp", timezone.now())
     recipient = kwargs.pop("recipient", None)
-    notification_type = kwargs.pop("type", None)
+    notification_type = kwargs.pop("type")
     target = kwargs.get("target", None)
     target_org = getattr(target, "organization_id", None)
     try:
@@ -88,33 +88,28 @@ def notify_handler(**kwargs):
         # chain can still resolve to True. Org-level web settings
         # are resolved via JOINs in the main query to avoid an
         # additional OrganizationNotificationSettings lookup.
-        if notification_type:
-            web_notification = Q(notificationsetting__web=True)
-            if notification_template["web_notification"]:
-                # Users with web=None inherit the org setting, so
-                # include them unless the org explicitly disables
-                # web notifications.
-                web_notification |= Q(
-                    notificationsetting__web=None,
-                ) & (
-                    Q(
-                        notificationsetting__organization__notification_settings__web=True
-                    )
-                    | Q(
-                        notificationsetting__organization__notification_settings__web=None
-                    )
-                    | Q(
-                        notificationsetting__organization__notification_settings__isnull=True
-                    )
+        web_notification = Q(notificationsetting__web=True)
+        if notification_template["web_notification"]:
+            # Users with web=None inherit the org setting, so
+            # include them unless the org explicitly disables
+            # web notifications.
+            web_notification |= Q(
+                notificationsetting__web=None,
+            ) & (
+                Q(notificationsetting__organization__notification_settings__web=True)
+                | Q(notificationsetting__organization__notification_settings__web=None)
+                | Q(
+                    notificationsetting__organization__notification_settings__isnull=True
                 )
-
-            notification_setting = web_notification & Q(
-                notificationsetting__type=notification_type,
-                notificationsetting__organization_id=target_org,
-                notificationsetting__deleted=False,
             )
-            where = where & notification_setting
-            where_group = where_group & notification_setting
+
+        notification_setting = web_notification & Q(
+            notificationsetting__type=notification_type,
+            notificationsetting__organization_id=target_org,
+            notificationsetting__deleted=False,
+        )
+        where = where & notification_setting
+        where_group = where_group & notification_setting
 
     # Ensure notifications are only sent to active user
     where = where & Q(is_active=True)

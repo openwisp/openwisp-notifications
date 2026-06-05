@@ -52,7 +52,8 @@ The complete syntax for ``notify`` is:
 .. code-block:: python
 
     notify.send(
-        actor,
+        sender,
+        type,
         recipient,
         verb,
         action_object,
@@ -87,8 +88,7 @@ The ``notify`` signal supports the following parameters:
 ``type``          Set values of other parameters based on registered
                   :doc:`notification types <./notification-types>`
 
-                  Defaults to ``None`` meaning you need to provide other
-                  arguments.
+                  This parameter is required.
 ``email_subject`` Sets subject of email notification to be sent.
 
                   Defaults to the notification message.

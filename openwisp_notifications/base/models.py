@@ -84,7 +84,6 @@ class AbstractNotification(UUIDModel, BaseNotification):
     CACHE_KEY_PREFIX = "ow-notifications-"
     type = models.CharField(
         max_length=30,
-        null=True,
         # TODO: Remove when dropping support for Django 4.2
         choices=(
             NOTIFICATION_CHOICES
@@ -216,16 +215,15 @@ class AbstractNotification(UUIDModel, BaseNotification):
         """
         Returns URLs for "actor", "action_object" and "target" fields.
         """
-        if self.type:
-            # Generate URL according to the notification configuration
-            config = get_notification_configuration(self.type)
-            url = config.get(f"{field}_link", None)
-            if url:
-                try:
-                    url_callable = import_string(url)
-                    return url_callable(self, field=field, absolute_url=True)
-                except ImportError:
-                    return url
+        # Generate URL according to the notification configuration
+        config = get_notification_configuration(self.type)
+        url = config.get(f"{field}_link", None)
+        if url:
+            try:
+                url_callable = import_string(url)
+                return url_callable(self, field=field, absolute_url=True)
+            except ImportError:
+                return url
         return _get_object_link(obj=self._related_object(field), absolute_url=True)
 
     @property
@@ -260,8 +258,6 @@ class AbstractNotification(UUIDModel, BaseNotification):
             return self.get_message()
 
     def get_message(self):
-        if not self.type:
-            return self.description
         try:
             config = get_notification_configuration(self.type)
             data = self.data or {}
@@ -283,23 +279,18 @@ class AbstractNotification(UUIDModel, BaseNotification):
 
     @cached_property
     def email_subject(self):
-        if self.type:
-            try:
-                config = get_notification_configuration(self.type)
-                data = self.data or {}
-                return config["email_subject"].format(
-                    site=Site.objects.get_current(), notification=self, **data
-                )
-            except (AttributeError, KeyError, NotificationRenderException) as exception:
-                self._invalid_notification(
-                    self.pk,
-                    exception,
-                    "Error encountered in generating notification email",
-                )
-        elif self.data.get("email_subject", None):
-            return self.data.get("email_subject")
-        else:
-            return self.message
+        try:
+            config = get_notification_configuration(self.type)
+            data = self.data or {}
+            return config["email_subject"].format(
+                site=Site.objects.get_current(), notification=self, **data
+            )
+        except (AttributeError, KeyError, NotificationRenderException) as exception:
+            self._invalid_notification(
+                self.pk,
+                exception,
+                "Error encountered in generating notification email",
+            )
 
     def _related_object(self, field):
         obj_id = getattr(self, f"{field}_object_id")
