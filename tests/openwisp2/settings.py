@@ -113,11 +113,18 @@ TEMPLATES = [
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": "redis://localhost/5",
+        "LOCATION": "redis://localhost/0",
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
         },
-    }
+    },
+    "sessions": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://localhost/1",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        },
+    },
 }
 
 ASGI_APPLICATION = "openwisp2.asgi.application"
@@ -131,7 +138,7 @@ else:
         "default": {
             "BACKEND": "channels_redis.core.RedisChannelLayer",
             "CONFIG": {
-                "hosts": ["redis://localhost/7"],
+                "hosts": ["redis://localhost/3"],
                 "group_expiry": 3600,
                 "capacity": 1000,
                 "expiry": 30,
@@ -140,7 +147,7 @@ else:
     }
 
 SESSION_ENGINE = "django.contrib.sessions.backends.cache"
-SESSION_CACHE_ALIAS = "default"
+SESSION_CACHE_ALIAS = "sessions"
 
 LOGGING = {
     "version": 1,
@@ -167,7 +174,7 @@ if not TESTING:
     LOGGING.update({"root": {"level": "INFO", "handlers": ["console"]}})
 
 if not TESTING:
-    CELERY_BROKER_URL = "redis://localhost/6"
+    CELERY_BROKER_URL = "redis://localhost/2"
 else:
     CELERY_TASK_ALWAYS_EAGER = True
     CELERY_TASK_EAGER_PROPAGATES = True
