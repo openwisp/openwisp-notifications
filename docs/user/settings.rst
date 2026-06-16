@@ -181,6 +181,9 @@ over.
 
 This setting allows tweaking how this mechanism works.
 
+For details on how the storm prevention affects real-time WebSocket
+delivery, refer to the :doc:`WebSocket API reference <websocket-api>`.
+
 The default configuration is as follows:
 
 .. code-block:: python

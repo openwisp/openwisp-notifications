@@ -1863,6 +1863,16 @@ class TestNotificationSending(TestOrganizationMixin, TransactionTestCase):
         self._assert_notification_created(False)
         self._assert_email_sent(False)
 
+    def test_generic_type_shared_object(self):
+        self._send_notification("generic_message", target=self.admin)
+        self._assert_notification_created(True, target=self.admin)
+        self._assert_email_sent(False)
+
+    def test_default_type_shared_object(self):
+        self._send_notification("default", target=self.admin)
+        self._assert_notification_created(True, target=self.admin)
+        self._assert_email_sent(True)
+
     def test_global_setting_web_disabled(self):
         self._set_global_notification_settings(web=False)
         self._send_notification("default")
