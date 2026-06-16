@@ -24,7 +24,7 @@
 #ow-notification-help-text {
   padding: 10px 10px;
   margin: 0;
-  color: #828282;
+  color: var(--ow-color-fg-dark);
   background: rgba(255, 255, 255, 0.5);
 }
 #ow-object-notification-loader .loader {
@@ -48,7 +48,7 @@
   height: 14px;
   position: relative;
   bottom: -2px;
-  background: #fff;
+  background: var(--ow-color-white);
   -webkit-mask-size: 15px;
   -webkit-mask-repeat: no-repeat;
   mask-size: 15px;
