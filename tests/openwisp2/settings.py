@@ -94,8 +94,8 @@ TEMPLATES = [
         "OPTIONS": {
             "loaders": [
                 "django.template.loaders.filesystem.Loader",
-                "openwisp_utils.loaders.DependencyLoader",
                 "django.template.loaders.app_directories.Loader",
+                "openwisp_utils.loaders.DependencyLoader",
             ],
             "context_processors": [
                 "django.template.context_processors.debug",
@@ -203,9 +203,10 @@ except ImportError:
     pass
 
 if os.environ.get("SAMPLE_APP", False):
+    notifications_index = INSTALLED_APPS.index("openwisp_notifications")
+    INSTALLED_APPS.insert(notifications_index, "openwisp2.sample_notifications")
     INSTALLED_APPS.remove("openwisp_notifications")
     EXTENDED_APPS = ["openwisp_notifications"]
-    INSTALLED_APPS.append("openwisp2.sample_notifications")
     OPENWISP_NOTIFICATIONS_NOTIFICATION_MODEL = "sample_notifications.Notification"
     OPENWISP_NOTIFICATIONS_NOTIFICATIONSETTING_MODEL = (
         "sample_notifications.NotificationSetting"

@@ -6,6 +6,7 @@ from django.contrib.admin.sites import AdminSite
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
 from django.forms.widgets import MediaOrderConflictWarning
+from django.templatetags.static import static
 from django.test import TestCase, override_settings, tag
 from django.urls import reverse
 
@@ -192,6 +193,33 @@ class TestAdmin(BaseTestAdmin):
             user.save()
             response = self.client.get(user_admin_page)
             self.assertNotContains(response, expected_html, html=True)
+
+    def test_base_site_template(self):
+        response = self.client.get(self._url)
+        self.assertContains(response, static("openwisp-notifications/css/loader.css"))
+        self.assertContains(
+            response, static("openwisp-notifications/css/notifications.css")
+        )
+        self.assertContains(
+            response, static("openwisp-notifications/js/notifications.js")
+        )
+        self.assertContains(
+            response,
+            static("openwisp-notifications/js/vendor/reconnecting-websocket.min.js"),
+        )
+        self.assertContains(response, 'id="openwisp_notifications"')
+
+    def test_change_form_template(self):
+        org = self._get_org()
+        url = reverse(
+            f"admin:{self.users_app_label}_organization_change", args=(org.pk,)
+        )
+        response = self.client.get(url)
+        self.assertContains(response, "owIsChangeForm = true")
+        self.assertContains(
+            response, f"const owNotifyAppLabel = '{self.users_app_label}'"
+        )
+        self.assertContains(response, "owNotifyModelName = 'organization'")
 
     def test_notification_preferences_button_with_permission(self):
         perm = get_notification_setting_permission("change")
