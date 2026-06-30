@@ -159,7 +159,7 @@ LOGGING = {
             "propagate": False,
         },
         "py.warnings": {"handlers": ["console"], "propagate": False},
-        "celery": {"handlers": ["console"], "level": "DEBUG"},
+        "celery": {"handlers": ["console"], "level": "INFO", "propagate": False},
     },
 }
 
