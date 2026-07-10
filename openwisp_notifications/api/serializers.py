@@ -1,4 +1,5 @@
 import logging
+from urllib.parse import urlparse
 
 from django.db import models
 from rest_framework import serializers
@@ -46,6 +47,20 @@ class NotificationSerializer(serializers.ModelSerializer):
     def get_field_names(self, declared_fields, info):
         model_fields = super().get_field_names(declared_fields, info)
         return model_fields + self.Meta.extra_fields
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        url = (instance.data or {}).get("url")
+        if url and self._is_safe_target_url(url):
+            data["target_url"] = url
+        return data
+
+    @staticmethod
+    def _is_safe_target_url(url):
+        """Allows only relative paths or http(s) URLs as the redirect target."""
+        if url.startswith("//"):
+            return False
+        return urlparse(url).scheme in ("", "http", "https")
 
     @property
     def data(self):

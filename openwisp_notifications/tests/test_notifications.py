@@ -25,6 +25,7 @@ from freezegun import freeze_time
 
 from openwisp_notifications import settings as app_settings
 from openwisp_notifications import tasks, utils
+from openwisp_notifications.api.serializers import NotificationSerializer
 from openwisp_notifications.exceptions import NotificationRenderException
 from openwisp_notifications.handlers import (
     notify_handler,
@@ -770,6 +771,42 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
             self.assertEqual(
                 notification.target_url, "https://target.example.com/index#heading"
             )
+
+    def test_target_url_data_override(self):
+        target = self._create_user(username="target", email="target@example.com")
+        self.notification_options.update({"target": target})
+        with self.subTest("data url is used as the notification link"):
+            self._create_notification()
+            n = Notification.objects.first()
+            self.assertEqual(
+                NotificationSerializer(n).data["target_url"],
+                "https://localhost:8000/admin",
+            )
+            self.assertIn(str(target.pk), n.target_url)
+        with self.subTest("a relative data url is honored"):
+            Notification.objects.all().delete()
+            self.notification_options.update({"url": "/admin/?status=pending"})
+            self._create_notification()
+            n = Notification.objects.first()
+            self.assertEqual(
+                NotificationSerializer(n).data["target_url"], "/admin/?status=pending"
+            )
+        with self.subTest("an unsafe scheme falls back to the target object URL"):
+            for unsafe in ("javascript:alert(1)", "//evil.example.com"):
+                Notification.objects.all().delete()
+                self.notification_options.update({"url": unsafe})
+                self._create_notification()
+                n = Notification.objects.first()
+                self.assertEqual(
+                    NotificationSerializer(n).data["target_url"], n.target_url
+                )
+        with self.subTest("falls back to the target object URL without a data url"):
+            Notification.objects.all().delete()
+            self.notification_options.pop("url")
+            self._create_notification()
+            n = Notification.objects.first()
+            self.assertEqual(NotificationSerializer(n).data["target_url"], n.target_url)
+            self.assertIn(str(target.pk), n.target_url)
 
     @capture_any_output()
     @mock_notification_types
