@@ -238,7 +238,9 @@ class AbstractNotification(UUIDModel, BaseNotification):
 
     @property
     def target_url(self):
-        return self._get_related_object_url(field="target")
+        url = self._get_related_object_url(field="target")
+        suffix = (self.data or {}).get("target_url_suffix")
+        return f"{url}{suffix}" if suffix else url
 
     @cached_property
     def message(self):
