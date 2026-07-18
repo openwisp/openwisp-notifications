@@ -4,7 +4,7 @@ Notification Cache
 In a typical OpenWISP installation, ``actor``, ``action_object`` and
 ``target`` objects are same for a number of notifications. To optimize
 database queries, these objects are cached using `Django's cache framework
-<https://docs.djangoproject.com/en/4.2/topics/cache/>`_. The cached values
+<https://docs.djangoproject.com/en/5.2/topics/cache/>`_. The cached values
 are updated automatically to reflect actual data from database. You can
 control the duration of caching these objects using
 :ref:`OPENWISP_NOTIFICATIONS_CACHE_TIMEOUT setting
@@ -52,4 +52,4 @@ following code in your ``apps.py``.
     signal. You can pass any value you want but it needs to be unique. For
     more details read `preventing duplicate signals section of Django
     documentation
-    <https://docs.djangoproject.com/en/4.2/topics/signals/#preventing-duplicate-signals>`_
+    <https://docs.djangoproject.com/en/5.2/topics/signals/#preventing-duplicate-signals>`_
