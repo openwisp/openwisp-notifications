@@ -161,7 +161,7 @@ def notify_handler(**kwargs):
         or not target_url_suffix.startswith(("?", "&", "#"))
     ):
         raise ValueError(
-            "target_url_suffix must be a string starting with '?', '&' or '#'."
+            _("target_url_suffix must be a string starting with '?', '&' or '#'.")
         )
 
     notification_list = []

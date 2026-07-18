@@ -169,29 +169,42 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
         target_url = _get_absolute_url(
             reverse(f"admin:{self.users_app_label}_user_change", args=[target.pk])
         )
-        notify.send(
-            type="generic_message",
-            target=target,
-            sender=self.admin,
-            target_url_suffix="?status=pending",
-        )
-        notification = notification_queryset.first()
-        self.assertEqual(
-            notification.target_url,
-            f"{target_url}?status=pending",
-        )
-        notification.delete()
-        notify.send(
-            type="generic_message",
-            target=target,
-            sender=self.admin,
-            target_url_suffix="#pending",
-        )
-        notification = notification_queryset.first()
-        self.assertEqual(
-            notification.target_url,
-            f"{target_url}#pending",
-        )
+        with self.subTest("Append querystring suffix"):
+            notify.send(
+                type="generic_message",
+                target=target,
+                sender=self.admin,
+                target_url_suffix="?status=pending",
+            )
+            notification = notification_queryset.first()
+            self.assertEqual(
+                notification.target_url,
+                f"{target_url}?status=pending",
+            )
+
+        with self.subTest("Append fragment suffix"):
+            notification.delete()
+            notify.send(
+                type="generic_message",
+                target=target,
+                sender=self.admin,
+                target_url_suffix="#pending",
+            )
+            notification = notification_queryset.first()
+            self.assertEqual(
+                notification.target_url,
+                f"{target_url}#pending",
+            )
+
+        with self.subTest("Do not append suffix to fallback target URL"):
+            notification.delete()
+            notify.send(
+                type="generic_message",
+                sender=self.admin,
+                target_url_suffix="?status=pending",
+            )
+            notification = notification_queryset.first()
+            self.assertEqual(notification.target_url, "#")
 
     def test_generic_message_invalid_target_url_suffix(self):
         target = self._create_operator()
