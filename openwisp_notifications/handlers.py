@@ -150,6 +150,14 @@ def notify_handler(**kwargs):
     optional_objs = [
         (kwargs.pop(opt, None), opt) for opt in ("target", "action_object")
     ]
+    target_url_suffix = kwargs.get("target_url_suffix")
+    if target_url_suffix is not None and (
+        not isinstance(target_url_suffix, str)
+        or not target_url_suffix.startswith(("?", "&", "#"))
+    ):
+        raise ValueError(
+            _("target_url_suffix must be a string starting with '?', '&' or '#'.")
+        )
 
     notification_list = []
     for recipient in recipients:

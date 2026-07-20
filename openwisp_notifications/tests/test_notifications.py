@@ -167,6 +167,61 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
         self.assertIn(f"Error: {error}", n.message)
         self.assertEqual(n.email_subject, f"Error subject: {error}")
 
+    def test_generic_message_target_url_suffix(self):
+        target = self._create_operator()
+        target_url = _get_absolute_url(
+            reverse(f"admin:{self.users_app_label}_user_change", args=[target.pk])
+        )
+        with self.subTest("Append querystring suffix"):
+            notify.send(
+                type="generic_message",
+                target=target,
+                sender=self.admin,
+                target_url_suffix="?status=pending",
+            )
+            notification = notification_queryset.first()
+            self.assertEqual(
+                notification.target_url,
+                f"{target_url}?status=pending",
+            )
+
+        with self.subTest("Append fragment suffix"):
+            notification.delete()
+            notify.send(
+                type="generic_message",
+                target=target,
+                sender=self.admin,
+                target_url_suffix="#pending",
+            )
+            notification = notification_queryset.first()
+            self.assertEqual(
+                notification.target_url,
+                f"{target_url}#pending",
+            )
+
+        with self.subTest("Do not append suffix to fallback target URL"):
+            notification.delete()
+            notify.send(
+                type="generic_message",
+                sender=self.admin,
+                target_url_suffix="?status=pending",
+            )
+            notification = notification_queryset.first()
+            self.assertEqual(notification.target_url, "#")
+
+    def test_generic_message_invalid_target_url_suffix(self):
+        target = self._create_operator()
+        invalid_suffixes = ["status=pending", "https://example.com"]
+        for suffix in invalid_suffixes:
+            with self.subTest(suffix=suffix):
+                with self.assertRaises(ValueError):
+                    notify.send(
+                        type="generic_message",
+                        target=target,
+                        sender=self.admin,
+                        target_url_suffix=suffix,
+                    )
+
     def test_batch_email_helpers(self):
         with self.subTest("get_user_batched_notifications_cache_key()"):
             cache_key = Notification.get_user_batched_notifications_cache_key(
