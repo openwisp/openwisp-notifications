@@ -64,113 +64,51 @@ The complete syntax for ``notify`` is:
     )
 
 The ``notify`` signal supports the following parameters:
-**Parameter**     **Description**
-``actor``         An object of any type that represents the actor
-                  performing the action that triggered the notification.
 
-                  **Note:** Use ``sender`` instead of ``actor`` if you
-                  intend to use keyword arguments.
-``recipient``     The recipient of the notification. This can be a
-                  ``Group``, a list or queryset of ``User`` objects, or a
-                  single ``User`` object.
+``actor`` An object of any type that represents the actor
+    performing the action that triggered the notification. **Note:** Use
+    ``sender`` instead of ``actor`` if you intend to use keyword
+    arguments.
 
-                  Defaults to ``None``, meaning you need to provide this
-                  argument.
+``recipient`` The recipient of the notification. This can be a
+    ``Group``, a list or queryset of ``User`` objects, or a single
+    ``User`` object. Defaults to ``None``, meaning you need to provide
+    this argument.
+
 ``action_object`` An object related to the action that triggered the
-                  notification (optional).
+    notification (optional). Defaults to ``None``.
 
-                  Defaults to ``None``.
-``target``        The target object of the notification (optional).
+``target`` The target object of the notification (optional).
+    Defaults to ``None``.
 
-                  Defaults to ``None``.
-``type``          Set values of other parameters based on registered
-                  :doc:`notification types <./notification-types>`
-
-                  This parameter is required.
-``email_subject`` Sets subject of email notification to be sent.
-
-                  Defaults to the notification message.
-``url``           Adds a URL in the email text, e.g.:
-
-                  ``For more information see <url>.``
-
-                  Defaults to ``None``, meaning the above message would
-                  not be added to the email text.
-``verb``          A string describing the action that triggered the
-                  notification.
-
-                  Defaults to ``None``, meaning you need to provide this
-                  argument.
-``level``         The level of the notification, one of 'success', 'info',
-                  'warning' or 'error'.
-
-                  Defaults to 'info'.
-``description``   Additional information to be included in the
-                  notification (optional).
-
-                  Defaults to ``''``.
-``timestamp``     A timestamp (``datetime`` object) for the notification
-                  (optional).
-
-                  Defaults to the current time.
-**Parameter**         **Description**
-``actor``             An object of any type that represents the actor
-                      performing the action that triggered the
-                      notification.
-
-                      **Note:** Use ``sender`` instead of ``actor`` if you
-                      intend to use keyword arguments.
-``recipient``         The recipient of the notification. This can be a
-                      ``Group``, a list or queryset of ``User`` objects,
-                      or a single ``User`` object.
-
-                      Defaults to ``None``, meaning you need to provide
-                      this argument.
-``action_object``     An object related to the action that triggered the
-                      notification (optional).
-
-                      Defaults to ``None``.
-``target``            The target object of the notification (optional).
-
-                      Defaults to ``None``.
 ``target_url_suffix`` Appends a querystring or fragment to the generated
-                      target URL. The value must be a string starting with
-                      ``?``, ``&`` or ``#``. See the :ref:`generic_message
-                      example <notifications_generic_message_type>`.
+    target URL. The value must be a string starting with ``?``, ``&`` or
+    ``#``. See the :ref:`generic_message example
+    <notifications_generic_message_type>`. Defaults to ``None``.
 
-                      Defaults to ``None``.
-``type``              Set values of other parameters based on registered
-                      :doc:`notification types <./notification-types>`
+``type`` Set values of other parameters based on registered
+    :doc:`notification types <./notification-types>`. Defaults to ``None``
+    meaning you need to provide other arguments.
 
-                      Defaults to ``None`` meaning you need to provide
-                      other arguments.
-``email_subject``     Sets subject of email notification to be sent.
+``email_subject`` Sets subject of email notification to be sent.
+    Defaults to the notification message.
 
-                      Defaults to the notification message.
-``url``               Adds a URL in the email text, e.g.:
+``url`` Adds a URL in the email text, e.g.:
+    ``For more information see <url>.``. Defaults to ``None``, meaning the
+    above message would not be added to the email text.
 
-                      ``For more information see <url>.``
+``verb`` A string describing the action that triggered the
+    notification. Defaults to ``None``, meaning you need to provide this
+    argument.
 
-                      Defaults to ``None``, meaning the above message
-                      would not be added to the email text.
-``verb``              A string describing the action that triggered the
-                      notification.
+``level`` The level of the notification, one of 'success',
+    'info', 'warning' or 'error'. Defaults to 'info'.
 
-                      Defaults to ``None``, meaning you need to provide
-                      this argument.
-``level``             The level of the notification, one of 'success',
-                      'info', 'warning' or 'error'.
+``description`` Additional information to be included in the
+    notification (optional). Defaults to ``''``.
 
-                      Defaults to 'info'.
-``description``       Additional information to be included in the
-                      notification (optional).
-
-                      Defaults to ``''``.
-``timestamp``         A timestamp (``datetime`` object) for the
-                      notification (optional).
-
-                      Defaults to the current time.
-
+``timestamp`` A timestamp (``datetime`` object) for the
+    notification (optional). Defaults to the current time.
 
 Passing Extra Data to Notifications
 -----------------------------------
