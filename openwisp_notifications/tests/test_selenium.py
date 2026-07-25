@@ -137,6 +137,27 @@ class TestSelenium(
         # This confirms the button is hidden
         dialog.find_element(By.CSS_SELECTOR, ".ow-message-target-redirect.ow-hide")
 
+    def test_notification_dialog_closes_on_same_fragment_target(self):
+        self.login()
+        self.notification_options.update(
+            {
+                "type": "generic_message",
+                "description": "Test Description",
+                "target_url_suffix": "#notification",
+            }
+        )
+        notification = self._create_notification().pop()[1][0]
+        self.find_element(By.ID, "openwisp_notifications").click()
+        self.wait_for_visibility(By.ID, f"ow-{notification.id}").click()
+        self.wait_for_visibility(By.CLASS_NAME, "ow-dialog-notification")
+        self.find_element(By.CLASS_NAME, "ow-message-target-redirect").click()
+        self.wait_for_visibility(By.ID, "openwisp_notifications")
+        self.find_element(By.ID, "openwisp_notifications").click()
+        self.wait_for_visibility(By.ID, f"ow-{notification.id}").click()
+        self.wait_for_visibility(By.CLASS_NAME, "ow-dialog-notification")
+        self.find_element(By.CLASS_NAME, "ow-message-target-redirect").click()
+        self.wait_for_invisibility(By.CLASS_NAME, "ow-overlay-notification")
+
     def test_email_unsubscribe_page(self):
         with self.subTest("Token is invalid"):
             self.open(reverse("notifications:unsubscribe"))
