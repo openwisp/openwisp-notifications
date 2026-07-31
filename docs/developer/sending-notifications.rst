@@ -56,8 +56,9 @@ The ``notify`` signal supports the following parameters:
 
 ``recipient`` The recipient of the notification. This can be a
     ``Group``, a list or queryset of ``User`` objects, or a single
-    ``User`` object. Defaults to ``None``, meaning you need to provide
-    this argument.
+    ``User`` object. Defaults to ``None``. If omitted, eligible superusers
+    and, when the target has an organization, its administrators are
+    notified.
 
 ``action_object`` An object related to the action that triggered the
     notification (optional). Defaults to ``None``.
@@ -75,18 +76,18 @@ The ``notify`` signal supports the following parameters:
     required.
 
 ``email_subject`` Sets subject of email notification to be sent.
-    Defaults to the notification message.
+    Uses the registered notification type's email subject configuration.
 
 ``url`` Adds a URL in the email text, e.g.:
     ``For more information see <url>.``. Defaults to ``None``, meaning the
     above message would not be added to the email text.
 
 ``verb`` A string describing the action that triggered the
-    notification. Defaults to ``None``, meaning you need to provide this
-    argument.
+    notification. Uses the registered notification type's configured verb.
 
 ``level`` The level of the notification, one of 'success',
-    'info', 'warning' or 'error'. Defaults to 'info'.
+    'info', 'warning' or 'error'. Uses the registered notification type's
+    configured level.
 
 ``description`` Additional information to be included in the
     notification (optional). Defaults to ``''``.

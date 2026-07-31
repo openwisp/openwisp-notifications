@@ -323,11 +323,10 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
         self._create_notification()
         self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(mail.outbox[0].to, [self.admin.email])
-        n = notification_queryset.first()
         self.assertEqual(
-            mail.outbox[0].subject,
-            n.email_subject,
+            mail.outbox[0].subject, "[example.com] Default Notification Subject"
         )
+        n = notification_queryset.first()
         self.assertIn(n.data.get("url"), mail.outbox[0].body)
         self.assertIn("https://", n.data.get("url"))
         html_email = mail.outbox[0].alternatives[0][0]
@@ -430,15 +429,6 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
                 self.assertEqual(notification.recipient, user)
         else:
             self.fail()
-
-    def test_description_in_email_subject(self):
-        self.notification_options.pop("email_subject")
-        self._create_notification()
-        n = notification_queryset.first()
-        self.assertEqual(
-            mail.outbox[0].subject,
-            n.email_subject,
-        )
 
     def test_handler_optional_tag(self):
         operator = self._create_operator()
