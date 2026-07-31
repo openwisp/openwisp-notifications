@@ -54,7 +54,9 @@ def notify_handler(**kwargs):
     description = kwargs.pop("description", None)
     timestamp = kwargs.pop("timestamp", timezone.now())
     recipient = kwargs.pop("recipient", None)
-    notification_type = kwargs.pop("type")
+    notification_type = kwargs.pop("type", None)
+    if not notification_type:
+        raise ValueError(_("Notification type is required."))
     target = kwargs.get("target", None)
     target_org = getattr(target, "organization_id", None)
     try:

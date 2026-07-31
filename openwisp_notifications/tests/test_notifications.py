@@ -84,6 +84,21 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
     def _create_notification(self, **kwargs):
         return notify.send(**self.notification_options, **kwargs)
 
+    def test_type_required(self):
+        self.admin.emailaddress_set.update(verified=False)
+        options = self.notification_options.copy()
+        options.pop("type")
+        invalid_types = {
+            "missing": {},
+            "none": {"type": None},
+            "empty": {"type": ""},
+        }
+        for label, invalid_type in invalid_types.items():
+            with self.subTest(type=label):
+                with self.assertRaisesRegex(ValueError, "type is required"):
+                    notify.send(**options, **invalid_type)
+                self.assertFalse(notification_queryset.exists())
+
     def test_create_notification(self):
         operator = super()._create_operator()
         data = dict(

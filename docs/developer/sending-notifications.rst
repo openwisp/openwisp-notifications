@@ -47,22 +47,6 @@ You can override the recipients of the notification by passing the
 However, these users will only be notified if they have opted-in to
 receive notifications.
 
-The complete syntax for ``notify`` is:
-
-.. code-block:: python
-
-    notify.send(
-        sender,
-        type,
-        recipient,
-        verb,
-        action_object,
-        target,
-        level,
-        description,
-        **kwargs,
-    )
-
 The ``notify`` signal supports the following parameters:
 
 ``actor`` An object of any type that represents the actor
@@ -87,8 +71,8 @@ The ``notify`` signal supports the following parameters:
     <notifications_generic_message_type>`. Defaults to ``None``.
 
 ``type`` Set values of other parameters based on registered
-    :doc:`notification types <./notification-types>`. Defaults to ``None``
-    meaning you need to provide other arguments.
+    :doc:`notification types <./notification-types>`. This parameter is
+    required.
 
 ``email_subject`` Sets subject of email notification to be sent.
     Defaults to the notification message.
