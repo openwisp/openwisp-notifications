@@ -63,6 +63,7 @@ class BaseTestAdmin(TestMultitenantAdminMixin, TestCase):
             description="Test Notification",
             verb="Test Notification",
             email_subject="Test Email subject",
+            type="default",
             url="localhost:8000/admin",
         )
         self.site = AdminSite()

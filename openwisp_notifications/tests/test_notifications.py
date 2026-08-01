@@ -77,11 +77,27 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
             description="Test Notification",
             verb="Test Notification",
             email_subject="Test Email subject",
+            type="default",
             url="https://localhost:8000/admin",
         )
 
     def _create_notification(self, **kwargs):
         return notify.send(**self.notification_options, **kwargs)
+
+    def test_type_required(self):
+        self.admin.emailaddress_set.update(verified=False)
+        options = self.notification_options.copy()
+        options.pop("type")
+        invalid_types = {
+            "missing": {},
+            "none": {"type": None},
+            "empty": {"type": ""},
+        }
+        for label, invalid_type in invalid_types.items():
+            with self.subTest(type=label):
+                with self.assertRaisesRegex(ValueError, "type is required"):
+                    notify.send(**options, **invalid_type)
+                self.assertFalse(notification_queryset.exists())
 
     def test_create_notification(self):
         operator = super()._create_operator()
@@ -93,6 +109,7 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
             recipient=self.admin,
             description="Test Notification Description",
             verb="Test Notification",
+            type="default",
             action_object=operator,
             target=operator,
             data=data,
@@ -111,7 +128,7 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
             n.target_content_type, ContentType.objects.get_for_model(operator)
         )
         self.assertEqual(n.verb, "Test Notification")
-        self.assertEqual(n.message, "Test Notification Description")
+        self.assertIn("Default notification with", n.message)
         self.assertEqual(n.recipient, self.admin)
 
     def test_lazy_translation(self):
@@ -126,6 +143,7 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
             description=gettext_lazy("Test Notification"),
             verb=gettext_lazy("Test Notification"),
             email_subject=gettext_lazy("Test Email subject"),
+            type="default",
             url="https://localhost:8000/admin",
             message=gettext_lazy("Translated message"),
             random=gettext_lazy("any extra kwargs is evaluated"),
@@ -305,12 +323,10 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
         self._create_notification()
         self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(mail.outbox[0].to, [self.admin.email])
-        n = notification_queryset.first()
         self.assertEqual(
-            mail.outbox[0].subject,
-            "Test Email subject",
+            mail.outbox[0].subject, "[example.com] Default Notification Subject"
         )
-        self.assertIn(n.message, mail.outbox[0].body)
+        n = notification_queryset.first()
         self.assertIn(n.data.get("url"), mail.outbox[0].body)
         self.assertIn("https://", n.data.get("url"))
         html_email = mail.outbox[0].alternatives[0][0]
@@ -413,14 +429,6 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
                 self.assertEqual(notification.recipient, user)
         else:
             self.fail()
-
-    def test_description_in_email_subject(self):
-        self.notification_options.pop("email_subject")
-        self._create_notification()
-        self.assertEqual(
-            mail.outbox[0].subject,
-            "Test Notification",
-        )
 
     def test_handler_optional_tag(self):
         operator = self._create_operator()
@@ -2048,6 +2056,7 @@ class TestTransactionNotifications(TestOrganizationMixin, TransactionTestCase):
             level="info",
             verb="Test Notification",
             email_subject="Test Email subject",
+            type="default",
             url="https://localhost:8000/admin",
         )
 
