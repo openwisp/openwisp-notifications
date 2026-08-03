@@ -2046,27 +2046,26 @@ class TestNotificationSending(TestOrganizationMixin, TransactionTestCase):
             self._assert_notification_created(True, target=org_b_target)
             self._assert_email_sent(True)
 
+    @patch.object(app_settings, "WEB_ENABLED", False)
     def test_web_disabled_globally_org_inherited_setting(self):
         self._set_user_notification_settings("default", web=None)
-        with patch.object(app_settings, "WEB_ENABLED", False):
-            self._send_notification("default")
-            self._assert_notification_created(False)
-            self._assert_email_sent(False)
+        self._send_notification("default")
+        self._assert_notification_created(False)
+        self._assert_email_sent(False)
 
+    @patch.object(app_settings, "WEB_ENABLED", False)
     def test_web_disabled_globally_org_inherited_missing_row(self):
         self._set_user_notification_settings("default", web=None)
         self.org.notification_settings.delete()
-        with patch.object(app_settings, "WEB_ENABLED", False):
-            self._send_notification("default")
-            self._assert_notification_created(False)
-            self._assert_email_sent(False)
+        self._send_notification("default")
+        self._assert_notification_created(False)
+        self._assert_email_sent(False)
 
+    @patch.object(app_settings, "WEB_ENABLED", False)
     def test_web_disabled_globally_org_explicitly_enabled(self):
         web_field = OrganizationNotificationSettings._meta.get_field("web")
         self._set_user_notification_settings("default", web=None)
-        with patch.object(web_field, "fallback", False), patch.object(
-            app_settings, "WEB_ENABLED", False
-        ):
+        with patch.object(web_field, "fallback", False):
             self._set_org_notification_settings(web=True, email=True)
             self._send_notification("default")
             self._assert_notification_created(True)
