@@ -2047,29 +2047,33 @@ class TestNotificationSending(TestOrganizationMixin, TransactionTestCase):
             self._assert_email_sent(True)
 
     @patch.object(app_settings, "WEB_ENABLED", False)
-    def test_web_disabled_globally_org_inherited_setting(self):
+    def test_web_disabled_globally_org_settings_fallback(self):
         self._set_user_notification_settings("default", web=None)
-        self._send_notification("default")
-        self._assert_notification_created(False)
-        self._assert_email_sent(False)
 
-    @patch.object(app_settings, "WEB_ENABLED", False)
-    def test_web_disabled_globally_org_inherited_missing_row(self):
-        self._set_user_notification_settings("default", web=None)
-        self.org.notification_settings.delete()
-        self._send_notification("default")
-        self._assert_notification_created(False)
-        self._assert_email_sent(False)
-
-    @patch.object(app_settings, "WEB_ENABLED", False)
-    def test_web_disabled_globally_org_explicitly_enabled(self):
-        web_field = OrganizationNotificationSettings._meta.get_field("web")
-        self._set_user_notification_settings("default", web=None)
-        with patch.object(web_field, "fallback", False):
-            self._set_org_notification_settings(web=True, email=True)
+        with self.subTest("Organization setting inherited"):
             self._send_notification("default")
-            self._assert_notification_created(True)
-            self._assert_email_sent(True)
+            self._assert_notification_created(False)
+            self._assert_email_sent(False)
+
+        Notification.objects.all().delete()
+        mail.outbox.clear()
+
+        with self.subTest("Organization setting explicitly enabled"):
+            web_field = OrganizationNotificationSettings._meta.get_field("web")
+            with patch.object(web_field, "fallback", False):
+                self._set_org_notification_settings(web=True, email=True)
+                self._send_notification("default")
+                self._assert_notification_created(True)
+                self._assert_email_sent(True)
+
+        Notification.objects.all().delete()
+        mail.outbox.clear()
+
+        with self.subTest("Organization settings missing"):
+            self.org.notification_settings.delete()
+            self._send_notification("default")
+            self._assert_notification_created(False)
+            self._assert_email_sent(False)
 
 
 class TestTransactionNotifications(TestOrganizationMixin, TransactionTestCase):
