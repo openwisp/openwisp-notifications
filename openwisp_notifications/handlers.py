@@ -92,17 +92,20 @@ def notify_handler(**kwargs):
         # additional OrganizationNotificationSettings lookup.
         web_notification = Q(notificationsetting__web=True)
         if notification_template["web_notification"]:
-            # Users with web=None inherit the org setting, so
-            # include them unless the org explicitly disables
-            # web notifications.
-            web_notification |= Q(
-                notificationsetting__web=None,
-            ) & (
-                Q(notificationsetting__organization__notification_settings__web=True)
-                | Q(notificationsetting__organization__notification_settings__web=None)
-                | Q(
+            inherit_org_web = Q(
+                notificationsetting__organization__notification_settings__web=True
+            )
+            if app_settings.WEB_ENABLED:
+                inherit_org_web |= Q(
+                    notificationsetting__organization__notification_settings__web=None
+                ) | Q(
                     notificationsetting__organization__notification_settings__isnull=True
                 )
+            web_notification |= (
+                Q(
+                    notificationsetting__web=None,
+                )
+                & inherit_org_web
             )
 
         notification_setting = web_notification & Q(
