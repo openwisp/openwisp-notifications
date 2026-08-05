@@ -65,6 +65,8 @@ If instructions conflict, repository config and CI workflows win first, official
 ## Security and Auth Notes
 
 - Notification visibility depends on user, organization, and object permissions; avoid changes that could leak notifications across tenants.
+- A model permission does not permit access to another organization's data. Begin organization-owned, parent, and related-object lookups with objects managed by the requester; filters may only narrow that queryset, and writes must reject cross-organization relations.
+- Cached lookups must check permission and organization scope on every request. Changed endpoints need cross-organization regression tests.
 - Be careful with notification preference inheritance, global notification settings, soft-deleted `NotificationSetting` rows, and user/organization permission boundaries.
 - Be careful when changing organization membership handling, notification preference APIs, unsubscribe flows, email verification warnings, websocket updates, and cache invalidation.
 - Notification payloads can include related objects and URLs; preserve validation and permission checks when changing serializers, views, handlers, or tasks.
