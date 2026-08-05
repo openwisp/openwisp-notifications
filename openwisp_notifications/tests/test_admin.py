@@ -15,6 +15,7 @@ from openwisp_notifications.swapper import load_model, swapper_load_model
 from openwisp_notifications.templatetags.notification_tags import (
     has_notification_setting_permission,
 )
+from openwisp_notifications.types import NOTIFICATION_TYPES
 from openwisp_notifications.widgets import _add_object_notification_widget
 from openwisp_users.admin import UserAdmin
 from openwisp_users.tests.utils import TestMultitenantAdminMixin
@@ -63,7 +64,7 @@ class BaseTestAdmin(TestMultitenantAdminMixin, TestCase):
             description="Test Notification",
             verb="Test Notification",
             email_subject="Test Email subject",
-            type="default",
+            type="generic_message",
             url="localhost:8000/admin",
         )
         self.site = AdminSite()
@@ -110,6 +111,11 @@ class TestAdmin(BaseTestAdmin):
         self.assertEqual(cache.get(cache_key), 0)
         return cache_key
 
+    @patch.dict(
+        NOTIFICATION_TYPES,
+        {"generic_message": NOTIFICATION_TYPES["generic_message"]},
+        clear=True,
+    )
     def test_cached_invalidation(self):
         cache_key = self.test_cached_value()
         notify.send(**self.notification_options)
