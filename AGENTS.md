@@ -28,7 +28,7 @@ If instructions conflict, repository config and CI workflows win first, official
 - When separate tests cover different cases of the same feature, share almost identical database preparation, and primarily vary in input or expected outcome, group them in one test method with subTest. This is especially encouraged, but not limited to, TransactionTestCase tests, where it avoids repeated expensive database setup and teardown. Keep each subtest's setup explicit and independent, and retain separate test methods when cases exercise genuinely distinct behavior. Leave one blank line immediately before each with self.subTest(...): call.
 - During development, run the focused tests and test suites directly affected by the change instead of routinely running the full test suite. For example, run the relevant `test_admin` tests for admin changes and Selenium tests for JavaScript or browser-facing changes.
 - Changes to core logic, model validation, migrations, database schema, tenant isolation, authentication, or shared behavior require all affected package and integration suites.
-- Before pushing a branch or opening a pull request for a behavior-affecting change, verify that the full test suite has passed at least once for the current branch after its latest code, test, dependency, migration, or configuration change. If no successful full-suite result is available, stop, report the missing verification, and do not push or open the pull request. If the full suite cannot run, report the blocker and wait for user direction.
+- Before pushing a behavior-affecting change, verify the CI-equivalent full suite after its latest code, test, dependency, migration, or configuration change. This includes both the `SAMPLE_APP=1` suite and the default suite defined in `.github/workflows/build.yml`. If it cannot run, report the blocker and wait for user direction.
 - Prefer in-process tests so coverage tools can measure changed code.
 
 ## Contributing Guidelines
@@ -71,7 +71,6 @@ If instructions conflict, repository config and CI workflows win first, official
 
 ## Troubleshooting
 
-- If documentation and CI commands differ, use CI for verification and report the exact documentation path, CI workflow path, and differing commands. Do not change the documentation until the user explicitly chooses one of these actions: update the named documentation file in the current change because the divergence was caused by that change, or leave it unchanged for a separate follow-up. Never decide that scope distinction independently.
 - If you change notification setting creation/deletion, run focused notification setting tests and check staff, superuser, organization admin, and regular user transitions.
 - If you change UI notification preferences, include browser/Selenium coverage when the behavior is user-facing.
 - If you change background tasks or signals, account for Celery eager execution in tests and normal asynchronous execution in production.
