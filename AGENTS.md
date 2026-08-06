@@ -31,6 +31,7 @@ If instructions conflict, repository config and CI workflows win first, official
 - Before pushing a behavior-affecting change, verify the CI-equivalent full suite after its latest code, test, dependency, migration, or configuration change. This includes both the `SAMPLE_APP=1` suite and the default suite defined in `.github/workflows/build.yml`. If it cannot run, report the blocker and wait for user direction.
 - Apps under `tests/openwisp2/sample_*` are disposable test and example projects, not maintained deployments. Prefer updating their existing migrations to keep them minimal. Add an append-only migration only when an important change needs documented upgrade guidance for users who customized their OpenWISP modules.
 - Prefer in-process tests so coverage tools can measure changed code.
+- Keep helpers and classes used by only one test method inside that method. Promote them to class or module scope only when genuinely reused.
 
 ## Contributing Guidelines
 
