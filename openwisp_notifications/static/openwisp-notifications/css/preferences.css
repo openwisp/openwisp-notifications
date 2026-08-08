@@ -34,7 +34,7 @@
   position: relative;
 }
 .global-setting-dropdown button {
-  color: #777;
+  color: var(--ow-color-fg-dark);
   font-weight: 700;
   font-family: var(--font-family-primary);
   position: relative;
@@ -42,7 +42,7 @@
 }
 .global-setting-dropdown button:hover,
 .global-setting-dropdown button:focus {
-  color: #df5d43;
+  color: var(--ow-color-primary);
 }
 .global-setting-dropdown-toggle {
   display: flex;
@@ -57,10 +57,10 @@
 }
 .global-setting-dropdown-toggle:hover .mg-arrow,
 .global-setting-dropdown-toggle:active .mg-arrow {
-  background-color: #df5d43;
+  background-color: var(--ow-color-primary);
 }
 .global-setting-dropdown-toggle .mg-arrow {
-  background-color: #777;
+  background-color: var(--ow-color-fg-dark);
   display: block;
   position: absolute;
   top: 8px;
@@ -74,9 +74,9 @@
   display: none;
   position: absolute;
   border-radius: 4px;
-  background-color: #fff;
+  background-color: var(--ow-color-white);
   border: 1px solid var(--hairline-color);
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 5px var(--ow-overlay-10);
 }
 .global-setting-dropdown-menu-open {
   display: block;
@@ -135,10 +135,10 @@
   width: 100%;
   height: 100%;
   overflow: auto;
-  background-color: rgba(0, 0, 0, 0.4);
+  background-color: var(--ow-overlay-40);
 }
 .modal-content {
-  background-color: #fff;
+  background-color: var(--ow-color-white);
   margin: 15% auto;
   padding: 20px;
   border: 1px solid #888;
@@ -227,7 +227,7 @@ tr.org-header {
 .no-organizations {
   padding: 10px;
   text-align: center;
-  color: #666;
+  color: var(--body-quiet-color);
 }
 
 /* Toast */
@@ -235,8 +235,8 @@ tr.org-header {
   position: fixed;
   bottom: 20px;
   right: 20px;
-  background-color: #333;
-  color: white;
+  background-color: var(--ow-color-fg-darker);
+  color: var(--ow-color-white);
   padding: 12px 20px;
   border-radius: 5px;
   transition: opacity 0.5s ease-in-out;
@@ -311,8 +311,8 @@ button.toggle-icon.expanded {
   bottom: 125%;
   left: 50%;
   transform: translateX(-50%);
-  background-color: #333;
-  color: #fff;
+  background-color: var(--ow-color-fg-darker);
+  color: var(--ow-color-white);
   padding: 5px 10px;
   border-radius: 2px;
   font-size: 10px;
@@ -342,7 +342,7 @@ button.toggle-icon.expanded {
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: #ccc;
+  background-color: var(--border-color);
   -webkit-transition: 0.4s;
   transition: 0.4s;
 }
@@ -353,7 +353,7 @@ button.toggle-icon.expanded {
   width: 14px;
   left: 3px;
   bottom: 3px;
-  background-color: white;
+  background-color: var(--ow-color-white);
   -webkit-transition: 0.4s;
   transition: 0.4s;
 }
