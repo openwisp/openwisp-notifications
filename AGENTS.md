@@ -71,6 +71,7 @@ If instructions conflict, repository config and CI workflows win first, official
 - Changes to HTTP REST API endpoints or Django REST Framework serializers must include tests for permissions, input validation, filtering or pagination when supported, and organization or tenant boundaries where applicable.
 - Changes to swappable models, tenant isolation, or admin/REST authorization must be covered by both the default package suite and the `SAMPLE_APP=1` integration suite. For authentication changes, require `SAMPLE_APP=1` coverage only when they exercise notification models or APIs; standalone verification-email and admin-login views have package-only coverage.
 - When a Celery task, notification, cache invalidation, or other external side effect depends on database changes made in the current transaction, register it with `transaction.on_commit()` so it cannot run against uncommitted or rolled-back data. Do not defer work that must run before commit or is independent of the transaction. Test commit and rollback behavior, and account for Celery eager execution in tests versus asynchronous execution in production.
+- Treat email addresses as case-insensitive when identifying, deduplicating, importing, migrating, or searching users by email. Use `email__iexact` for direct and `Q()` ORM lookups. Keep username matching case-sensitive unless explicitly required. Normalize email records this module owns to lowercase, and cover casing-only inputs, including legacy mixed-case records when relevant.
 
 ## Security and Auth Rules
 
