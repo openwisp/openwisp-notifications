@@ -1520,6 +1520,17 @@ class TestMultitenancyApi(
     AuthenticationMixin,
     TransactionTestCase,
 ):
+    fixtures = [
+        "openwisp_notifications/tests/fixtures/initial_data.json",
+    ]
+
+    def setUp(self):
+        super().setUp()
+        # The in-memory cache survives TransactionTestCase truncation and
+        # user primary keys can be reused, so stale organization membership
+        # data from earlier tests must be cleared before creating users here.
+        cache.clear()
+
     def test_organization_setting_multitenancy(self):
         """Test operator and administrator access in multitenant scenarios"""
         org1 = self._create_org(name="test-org-1", slug="test-org-1")

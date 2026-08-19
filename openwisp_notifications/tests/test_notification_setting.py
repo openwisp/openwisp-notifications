@@ -1,6 +1,8 @@
+from importlib import import_module
 from unittest.mock import patch
 
 from django.core.exceptions import ValidationError
+from django.db import IntegrityError
 from django.db.models.signals import post_save
 from django.test import TransactionTestCase
 
@@ -20,6 +22,10 @@ from openwisp_notifications.tests.test_helpers import (
     test_notification_type,
 )
 from openwisp_users.tests.utils import TestOrganizationMixin
+
+_merge_global_notification_settings = import_module(
+    "openwisp_notifications.migrations.0014_deduplicate_global_notification_settings"
+).merge_global_notification_settings
 
 NotificationSetting = load_model("NotificationSetting")
 Organization = swapper_load_model("openwisp_users", "Organization")
@@ -454,6 +460,64 @@ class TestNotificationSetting(TestOrganizationMixin, TransactionTestCase):
             with self.assertRaises(ValidationError):
                 global_setting.full_clean()
                 global_setting.save()
+
+    def test_global_notification_setting_unique_constraint(self):
+        user = self._create_user(
+            username="constraint_test", email="constraint_test@example.com"
+        )
+        NotificationSetting.objects.create(
+            user=user, organization=None, type=None, web=True, email=True
+        )
+        with self.assertRaises(IntegrityError):
+            NotificationSetting.objects.create(
+                user=user, organization=None, type=None, web=True, email=True
+            )
+
+    def test_merge_global_notification_settings(self):
+        class FakeSetting:
+            def __init__(self, web=None, email=None, deleted=False):
+                self.web = web
+                self.email = email
+                self.deleted = deleted
+
+        with self.subTest("False wins over True and None"):
+            merged = _merge_global_notification_settings(
+                [
+                    FakeSetting(web=True, email=None),
+                    FakeSetting(web=False, email=False),
+                ]
+            )
+            self.assertEqual(merged["web"], False)
+            self.assertEqual(merged["email"], False)
+
+        with self.subTest("True wins over None"):
+            merged = _merge_global_notification_settings(
+                [
+                    FakeSetting(web=None, email=None),
+                    FakeSetting(web=True, email=True),
+                ]
+            )
+            self.assertEqual(merged["web"], True)
+            self.assertEqual(merged["email"], True)
+
+        with self.subTest("All None stays None"):
+            merged = _merge_global_notification_settings(
+                [
+                    FakeSetting(web=None, email=None),
+                    FakeSetting(web=None, email=None),
+                ]
+            )
+            self.assertIsNone(merged["web"])
+            self.assertIsNone(merged["email"])
+
+        with self.subTest("Active row wins over deleted"):
+            merged = _merge_global_notification_settings(
+                [
+                    FakeSetting(deleted=True),
+                    FakeSetting(deleted=False),
+                ]
+            )
+            self.assertFalse(merged["deleted"])
 
     def test_new_org_creation_respects_global_preferences(self):
         """

@@ -267,6 +267,14 @@ class Migration(migrations.Migration):
                 name="unique_notification_setting",
             ),
         ),
+        migrations.AddConstraint(
+            model_name="notificationsetting",
+            constraint=models.UniqueConstraint(
+                fields=("user",),
+                condition=models.Q(organization__isnull=True, type__isnull=True),
+                name="unique_global_notification_setting",
+            ),
+        ),
         migrations.AddIndex(
             model_name="notificationsetting",
             index=models.Index(

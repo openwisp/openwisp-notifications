@@ -406,6 +406,15 @@ class AbstractNotificationSetting(UUIDModel):
                 fields=["organization", "type", "user"],
                 name="unique_notification_setting",
             ),
+            # Enforce one global setting row per user at the database level.
+            # The existing constraint above treats NULLs as distinct values,
+            # so it does not prevent duplicate rows where both organization
+            # and type are NULL. This partial constraint closes that gap.
+            UniqueConstraint(
+                fields=["user"],
+                condition=models.Q(organization__isnull=True, type__isnull=True),
+                name="unique_global_notification_setting",
+            ),
         ]
         verbose_name = _("user notification settings")
         verbose_name_plural = verbose_name
