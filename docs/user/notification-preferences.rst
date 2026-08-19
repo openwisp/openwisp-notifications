@@ -103,6 +103,11 @@ Key points:
 - Organization settings override global defaults defined in Django
   settings (see :ref:`openwisp_notifications_web_enabled` and
   :ref:`openwisp_notifications_email_enabled`).
+- Preferences of disabled organizations are hidden from the preferences
+  page and API, and cannot be modified per organization. The one-click
+  email unsubscribe link is unaffected and still applies to every
+  organization, including disabled ones, so a user's choice does not drift
+  once an organization is re-enabled.
 
 .. _notifications_silencing:
 
