@@ -2,9 +2,10 @@ import uuid
 from datetime import datetime
 from unittest.mock import patch
 
+from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.core.cache import cache
-from django.test import TransactionTestCase
+from django.test import TransactionTestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 from rest_framework.exceptions import ErrorDetail
@@ -1515,6 +1516,17 @@ class TestNotificationApi(
             self.assertEqual(response.status_code, 404)
 
 
+@override_settings(
+    CACHES={
+        **settings.CACHES,
+        "default": {
+            # Use a worker-local cache so the cache.clear() call
+            # in setUp() does not affect parallel test workers.
+            "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+            "LOCATION": "notifications-multitenancy",
+        },
+    }
+)
 class TestMultitenancyApi(
     TestNotificationMixin,
     TestOrganizationMixin,
@@ -1530,9 +1542,8 @@ class TestMultitenancyApi(
 
     def setUp(self):
         super().setUp()
-        # The in-memory cache survives TransactionTestCase truncation and
-        # user primary keys can be reused, so stale organization membership
-        # data from earlier tests must be cleared before creating users here.
+        # The worker-local cache survives TransactionTestCase truncation, so
+        # stale organization memberships must be cleared before reusing user IDs.
         cache.clear()
 
     def test_organization_setting_multitenancy(self):
@@ -1543,9 +1554,9 @@ class TestMultitenancyApi(
         operator = self._create_operator(organizations=[org1])
         administrator = self._create_administrator(organizations=[org1])
         org1_setting_path = self._get_path("org_notification_setting", org1.pk)
-
         # Test operator permissions
         self.client.force_login(operator)
+
         with self.subTest("Operator can retrieve organization notification settings"):
             response = self.client.get(org1_setting_path)
             self._assert_org_setting_response(response, org1_settings)

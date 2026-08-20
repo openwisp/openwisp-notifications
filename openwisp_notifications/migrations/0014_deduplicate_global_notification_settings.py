@@ -34,7 +34,6 @@ def deduplicate_global_notification_settings(apps, schema_editor):
         .annotate(count=models.Count("id"))
         .filter(count__gt=1)
     )
-
     for duplicate in duplicate_users.iterator():
         user_id = duplicate["user"]
         settings = list(
@@ -44,10 +43,8 @@ def deduplicate_global_notification_settings(apps, schema_editor):
         )
         if len(settings) < 2:
             continue
-
         keep = settings[0]
         merged = merge_global_notification_settings(settings)
-
         NotificationSetting.objects.filter(pk=keep.pk).update(
             web=merged["web"],
             email=merged["email"],
@@ -63,7 +60,6 @@ class Migration(migrations.Migration):
     dependencies = [
         ("openwisp_notifications", "0013_make_notification_type_nonnullable"),
     ]
-
     operations = [
         migrations.RunPython(
             deduplicate_global_notification_settings,
