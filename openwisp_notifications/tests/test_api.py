@@ -1521,6 +1521,9 @@ class TestMultitenancyApi(
     AuthenticationMixin,
     TransactionTestCase,
 ):
+    # TransactionTestCase flushes groups and their permissions after each test.
+    # Load the fixture to recreate the default roles with the organization
+    # notification-setting permissions required by this test.
     fixtures = [
         "openwisp_notifications/tests/fixtures/initial_data.json",
     ]
