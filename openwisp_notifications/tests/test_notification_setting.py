@@ -848,6 +848,7 @@ class TestNotificationSetting(TestOrganizationMixin, TransactionTestCase):
         self.assertTrue(NotificationSetting.objects.filter(user=user).count() > 1)
 
     def test_deduplicates_global_settings_before_adding_constraint(self):
+        """Verify migrations merge duplicate global settings before uniqueness."""
         migrate_from = (
             "openwisp_notifications",
             "0013_make_notification_type_nonnullable",
@@ -885,7 +886,6 @@ class TestNotificationSetting(TestOrganizationMixin, TransactionTestCase):
                 email=True,
                 deleted=False,
             )
-
             executor = MigrationExecutor(connection)
             executor.migrate(
                 [
@@ -915,7 +915,6 @@ class TestNotificationSetting(TestOrganizationMixin, TransactionTestCase):
             self.assertFalse(setting.web)
             self.assertTrue(setting.email)
             self.assertFalse(setting.deleted)
-
             executor.migrate([migrate_marker])
             executor = MigrationExecutor(connection)
             apps = executor.loader.project_state([migrate_marker]).apps
@@ -924,7 +923,6 @@ class TestNotificationSetting(TestOrganizationMixin, TransactionTestCase):
             )
             setting = NotificationSetting.objects.get(pk=setting.pk)
             self.assertTrue(setting._global)
-
             executor.migrate([migrate_to])
             executor = MigrationExecutor(connection)
             apps = executor.loader.project_state([migrate_to]).apps
