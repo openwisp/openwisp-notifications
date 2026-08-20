@@ -1,7 +1,6 @@
 from importlib import import_module
 from unittest.mock import patch
 
-from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError, connection
 from django.db.migrations.executor import MigrationExecutor
@@ -848,98 +847,94 @@ class TestNotificationSetting(TestOrganizationMixin, TransactionTestCase):
         user.save()
         self.assertTrue(NotificationSetting.objects.filter(user=user).count() > 1)
 
-
-class TestGlobalNotificationSettingsMigration(TransactionTestCase):
-    migrate_from = ("openwisp_notifications", "0013_make_notification_type_nonnullable")
-    migrate_marker = (
-        "openwisp_notifications",
-        "0016_populate_global_notification_setting_marker",
-    )
-    migrate_to = (
-        "openwisp_notifications",
-        "0017_add_global_notification_setting_constraint",
-    )
-
-    def setUp(self):
-        super().setUp()
-        self.user = get_user_model().objects.create_user(
+    def test_deduplicates_global_settings_before_adding_constraint(self):
+        migrate_from = (
+            "openwisp_notifications",
+            "0013_make_notification_type_nonnullable",
+        )
+        migrate_marker = (
+            "openwisp_notifications",
+            "0016_populate_global_notification_setting_marker",
+        )
+        migrate_to = (
+            "openwisp_notifications",
+            "0017_add_global_notification_setting_constraint",
+        )
+        user = self._create_user(
             username="migration-test", email="migration-test@example.com"
         )
-        self.executor = MigrationExecutor(connection)
-        self.executor.migrate([self.migrate_from])
-
-    def tearDown(self):
         executor = MigrationExecutor(connection)
-        executor.migrate(executor.loader.graph.leaf_nodes())
-        super().tearDown()
-
-    def test_deduplicates_global_settings_before_adding_constraint(self):
-        old_apps = self.executor.loader.project_state([self.migrate_from]).apps
-        NotificationSetting = old_apps.get_model(
-            "openwisp_notifications", "NotificationSetting"
-        )
-        NotificationSetting.objects.create(
-            user_id=self.user.pk,
-            organization=None,
-            type=None,
-            web=True,
-            deleted=True,
-        )
-        NotificationSetting.objects.create(
-            user_id=self.user.pk,
-            organization=None,
-            type=None,
-            web=False,
-            email=True,
-            deleted=False,
-        )
-
-        self.executor = MigrationExecutor(connection)
-        self.executor.migrate(
-            [
-                (
-                    "openwisp_notifications",
-                    "0014_deduplicate_global_notification_settings",
-                )
-            ]
-        )
-        self.executor = MigrationExecutor(connection)
-        apps = self.executor.loader.project_state(
-            [
-                (
-                    "openwisp_notifications",
-                    "0014_deduplicate_global_notification_settings",
-                )
-            ]
-        ).apps
-        NotificationSetting = apps.get_model(
-            "openwisp_notifications", "NotificationSetting"
-        )
-        settings = NotificationSetting.objects.filter(
-            user_id=self.user.pk, organization=None, type=None
-        )
-        self.assertEqual(settings.count(), 1)
-        setting = settings.get()
-        self.assertFalse(setting.web)
-        self.assertTrue(setting.email)
-        self.assertFalse(setting.deleted)
-
-        self.executor.migrate([self.migrate_marker])
-        self.executor = MigrationExecutor(connection)
-        apps = self.executor.loader.project_state([self.migrate_marker]).apps
-        NotificationSetting = apps.get_model(
-            "openwisp_notifications", "NotificationSetting"
-        )
-        setting = NotificationSetting.objects.get(pk=setting.pk)
-        self.assertTrue(setting._global)
-
-        self.executor.migrate([self.migrate_to])
-        self.executor = MigrationExecutor(connection)
-        apps = self.executor.loader.project_state([self.migrate_to]).apps
-        NotificationSetting = apps.get_model(
-            "openwisp_notifications", "NotificationSetting"
-        )
-        with self.assertRaises(IntegrityError):
-            NotificationSetting.objects.create(
-                user_id=self.user.pk, organization=None, type=None, _global=True
+        try:
+            executor.migrate([migrate_from])
+            old_apps = executor.loader.project_state([migrate_from]).apps
+            NotificationSetting = old_apps.get_model(
+                "openwisp_notifications", "NotificationSetting"
             )
+            NotificationSetting.objects.create(
+                user_id=user.pk,
+                organization=None,
+                type=None,
+                web=True,
+                deleted=True,
+            )
+            NotificationSetting.objects.create(
+                user_id=user.pk,
+                organization=None,
+                type=None,
+                web=False,
+                email=True,
+                deleted=False,
+            )
+
+            executor = MigrationExecutor(connection)
+            executor.migrate(
+                [
+                    (
+                        "openwisp_notifications",
+                        "0014_deduplicate_global_notification_settings",
+                    )
+                ]
+            )
+            executor = MigrationExecutor(connection)
+            apps = executor.loader.project_state(
+                [
+                    (
+                        "openwisp_notifications",
+                        "0014_deduplicate_global_notification_settings",
+                    )
+                ]
+            ).apps
+            NotificationSetting = apps.get_model(
+                "openwisp_notifications", "NotificationSetting"
+            )
+            settings = NotificationSetting.objects.filter(
+                user_id=user.pk, organization=None, type=None
+            )
+            self.assertEqual(settings.count(), 1)
+            setting = settings.get()
+            self.assertFalse(setting.web)
+            self.assertTrue(setting.email)
+            self.assertFalse(setting.deleted)
+
+            executor.migrate([migrate_marker])
+            executor = MigrationExecutor(connection)
+            apps = executor.loader.project_state([migrate_marker]).apps
+            NotificationSetting = apps.get_model(
+                "openwisp_notifications", "NotificationSetting"
+            )
+            setting = NotificationSetting.objects.get(pk=setting.pk)
+            self.assertTrue(setting._global)
+
+            executor.migrate([migrate_to])
+            executor = MigrationExecutor(connection)
+            apps = executor.loader.project_state([migrate_to]).apps
+            NotificationSetting = apps.get_model(
+                "openwisp_notifications", "NotificationSetting"
+            )
+            with self.assertRaises(IntegrityError):
+                NotificationSetting.objects.create(
+                    user_id=user.pk, organization=None, type=None, _global=True
+                )
+        finally:
+            executor = MigrationExecutor(connection)
+            executor.migrate(executor.loader.graph.leaf_nodes())
