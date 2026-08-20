@@ -1,4 +1,5 @@
 from importlib import import_module
+from unittest import skipIf
 from unittest.mock import patch
 
 from django.core.exceptions import ValidationError
@@ -847,6 +848,10 @@ class TestNotificationSetting(TestOrganizationMixin, TransactionTestCase):
         user.save()
         self.assertTrue(NotificationSetting.objects.filter(user=user).count() > 1)
 
+    @skipIf(
+        NotificationSetting._meta.app_label != "openwisp_notifications",
+        "Base migrations are not installed for swapped notification settings.",
+    )
     def test_deduplicates_global_settings_before_adding_constraint(self):
         """Verify migrations merge duplicate global settings before uniqueness."""
         migrate_from = (
