@@ -398,6 +398,10 @@ class AbstractNotificationSetting(UUIDModel):
         _("email notifications"), null=True, blank=True, help_text=_(_RECEIVE_HELP)
     )
     deleted = models.BooleanField(_("Delete"), null=True, blank=True, default=False)
+    # This private marker enables portable global-setting uniqueness on
+    # databases without partial indexes. It is maintained internally in save()
+    # and must not be exposed through forms or APIs.
+    _global = models.BooleanField(null=True, editable=False)
 
     class Meta:
         abstract = True
@@ -406,13 +410,8 @@ class AbstractNotificationSetting(UUIDModel):
                 fields=["organization", "type", "user"],
                 name="unique_notification_setting",
             ),
-            # Enforce one global setting row per user at the database level.
-            # The existing constraint above treats NULLs as distinct values,
-            # so it does not prevent duplicate rows where both organization
-            # and type are NULL. This partial constraint closes that gap.
             UniqueConstraint(
-                fields=["user"],
-                condition=models.Q(organization__isnull=True, type__isnull=True),
+                fields=["user", "_global"],
                 name="unique_global_notification_setting",
             ),
         ]
@@ -488,6 +487,11 @@ class AbstractNotificationSetting(UUIDModel):
                 self.web = None
 
     def save(self, *args, **kwargs):
+        self._global = (
+            True if self.organization_id is None and self.type is None else None
+        )
+        if kwargs.get("update_fields"):
+            kwargs["update_fields"] = set(kwargs["update_fields"]) | {"_global"}
         self.normalize_settings()
         with transaction.atomic():
             if not self.organization and not self.type:

@@ -580,6 +580,7 @@ class TestNotificationApi(
             self.assertTrue(notification_setting["web"])
             self.assertTrue(notification_setting["email"])
             self.assertIn("organization", notification_setting)
+            self.assertNotIn("_global", notification_setting)
 
     def test_list_notification_setting_filtering(self):
         url = self._get_path("notification_setting_list")

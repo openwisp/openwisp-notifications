@@ -252,6 +252,7 @@ class Migration(migrations.Migration):
                         blank=True, default=False, null=True, verbose_name="Delete"
                     ),
                 ),
+                ("_global", models.BooleanField(editable=False, null=True)),
             ],
             options={
                 "verbose_name": "user notification settings",
@@ -270,8 +271,7 @@ class Migration(migrations.Migration):
         migrations.AddConstraint(
             model_name="notificationsetting",
             constraint=models.UniqueConstraint(
-                fields=("user",),
-                condition=models.Q(organization__isnull=True, type__isnull=True),
+                fields=("user", "_global"),
                 name="unique_global_notification_setting",
             ),
         ),
