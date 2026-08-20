@@ -851,7 +851,14 @@ class TestNotificationSetting(TestOrganizationMixin, TransactionTestCase):
 
 class TestGlobalNotificationSettingsMigration(TransactionTestCase):
     migrate_from = ("openwisp_notifications", "0013_make_notification_type_nonnullable")
-    migrate_to = ("openwisp_notifications", "0015_unique_global_notification_setting")
+    migrate_marker = (
+        "openwisp_notifications",
+        "0016_populate_global_notification_setting_marker",
+    )
+    migrate_to = (
+        "openwisp_notifications",
+        "0017_add_global_notification_setting_constraint",
+    )
 
     def setUp(self):
         super().setUp()
@@ -917,14 +924,21 @@ class TestGlobalNotificationSettingsMigration(TransactionTestCase):
         self.assertTrue(setting.email)
         self.assertFalse(setting.deleted)
 
+        self.executor.migrate([self.migrate_marker])
+        self.executor = MigrationExecutor(connection)
+        apps = self.executor.loader.project_state([self.migrate_marker]).apps
+        NotificationSetting = apps.get_model(
+            "openwisp_notifications", "NotificationSetting"
+        )
+        setting = NotificationSetting.objects.get(pk=setting.pk)
+        self.assertTrue(setting._global)
+
         self.executor.migrate([self.migrate_to])
         self.executor = MigrationExecutor(connection)
         apps = self.executor.loader.project_state([self.migrate_to]).apps
         NotificationSetting = apps.get_model(
             "openwisp_notifications", "NotificationSetting"
         )
-        setting = NotificationSetting.objects.get(pk=setting.pk)
-        self.assertTrue(setting._global)
         with self.assertRaises(IntegrityError):
             NotificationSetting.objects.create(
                 user_id=self.user.pk, organization=None, type=None, _global=True

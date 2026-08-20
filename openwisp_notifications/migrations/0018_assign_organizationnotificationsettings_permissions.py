@@ -8,7 +8,10 @@ from openwisp_notifications.migrations import (
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("openwisp_notifications", "0015_unique_global_notification_setting"),
+        (
+            "openwisp_notifications",
+            "0017_add_global_notification_setting_constraint",
+        ),
         ("openwisp_users", "0004_default_groups"),
     ]
 
