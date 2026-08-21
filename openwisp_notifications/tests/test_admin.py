@@ -2,14 +2,16 @@ import copy
 import uuid
 from unittest.mock import patch
 
+from django.contrib import admin as django_admin
 from django.contrib.admin.sites import AdminSite
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
 from django.forms.widgets import MediaOrderConflictWarning
-from django.test import TestCase, override_settings, tag
+from django.test import RequestFactory, TestCase, override_settings, tag
 from django.urls import reverse
 
 from openwisp_notifications import settings as app_settings
+from openwisp_notifications.admin import OrganizationNotificationSettingsInline
 from openwisp_notifications.signals import notify
 from openwisp_notifications.swapper import load_model, swapper_load_model
 from openwisp_notifications.templatetags.notification_tags import (
@@ -17,7 +19,7 @@ from openwisp_notifications.templatetags.notification_tags import (
 )
 from openwisp_notifications.types import NOTIFICATION_TYPES
 from openwisp_notifications.widgets import _add_object_notification_widget
-from openwisp_users.admin import UserAdmin
+from openwisp_users.admin import OrganizationAdmin, UserAdmin
 from openwisp_users.tests.utils import TestMultitenantAdminMixin
 
 from .test_helpers import MessagingRequest, get_notification_setting_permission
@@ -27,6 +29,7 @@ NotificationSetting = load_model("NotificationSetting")
 notification_queryset = Notification.objects.order_by("-timestamp")
 Group = swapper_load_model("openwisp_users", "Group")
 OrganizationUser = swapper_load_model("openwisp_users", "OrganizationUser")
+Organization = swapper_load_model("openwisp_users", "Organization")
 
 
 class MockUser:
@@ -387,6 +390,20 @@ class TestOrganizationNotificationsSettingsAdmin(BaseTestAdmin):
                 response,
                 '<select name="notification_settings-0-email"',
             )
+
+    def test_disabled_organization_inline_readonly(self):
+        org_admin = OrganizationAdmin(Organization, django_admin.site)
+        active_org = self._get_org()
+        disabled_org = self._create_org(name="disabled-org", is_active=False)
+        request = RequestFactory().get("/")
+        request.user = self._get_admin()
+        self._test_disabled_org_admin_inline_readonly(
+            org_admin,
+            disabled_org,
+            active_obj=active_org,
+            inline_models=(OrganizationNotificationSettingsInline,),
+            user=request.user,
+        )
 
 
 @tag("skip_prod")

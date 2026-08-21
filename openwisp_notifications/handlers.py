@@ -59,6 +59,9 @@ def notify_handler(**kwargs):
         raise ValueError(_("Notification type is required."))
     target = kwargs.get("target", None)
     target_org = getattr(target, "organization_id", None)
+    if target_org and not Organization.active.filter(pk=target_org).exists():
+        # Notifications are not generated for disabled organizations.
+        return
     try:
         notification_template = get_notification_configuration(notification_type)
     except NotificationRenderException as error:
