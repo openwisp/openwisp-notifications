@@ -1,6 +1,10 @@
+from importlib import import_module
+from unittest import skipIf
 from unittest.mock import patch
 
 from django.core.exceptions import ValidationError
+from django.db import IntegrityError, connection
+from django.db.migrations.executor import MigrationExecutor
 from django.db.models.signals import post_save
 from django.test import TransactionTestCase
 
@@ -20,6 +24,10 @@ from openwisp_notifications.tests.test_helpers import (
     test_notification_type,
 )
 from openwisp_users.tests.utils import TestOrganizationMixin
+
+_merge_global_notification_settings = import_module(
+    "openwisp_notifications.migrations.0014_deduplicate_global_notification_settings"
+).merge_global_notification_settings
 
 NotificationSetting = load_model("NotificationSetting")
 Organization = swapper_load_model("openwisp_users", "Organization")
@@ -455,6 +463,69 @@ class TestNotificationSetting(TestOrganizationMixin, TransactionTestCase):
                 global_setting.full_clean()
                 global_setting.save()
 
+    def test_global_notification_setting_unique_constraint(self):
+        user = self._create_user(
+            username="constraint_test", email="constraint_test@example.com"
+        )
+        global_setting = NotificationSetting.objects.create(
+            user=user, organization=None, type=None, web=True, email=True
+        )
+        self.assertTrue(global_setting._global)
+        setting = NotificationSetting.objects.create(
+            user=user, organization=self._get_org(), type="default"
+        )
+        self.assertIsNone(setting._global)
+        with self.assertRaises(IntegrityError):
+            NotificationSetting.objects.create(
+                user=user, organization=None, type=None, web=True, email=True
+            )
+
+    def test_merge_global_notification_settings(self):
+        class FakeSetting:
+            def __init__(self, web=None, email=None, deleted=False):
+                self.web = web
+                self.email = email
+                self.deleted = deleted
+
+        with self.subTest("False wins over True and None"):
+            merged = _merge_global_notification_settings(
+                [
+                    FakeSetting(web=True, email=None),
+                    FakeSetting(web=False, email=False),
+                ]
+            )
+            self.assertEqual(merged["web"], False)
+            self.assertEqual(merged["email"], False)
+
+        with self.subTest("True wins over None"):
+            merged = _merge_global_notification_settings(
+                [
+                    FakeSetting(web=None, email=None),
+                    FakeSetting(web=True, email=True),
+                ]
+            )
+            self.assertEqual(merged["web"], True)
+            self.assertEqual(merged["email"], True)
+
+        with self.subTest("All None stays None"):
+            merged = _merge_global_notification_settings(
+                [
+                    FakeSetting(web=None, email=None),
+                    FakeSetting(web=None, email=None),
+                ]
+            )
+            self.assertIsNone(merged["web"])
+            self.assertIsNone(merged["email"])
+
+        with self.subTest("Active row wins over deleted"):
+            merged = _merge_global_notification_settings(
+                [
+                    FakeSetting(deleted=True),
+                    FakeSetting(deleted=False),
+                ]
+            )
+            self.assertFalse(merged["deleted"])
+
     def test_new_org_creation_respects_global_preferences(self):
         """
         Regression test for bug 1 in https://github.com/openwisp/openwisp-notifications/issues/448
@@ -774,3 +845,97 @@ class TestNotificationSetting(TestOrganizationMixin, TransactionTestCase):
         user.is_superuser = True
         user.save()
         self.assertTrue(NotificationSetting.objects.filter(user=user).count() > 1)
+
+    @skipIf(
+        NotificationSetting._meta.app_label != "openwisp_notifications",
+        "Base migrations are not installed for swapped notification settings.",
+    )
+    def test_deduplicates_global_settings_before_adding_constraint(self):
+        """Verify migrations merge duplicate global settings before uniqueness."""
+        migrate_from = (
+            "openwisp_notifications",
+            "0013_make_notification_type_nonnullable",
+        )
+        migrate_marker = (
+            "openwisp_notifications",
+            "0016_populate_global_notification_setting_marker",
+        )
+        migrate_to = (
+            "openwisp_notifications",
+            "0017_add_global_notification_setting_constraint",
+        )
+        user = self._create_user(
+            username="migration-test", email="migration-test@example.com"
+        )
+        executor = MigrationExecutor(connection)
+        try:
+            executor.migrate([migrate_from])
+            old_apps = executor.loader.project_state([migrate_from]).apps
+            NotificationSetting = old_apps.get_model(
+                "openwisp_notifications", "NotificationSetting"
+            )
+            NotificationSetting.objects.create(
+                user_id=user.pk,
+                organization=None,
+                type=None,
+                web=True,
+                deleted=True,
+            )
+            NotificationSetting.objects.create(
+                user_id=user.pk,
+                organization=None,
+                type=None,
+                web=False,
+                email=True,
+                deleted=False,
+            )
+            executor = MigrationExecutor(connection)
+            executor.migrate(
+                [
+                    (
+                        "openwisp_notifications",
+                        "0014_deduplicate_global_notification_settings",
+                    )
+                ]
+            )
+            executor = MigrationExecutor(connection)
+            apps = executor.loader.project_state(
+                [
+                    (
+                        "openwisp_notifications",
+                        "0014_deduplicate_global_notification_settings",
+                    )
+                ]
+            ).apps
+            NotificationSetting = apps.get_model(
+                "openwisp_notifications", "NotificationSetting"
+            )
+            settings = NotificationSetting.objects.filter(
+                user_id=user.pk, organization=None, type=None
+            )
+            self.assertEqual(settings.count(), 1)
+            setting = settings.get()
+            self.assertFalse(setting.web)
+            self.assertTrue(setting.email)
+            self.assertFalse(setting.deleted)
+            executor.migrate([migrate_marker])
+            executor = MigrationExecutor(connection)
+            apps = executor.loader.project_state([migrate_marker]).apps
+            NotificationSetting = apps.get_model(
+                "openwisp_notifications", "NotificationSetting"
+            )
+            setting = NotificationSetting.objects.get(pk=setting.pk)
+            self.assertTrue(setting._global)
+            executor.migrate([migrate_to])
+            executor = MigrationExecutor(connection)
+            apps = executor.loader.project_state([migrate_to]).apps
+            NotificationSetting = apps.get_model(
+                "openwisp_notifications", "NotificationSetting"
+            )
+            with self.assertRaises(IntegrityError):
+                NotificationSetting.objects.create(
+                    user_id=user.pk, organization=None, type=None, _global=True
+                )
+        finally:
+            executor = MigrationExecutor(connection)
+            executor.migrate(executor.loader.graph.leaf_nodes())
