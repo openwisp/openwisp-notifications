@@ -471,12 +471,10 @@ class TestNotificationSetting(TestOrganizationMixin, TransactionTestCase):
             user=user, organization=None, type=None, web=True, email=True
         )
         self.assertTrue(global_setting._global)
-
         setting = NotificationSetting.objects.create(
             user=user, organization=self._get_org(), type="default"
         )
         self.assertIsNone(setting._global)
-
         with self.assertRaises(IntegrityError):
             NotificationSetting.objects.create(
                 user=user, organization=None, type=None, web=True, email=True
