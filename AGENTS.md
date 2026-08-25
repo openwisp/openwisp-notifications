@@ -72,6 +72,7 @@ If instructions conflict, repository config and CI workflows win first, official
 - Preserve swappable model support and integration with `openwisp-users` organizations and memberships.
 - When migrations reference models that may be swapped, use Django or django-swappable dependency and model-resolution helpers. Never hard-code a migration dependency of the target app, because swapped models may have a different migration history. If no stable cross-app migration contract exists, depend on a migration whose existing ordering gives reasonable confidence it follows the required state, then verify every supported sample and integration migration graph.
 - Mark user-facing strings as translatable with Django i18n helpers, typically `gettext_lazy` imported as `_`.
+- When writing tests that assert permission-controlled behavior, create users with `_create_operator()` or `_create_administrator()` and exercise the permissions assigned by this module's default-group data migrations. Do not grant permissions directly to test users or to the `Operator` or `Administrator` groups, for example with `user.user_permissions.add()`, `group.permissions.add()`, or `group.permissions.set()`, to make a test pass. If the required permission is missing, add it to the appropriate default group in this module's data migration and cover the behavior using the corresponding helper.
 
 ## Security and Auth Rules
 
