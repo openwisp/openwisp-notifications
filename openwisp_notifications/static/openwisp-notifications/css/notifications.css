@@ -190,7 +190,7 @@
   display: flex;
   justify-content: space-between;
   color: var(--ow-color-fg-dark);
-  -webkit-text-stroke: 0.2px white;
+  -webkit-text-stroke: 0.2px var(--ow-color-white);
   padding: 1px 0px;
 }
 .ow-notification-date {
