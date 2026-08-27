@@ -255,7 +255,7 @@ tr.org-header {
   bottom: 0;
   left: 0;
   height: 4px;
-  background-color: #007bff;
+  background-color: var(--ow-color-primary);
   width: 100%;
   transition: width 3s linear;
 }
@@ -358,10 +358,10 @@ button.toggle-icon.expanded {
   transition: 0.4s;
 }
 input:checked + .slider {
-  background-color: #2196f3;
+  background-color: var(--ow-btn-default-bg);
 }
 input:focus + .slider {
-  box-shadow: 0 0 5px 2px #2196f3;
+  box-shadow: 0 0 5px 2px var(--ow-btn-default-bg);
   outline: none;
 }
 input:checked + .slider:before {
