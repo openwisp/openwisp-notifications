@@ -1,3 +1,4 @@
+import functools
 from copy import deepcopy
 from datetime import datetime
 from unittest.mock import patch
@@ -88,6 +89,7 @@ def mock_notification_types(func):
     registered during the test.
     """
 
+    @functools.wraps(func)
     def wrapper(*args, **kwargs):
         with patch.multiple(
             "openwisp_notifications.types",

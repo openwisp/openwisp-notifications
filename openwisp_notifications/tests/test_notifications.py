@@ -77,11 +77,27 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
             description="Test Notification",
             verb="Test Notification",
             email_subject="Test Email subject",
+            type="default",
             url="https://localhost:8000/admin",
         )
 
     def _create_notification(self, **kwargs):
         return notify.send(**self.notification_options, **kwargs)
+
+    def test_type_required(self):
+        self.admin.emailaddress_set.update(verified=False)
+        options = self.notification_options.copy()
+        options.pop("type")
+        invalid_types = {
+            "missing": {},
+            "none": {"type": None},
+            "empty": {"type": ""},
+        }
+        for label, invalid_type in invalid_types.items():
+            with self.subTest(type=label):
+                with self.assertRaisesRegex(ValueError, "type is required"):
+                    notify.send(**options, **invalid_type)
+                self.assertFalse(notification_queryset.exists())
 
     def test_create_notification(self):
         operator = super()._create_operator()
@@ -93,6 +109,7 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
             recipient=self.admin,
             description="Test Notification Description",
             verb="Test Notification",
+            type="default",
             action_object=operator,
             target=operator,
             data=data,
@@ -111,7 +128,7 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
             n.target_content_type, ContentType.objects.get_for_model(operator)
         )
         self.assertEqual(n.verb, "Test Notification")
-        self.assertEqual(n.message, "Test Notification Description")
+        self.assertIn("Default notification with", n.message)
         self.assertEqual(n.recipient, self.admin)
 
     def test_lazy_translation(self):
@@ -126,6 +143,7 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
             description=gettext_lazy("Test Notification"),
             verb=gettext_lazy("Test Notification"),
             email_subject=gettext_lazy("Test Email subject"),
+            type="default",
             url="https://localhost:8000/admin",
             message=gettext_lazy("Translated message"),
             random=gettext_lazy("any extra kwargs is evaluated"),
@@ -163,6 +181,61 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
         n = notification_queryset.first()
         self.assertIn(f"Error: {error}", n.message)
         self.assertEqual(n.email_subject, f"Error subject: {error}")
+
+    def test_generic_message_target_url_suffix(self):
+        target = self._create_operator()
+        target_url = _get_absolute_url(
+            reverse(f"admin:{self.users_app_label}_user_change", args=[target.pk])
+        )
+        with self.subTest("Append querystring suffix"):
+            notify.send(
+                type="generic_message",
+                target=target,
+                sender=self.admin,
+                target_url_suffix="?status=pending",
+            )
+            notification = notification_queryset.first()
+            self.assertEqual(
+                notification.target_url,
+                f"{target_url}?status=pending",
+            )
+
+        with self.subTest("Append fragment suffix"):
+            notification.delete()
+            notify.send(
+                type="generic_message",
+                target=target,
+                sender=self.admin,
+                target_url_suffix="#pending",
+            )
+            notification = notification_queryset.first()
+            self.assertEqual(
+                notification.target_url,
+                f"{target_url}#pending",
+            )
+
+        with self.subTest("Do not append suffix to fallback target URL"):
+            notification.delete()
+            notify.send(
+                type="generic_message",
+                sender=self.admin,
+                target_url_suffix="?status=pending",
+            )
+            notification = notification_queryset.first()
+            self.assertEqual(notification.target_url, "#")
+
+    def test_generic_message_invalid_target_url_suffix(self):
+        target = self._create_operator()
+        invalid_suffixes = ["status=pending", "https://example.com"]
+        for suffix in invalid_suffixes:
+            with self.subTest(suffix=suffix):
+                with self.assertRaises(ValueError):
+                    notify.send(
+                        type="generic_message",
+                        target=target,
+                        sender=self.admin,
+                        target_url_suffix=suffix,
+                    )
 
     def test_batch_email_helpers(self):
         with self.subTest("get_user_batched_notifications_cache_key()"):
@@ -250,12 +323,10 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
         self._create_notification()
         self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(mail.outbox[0].to, [self.admin.email])
-        n = notification_queryset.first()
         self.assertEqual(
-            mail.outbox[0].subject,
-            "Test Email subject",
+            mail.outbox[0].subject, "[example.com] Default Notification Subject"
         )
-        self.assertIn(n.message, mail.outbox[0].body)
+        n = notification_queryset.first()
         self.assertIn(n.data.get("url"), mail.outbox[0].body)
         self.assertIn("https://", n.data.get("url"))
         html_email = mail.outbox[0].alternatives[0][0]
@@ -358,14 +429,6 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
                 self.assertEqual(notification.recipient, user)
         else:
             self.fail()
-
-    def test_description_in_email_subject(self):
-        self.notification_options.pop("email_subject")
-        self._create_notification()
-        self.assertEqual(
-            mail.outbox[0].subject,
-            "Test Notification",
-        )
 
     def test_handler_optional_tag(self):
         operator = self._create_operator()
@@ -1983,6 +2046,35 @@ class TestNotificationSending(TestOrganizationMixin, TransactionTestCase):
             self._assert_notification_created(True, target=org_b_target)
             self._assert_email_sent(True)
 
+    @patch.object(app_settings, "WEB_ENABLED", False)
+    def test_web_disabled_globally_org_settings_fallback(self):
+        self._set_user_notification_settings("default", web=None)
+
+        with self.subTest("Organization setting inherited"):
+            self._send_notification("default")
+            self._assert_notification_created(False)
+            self._assert_email_sent(False)
+
+        Notification.objects.all().delete()
+        mail.outbox.clear()
+
+        with self.subTest("Organization setting explicitly enabled"):
+            web_field = OrganizationNotificationSettings._meta.get_field("web")
+            with patch.object(web_field, "fallback", False):
+                self._set_org_notification_settings(web=True, email=True)
+                self._send_notification("default")
+                self._assert_notification_created(True)
+                self._assert_email_sent(True)
+
+        Notification.objects.all().delete()
+        mail.outbox.clear()
+
+        with self.subTest("Organization settings missing"):
+            self.org.notification_settings.delete()
+            self._send_notification("default")
+            self._assert_notification_created(False)
+            self._assert_email_sent(False)
+
 
 class TestTransactionNotifications(TestOrganizationMixin, TransactionTestCase):
     def setUp(self):
@@ -1993,6 +2085,7 @@ class TestTransactionNotifications(TestOrganizationMixin, TransactionTestCase):
             level="info",
             verb="Test Notification",
             email_subject="Test Email subject",
+            type="default",
             url="https://localhost:8000/admin",
         )
 

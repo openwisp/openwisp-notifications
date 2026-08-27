@@ -7,16 +7,16 @@ _test_batch_email_notification_email_body = """
   Date & Time: {datetime_str}
   URL: https://example.com/api/v1/notifications/notification/{notification_id}/redirect/
 
-- Test Notification
+- Default notification with default verb and level info by None
   Description: Test Notification
   Date & Time: {datetime_str}
 
-- Test Notification
+- Default notification with default verb and level info by None
   Description: Test Notification
   Date & Time: {datetime_str}
   URL: https://localhost:8000/admin
 
-- Test Notification
+- Default notification with default verb and level info by None
   Description: Test Notification
   Date & Time: {datetime_str}
   URL: https://localhost:8000/admin
@@ -76,7 +76,7 @@ _test_batch_email_notification_email_html = """
                 <div>
                   <span class="badge info">info</span>
                   <div class="title">
-                    <p>Test Notification</p>
+                    <p>Default notification with default verb and level info by None</p>
                   </div>
                 </div>
               </td>
@@ -101,7 +101,7 @@ _test_batch_email_notification_email_html = """
                   <div>
                     <span class="badge info">info</span>
                     <div class="title">
-                      <p>Test Notification</p>
+                      <p>Default notification with default verb and level info by None</p>
                     </div>
                   </div>
                 </td>
@@ -127,7 +127,7 @@ _test_batch_email_notification_email_html = """
                   <div>
                     <span class="badge info">info</span>
                     <div class="title">
-                      <p>Test Notification</p>
+                      <p>Default notification with default verb and level info by None</p>
                     </div>
                   </div>
                 </td>

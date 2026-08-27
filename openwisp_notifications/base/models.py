@@ -84,7 +84,6 @@ class AbstractNotification(UUIDModel, BaseNotification):
     CACHE_KEY_PREFIX = "ow-notifications-"
     type = models.CharField(
         max_length=30,
-        null=True,
         # TODO: Remove when dropping support for Django 4.2
         choices=(
             NOTIFICATION_CHOICES
@@ -216,16 +215,15 @@ class AbstractNotification(UUIDModel, BaseNotification):
         """
         Returns URLs for "actor", "action_object" and "target" fields.
         """
-        if self.type:
-            # Generate URL according to the notification configuration
-            config = get_notification_configuration(self.type)
-            url = config.get(f"{field}_link", None)
-            if url:
-                try:
-                    url_callable = import_string(url)
-                    return url_callable(self, field=field, absolute_url=True)
-                except ImportError:
-                    return url
+        # Generate URL according to the notification configuration
+        config = get_notification_configuration(self.type)
+        url = config.get(f"{field}_link", None)
+        if url:
+            try:
+                url_callable = import_string(url)
+                return url_callable(self, field=field, absolute_url=True)
+            except ImportError:
+                return url
         return _get_object_link(obj=self._related_object(field), absolute_url=True)
 
     @property
@@ -238,7 +236,9 @@ class AbstractNotification(UUIDModel, BaseNotification):
 
     @property
     def target_url(self):
-        return self._get_related_object_url(field="target")
+        url = self._get_related_object_url(field="target")
+        suffix = (self.data or {}).get("target_url_suffix")
+        return f"{url}{suffix}" if url and url != "#" and suffix else url
 
     @cached_property
     def message(self):
@@ -260,8 +260,6 @@ class AbstractNotification(UUIDModel, BaseNotification):
             return self.get_message()
 
     def get_message(self):
-        if not self.type:
-            return self.description
         try:
             config = get_notification_configuration(self.type)
             data = self.data or {}
@@ -283,23 +281,18 @@ class AbstractNotification(UUIDModel, BaseNotification):
 
     @cached_property
     def email_subject(self):
-        if self.type:
-            try:
-                config = get_notification_configuration(self.type)
-                data = self.data or {}
-                return config["email_subject"].format(
-                    site=Site.objects.get_current(), notification=self, **data
-                )
-            except (AttributeError, KeyError, NotificationRenderException) as exception:
-                self._invalid_notification(
-                    self.pk,
-                    exception,
-                    "Error encountered in generating notification email",
-                )
-        elif self.data.get("email_subject", None):
-            return self.data.get("email_subject")
-        else:
-            return self.message
+        try:
+            config = get_notification_configuration(self.type)
+            data = self.data or {}
+            return config["email_subject"].format(
+                site=Site.objects.get_current(), notification=self, **data
+            )
+        except (AttributeError, KeyError, NotificationRenderException) as exception:
+            self._invalid_notification(
+                self.pk,
+                exception,
+                "Error encountered in generating notification email",
+            )
 
     def _related_object(self, field):
         obj_id = getattr(self, f"{field}_object_id")
@@ -405,6 +398,10 @@ class AbstractNotificationSetting(UUIDModel):
         _("email notifications"), null=True, blank=True, help_text=_(_RECEIVE_HELP)
     )
     deleted = models.BooleanField(_("Delete"), null=True, blank=True, default=False)
+    # This private marker enables portable global-setting uniqueness on
+    # databases without partial indexes. It is maintained internally in save()
+    # and must not be exposed through forms or APIs.
+    _global = models.BooleanField(null=True, editable=False)
 
     class Meta:
         abstract = True
@@ -412,6 +409,10 @@ class AbstractNotificationSetting(UUIDModel):
             UniqueConstraint(
                 fields=["organization", "type", "user"],
                 name="unique_notification_setting",
+            ),
+            UniqueConstraint(
+                fields=["user", "_global"],
+                name="unique_global_notification_setting",
             ),
         ]
         verbose_name = _("user notification settings")
@@ -486,6 +487,11 @@ class AbstractNotificationSetting(UUIDModel):
                 self.web = None
 
     def save(self, *args, **kwargs):
+        self._global = (
+            True if self.organization_id is None and self.type is None else None
+        )
+        if kwargs.get("update_fields"):
+            kwargs["update_fields"] = set(kwargs["update_fields"]) | {"_global"}
         self.normalize_settings()
         with transaction.atomic():
             if not self.organization and not self.type:

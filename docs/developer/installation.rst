@@ -3,6 +3,23 @@ Developer Installation Instructions
 
 .. include:: ../partials/developer-docs.rst
 
+The following diagram illustrates the role of the Notifications module
+within the OpenWISP architecture.
+
+.. figure:: ../images/architecture-v2-openwisp-notifications.png
+    :target: ../../_images/architecture-v2-openwisp-notifications.png
+    :align: center
+    :alt: OpenWISP Architecture: Notifications module
+
+    **OpenWISP Architecture: highlighted notifications module**
+
+.. important::
+
+    For an enhanced viewing experience, open the image above in a new
+    browser tab.
+
+    Refer to :doc:`/general/architecture` for more information.
+
 .. contents:: **Table of Contents**:
     :depth: 2
     :local:

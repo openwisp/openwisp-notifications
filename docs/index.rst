@@ -17,23 +17,6 @@ administrators aware and responsive to important developments.
 For a comprehensive overview of features, please refer to the
 :doc:`user/intro` page.
 
-The following diagram illustrates the role of the Notifications module
-within the OpenWISP architecture.
-
-.. figure:: images/architecture-v2-openwisp-notifications.png
-    :target: ../_images/architecture-v2-openwisp-notifications.png
-    :align: center
-    :alt: OpenWISP Architecture: Notifications module
-
-    **OpenWISP Architecture: highlighted notifications module**
-
-.. important::
-
-    For an enhanced viewing experience, open the image above in a new
-    browser tab.
-
-    Refer to :doc:`/general/architecture` for more information.
-
 .. toctree::
     :caption: Notifications Usage Docs
     :maxdepth: 1

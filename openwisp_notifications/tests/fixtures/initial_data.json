@@ -1,0 +1,33 @@
+[
+  {
+    "model": "auth.group",
+    "fields": {
+      "name": "Operator",
+      "permissions": [
+        [
+          "view_organizationnotificationsettings",
+          "openwisp_notifications",
+          "organizationnotificationsettings"
+        ]
+      ]
+    }
+  },
+  {
+    "model": "auth.group",
+    "fields": {
+      "name": "Administrator",
+      "permissions": [
+        [
+          "view_organizationnotificationsettings",
+          "openwisp_notifications",
+          "organizationnotificationsettings"
+        ],
+        [
+          "change_organizationnotificationsettings",
+          "openwisp_notifications",
+          "organizationnotificationsettings"
+        ]
+      ]
+    }
+  }
+]

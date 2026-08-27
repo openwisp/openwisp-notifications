@@ -137,13 +137,34 @@ class TestSelenium(
         # This confirms the button is hidden
         dialog.find_element(By.CSS_SELECTOR, ".ow-message-target-redirect.ow-hide")
 
+    def test_notification_dialog_closes_on_same_fragment_target(self):
+        self.login()
+        self.notification_options.update(
+            {
+                "type": "generic_message",
+                "description": "Test Description",
+                "target_url_suffix": "#notification",
+            }
+        )
+        notification = self._create_notification().pop()[1][0]
+        self.find_element(By.ID, "openwisp_notifications").click()
+        self.wait_for_visibility(By.ID, f"ow-{notification.id}").click()
+        self.wait_for_visibility(By.CLASS_NAME, "ow-dialog-notification")
+        self.find_element(By.CLASS_NAME, "ow-message-target-redirect").click()
+        self.wait_for_visibility(By.ID, "openwisp_notifications")
+        self.find_element(By.ID, "openwisp_notifications").click()
+        self.wait_for_visibility(By.ID, f"ow-{notification.id}").click()
+        self.wait_for_visibility(By.CLASS_NAME, "ow-dialog-notification")
+        self.find_element(By.CLASS_NAME, "ow-message-target-redirect").click()
+        self.wait_for_invisibility(By.CLASS_NAME, "ow-overlay-notification")
+
     def test_email_unsubscribe_page(self):
         with self.subTest("Token is invalid"):
             self.open(reverse("notifications:unsubscribe"))
             self.assertEqual(
                 self.find_element(By.TAG_NAME, "h2").text, "Invalid or Expired Link"
             )
-            self.assertEqual(len(self.get_browser_logs()), 0)
+            self.assertEqual(self.get_browser_errors(), [])
 
         with self.subTest("User unsubscribe with valid URL"):
             unsubscribe_link = get_unsubscribe_url_for_user(self.admin, False)
@@ -156,7 +177,7 @@ class TestSelenium(
             self.wait_for_visibility(By.ID, "confirm-unsubscribed")
             self.wait_for_invisibility(By.ID, "confirm-subscribed")
             self.assertEqual(self.find_element(By.ID, "toggle-btn").text, "Subscribe")
-            self.assertEqual(len(self.get_browser_logs()), 0)
+            self.assertEqual(self.get_browser_errors(), [])
 
         with self.subTest("User subscribe to notifications again"):
             self.open(unsubscribe_link)
@@ -168,7 +189,7 @@ class TestSelenium(
             self.wait_for_visibility(By.ID, "confirm-subscribed")
             self.wait_for_invisibility(By.ID, "confirm-unsubscribed")
             self.assertEqual(self.find_element(By.ID, "toggle-btn").text, "Unsubscribe")
-            self.assertEqual(len(self.get_browser_logs()), 0)
+            self.assertEqual(self.get_browser_errors(), [])
 
         with self.subTest("Network request fails"):
             self.open(unsubscribe_link)

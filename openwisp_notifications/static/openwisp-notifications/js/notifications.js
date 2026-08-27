@@ -442,6 +442,11 @@ function notificationHandler($, elem) {
     $(".ow-overlay-notification").removeClass("ow-hide");
 
     $(document).on("click", ".ow-message-target-redirect", function () {
+      if (new URL(targetUrl, window.location.href).href === window.location.href) {
+        $(".ow-overlay-notification").addClass("ow-hide");
+        $(".ow-message-target-redirect").addClass("ow-hide");
+        return;
+      }
       window.location = targetUrl;
     });
     // standard notification
