@@ -1,10 +1,78 @@
 Changelog
 =========
 
-Version 1.3.0 [unreleased]
+Version 1.3.0 [2026-09-03]
 --------------------------
 
-Work in progress.
+Features
+~~~~~~~~
+
+- Added `target URL suffix support
+  <https://github.com/openwisp/openwisp-notifications/issues/492>`_ to the
+  ``notify`` signal.
+
+Changes
+~~~~~~~
+
+Backward-incompatible changes
++++++++++++++++++++++++++++++
+
+- Changed `notification types to be mandatory
+  <https://github.com/openwisp/openwisp-notifications/issues/481>`_.
+  ``Notification.type`` can no longer be null and ``notify.send()`` now
+  requires the ``type`` argument.
+
+Other changes
++++++++++++++
+
+- Updated `notification preference colors
+  <https://github.com/openwisp/openwisp-notifications/issues/425>`_ to use
+  OpenWISP theme colors, improving compatibility with customized themes.
+- Updated `notification preferences to respect Django permissions
+  <https://github.com/openwisp/openwisp-notifications/issues/312>`_,
+  allowing users to modify other users' preferences only when they have
+  the required permissions.
+- Replaced the `third-party JSONField with Django's built-in JSONField
+  <https://github.com/openwisp/openwisp-notifications/issues/363>`_.
+
+Dependencies
+++++++++++++
+
+- Bumped ``openwisp-users`` from ``~=1.2.0`` to `~=1.3.0
+  <https://github.com/openwisp/openwisp-users/releases/tag/1.3.0>`_.
+- Bumped ``openwisp-utils[rest,celery,channels]`` from ``~=1.2.0`` to
+  `~=1.3.0
+  <https://github.com/openwisp/openwisp-utils/releases/tag/1.3.0>`__.
+- Bumped ``django-redis`` from ``~=6.0.0`` to `~=7.0.0
+  <https://github.com/jazzband/django-redis/releases/tag/7.0.0>`_.
+- Bumped ``markdown`` from ``~=3.9`` to `~=3.10
+  <https://github.com/Python-Markdown/markdown/releases/tag/3.10.0>`_.
+- Dropped support for Django ``4.2``.
+- Dropped support for Python ``3.9``.
+
+Bugfixes
+~~~~~~~~
+
+- Fixed `global notification setting integrity
+  <https://github.com/openwisp/openwisp-notifications/issues/503>`_ by
+  ensuring that each user can have only one global notification setting
+  and resolving existing duplicates.
+- Fixed `web notifications being received when disabled globally
+  <https://github.com/openwisp/openwisp-notifications/issues/495>`_.
+- Fixed `fragment notifications remaining open when already on their
+  target page
+  <https://github.com/openwisp/openwisp-notifications/issues/491>`_.
+- Fixed support for swappable user models by removing a hardcoded
+  dependency on ``openwisp-users``.
+- Fixed `database migration from the third-party JSONField to Django's
+  JSONField
+  <https://github.com/openwisp/openwisp-notifications/issues/467>`_ so
+  PostgreSQL columns are correctly converted from text to ``jsonb`` during
+  upgrades.
+- Fixed `handling of lazy translated notification messages
+  <https://github.com/openwisp/openwisp-notifications/issues/438>`_.
+- Fixed notification admin object ID extraction.
+- Fixed an invalid escape sequence warning in ``setup.py``.
 
 Version 1.2.3 [2026-06-04]
 --------------------------
