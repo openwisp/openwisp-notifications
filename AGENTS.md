@@ -88,6 +88,7 @@ If instructions conflict, repository config and CI workflows win first, official
 - Be careful with notification preference inheritance, global notification settings, soft-deleted `NotificationSetting` rows, and user/organization permission boundaries.
 - Be careful when changing organization membership handling, notification preference APIs, unsubscribe flows, email verification warnings, websocket updates, and cache invalidation.
 - Notification payloads can include related objects and URLs; preserve validation and permission checks when changing serializers, views, handlers, or tasks.
+- Objects belonging to a disabled organization must be readable and deletable; creation and updates must be blocked across all relevant write paths. This applies to objects with either a direct or chained/nested relationship to the organization. No other operations should be permitted, except for ordinary cleanup operations.
 
 ## Troubleshooting
 
