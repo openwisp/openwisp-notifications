@@ -223,19 +223,26 @@ class IgnoreObjectNotificationView(
 
 class UserOrgNotificationSettingView(GenericAPIView):
     """
-    Allows a user to enable or disable all their notifications for a specific organization.
+    Bulk-toggles all of a user's notification settings for one organization.
     """
 
     permission_classes = [IsAuthenticated, PreferencesPermission]
     serializer_class = NotificationSettingUpdateSerializer
 
+    def get_queryset(self):
+        return NotificationSetting.objects.filter(
+            organization_id=self.kwargs["organization_id"],
+            user_id=self.kwargs["user_id"],
+            organization__is_active=True,
+        )
+
     def post(self, request, user_id, organization_id):
+        queryset = self.get_queryset()
+        if not queryset.exists():
+            raise Http404
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
-            validated_data = serializer.validated_data
-            NotificationSetting.objects.filter(
-                organization_id=organization_id, user_id=user_id
-            ).update(**validated_data)
+            queryset.update(**serializer.validated_data)
             return Response(status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 

@@ -1476,11 +1476,14 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
             is_valid = email_token_generator.check_token(self.admin, token)
             self.assertFalse(is_valid)
 
+    def _get_unsubscribe_url(self, user):
+        full_url = get_unsubscribe_url_for_user(user, False)
+        token = full_url.split("?token=")[1]
+        return f'{reverse("notifications:unsubscribe")}?token={token}'
+
     def test_email_unsubscribe_view(self):
-        unsubscribe_link_generated = get_unsubscribe_url_for_user(self.admin, False)
-        token = unsubscribe_link_generated.split("?token=")[1]
         local_unsubscribe_url = reverse("notifications:unsubscribe")
-        unsubscribe_url = f"{local_unsubscribe_url}?token={token}"
+        unsubscribe_url = self._get_unsubscribe_url(self.admin)
 
         with self.subTest("Test GET request with valid token"):
             response = self.client.get(unsubscribe_url)
@@ -1564,6 +1567,34 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
             )
             self.assertEqual(response.status_code, 400)
             self.assertEqual(response.json()["message"], "Invalid JSON data")
+
+    def test_unsubscribe_and_resubscribe_apply_to_disabled_organizations(self):
+        org = self._create_org(name="unsub-org")
+        org_settings_queryset = NotificationSetting.objects.filter(
+            user=self.admin, organization=org
+        )
+        org_settings_queryset.update(email=True)
+        org.is_active = False
+        org.save(update_fields=["is_active"])
+        unsubscribe_url = self._get_unsubscribe_url(self.admin)
+
+        with self.subTest("Unsubscribing also disables disabled-org settings"):
+            response = self.client.post(unsubscribe_url)
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(
+                set(org_settings_queryset.values_list("email", flat=True)), {False}
+            )
+
+        with self.subTest("Re-subscribing also re-enables disabled-org settings"):
+            response = self.client.post(
+                unsubscribe_url,
+                data=json.dumps({"subscribe": True}),
+                content_type="application/json",
+            )
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(
+                set(org_settings_queryset.values_list("email", flat=True)), {True}
+            )
 
     def test_notification_preference_page(self):
         preference_page = "notifications:user_notification_preference"
@@ -2074,6 +2105,34 @@ class TestNotificationSending(TestOrganizationMixin, TransactionTestCase):
             self._send_notification("default")
             self._assert_notification_created(False)
             self._assert_email_sent(False)
+
+    def test_notification_not_created_for_disabled_organization(self):
+        with self.subTest("Target organization disabled"):
+            self.org.is_active = False
+            self.org.save(update_fields=["is_active"])
+            with patch(
+                "openwisp_notifications.handlers.ws_handlers"
+                ".notification_update_handler"
+            ) as mocked_handler:
+                self._send_notification("default")
+            self._assert_notification_created(False)
+            self._assert_email_sent(False)
+            mocked_handler.assert_not_called()
+
+        with self.subTest("No target, organization disabled"):
+            self._send_notification("default", target=None)
+            count = Notification.objects.filter(recipient=self.admin).count()
+            self.assertEqual(count, 1)
+
+        Notification.objects.all().delete()
+        mail.outbox.clear()
+
+        with self.subTest("Target organization re-enabled"):
+            self.org.is_active = True
+            self.org.save(update_fields=["is_active"])
+            self._send_notification("default")
+            self._assert_notification_created(True)
+            self._assert_email_sent(True)
 
 
 class TestTransactionNotifications(TestOrganizationMixin, TransactionTestCase):
