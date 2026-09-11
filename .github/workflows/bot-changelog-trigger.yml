@@ -9,6 +9,7 @@ permissions: {}
 jobs:
   check:
     if: |
+      github.repository == 'openwisp/openwisp-notifications' &&
       github.event.review.state == 'approved' &&
       (github.event.review.author_association == 'OWNER' ||
         github.event.review.author_association == 'MEMBER' ||

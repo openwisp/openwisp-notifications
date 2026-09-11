@@ -1,7 +1,6 @@
 import logging
 from contextlib import contextmanager
 
-import django
 import swapper
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -25,7 +24,6 @@ from swapper import get_model_name
 from openwisp_notifications import settings as app_settings
 from openwisp_notifications.exceptions import NotificationRenderException
 from openwisp_notifications.types import (
-    NOTIFICATION_CHOICES,
     get_notification_choices,
     get_notification_configuration,
 )
@@ -84,16 +82,7 @@ class AbstractNotification(UUIDModel, BaseNotification):
     CACHE_KEY_PREFIX = "ow-notifications-"
     type = models.CharField(
         max_length=30,
-        # TODO: Remove when dropping support for Django 4.2
-        choices=(
-            NOTIFICATION_CHOICES
-            if django.VERSION < (5, 0)
-            # In Django 5.0+, choices are normalized at model definition,
-            # creating a static list of tuples that doesn't update when notification
-            # types are dynamically registered or unregistered. Using a callable
-            # ensures we always get the current choices from the registry.
-            else get_notification_choices
-        ),
+        choices=get_notification_choices,
         verbose_name=_("Notification Type"),
     )
     _actor = BaseNotification.actor
@@ -373,16 +362,7 @@ class AbstractNotificationSetting(UUIDModel):
         max_length=30,
         null=True,
         blank=True,
-        # TODO: Remove when dropping support for Django 4.2
-        choices=(
-            NOTIFICATION_CHOICES
-            if django.VERSION < (5, 0)
-            # In Django 5.0+, choices are normalized at model definition,
-            # creating a static list of tuples that doesn't update when notification
-            # types are dynamically registered or unregistered. Using a callable
-            # ensures we always get the current choices from the registry.
-            else get_notification_choices
-        ),
+        choices=get_notification_choices,
         verbose_name=_("Notification Type"),
     )
     organization = models.ForeignKey(

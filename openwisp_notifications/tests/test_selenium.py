@@ -3,7 +3,7 @@ from django.test import tag
 from django.urls import reverse
 from selenium.common.exceptions import StaleElementReferenceException, TimeoutException
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import Select, WebDriverWait
+from selenium.webdriver.support.ui import Select
 
 from openwisp_notifications.signals import notify
 from openwisp_notifications.swapper import load_model, swapper_load_model
@@ -164,7 +164,7 @@ class TestSelenium(
             self.assertEqual(
                 self.find_element(By.TAG_NAME, "h2").text, "Invalid or Expired Link"
             )
-            self.assertEqual(self.get_browser_errors(), [])
+            self.assert_no_browser_errors()
 
         with self.subTest("User unsubscribe with valid URL"):
             unsubscribe_link = get_unsubscribe_url_for_user(self.admin, False)
@@ -177,7 +177,7 @@ class TestSelenium(
             self.wait_for_visibility(By.ID, "confirm-unsubscribed")
             self.wait_for_invisibility(By.ID, "confirm-subscribed")
             self.assertEqual(self.find_element(By.ID, "toggle-btn").text, "Subscribe")
-            self.assertEqual(self.get_browser_errors(), [])
+            self.assert_no_browser_errors()
 
         with self.subTest("User subscribe to notifications again"):
             self.open(unsubscribe_link)
@@ -189,7 +189,7 @@ class TestSelenium(
             self.wait_for_visibility(By.ID, "confirm-subscribed")
             self.wait_for_invisibility(By.ID, "confirm-unsubscribed")
             self.assertEqual(self.find_element(By.ID, "toggle-btn").text, "Unsubscribe")
-            self.assertEqual(self.get_browser_errors(), [])
+            self.assert_no_browser_errors()
 
         with self.subTest("Network request fails"):
             self.open(unsubscribe_link)
@@ -330,8 +330,8 @@ class TestSelenium(
 
         def _dismiss_toast_if_present():
             try:
-                toast = WebDriverWait(self.web_driver, 1).until(
-                    lambda d: d.find_element(By.CLASS_NAME, "toast")
+                toast = self.wait_until(
+                    lambda d: d.find_element(By.CLASS_NAME, "toast"), timeout=1
                 )
                 toast.click()
             except (TimeoutException, StaleElementReferenceException):
