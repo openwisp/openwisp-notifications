@@ -46,7 +46,7 @@ from openwisp_notifications.types import (
 )
 from openwisp_notifications.utils import _get_absolute_url, get_unsubscribe_url_for_user
 from openwisp_users.tests.utils import TestOrganizationMixin
-from openwisp_utils.tests import capture_any_output
+from openwisp_utils.tests import AssertNumQueriesSubTestMixin, capture_any_output
 
 from . import (
     _test_batch_email_notification_email_body,
@@ -66,7 +66,9 @@ ten_minutes_ago = start_time - timedelta(minutes=10)
 notification_queryset = Notification.objects.order_by("-timestamp")
 
 
-class TestNotifications(TestOrganizationMixin, TransactionTestCase):
+class TestNotifications(
+    AssertNumQueriesSubTestMixin, TestOrganizationMixin, TransactionTestCase
+):
     app_label = "openwisp_notifications"
     users_app_label = "openwisp_users"
 
