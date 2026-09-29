@@ -3,6 +3,7 @@ from unittest.mock import patch
 from django.apps.registry import apps
 from django.contrib.contenttypes.models import ContentType
 from django.core.cache import cache
+from django.urls import reverse
 
 from openwisp_notifications.swapper import load_model, swapper_load_model
 from openwisp_notifications.tests.test_admin import TestAdmin as BaseTestAdmin
@@ -44,6 +45,18 @@ NotificationAppConfig = apps.get_app_config(Notification._meta.app_label)
 
 class TestAdmin(BaseTestAdmin):
     app_label = "sample_notifications"
+
+    def test_base_site_template(self):
+        response = self.client.get(self._url)
+        self.assertContains(response, 'id="sample-notifications-base-site"')
+
+    def test_change_form_template(self):
+        org = self._get_org()
+        url = reverse(
+            f"admin:{self.users_app_label}_organization_change", args=(org.pk,)
+        )
+        response = self.client.get(url)
+        self.assertContains(response, 'id="sample-notifications-change-form"')
 
 
 class TestAdminMedia(BaseTestAdminMedia):
