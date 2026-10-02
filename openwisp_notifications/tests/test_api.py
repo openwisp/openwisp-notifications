@@ -1,6 +1,7 @@
 import uuid
 from datetime import datetime
-from unittest.mock import patch
+from types import SimpleNamespace
+from unittest.mock import Mock, patch
 
 from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
@@ -11,6 +12,8 @@ from django.utils import timezone
 from rest_framework.exceptions import ErrorDetail
 
 from openwisp_notifications import settings as app_settings
+from openwisp_notifications.api import views as default_api_views
+from openwisp_notifications.api.urls import get_api_urls
 from openwisp_notifications.signals import notify
 from openwisp_notifications.swapper import load_model, swapper_load_model
 from openwisp_notifications.tests.test_helpers import (
@@ -1595,3 +1598,58 @@ class TestMultitenancyApi(
             path = self._get_path("org_notification_setting", org2.pk)
             response = self.client.get(path)
             self.assertEqual(response.status_code, 404)
+
+
+class TestApiUrls(TransactionTestCase):
+
+    def test_custom_api_views_override_default_views(self):
+        custom_notifications_list = Mock()
+
+        custom_api_views = SimpleNamespace(
+            notifications_list=custom_notifications_list,
+        )
+
+        urlpatterns = get_api_urls(custom_api_views)
+
+        self.assertIs(
+            urlpatterns[0].callback,
+            custom_notifications_list,
+        )
+
+    def test_missing_custom_api_views_fallback_to_default_views(self):
+        custom_notifications_list = Mock()
+
+        custom_api_views = SimpleNamespace(
+            notifications_list=custom_notifications_list,
+        )
+
+        urlpatterns = get_api_urls(custom_api_views)
+
+        self.assertIs(
+            urlpatterns[0].callback,
+            custom_notifications_list,
+        )
+        self.assertIs(
+            urlpatterns[1].callback,
+            default_api_views.notifications_read_all,
+        )
+
+    def test_deprecated_notification_setting_urls(self):
+        custom_notification_setting_list = Mock()
+        custom_notification_setting = Mock()
+
+        custom_api_views = SimpleNamespace(
+            notification_setting_list=custom_notification_setting_list,
+            notification_setting=custom_notification_setting,
+        )
+
+        urlpatterns = get_api_urls(custom_api_views)
+
+        self.assertIs(
+            urlpatterns[-2].callback,
+            custom_notification_setting_list,
+        )
+        self.assertIs(
+            urlpatterns[-1].callback,
+            custom_notification_setting,
+        )
