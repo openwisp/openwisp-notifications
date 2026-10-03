@@ -249,6 +249,59 @@ class TestNotificationApi(
             self.assertIsNone(response.data)
             self.assertFalse(Notification.objects.all())
 
+    def test_notification_of_disabled_organization_remains_usable(self):
+        org_user = self._get_org_user()
+        org = org_user.organization
+        notify.send(sender=self.admin, type="default", target=org_user)
+        n = Notification.objects.first()
+        org.is_active = False
+        org.save(update_fields=["is_active"])
+
+        with self.subTest("Retrieving a disabled-org notification still works"):
+            url = self._get_path("notification_detail", n.pk)
+            response = self.client.get(url)
+            self.assertEqual(response.status_code, 200)
+
+        with self.subTest("Listing still includes disabled-org notifications"):
+            url = self._get_path("notifications_list")
+            response = self.client.get(url)
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.data["count"], 1)
+
+        with self.subTest("Marking a disabled-org notification as read still works"):
+            url = self._get_path("notification_detail", n.pk)
+            response = self.client.patch(url)
+            self.assertEqual(response.status_code, 200)
+            n.refresh_from_db()
+            self.assertEqual(n.unread, False)
+
+        with self.subTest("Redirecting from a disabled-org notification still works"):
+            n.unread = True
+            n.save(update_fields=["unread"])
+            url = self._get_path("notification_read_redirect", n.pk)
+            response = self.client.get(url)
+            self.assertEqual(response.status_code, 302)
+            self.assertEqual(response.url, n.target_url)
+            n.refresh_from_db()
+            self.assertEqual(n.unread, False)
+
+        with self.subTest(
+            "Marking all as read still covers disabled-org notifications"
+        ):
+            n.unread = True
+            n.save(update_fields=["unread"])
+            url = self._get_path("notifications_read_all")
+            response = self.client.post(url)
+            self.assertEqual(response.status_code, 200)
+            n.refresh_from_db()
+            self.assertEqual(n.unread, False)
+
+        with self.subTest("Deleting a disabled-org notification still works"):
+            url = self._get_path("notification_detail", n.pk)
+            response = self.client.delete(url)
+            self.assertEqual(response.status_code, 204)
+            self.assertEqual(Notification.objects.filter(pk=n.pk).exists(), False)
+
     def test_anonymous_user(self):
         response_data = {
             "detail": ErrorDetail(
@@ -1172,6 +1225,19 @@ class TestNotificationApi(
                 NotificationSetting.objects.filter(
                     user=self.admin, organization_id=org.pk, email=True
                 ).exists()
+            )
+
+        with self.subTest("Test disabled organization"):
+            org.is_active = False
+            org.save(update_fields=["is_active"])
+            url = self._get_path("user_org_notification_setting", self.admin.pk, org.pk)
+            response = self.client.post(url, data={"web": True, "email": True})
+            self.assertEqual(response.status_code, 404)
+            self.assertEqual(
+                NotificationSetting.objects.filter(
+                    user=self.admin, organization_id=org.pk, email=True
+                ).exists(),
+                False,
             )
 
     @patch("openwisp_notifications.tasks.delete_ignore_object_notification.apply_async")
