@@ -24,10 +24,11 @@ Example usage:
 ``create_notification``
 -----------------------
 
-This command will create a dummy notification with ``default``
+This command will create a dummy notification with ``generic_message``
 notification type for the members of ``default`` organization. This
 command is primarily provided for the sole purpose of testing notification
-in development only.
+in development only. The notification is web-only, because
+``generic_message`` does not send emails by default.
 
 Example usage:
 

@@ -36,6 +36,7 @@ INSTALLED_APPS = [
     "openwisp_users",
     # notifications module
     "openwisp_notifications",
+    "openwisp2.default_type",
     # add openwisp theme
     # (must be loaded here)
     "openwisp_utils.admin_theme",
