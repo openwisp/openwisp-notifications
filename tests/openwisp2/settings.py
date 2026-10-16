@@ -138,7 +138,15 @@ else:
         "default": {
             "BACKEND": "channels_redis.core.RedisChannelLayer",
             "CONFIG": {
-                "hosts": ["redis://localhost/3"],
+                "hosts": [
+                    {
+                        "address": "redis://localhost/3",
+                        # redis-py 8.0.0 changed the default timeout of socket
+                        # operations to 5 seconds, which breaks django-channels,
+                        # hence we need to explicitly remove the timeout.
+                        "socket_timeout": None,
+                    }
+                ],
                 "group_expiry": 3600,
                 "capacity": 1000,
                 "expiry": 30,
