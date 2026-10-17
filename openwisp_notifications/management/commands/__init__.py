@@ -18,7 +18,11 @@ class BaseCreateNotificationCommand(BaseCommand):
         )
         for _, notifications in results:
             for notification in notifications:
-                notification.send_email()
+                recipient = notification.recipient
+                if recipient.emailaddress_set.filter(
+                    verified=True, email=recipient.email
+                ).exists():
+                    notification.send_email()
 
 
 class BasePopulateNotificationPreferencesCommand(BaseCommand):
