@@ -43,6 +43,21 @@ class TestManagementCommands(TestCase, TestOrganizationMixin):
         self.assertEqual(Notification.objects.count(), 1)
         self.assertEqual(len(mail.outbox), 0)
 
+    def test_create_notification_command_verified_secondary_email(self):
+        admin = self._get_admin()
+        default_org = Organization.objects.first()
+        admin.emailaddress_set.update(verified=False)
+        admin.emailaddress_set.create(
+            email="secondary@example.com", verified=True, primary=False
+        )
+        ns = NotificationSetting(
+            user=admin, organization=default_org, type="generic_message"
+        )
+        ns.save()
+        management.call_command("create_notification")
+        self.assertEqual(Notification.objects.count(), 1)
+        self.assertEqual(len(mail.outbox), 0)
+
     def test_create_notification_command_when_notificationsetting_disable(self):
         admin = self._get_admin()
         default_org = Organization.objects.first()
