@@ -27,8 +27,8 @@ Example usage:
 This command will create a dummy notification with ``generic_message``
 notification type for the members of ``default`` organization. This
 command is primarily provided for the sole purpose of testing notification
-in development only. The notification is web-only, because
-``generic_message`` does not send emails by default.
+in development only. The command also sends the notification by email to
+recipients who have a verified email address.
 
 Example usage:
 

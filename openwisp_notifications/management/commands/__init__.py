@@ -13,7 +13,12 @@ class BaseCreateNotificationCommand(BaseCommand):
     def handle(self, *args, **kwargs):
         default_org = Organization.objects.first()
         default_org.organization_id = default_org.id
-        notify.send(sender=default_org, type="generic_message", target=default_org)
+        results = notify.send(
+            sender=default_org, type="generic_message", target=default_org
+        )
+        for _, notifications in results:
+            for notification in notifications:
+                notification.send_email()
 
 
 class BasePopulateNotificationPreferencesCommand(BaseCommand):

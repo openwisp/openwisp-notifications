@@ -29,7 +29,7 @@ class TestManagementCommands(TestCase, TestOrganizationMixin):
         self.assertEqual(n.type, "generic_message")
         self.assertEqual(n.actor, default_org)
         self.assertEqual(n.recipient, admin)
-        self.assertEqual(len(mail.outbox), 0)
+        self.assertEqual(len(mail.outbox), 1)
 
     def test_create_notification_command_when_notificationsetting_disable(self):
         admin = self._get_admin()
