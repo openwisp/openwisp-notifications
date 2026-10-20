@@ -8,6 +8,22 @@ Notification Types
 OpenWISP Notifications allows defining notification types for recurring
 events. Think of a notification type as a template for notifications.
 
+Upgrading from versions that include the ``default`` type
+---------------------------------------------------------
+
+The ``default`` notification type is no longer shipped with the package.
+
+On upgrade, ``migrate`` deletes existing ``default`` notifications, and
+``notify.send(type="default")`` silently does nothing. Replace any use of
+``default`` with ``generic_message`` or with a notification type
+registered by your own application.
+
+Leftover ``default`` notification settings are removed by a cleanup task
+which runs after ``migrate``. Until it has run, the notification settings
+REST API endpoints may return an error. The task is skipped if the broker
+is unreachable during ``migrate`` or if
+``OPENWISP_NOTIFICATIONS_POPULATE_PREFERENCES_ON_MIGRATE`` is disabled.
+
 .. _notifications_generic_message_type:
 
 ``generic_message``
