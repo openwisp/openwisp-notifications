@@ -12,17 +12,7 @@ Organization = swapper_load_model("openwisp_users", "Organization")
 class BaseCreateNotificationCommand(BaseCommand):
     def handle(self, *args, **kwargs):
         default_org = Organization.objects.first()
-        default_org.organization_id = default_org.id
-        results = notify.send(
-            sender=default_org, type="generic_message", target=default_org
-        )
-        for _, notifications in results:
-            for notification in notifications:
-                recipient = notification.recipient
-                if recipient.emailaddress_set.filter(
-                    verified=True, email=recipient.email
-                ).exists():
-                    notification.send_email()
+        notify.send(sender=default_org, type="generic_message", target=default_org)
 
 
 class BasePopulateNotificationPreferencesCommand(BaseCommand):
