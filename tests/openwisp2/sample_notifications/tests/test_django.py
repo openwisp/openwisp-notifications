@@ -47,10 +47,12 @@ class TestAdmin(BaseTestAdmin):
     app_label = "sample_notifications"
 
     def test_base_site_template(self):
+        super().test_base_site_template()
         response = self.client.get(self._url)
         self.assertContains(response, 'id="sample-notifications-base-site"')
 
     def test_change_form_template(self):
+        super().test_change_form_template()
         org = self._get_org()
         url = reverse(
             f"admin:{self.users_app_label}_organization_change", args=(org.pk,)
