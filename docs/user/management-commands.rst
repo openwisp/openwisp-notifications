@@ -24,12 +24,16 @@ Example usage:
 ``create_notification``
 -----------------------
 
-This command will create a dummy notification with ``generic_message``
-notification type for the members of ``default`` organization. This
-command is primarily provided for the sole purpose of testing notification
-in development only. Emails follow the notification preferences of each
-user: since ``generic_message`` does not send emails by default, an email
-is sent only to users who enabled email notifications for it.
+.. warning::
+
+    This command is for development and testing only. Do not run it in
+    production.
+
+This command creates a ``generic_message`` notification for superusers and
+administrators of the first organization in the database. It respects
+their web notification preferences. An email is sent only when the
+recipient has enabled email notifications for this type and has a verified
+email address.
 
 Example usage:
 
