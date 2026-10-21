@@ -13,6 +13,7 @@ from openwisp_utils.tests import SeleniumTestMixin
 
 from .test_helpers import mock_notification_types, register_notification_type
 
+IgnoreObjectNotification = load_model("IgnoreObjectNotification")
 Notification = load_model("Notification")
 NotificationSetting = load_model("NotificationSetting")
 Organization = swapper_load_model("openwisp_users", "Organization")
@@ -471,3 +472,44 @@ class TestSelenium(
             org_settings = org.notification_settings
             self.assertEqual(org_settings.web, True)
             self.assertEqual(org_settings.email, False)
+
+    def test_object_notification_widget(self):
+        # The widget script is loaded through the ModelAdmin Media of every
+        # admin in OPENWISP_NOTIFICATIONS_IGNORE_ENABLED_ADMIN (the
+        # OrganizationAdmin in the test project), so it runs on the add,
+        # change and changelist views alike: it must act on the change view
+        # only, and address the API with the label, model
+        # name and primary key of the object being changed.
+        org = self._create_org(name="Silenced Organization")
+        self.login()
+
+        with self.subTest("Change view adds the widget and silences the object"):
+            self.open(
+                reverse(
+                    f"admin:{self.users_app_label}_organization_change",
+                    args=(org.pk,),
+                )
+            )
+            self.find_element(By.ID, "ow-object-notify").click()
+            self.find_element(By.CSS_SELECTOR, 'button[data-days="-1"]').click()
+            self.wait_until(
+                lambda driver: driver.find_element(
+                    By.ID, "ow-notification-help-text"
+                ).text
+                == "Disabled permanently"
+            )
+            ignore = IgnoreObjectNotification.objects.get(object_id=str(org.pk))
+            self.assertEqual(ignore.object_content_type.app_label, self.users_app_label)
+            self.assertEqual(ignore.object_content_type.model, "organization")
+
+        # The add view has no ".object-tools" to attach the widget to, so this
+        # check cannot tell whether the script wrongly acted on it.
+        with self.subTest("Add view has no widget"):
+            self.open(reverse(f"admin:{self.users_app_label}_organization_add"))
+            self.wait_for_invisibility(By.ID, "ow-object-notify")
+
+        # The changelist renders ".object-tools" (the add button), so a script
+        # acting outside the change view shows the widget there.
+        with self.subTest("Changelist view has no widget"):
+            self.open(reverse(f"admin:{self.users_app_label}_organization_changelist"))
+            self.wait_for_invisibility(By.ID, "ow-object-notify")
