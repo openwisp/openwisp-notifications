@@ -1,7 +1,9 @@
 import copy
+import os
 import uuid
 from unittest.mock import patch
 
+from django.apps import apps
 from django.contrib.admin.sites import AdminSite
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
@@ -10,6 +12,7 @@ from django.templatetags.static import static
 from django.test import TestCase, override_settings, tag
 from django.urls import reverse
 
+import openwisp_notifications
 from openwisp_notifications import settings as app_settings
 from openwisp_notifications.signals import notify
 from openwisp_notifications.swapper import load_model, swapper_load_model
@@ -19,6 +22,7 @@ from openwisp_notifications.templatetags.notification_tags import (
 from openwisp_notifications.widgets import _add_object_notification_widget
 from openwisp_users.admin import UserAdmin
 from openwisp_users.tests.utils import TestMultitenantAdminMixin
+from openwisp_utils import admin_theme
 
 from .test_helpers import MessagingRequest, get_notification_setting_permission
 
@@ -194,8 +198,30 @@ class TestAdmin(BaseTestAdmin):
             response = self.client.get(user_admin_page)
             self.assertNotContains(response, expected_html, html=True)
 
+    def _assert_template_chain(self, response, name):
+        """Asserts ``admin/<name>`` resolves from ``app_label`` through
+        the namespaced notifications template to the admin theme."""
+        notifications_dir = os.path.dirname(openwisp_notifications.__file__)
+        theme_dir = os.path.dirname(admin_theme.__file__)
+        app_dir = apps.get_app_config(self.app_label).path
+        namespaced = f"admin/openwisp_notifications/{name}"
+        chain = [
+            (t.name, t.origin.name)
+            for t in response.templates
+            if t.name in (f"admin/{name}", namespaced)
+        ]
+        self.assertEqual(
+            chain[:3],
+            [
+                (f"admin/{name}", os.path.join(app_dir, "templates", "admin", name)),
+                (namespaced, os.path.join(notifications_dir, "templates", namespaced)),
+                (f"admin/{name}", os.path.join(theme_dir, "templates", "admin", name)),
+            ],
+        )
+
     def test_base_site_template(self):
         response = self.client.get(self._url)
+        self._assert_template_chain(response, "base_site.html")
         self.assertContains(response, static("openwisp-notifications/css/loader.css"))
         self.assertContains(
             response, static("openwisp-notifications/css/notifications.css")
@@ -215,6 +241,7 @@ class TestAdmin(BaseTestAdmin):
             f"admin:{self.users_app_label}_organization_change", args=(org.pk,)
         )
         response = self.client.get(url)
+        self._assert_template_chain(response, "change_form.html")
         self.assertContains(response, "owIsChangeForm = true")
         self.assertContains(
             response, f"const owNotifyAppLabel = '{self.users_app_label}'"
