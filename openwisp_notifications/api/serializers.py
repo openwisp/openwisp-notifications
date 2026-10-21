@@ -82,7 +82,7 @@ class NotificationSettingSerializer(ValidatedModelSerializer):
 
     class Meta:
         model = NotificationSetting
-        exclude = ["user"]
+        exclude = ["user", "_global"]
         read_only_fields = ["organization", "type"]
 
     def to_representation(self, instance):

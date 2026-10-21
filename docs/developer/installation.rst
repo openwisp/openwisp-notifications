@@ -3,6 +3,23 @@ Developer Installation Instructions
 
 .. include:: ../partials/developer-docs.rst
 
+The following diagram illustrates the role of the Notifications module
+within the OpenWISP architecture.
+
+.. figure:: ../images/architecture-v2-openwisp-notifications.png
+    :target: ../../_images/architecture-v2-openwisp-notifications.png
+    :align: center
+    :alt: OpenWISP Architecture: Notifications module
+
+    **OpenWISP Architecture: highlighted notifications module**
+
+.. important::
+
+    For an enhanced viewing experience, open the image above in a new
+    browser tab.
+
+    Refer to :doc:`/general/architecture` for more information.
+
 .. contents:: **Table of Contents**:
     :depth: 2
     :local:
@@ -16,11 +33,14 @@ Install the system dependencies:
 
     sudo apt install sqlite3 libsqlite3-dev openssl libssl-dev
 
-Fork and clone the forked repository:
+Fork the `openwisp-notifications repository
+<https://github.com/openwisp/openwisp-notifications>`_ on GitHub, then
+clone your fork. Replace ``YOUR_GITHUB_USERNAME`` with your GitHub
+username:
 
 .. code-block:: shell
 
-    git clone git://github.com/<your_fork>/openwisp-notifications
+    git clone git@github.com:YOUR_GITHUB_USERNAME/openwisp-notifications.git
 
 Navigate into the cloned repository:
 
@@ -125,8 +145,8 @@ To install the latest development version tarball via HTTPs:
 
     pip install https://github.com/openwisp/openwisp-notifications/tarball/master
 
-Alternatively you can use the git protocol:
+Alternatively you can install the latest development version from Git:
 
 .. code-block:: shell
 
-    pip install -e git+git://github.com/openwisp/openwisp-notifications#egg=openwisp_notifications
+    pip install -e git+https://github.com/openwisp/openwisp-notifications#egg=openwisp_notifications

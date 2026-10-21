@@ -43,6 +43,10 @@ when many notifications arrive in a short time. Refer to
 :ref:`openwisp_notifications_notification_storm_prevention` for more
 information.
 
+Real-time notification delivery uses the :doc:`WebSocket API
+<websocket-api>`, which also handles storm backoff and widget reload
+signaling.
+
 .. _notifications_email_notifications:
 
 Email Notifications

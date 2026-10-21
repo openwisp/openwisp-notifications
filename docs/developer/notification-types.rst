@@ -57,6 +57,24 @@ type:
     software like Aldus PageMaker including versions of *Lorem Ipsum*.""",
     )
 
+The URL of a ``generic_message`` notification points to the target object
+by default. To append a querystring or fragment to this URL, pass
+``target_url_suffix`` to ``notify.send``:
+
+.. code-block:: python
+
+    notify.send(
+        type="generic_message",
+        level="error",
+        message="An unexpected error happened!",
+        sender=User.objects.first(),
+        target=User.objects.last(),
+        target_url_suffix="?status=pending",
+    )
+
+The value of ``target_url_suffix`` must be a string starting with ``?``,
+``&`` or ``#``.
+
 Properties of Notification Types
 --------------------------------
 

@@ -94,7 +94,7 @@ Configure Django's settings as follows:
     CSRF_COOKIE_DOMAIN = "example.com"
 
 Please refer to `Django's settings documentation
-<https://docs.djangoproject.com/en/4.2/ref/settings/>`_ for more
+<https://docs.djangoproject.com/en/5.2/ref/settings/>`_ for more
 information on ``SESSION_COOKIE_DOMAIN`` and ``CSRF_COOKIE_DOMAIN``
 settings.
 
@@ -180,6 +180,9 @@ sound or create any other visual element until the notification storm is
 over.
 
 This setting allows tweaking how this mechanism works.
+
+For details on how the storm prevention affects real-time WebSocket
+delivery, refer to the :doc:`WebSocket API reference <websocket-api>`.
 
 The default configuration is as follows:
 
