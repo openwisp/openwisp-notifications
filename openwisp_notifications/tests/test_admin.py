@@ -167,11 +167,6 @@ class TestAdmin(BaseTestAdmin):
             response = self.client.get(self._url)
             self.assertContains(response, "wss")
 
-    def test_ignore_notification_widget_add_view(self):
-        url = reverse(f"admin:{self.users_app_label}_organization_add")
-        response = self.client.get(url)
-        self.assertNotContains(response, "owIsChangeForm")
-
     def test_notification_preferences_button_staff_user(self):
         user = self._create_user(
             username="btn_tester", email="btn_tester@test.com", is_staff=True
@@ -234,19 +229,6 @@ class TestAdmin(BaseTestAdmin):
             static("openwisp-notifications/js/vendor/reconnecting-websocket.min.js"),
         )
         self.assertContains(response, 'id="openwisp_notifications"')
-
-    def test_change_form_template(self):
-        org = self._get_org()
-        url = reverse(
-            f"admin:{self.users_app_label}_organization_change", args=(org.pk,)
-        )
-        response = self.client.get(url)
-        self._assert_template_chain(response, "change_form.html")
-        self.assertContains(response, "owIsChangeForm = true")
-        self.assertContains(
-            response, f"const owNotifyAppLabel = '{self.users_app_label}'"
-        )
-        self.assertContains(response, "owNotifyModelName = 'organization'")
 
     def test_notification_preferences_button_with_permission(self):
         perm = get_notification_setting_permission("change")

@@ -1,17 +1,53 @@
 "use strict";
 (function ($) {
   $(document).ready(function () {
-    if (typeof owIsChangeForm === "undefined") {
-      // Don't add object notification widget if
-      // it is not a change form.
+    const object = getChangedObject();
+    if (object === null) {
       return;
     }
     $(".object-tools").prepend(getObjectNotificationComponent());
     initObjectNotificationDropdown($);
-    addObjectNotificationHandlers($);
-    addObjectNotificationWSHandlers($);
+    addObjectNotificationHandlers($, object);
+    addObjectNotificationWSHandlers($, object);
   });
 })(django.jQuery);
+
+// Returns the app label, model name and primary key of the object shown by
+// an admin change view, or null on any other view.
+//
+// This script is added to the Media of every ModelAdmin listed in
+// OPENWISP_NOTIFICATIONS_IGNORE_ENABLED_ADMIN, so it also runs on their add
+// and changelist views, where it must do nothing. Those admins can belong to
+// any app and may set their own change form template, hence the values are
+// read from what Django's admin renders on every change view rather than
+// from a template override:
+// - the URL path ends with "/<pk>/change/", which no add or changelist URL
+//   does (the query string is ignored, so popups match as well);
+// - "admin/change_form.html" sets the "app-<app_label>" and
+//   "model-<model_name>" classes on the body. They cannot tell the add view
+//   from the change view, hence the URL check above. A change view whose
+//   template does not extend it lacks them and gets no widget, as with the
+//   former template override.
+// Primary keys are used as they appear in the URL: keys the admin quotes
+// (characters such as "/" or "_") are not supported.
+function getChangedObject() {
+  const match = /\/([^/]+)\/change\/?$/.exec(window.location.pathname);
+  if (match === null) {
+    return null;
+  }
+  const object = { id: match[1] };
+  document.body.classList.forEach(function (name) {
+    if (name.startsWith("app-")) {
+      object.appLabel = name.slice("app-".length);
+    } else if (name.startsWith("model-")) {
+      object.modelName = name.slice("model-".length);
+    }
+  });
+  if (!object.appLabel || !object.modelName) {
+    return null;
+  }
+  return object;
+}
 
 function getObjectNotificationComponent() {
   return `
@@ -65,7 +101,7 @@ function initObjectNotificationDropdown($) {
   });
 }
 
-function addObjectNotificationHandlers($) {
+function addObjectNotificationHandlers($, object) {
   // Click handler for disabling notifications
   $(document).on(
     "click",
@@ -85,7 +121,7 @@ function addObjectNotificationHandlers($) {
       $.ajax({
         type: "PUT",
         url: getAbsoluteUrl(
-          `/api/v1/notifications/notification/ignore/${owNotifyAppLabel}/${owNotifyModelName}/${owNotifyObjectId}/`,
+          `/api/v1/notifications/notification/ignore/${object.appLabel}/${object.modelName}/${object.id}/`,
         ),
         headers: {
           "X-CSRFToken": $('input[name="csrfmiddlewaretoken"]').val(),
@@ -118,7 +154,7 @@ function addObjectNotificationHandlers($) {
     $.ajax({
       type: "DELETE",
       url: getAbsoluteUrl(
-        `/api/v1/notifications/notification/ignore/${owNotifyAppLabel}/${owNotifyModelName}/${owNotifyObjectId}/`,
+        `/api/v1/notifications/notification/ignore/${object.appLabel}/${object.modelName}/${object.id}/`,
       ),
       headers: {
         "X-CSRFToken": $('input[name="csrfmiddlewaretoken"]').val(),
@@ -154,7 +190,7 @@ function addObjectNotificationHandlers($) {
   });
 }
 
-function addObjectNotificationWSHandlers($) {
+function addObjectNotificationWSHandlers($, object) {
   if (notificationSocket.readyState === 1) {
     openHandler();
   }
@@ -173,9 +209,9 @@ function addObjectNotificationWSHandlers($) {
   function openHandler() {
     let data = {
       type: "object_notification",
-      object_id: owNotifyObjectId,
-      app_label: owNotifyAppLabel,
-      model_name: owNotifyModelName,
+      object_id: object.id,
+      app_label: object.appLabel,
+      model_name: object.modelName,
     };
     notificationSocket.send(JSON.stringify(data));
   }
