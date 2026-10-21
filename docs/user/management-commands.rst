@@ -31,9 +31,9 @@ Example usage:
 
 This command creates a ``generic_message`` notification for superusers and
 administrators of the first organization in the database. It respects
-their web notification preferences. An email is sent only when the
-recipient has enabled email notifications for this type and has a verified
-email address.
+their web notification preferences. An email is sent only if the recipient
+has enabled email notifications for this type and their account email is
+verified.
 
 Example usage:
 
