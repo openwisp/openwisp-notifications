@@ -7,6 +7,7 @@ from selenium.webdriver.support.ui import Select
 
 from openwisp_notifications.signals import notify
 from openwisp_notifications.swapper import load_model, swapper_load_model
+from openwisp_notifications.tests.test_helpers import DefaultNotificationTypeMixin
 from openwisp_notifications.utils import _get_object_link, get_unsubscribe_url_for_user
 from openwisp_users.tests.utils import TestOrganizationMixin
 from openwisp_utils.tests import SeleniumTestMixin
@@ -22,6 +23,7 @@ OrganizationUser = swapper_load_model("openwisp_users", "OrganizationUser")
 
 @tag("selenium_tests")
 class TestSelenium(
+    DefaultNotificationTypeMixin,
     SeleniumTestMixin,
     TestOrganizationMixin,
     StaticLiveServerTestCase,
