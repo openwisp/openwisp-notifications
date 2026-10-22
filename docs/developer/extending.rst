@@ -51,7 +51,11 @@ you can then import the result into your project.
 
 Now you need to add ``mynotifications`` to ``INSTALLED_APPS`` in your
 ``settings.py``, ensuring also that ``openwisp_notifications`` has been
-removed:
+removed. Put ``mynotifications`` where ``openwisp_notifications`` was, in
+particular before ``openwisp_utils.admin_theme``: Django uses the admin
+templates of the first app listing them, and the templates of
+``mynotifications`` must win over the ones of the admin theme (see
+:ref:`notifications_extend_admin_templates`):
 
 .. code-block:: python
 
@@ -98,11 +102,15 @@ Add ``openwisp_utils.staticfiles.DependencyFinder`` to
         "openwisp_utils.staticfiles.DependencyFinder",
     ]
 
+.. _notifications_dependency_loader:
+
 5. Add ``openwisp_utils.loaders.DependencyLoader``
 --------------------------------------------------
 
 Add ``openwisp_utils.loaders.DependencyLoader`` to ``TEMPLATES`` in your
-``settings.py``:
+``settings.py``, after the template loaders of Django. It only looks in
+the apps listed in ``EXTENDED_APPS``, so this order lets the templates of
+your installed apps override the ones of ``openwisp_notifications``:
 
 .. code-block:: python
 
@@ -301,7 +309,52 @@ For more information about template tags in django, please refer to the
 `"Custom template tags and filters" section in the django documentation
 <https://docs.djangoproject.com/en/5.2/topics/http/urls/>`_.
 
-16. Register Notification Types
+.. _notifications_extend_admin_templates:
+
+16. Extend the Admin Templates
+------------------------------
+
+*openwisp-notifications* adds its notification widget to every admin page
+through ``admin/base_site.html``. Its content lives in
+``admin/openwisp_notifications/base_site.html``, and
+``admin/base_site.html`` only extends it.
+
+Since ``openwisp_notifications`` is not in ``INSTALLED_APPS`` anymore,
+``mynotifications`` must ship its own ``admin/base_site.html``, even if it
+does not change anything, otherwise the one of the admin theme is used and
+the notification widget disappears:
+
+.. code-block:: django
+
+    {% extends "admin/openwisp_notifications/base_site.html" %}
+
+You can override any of its blocks there, as shown in
+`sample_notifications/templates/admin/base_site.html
+<https://github.com/openwisp/openwisp-notifications/blob/master/tests/openwisp2/sample_notifications/templates/admin/base_site.html>`_.
+
+.. important::
+
+    ``admin/openwisp_notifications/base_site.html`` must be extended by
+    one template only: the ``admin/base_site.html`` of
+    ``mynotifications``. A second template extending it, for example in
+    the ``templates`` directory of your project, makes every admin page
+    fail with ``TemplateDoesNotExist``: such templates must extend
+    ``admin/base_site.html`` instead.
+
+    When migrating an existing project, change the order of the template
+    loaders as described in :ref:`the DependencyLoader step
+    <notifications_dependency_loader>` before extending
+    ``admin/openwisp_notifications/base_site.html``: with the previous
+    order, extending it also makes every admin page fail with
+    ``TemplateDoesNotExist``.
+
+The object notification widget, added to the admin classes listed in
+:ref:`OPENWISP_NOTIFICATIONS_IGNORE_ENABLED_ADMIN
+<openwisp_notifications_ignore_enabled_admin>`, needs no template: older
+versions overrode ``admin/change_form.html`` for it, and copies of that
+template can be deleted.
+
+17. Register Notification Types
 -------------------------------
 
 You can register notification types as shown in the :ref:`section for
@@ -316,7 +369,7 @@ You can use `sample_notifications/models.py
 <https://github.com/openwisp/openwisp-notifications/blob/master/tests/openwisp2/sample_notifications/models.py>`_
 as reference for your implementation.
 
-17. Import the automated tests
+18. Import the automated tests
 ------------------------------
 
 When developing a custom application based on this module, it's a good
@@ -333,9 +386,10 @@ to find out how to do this.
 
 .. note::
 
-    Some tests will fail if ``templatetags`` and ``admin/base.html`` are
-    not configured properly. See preceding sections to configure them
-    properly.
+    Some tests will fail if ``templatetags`` and ``admin/base_site.html``
+    are not configured properly. See
+    :ref:`notifications_extend_admin_templates` and the preceding sections
+    to configure them properly.
 
 Other base classes that can be inherited and extended
 -----------------------------------------------------
