@@ -45,6 +45,11 @@ NotificationAppConfig = apps.get_app_config(Notification._meta.app_label)
 class TestAdmin(BaseTestAdmin):
     app_label = "sample_notifications"
 
+    def test_base_site_template(self):
+        super().test_base_site_template()
+        response = self.client.get(self._url)
+        self.assertContains(response, 'id="sample-notifications-base-site"')
+
 
 class TestAdminMedia(BaseTestAdminMedia):
     pass
