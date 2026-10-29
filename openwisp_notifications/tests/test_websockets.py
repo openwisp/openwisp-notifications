@@ -26,7 +26,7 @@ IgnoreObjectNotification = load_model("IgnoreObjectNotification")
 
 @database_sync_to_async
 def create_notification(admin_user):
-    n = notify.send(sender=admin_user, type="default").pop()
+    n = notify.send(sender=admin_user, type="generic_message").pop()
     return n[1].pop()
 
 
@@ -38,7 +38,7 @@ def bulk_create_notification(admin_user, count=10):
             Notification(
                 recipient=admin_user,
                 actor=admin_user,
-                type="default",
+                type="generic_message",
             )
         )
     Notification.objects.bulk_create(notifications)

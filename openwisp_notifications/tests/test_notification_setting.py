@@ -17,6 +17,7 @@ from openwisp_notifications.tasks import (
     superuser_demoted_notification_setting,
 )
 from openwisp_notifications.tests.test_helpers import (
+    DefaultNotificationTypeMixin,
     base_register_notification_type,
     base_unregister_notification_type,
     mock_notification_types,
@@ -36,7 +37,9 @@ OrganizationUser = swapper_load_model("openwisp_users", "OrganizationUser")
 ns_queryset = NotificationSetting.objects.filter(type="default")
 
 
-class TestNotificationSetting(TestOrganizationMixin, TransactionTestCase):
+class TestNotificationSetting(
+    DefaultNotificationTypeMixin, TestOrganizationMixin, TransactionTestCase
+):
     def setUp(self):
         self.default_org = self._get_org("default")
 

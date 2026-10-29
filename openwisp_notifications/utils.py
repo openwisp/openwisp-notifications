@@ -156,13 +156,25 @@ def send_notification_email(
     )
 
 
+def get_target_organization_id(target):
+    """
+    Returns the organization id of the target object.
+    An organization is its own organization.
+    """
+    if target is None:
+        return None
+    if target._meta.model_name == "organization":
+        return target.pk
+    return getattr(target, "organization_id", None)
+
+
 def get_user_email_preference(notification):
     """
     Returns the user's email preference for notifications.
     Falls back to the notification type's ``email_notification``
     configuration when the target has no organization.
     """
-    target_org = getattr(getattr(notification, "target", None), "organization_id", None)
+    target_org = get_target_organization_id(getattr(notification, "target", None))
     if not target_org:
         type_config = get_notification_configuration(notification.type)
         return type_config.get("email_notification", True)

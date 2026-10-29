@@ -26,7 +26,10 @@ from openwisp_notifications.types import (
     NOTIFICATION_ASSOCIATED_MODELS,
     get_notification_configuration,
 )
-from openwisp_notifications.utils import get_user_email_preference
+from openwisp_notifications.utils import (
+    get_target_organization_id,
+    get_user_email_preference,
+)
 from openwisp_notifications.websockets import handlers as ws_handlers
 
 logger = logging.getLogger(__name__)
@@ -58,7 +61,7 @@ def notify_handler(**kwargs):
     if not notification_type:
         raise ValueError(_("Notification type is required."))
     target = kwargs.get("target", None)
-    target_org = getattr(target, "organization_id", None)
+    target_org = get_target_organization_id(target)
     if target_org and not Organization.active.filter(pk=target_org).exists():
         # Notifications are not generated for disabled organizations.
         return
