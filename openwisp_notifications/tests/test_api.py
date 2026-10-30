@@ -15,13 +15,14 @@ from openwisp_notifications.signals import notify
 from openwisp_notifications.swapper import load_model, swapper_load_model
 from openwisp_notifications.tests.test_helpers import (
     TEST_DATETIME,
+    DefaultNotificationTypeMixin,
     get_notification_setting_permission,
     mock_notification_types,
     register_notification_type,
 )
 from openwisp_users.tests.test_api import AuthenticationMixin
 from openwisp_users.tests.utils import TestOrganizationMixin
-from openwisp_utils.tests import capture_any_output
+from openwisp_utils.tests import AssertNumQueriesSubTestMixin, capture_any_output
 
 Notification = load_model("Notification")
 NotificationSetting = load_model("NotificationSetting")
@@ -31,7 +32,7 @@ Organization = swapper_load_model("openwisp_users", "Organization")
 OrganizationUser = swapper_load_model("openwisp_users", "OrganizationUser")
 
 
-class TestNotificationMixin:
+class TestNotificationMixin(AssertNumQueriesSubTestMixin):
     url_namespace = "notifications"
 
     def _get_path(self, url_name, *args, **kwargs):
@@ -72,6 +73,7 @@ class TestNotificationMixin:
 
 
 class TestNotificationApi(
+    DefaultNotificationTypeMixin,
     TestNotificationMixin,
     TestOrganizationMixin,
     AuthenticationMixin,

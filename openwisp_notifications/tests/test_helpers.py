@@ -103,3 +103,32 @@ class GetEditFormInlineMixin(object):
             }
         )
         return params
+
+
+default_notification_type = {
+    "level": "info",
+    "verb": "default verb",
+    "verbose_name": "Default Type",
+    "email_subject": "[{site.name}] Default Notification Subject",
+    "message": (
+        "Default notification with {notification.verb}"
+        " and level {notification.level}"
+        " by [{notification.target}]({notification.target_link})"
+    ),
+    "message_template": "openwisp_notifications/default_message.md",
+    "email_notification": True,
+    "web_notification": True,
+}
+
+
+class DefaultNotificationTypeMixin:
+    """
+    Registers the ``default`` notification type for the duration
+    of a test class, since it is not shipped with the application.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        register_notification_type("default", default_notification_type)
+        cls.addClassCleanup(unregister_notification_type, "default")

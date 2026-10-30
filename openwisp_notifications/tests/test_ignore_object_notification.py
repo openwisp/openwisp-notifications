@@ -7,6 +7,7 @@ from django.utils import timezone
 from openwisp_notifications import tasks
 from openwisp_notifications.signals import notify
 from openwisp_notifications.swapper import load_model
+from openwisp_notifications.tests.test_helpers import DefaultNotificationTypeMixin
 from openwisp_users.tests.utils import TestOrganizationMixin
 
 from ..types import get_notification_configuration
@@ -17,7 +18,9 @@ Notification = load_model("Notification")
 on_queryset = IgnoreObjectNotification.objects
 
 
-class TestIgnoreObjectNotification(TestOrganizationMixin, TestCase):
+class TestIgnoreObjectNotification(
+    DefaultNotificationTypeMixin, TestOrganizationMixin, TestCase
+):
     def setUp(self):
         self.obj = self._get_org_user()
         self.admin = self._get_admin()

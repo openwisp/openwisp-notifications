@@ -9,6 +9,7 @@ from django.test.client import Client
 from django.urls import reverse
 
 from openwisp_notifications.swapper import load_model
+from openwisp_notifications.tests.test_helpers import DefaultNotificationTypeMixin
 
 User = get_user_model()
 
@@ -102,7 +103,7 @@ class TestResendVerificationEmailView(TestCase):
         self.assertEqual(str(messages[0]), "No email address found for your account.")
 
 
-class TestCheckEmailVerification(TestCase):
+class TestCheckEmailVerification(DefaultNotificationTypeMixin, TestCase):
     def setUp(self):
         self.client = Client()
         self.user = User.objects.create_user(

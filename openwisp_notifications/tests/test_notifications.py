@@ -33,6 +33,7 @@ from openwisp_notifications.handlers import (
 from openwisp_notifications.signals import notify
 from openwisp_notifications.swapper import load_model, swapper_load_model
 from openwisp_notifications.tests.test_helpers import (
+    DefaultNotificationTypeMixin,
     get_notification_setting_permission,
     mock_notification_types,
     register_notification_type,
@@ -46,7 +47,7 @@ from openwisp_notifications.types import (
 )
 from openwisp_notifications.utils import _get_absolute_url, get_unsubscribe_url_for_user
 from openwisp_users.tests.utils import TestOrganizationMixin
-from openwisp_utils.tests import capture_any_output
+from openwisp_utils.tests import AssertNumQueriesSubTestMixin, capture_any_output
 
 from . import (
     _test_batch_email_notification_email_body,
@@ -66,7 +67,12 @@ ten_minutes_ago = start_time - timedelta(minutes=10)
 notification_queryset = Notification.objects.order_by("-timestamp")
 
 
-class TestNotifications(TestOrganizationMixin, TransactionTestCase):
+class TestNotifications(
+    DefaultNotificationTypeMixin,
+    AssertNumQueriesSubTestMixin,
+    TestOrganizationMixin,
+    TransactionTestCase,
+):
     app_label = "openwisp_notifications"
     users_app_label = "openwisp_users"
 
@@ -1737,7 +1743,9 @@ class TestNotifications(TestOrganizationMixin, TransactionTestCase):
             self.assertEqual(response.status_code, 200)
 
 
-class TestNotificationSending(TestOrganizationMixin, TransactionTestCase):
+class TestNotificationSending(
+    DefaultNotificationTypeMixin, TestOrganizationMixin, TransactionTestCase
+):
     app_label = "openwisp_notifications"
 
     def setUp(self):
@@ -2076,7 +2084,9 @@ class TestNotificationSending(TestOrganizationMixin, TransactionTestCase):
             self._assert_email_sent(False)
 
 
-class TestTransactionNotifications(TestOrganizationMixin, TransactionTestCase):
+class TestTransactionNotifications(
+    DefaultNotificationTypeMixin, TestOrganizationMixin, TransactionTestCase
+):
     def setUp(self):
         self.admin = self._create_admin()
         self.notification_options = dict(
