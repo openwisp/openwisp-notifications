@@ -2,7 +2,6 @@
 
 import uuid
 
-import django
 import django.db.models.deletion
 import django.utils.timezone
 import swapper
@@ -10,7 +9,7 @@ from django.conf import settings
 from django.db import migrations, models
 
 import openwisp_utils.fields
-from openwisp_notifications.types import NOTIFICATION_CHOICES, get_notification_choices
+from openwisp_notifications.types import get_notification_choices
 
 
 class Migration(migrations.Migration):
@@ -154,11 +153,7 @@ class Migration(migrations.Migration):
                 (
                     "type",
                     models.CharField(
-                        choices=(
-                            NOTIFICATION_CHOICES
-                            if django.VERSION < (5, 0)
-                            else get_notification_choices
-                        ),
+                        choices=get_notification_choices,
                         max_length=30,
                         null=True,
                         verbose_name="Notification Type",
@@ -194,11 +189,7 @@ class Migration(migrations.Migration):
                 (
                     "type",
                     models.CharField(
-                        choices=(
-                            NOTIFICATION_CHOICES
-                            if django.VERSION < (5, 0)
-                            else get_notification_choices
-                        ),
+                        choices=get_notification_choices,
                         max_length=30,
                         null=True,
                         blank=True,
