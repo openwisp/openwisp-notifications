@@ -1482,14 +1482,9 @@ class TestNotifications(
             is_valid = email_token_generator.check_token(self.admin, token)
             self.assertFalse(is_valid)
 
-    def _get_unsubscribe_url(self, user):
-        full_url = get_unsubscribe_url_for_user(user, False)
-        token = full_url.split("?token=")[1]
-        return f'{reverse("notifications:unsubscribe")}?token={token}'
-
     def test_email_unsubscribe_view(self):
         local_unsubscribe_url = reverse("notifications:unsubscribe")
-        unsubscribe_url = self._get_unsubscribe_url(self.admin)
+        unsubscribe_url = get_unsubscribe_url_for_user(self.admin, full_url=False)
 
         with self.subTest("Test GET request with valid token"):
             response = self.client.get(unsubscribe_url)
@@ -1582,7 +1577,7 @@ class TestNotifications(
         org_settings_queryset.update(email=True)
         org.is_active = False
         org.save(update_fields=["is_active"])
-        unsubscribe_url = self._get_unsubscribe_url(self.admin)
+        unsubscribe_url = get_unsubscribe_url_for_user(self.admin, full_url=False)
 
         with self.subTest("Unsubscribing also disables disabled-org settings"):
             response = self.client.post(unsubscribe_url)

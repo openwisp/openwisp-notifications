@@ -1233,13 +1233,14 @@ class TestNotificationApi(
             org.is_active = False
             org.save(update_fields=["is_active"])
             url = self._get_path("user_org_notification_setting", self.admin.pk, org.pk)
+            settings = NotificationSetting.objects.filter(
+                user=self.admin, organization_id=org.pk
+            ).order_by("pk")
+            original_settings = list(settings.values_list("pk", "web", "email"))
             response = self.client.post(url, data={"web": True, "email": True})
             self.assertEqual(response.status_code, 404)
             self.assertEqual(
-                NotificationSetting.objects.filter(
-                    user=self.admin, organization_id=org.pk, email=True
-                ).exists(),
-                False,
+                list(settings.values_list("pk", "web", "email")), original_settings
             )
 
     @patch("openwisp_notifications.tasks.delete_ignore_object_notification.apply_async")

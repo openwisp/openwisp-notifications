@@ -26,6 +26,9 @@ from openwisp_notifications.tests.test_notifications import (
     TestNotifications as BaseTestNotifications,
 )
 from openwisp_notifications.tests.test_notifications import (
+    TestNotificationSending as BaseTestNotificationSending,
+)
+from openwisp_notifications.tests.test_notifications import (
     TestTransactionNotifications as BaseTestTransactionNotifications,
 )
 from openwisp_notifications.tests.test_organization_setting import (
@@ -80,6 +83,10 @@ class TestNotifications(BaseTestNotifications):
     )
     def test_post_migrate_populate_notification_settings(self, *args):
         super().test_post_migrate_populate_notification_settings()
+
+
+class TestNotificationSending(BaseTestNotificationSending):
+    pass
 
 
 class TestTransactionNotifications(BaseTestTransactionNotifications):
@@ -142,6 +149,7 @@ class TestChecks(BaseTestChecks):
 del BaseTestAdmin
 del BaseTestAdminMedia
 del BaseTestNotifications
+del BaseTestNotificationSending
 del BaseTestNotificationApi
 del BaseTestMultitenancyApi
 del BaseTestNotificationSetting

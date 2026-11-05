@@ -7,7 +7,7 @@ from django.contrib.admin.sites import AdminSite
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
 from django.forms.widgets import MediaOrderConflictWarning
-from django.test import RequestFactory, TestCase, override_settings, tag
+from django.test import TestCase, override_settings, tag
 from django.urls import reverse
 
 from openwisp_notifications import settings as app_settings
@@ -395,14 +395,11 @@ class TestOrganizationNotificationsSettingsAdmin(BaseTestAdmin):
         org_admin = OrganizationAdmin(Organization, django_admin.site)
         active_org = self._get_org()
         disabled_org = self._create_org(name="disabled-org", is_active=False)
-        request = RequestFactory().get("/")
-        request.user = self._get_admin()
         self._test_disabled_org_admin_inline_readonly(
             org_admin,
             disabled_org,
             active_obj=active_org,
             inline_models=(OrganizationNotificationSettingsInline,),
-            user=request.user,
         )
 
 

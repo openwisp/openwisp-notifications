@@ -1,7 +1,6 @@
 import functools
 from copy import deepcopy
 from datetime import datetime
-from functools import wraps
 from unittest.mock import patch
 
 from django.contrib.auth.models import Permission
@@ -88,7 +87,7 @@ def mock_notification_types(func):
         ):
             return func(*args, **kwargs)
 
-    return wraps(func)(wrapper)
+    return wrapper
 
 
 class GetEditFormInlineMixin(object):
