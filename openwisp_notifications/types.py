@@ -4,19 +4,6 @@ from django.template.loader import get_template
 from .exceptions import NotificationRenderException
 
 NOTIFICATION_TYPES = {
-    "default": {
-        "level": "info",
-        "verb": "default verb",
-        "verbose_name": "Default Type",
-        "email_subject": "[{site.name}] Default Notification Subject",
-        "message": (
-            "Default notification with {notification.verb} and level {notification.level}"
-            " by [{notification.target}]({notification.target_link})"
-        ),
-        "message_template": "openwisp_notifications/default_message.md",
-        "email_notification": True,
-        "web_notification": True,
-    },
     "generic_message": {
         "level": "info",
         "verb": "generic verb",
@@ -33,7 +20,6 @@ NOTIFICATION_TYPES = {
 }
 
 NOTIFICATION_CHOICES = [
-    ("default", "Default Type"),
     ("generic_message", "Generic Message Type"),
 ]
 NOTIFICATION_ASSOCIATED_MODELS = set()

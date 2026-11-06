@@ -362,17 +362,27 @@ class TestOrganizationNotificationsSettingsAdmin(BaseTestAdmin):
                 '<select name="notification_settings-0-email"',
             )
             self.assertContains(
-                response,
-                "<label>Web notifications enabled:</label>"
-                '<div class="readonly"><img src="/static/admin/img/icon-yes.svg" alt="True"></div>',
-                html=True,
+                response, "<label>Web notifications enabled:</label>", html=True
             )
             self.assertContains(
-                response,
-                "<label>Email notifications enabled:</label>"
-                '<div class="readonly"><img src="/static/admin/img/icon-yes.svg" alt="True"></div>',
-                html=True,
+                response, "<label>Email notifications enabled:</label>", html=True
             )
+            inline_admin_form = next(
+                form
+                for inline in response.context["inline_admin_formsets"]
+                if inline.formset.prefix == "notification_settings"
+                for form in inline
+            )
+            readonly_fields = {
+                field.field["name"]: field.contents()
+                for fieldset in inline_admin_form
+                for line in fieldset
+                for field in line
+                if field.is_readonly
+            }
+            icon = '<img src="/static/admin/img/icon-yes.svg" alt="True">'
+            self.assertEqual(readonly_fields.get("web"), icon)
+            self.assertEqual(readonly_fields.get("email"), icon)
 
         with self.subTest("Administrator has change permissions"):
             admin = self._create_administrator(organizations=[org])

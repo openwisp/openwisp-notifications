@@ -15,6 +15,7 @@ from openwisp_notifications.signals import notify
 from openwisp_notifications.swapper import load_model, swapper_load_model
 from openwisp_notifications.tests.test_helpers import (
     TEST_DATETIME,
+    DefaultNotificationTypeMixin,
     get_notification_setting_permission,
     mock_notification_types,
     register_notification_type,
@@ -72,6 +73,7 @@ class TestNotificationMixin(AssertNumQueriesSubTestMixin):
 
 
 class TestNotificationApi(
+    DefaultNotificationTypeMixin,
     TestNotificationMixin,
     TestOrganizationMixin,
     AuthenticationMixin,

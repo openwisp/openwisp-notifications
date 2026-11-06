@@ -2,7 +2,7 @@ from io import StringIO
 from unittest.mock import patch
 
 import swapper
-from django.core import management
+from django.core import mail, management
 from django.test import TestCase
 
 from openwisp_notifications import checks
@@ -19,24 +19,87 @@ class TestManagementCommands(TestCase, TestOrganizationMixin):
     def test_create_notification_command(self):
         admin = self._get_admin()
         default_org = Organization.objects.first()
-        ns = NotificationSetting(user=admin, organization=default_org, type="default")
-        ns.save()
-        management.call_command("create_notification")
-        self.assertEqual(Notification.objects.count(), 1)
-        n = Notification.objects.first()
-        self.assertEqual(n.type, "default")
-        self.assertEqual(n.actor, default_org)
-        self.assertEqual(n.recipient, admin)
-
-    def test_create_notification_command_when_notificationsetting_disable(self):
-        admin = self._get_admin()
-        default_org = Organization.objects.first()
-        ns = NotificationSetting(
-            user=admin, organization=default_org, type="default", web=False, email=False
-        )
-        ns.save()
-        management.call_command("create_notification")
-        self.assertEqual(Notification.objects.count(), 0)
+        cases = [
+            {
+                "name": "email enabled",
+                "web": True,
+                "email": True,
+                "verified": True,
+                "secondary": False,
+                "notifications": 1,
+                "emails": 1,
+            },
+            {
+                "name": "email disabled",
+                "web": True,
+                "email": False,
+                "verified": True,
+                "secondary": False,
+                "notifications": 1,
+                "emails": 0,
+            },
+            {
+                "name": "unverified email",
+                "web": True,
+                "email": True,
+                "verified": False,
+                "secondary": False,
+                "notifications": 1,
+                "emails": 0,
+            },
+            {
+                "name": "verified secondary email only",
+                "web": True,
+                "email": True,
+                "verified": False,
+                "secondary": True,
+                "notifications": 1,
+                "emails": 0,
+            },
+            {
+                "name": "web and email disabled",
+                "web": False,
+                "email": False,
+                "verified": True,
+                "secondary": False,
+                "notifications": 0,
+                "emails": 0,
+            },
+        ]
+        for case in cases:
+            with self.subTest(case["name"]):
+                Notification.objects.all().delete()
+                NotificationSetting.objects.filter(user=admin).delete()
+                mail.outbox.clear()
+                admin.emailaddress_set.exclude(email=admin.email).delete()
+                admin.emailaddress_set.update(verified=case["verified"])
+                if case["secondary"]:
+                    admin.emailaddress_set.create(
+                        email="secondary@example.com", verified=True, primary=False
+                    )
+                NotificationSetting.objects.create(
+                    user=admin,
+                    organization=default_org,
+                    type="generic_message",
+                    web=case["web"],
+                    email=case["email"],
+                )
+                management.call_command("create_notification")
+                self.assertEqual(
+                    Notification.objects.count(),
+                    case["notifications"],
+                    msg="Unexpected number of notifications created",
+                )
+                self.assertEqual(
+                    len(mail.outbox),
+                    case["emails"],
+                    msg="Unexpected number of emails sent",
+                )
+                if case["notifications"]:
+                    n = Notification.objects.first()
+                    self.assertEqual(n.type, "generic_message")
+                    self.assertEqual(n.actor, default_org)
+                    self.assertEqual(n.recipient, admin)
 
     @patch(
         "openwisp_notifications.tasks.ns_register_unregister_notification_type.delay"
