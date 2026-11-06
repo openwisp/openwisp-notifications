@@ -2,6 +2,7 @@ import copy
 import uuid
 from unittest.mock import patch
 
+from django.contrib import admin as django_admin
 from django.contrib.admin.sites import AdminSite
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
@@ -10,6 +11,7 @@ from django.test import TestCase, override_settings, tag
 from django.urls import reverse
 
 from openwisp_notifications import settings as app_settings
+from openwisp_notifications.admin import OrganizationNotificationSettingsInline
 from openwisp_notifications.signals import notify
 from openwisp_notifications.swapper import load_model, swapper_load_model
 from openwisp_notifications.templatetags.notification_tags import (
@@ -17,7 +19,7 @@ from openwisp_notifications.templatetags.notification_tags import (
 )
 from openwisp_notifications.types import NOTIFICATION_TYPES
 from openwisp_notifications.widgets import _add_object_notification_widget
-from openwisp_users.admin import UserAdmin
+from openwisp_users.admin import OrganizationAdmin, UserAdmin
 from openwisp_users.tests.utils import TestMultitenantAdminMixin
 
 from .test_helpers import MessagingRequest, get_notification_setting_permission
@@ -27,6 +29,7 @@ NotificationSetting = load_model("NotificationSetting")
 notification_queryset = Notification.objects.order_by("-timestamp")
 Group = swapper_load_model("openwisp_users", "Group")
 OrganizationUser = swapper_load_model("openwisp_users", "OrganizationUser")
+Organization = swapper_load_model("openwisp_users", "Organization")
 
 
 class MockUser:
@@ -397,6 +400,70 @@ class TestOrganizationNotificationsSettingsAdmin(BaseTestAdmin):
                 response,
                 '<select name="notification_settings-0-email"',
             )
+
+    def test_disabled_organization_inline_readonly(self):
+        def notification_settings_payload(organization):
+            return {
+                "owner-TOTAL_FORMS": "0",
+                "owner-INITIAL_FORMS": "0",
+                "notification_settings-TOTAL_FORMS": "1",
+                "notification_settings-INITIAL_FORMS": "1",
+                "notification_settings-0-organization": str(organization.pk),
+                "notification_settings-0-web": "False",
+                "notification_settings-0-email": "False",
+            }
+
+        org_admin = OrganizationAdmin(Organization, django_admin.site)
+        active_org = self._get_org()
+        disabled_org = self._create_org(name="disabled-org", is_active=False)
+        self._test_disabled_org_admin_inline_readonly(
+            org_admin,
+            disabled_org,
+            active_obj=active_org,
+            inline_models=(OrganizationNotificationSettingsInline,),
+        )
+
+        with self.subTest("Disabled organization settings cannot be changed"):
+            org_settings = disabled_org.notification_settings
+            org_settings.web = True
+            org_settings.email = True
+            org_settings.save()
+            path = reverse(
+                f"admin:{self.users_app_label}_organization_change",
+                args=(disabled_org.pk,),
+            )
+            response = self.client.post(
+                path, notification_settings_payload(disabled_org)
+            )
+            self.assertEqual(response.status_code, 302)
+            org_settings.refresh_from_db()
+            self.assertEqual(org_settings.web, True)
+            self.assertEqual(org_settings.email, True)
+            disabled_org.refresh_from_db()
+            self.assertEqual(disabled_org.is_active, False)
+
+        with self.subTest("Active organization settings can be changed"):
+            org_settings = active_org.notification_settings
+            org_settings.web = True
+            org_settings.email = True
+            org_settings.save()
+            path = reverse(
+                f"admin:{self.users_app_label}_organization_change",
+                args=(active_org.pk,),
+            )
+            payload = notification_settings_payload(active_org)
+            payload.update(
+                {
+                    "name": active_org.name,
+                    "slug": active_org.slug,
+                    "is_active": "on",
+                }
+            )
+            response = self.client.post(path, payload)
+            self.assertEqual(response.status_code, 302)
+            org_settings.refresh_from_db()
+            self.assertEqual(org_settings.web, False)
+            self.assertEqual(org_settings.email, False)
 
 
 @tag("skip_prod")
