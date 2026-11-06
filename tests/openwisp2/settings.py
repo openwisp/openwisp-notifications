@@ -79,7 +79,6 @@ TIME_ZONE = "Europe/Rome"
 LANGUAGE_CODE = "en-gb"
 USE_TZ = True
 USE_I18N = False
-USE_L10N = False
 STATIC_URL = "/static/"
 STATIC_ROOT = os.path.join(BASE_DIR, "static")
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
