@@ -237,6 +237,11 @@ class UnsubscribeView(TemplateView):
         """
         Update all of the user's notification settings to set email preference.
         """
+        # This user-wide switch deliberately allows disabled organizations too:
+        # skipping them would leave their preferences out of sync with the
+        # user's choice and silently resume emails once the organization is
+        # re-enabled. Per-organization toggles are blocked instead, see
+        # UserOrgNotificationSettingView.
         NotificationSetting.objects.filter(user=user).update(email=subscribe)
 
 
