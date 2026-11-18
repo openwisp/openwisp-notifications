@@ -37,6 +37,12 @@ organization administrators of the target object's organization who have
 opted-in to receive notifications. If the target object is omitted or does
 not have an organization, it will only send notifications to superusers.
 
+No notification is generated when the target object belongs to a disabled
+organization (``Organization.is_active=False``); notifications without a
+target, or whose target has no organization, are unaffected. Notifications
+created before an organization was disabled remain readable and can still
+be marked as read.
+
 You can override the recipients of the notification by passing the
 ``recipient`` keyword argument. The ``recipient`` argument can be a:
 
