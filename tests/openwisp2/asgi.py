@@ -4,7 +4,12 @@ from channels.auth import AuthMiddlewareStack
 from channels.routing import ProtocolTypeRouter, URLRouter
 from django.core.asgi import get_asgi_application
 
-from openwisp_notifications.websockets.routing import get_routes
+django_asgi_app = get_asgi_application()
+
+# isort: off
+from openwisp_notifications.websockets.routing import get_routes  # noqa: E402
+
+# isort: on
 
 if os.environ.get("SAMPLE_APP", False):
     # Load custom routes:
@@ -24,6 +29,6 @@ else:
 application = ProtocolTypeRouter(
     {
         "websocket": (AuthMiddlewareStack(URLRouter(routes))),
-        "http": get_asgi_application(),
+        "http": django_asgi_app,
     }
 )

@@ -27,6 +27,13 @@ within the OpenWISP architecture.
 Installing for Development
 --------------------------
 
+The CI test matrix covers Python 3.11 through 3.15 with these Django
+versions:
+
+- Python 3.11: Django 5.2.
+- Python 3.12, 3.13, and 3.14: Django 5.2, 6.0, and 6.1.
+- Python 3.15: Django 6.1.
+
 Install the system dependencies:
 
 .. code-block:: shell
