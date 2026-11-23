@@ -2,7 +2,7 @@ version: "3"
 
 services:
   redis:
-    image: redis:5.0-alpine
+    image: redis:8.10-alpine
     ports:
       - "6379:6379"
     entrypoint: redis-server --appendonly yes
