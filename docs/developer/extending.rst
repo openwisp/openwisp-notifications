@@ -354,6 +354,10 @@ the API views.
 Create a view file as done in `sample_notifications/views.py
 <https://github.com/openwisp/openwisp-notifications/blob/master/tests/openwisp2/sample_notifications/views.py>`_
 
+Custom API view modules can contain only the callbacks that need to be
+customized. Callbacks that are not defined in the custom module will
+automatically fall back to the corresponding standard API view.
+
 For more information regarding Django REST Framework API views, please
 refer to the `"Generic views" section in the Django REST Framework
 documentation
