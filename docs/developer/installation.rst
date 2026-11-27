@@ -103,20 +103,17 @@ Run tests with:
 
 .. code-block:: shell
 
-    # standard tests
-    ./runtests.py
+    # Full CI coverage suite, including the sample app and websocket tests
+    ./runtests
 
-    # If you running tests on PROD environment
-    ./runtests.py --exclude skip_prod
+    # Focus a Django test module
+    ./runtests openwisp_notifications.tests.test_notifications
 
-    # tests for the sample app
-    SAMPLE_APP=1 ./runtests.py
+    # Run websocket tests with pytest
+    PYTHONPATH=tests python -m pytest openwisp_notifications/tests/test_websockets.py
 
-When running the last line of the previous example, the environment
-variable ``SAMPLE_APP`` activates the sample app in ``/tests/openwisp2/``
-which is a simple django app that extends ``openwisp-notifications`` with
-the sole purpose of testing its extensibility, for more information
-regarding this concept, read the following section.
+The full suite also runs the sample app in ``/tests/openwisp2/`` to test
+extensibility. For more information, read the following section.
 
 Run quality assurance tests with:
 
