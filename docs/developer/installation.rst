@@ -109,8 +109,11 @@ From the repository root, run tests with:
     # Focus a Django test module
     ./runtests openwisp_notifications.tests.test_notifications
 
-    # Run websocket tests with pytest
-    TESTING=1 PYTHONPATH=tests python -m pytest openwisp_notifications/tests/test_websockets.py
+    # Exclude production-incompatible tests
+    ./runtests.py --exclude skip_prod
+
+    # Run the sample app tests
+    SAMPLE_APP=1 ./runtests.py
 
 The full suite also runs the sample app in ``/tests/openwisp2/`` to test
 extensibility. For more information, read the following section.

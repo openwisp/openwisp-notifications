@@ -2,7 +2,7 @@ import os
 import sys
 from datetime import timedelta
 
-TESTING = "test" in sys.argv or os.environ.get("TESTING") == "1"
+TESTING = "test" in sys.argv
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 DEBUG = True
