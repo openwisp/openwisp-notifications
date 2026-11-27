@@ -35,6 +35,7 @@ If instructions conflict, repository config and CI workflows win first, official
 - Prefer in-process tests so coverage tools can measure changed code.
 - Keep helpers and classes used by only one test method inside that method. Promote them to class or module scope only when genuinely reused.
 - Keep tests quiet on success. When code under test writes to stdout or stderr, use `capture_stdout`, `capture_stderr`, or `capture_any_output` from `openwisp_utils.tests` and assert the expected output. Do not leave unasserted output, logs, or warnings in test runs.
+- For CI configuration, dependency installation, or test entry point changes that do not change application behavior, run focused tests and QA locally. Open the PR after focused verification and require the relevant full suite in CI before declaring it complete.
 
 ## Contributing Guidelines
 
