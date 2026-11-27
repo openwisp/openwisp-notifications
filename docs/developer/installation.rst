@@ -99,7 +99,7 @@ Launch development server:
 
 You can access the admin interface at ``http://127.0.0.1:8000/admin/``.
 
-Run tests with:
+From the repository root, run tests with:
 
 .. code-block:: shell
 
@@ -110,7 +110,7 @@ Run tests with:
     ./runtests openwisp_notifications.tests.test_notifications
 
     # Run websocket tests with pytest
-    PYTHONPATH=tests python -m pytest openwisp_notifications/tests/test_websockets.py
+    TESTING=1 PYTHONPATH=tests python -m pytest openwisp_notifications/tests/test_websockets.py
 
 The full suite also runs the sample app in ``/tests/openwisp2/`` to test
 extensibility. For more information, read the following section.
