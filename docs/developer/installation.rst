@@ -99,24 +99,24 @@ Launch development server:
 
 You can access the admin interface at ``http://127.0.0.1:8000/admin/``.
 
-Run tests with:
+From the repository root, run tests with:
 
 .. code-block:: shell
 
-    # standard tests
-    ./runtests.py
+    # Full CI coverage suite, including the sample app and websocket tests
+    ./runtests
 
-    # If you running tests on PROD environment
+    # Focus a Django test module
+    ./runtests openwisp_notifications.tests.test_notifications
+
+    # Exclude production-incompatible tests
     ./runtests.py --exclude skip_prod
 
-    # tests for the sample app
+    # Run the sample app tests
     SAMPLE_APP=1 ./runtests.py
 
-When running the last line of the previous example, the environment
-variable ``SAMPLE_APP`` activates the sample app in ``/tests/openwisp2/``
-which is a simple django app that extends ``openwisp-notifications`` with
-the sole purpose of testing its extensibility, for more information
-regarding this concept, read the following section.
+The full suite also runs the sample app in ``/tests/openwisp2/`` to test
+extensibility. For more information, read the following section.
 
 Run quality assurance tests with:
 

@@ -17,7 +17,7 @@ Core code lives in `openwisp_notifications/`:
 ## Source of Truth
 
 - Use `docs/developer/installation.rst` and `docs/developer/index.rst` for local setup, Redis/Celery, services, and baseline test commands.
-- Use `.github/workflows/build.yml` for CI-tested dependencies, QA/test commands, env vars, and supported Python/Django versions.
+- Use `.github/workflows/ci.yml` for CI-tested dependencies, QA/test commands, env vars, and supported Python/Django versions.
 - Use GitHub issue/PR templates when asked to open issues or PRs.
 
 If instructions conflict, repository config and CI workflows win first, official docs next, and this file is supplemental.
@@ -27,14 +27,15 @@ If instructions conflict, repository config and CI workflows win first, official
 - Prefer method decorators for context managers that apply to the entire test method and would otherwise create unnecessary nesting, unless decorator ordering conflicts or the context manager requires data unavailable when the method is defined.
 - When separate tests cover different cases of the same feature, share almost identical database preparation, and primarily vary in input or expected outcome, group them in one test method with `subTest`. This is especially encouraged, but not limited to, TransactionTestCase tests, where it avoids repeated expensive database setup and teardown. Keep each subtest's setup explicit and independent, and retain separate test methods when cases exercise genuinely distinct behavior. Leave one blank line before each with `self.subTest(...)` statement only when a test method contains multiple such statements. Do not add a blank line for a single `subTest` statement inside a loop.
 - During development, run the focused tests and test suites directly affected by the change instead of routinely running the full test suite. For example, run the relevant `test_admin` tests for admin changes and Selenium tests for JavaScript or browser-facing changes.
-- For focused tests, call `./tests/manage.py test <pythonpath>` directly. Use `./runtests` only for the full suite because it runs multiple coverage and integration configurations and is not a focused-test runner.
+- Use `./runtests <pythonpath>` for focused Django tests and `./runtests` for the full coverage suite. Keep focused labels and flags on an explicit allowlist.
 - Changes to core logic, model validation, migrations, database schema, tenant isolation, authentication, or shared behavior require all affected package and integration suites.
-- Before pushing a behavior-affecting change, verify the CI-equivalent full suite after its latest code, test, dependency, migration, or configuration change. This includes both the `SAMPLE_APP=1` suite and the default suite defined in `.github/workflows/build.yml`. If it cannot run, report the blocker and wait for user direction.
+- Before pushing a behavior-affecting change, verify the CI-equivalent full suite after its latest code, test, dependency, migration, or configuration change. This includes both the `SAMPLE_APP=1` suite and the default suite defined in `.github/workflows/ci.yml`. If it cannot run, report the blocker and wait for user direction.
 - Run the full test suite with a timeout of at least 15 minutes (`timeout=900000`).
 - Apps under `tests/openwisp2/sample_*` are disposable test and example projects, not maintained deployments. Prefer updating their existing migrations to keep them minimal. Add an append-only migration only when an important change needs documented upgrade guidance for users who customized their OpenWISP modules.
 - Prefer in-process tests so coverage tools can measure changed code.
 - Keep helpers and classes used by only one test method inside that method. Promote them to class or module scope only when genuinely reused.
 - Keep tests quiet on success. When code under test writes to stdout or stderr, use `capture_stdout`, `capture_stderr`, or `capture_any_output` from `openwisp_utils.tests` and assert the expected output. Do not leave unasserted output, logs, or warnings in test runs.
+- For CI configuration, dependency installation, or test entry point changes that do not change application behavior, run focused tests and QA locally. Open the PR after focused verification and require the relevant full suite in CI before declaring it complete.
 
 ## Contributing Guidelines
 
@@ -59,6 +60,7 @@ If instructions conflict, repository config and CI workflows win first, official
 - Prefer short, precise names that rely on their nearest meaningful scope. Do not repeat a feature, domain object, or namespace already named by the containing module, class, or function. For example, prefer `EstimatedLocation.refresh()` over `EstimatedLocation.refresh_estimated_location()`. Repeat that context only when the name is used outside that scope or is needed to distinguish genuinely different concepts. When a concise name cannot express a necessary distinction, use a concise docstring to describe it rather than encoding it in an excessively long name.
 - Before adding a comment or docstring, ask whether it conveys information a reader cannot reasonably infer from clear code, names, and surrounding scope. Add a concise comment when it explains a non-obvious reason, constraint, compatibility or security requirement, side effect, or unavoidable complexity. In opaque syntax or domain-specific code, especially shell scripts, a comment may also explain what the code does. Do not add comments that merely restate adjacent code one-to-one.
 - Update docs when behavior, settings, public APIs, setup steps, or supported versions change, including when a documented feature's behavior changes or a new user-facing feature is added.
+- Add CI dependencies to `./install-ci-deps.sh` and cache them. Keep cache inputs in sync with the installer and dependency files. Follow the shared structure and internal naming in `.github/workflows/ci.yml` so OpenWISP automation works across repositories.
 
 ## Django Rules
 
